@@ -45,9 +45,9 @@ const IDLE_SWAY = 0.2;
 
 // Squeeze while held (TZ follow-up: "as if squeezed by a fist").
 const HOLD_RAMP = 1.4; // how fast the squeeze builds, per second
-// Well-damped so it doesn't wobble while you drag it around (that read as a
-// dirty jitter); still a touch under critical (~24.5) for a soft settle.
-const SQUASH_SPRING = { stiffness: 150, damping: 23 };
+// A little under critical (~24.5): one clean bounce-back on release, no wobble.
+// Lower than this (e.g. 11) oscillated and read as dirty while dragging.
+const SQUASH_SPRING = { stiffness: 150, damping: 16 };
 const IMPACT_SQUASH = 0.3;
 
 // The texture is 1996² with the head occupying x 164–1832, y 444–1576 (TZ §1.3),
@@ -317,20 +317,10 @@ export function Head3D() {
       squash.velocity += Math.min(impact, 2) * IMPACT_SQUASH * 6;
 
       if (impact < BLOOD_MIN_SPEED) return;
-      // Origin sits ON the head's edge that struck (a touch inside the
-      // silhouette), not glued to the wall line — so the spray reads as coming
-      // off the head, not off the wall.
-      const cx = toStageX(posX) - nx * (sizePx / 2) * HEAD_W_FRAC * 0.72;
-      const cy = toStageY(posY) + ny * (sizePx / 2) * HEAD_H_FRAC * 0.72;
-      // Screen-space outward direction (head → wall): (-nx, +ny). Blood flings
-      // off the head that way but mostly falls, so it drips off the head rather
-      // than shooting back into the page from the wall.
-      let dx = -nx * 0.55;
-      let dy = ny * 0.55 + 0.85; // strong downward bias — it should fall
-      const dl = Math.hypot(dx, dy) || 1;
-      dx /= dl;
-      dy /= dl;
-      blood.splash(cx, cy, dx, dy, impact);
+      // Contact point: head centre pushed out to the silhouette edge it touched.
+      const cx = toStageX(posX) - nx * (sizePx / 2) * HEAD_W_FRAC;
+      const cy = toStageY(posY) + ny * (sizePx / 2) * HEAD_H_FRAC;
+      blood.splash(cx, cy, nx, -ny, impact);
     };
 
     // ---- loop --------------------------------------------------------------
