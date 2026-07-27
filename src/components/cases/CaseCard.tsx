@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react';
 import type { Case } from '@/data/cases';
 import { lerp, q } from '@/lib/lerp';
 import { useCanHover } from '@/hooks/useMediaQuery';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { MagneticButton } from '@/components/header/MagneticButton';
 import { MediaSlot } from './MediaSlot';
 import { FloatingLogo } from './FloatingLogo';
@@ -18,6 +19,7 @@ const RETURN = '600ms cubic-bezier(0.22, 1, 0.36, 1)';
 
 export function CaseCard({ data }: { data: Case }) {
   const canHover = useCanHover();
+  const reduced = useReducedMotion();
   const rootRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const glareRef = useRef<HTMLDivElement>(null);
@@ -25,7 +27,7 @@ export function CaseCard({ data }: { data: Case }) {
   const trackRef = useRef<HTMLDivElement>(null); // stable box for logo parallax
 
   useEffect(() => {
-    if (!canHover) return;
+    if (!canHover || reduced) return;
     const root = rootRef.current;
     const card = cardRef.current;
     const glare = glareRef.current;
@@ -94,7 +96,7 @@ export function CaseCard({ data }: { data: Case }) {
       root.removeEventListener('pointermove', onMove);
       root.removeEventListener('pointerleave', onLeave);
     };
-  }, [canHover]);
+  }, [canHover, reduced]);
 
   const textFirst = data.layout === 'text-left';
 

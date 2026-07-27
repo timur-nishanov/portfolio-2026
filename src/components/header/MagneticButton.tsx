@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react';
 import { clamp, lerp, q } from '@/lib/lerp';
 import { settled, stepSpring, type SpringState } from '@/lib/spring';
 import { useCanHover } from '@/hooks/useMediaQuery';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 const RADIUS = 90; // px beyond the border where the magnet engages
 const PULL = 0.28; // surface follows 0.28 of the centre→cursor vector
@@ -35,11 +36,12 @@ type Props = AsButton | AsLink;
 export function MagneticButton(props: Props) {
   const { children, className = '', labelClassName = '', disabled = false, magnetic = true } = props;
   const canHover = useCanHover();
+  const reduced = useReducedMotion();
   const rootRef = useRef<HTMLElement>(null);
   const surfaceRef = useRef<HTMLSpanElement>(null);
   const labelRef = useRef<HTMLSpanElement>(null);
 
-  const enabled = magnetic && !disabled && canHover;
+  const enabled = magnetic && !disabled && canHover && !reduced;
 
   useEffect(() => {
     if (!enabled) return;
