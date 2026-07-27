@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { assets } from '@/data/assets';
-import { clamp } from '@/lib/lerp';
+import { clamp, lerp } from '@/lib/lerp';
 import { stepSpring, type SpringState } from '@/lib/spring';
 import { createBloodField } from './blood';
 import fragmentShader from './head.frag';
@@ -19,23 +19,28 @@ const LIGHT_STRENGTH = 0.3;
 // --- flight physics (world units, where the stage height spans 2) ----------
 const IDLE_SPEED = 0.055; // calm drift
 const IDLE_STEER = 1.2; // how fast idle velocity converges on the wander dir
-const THROW_SPEED = 2.1; // impulse magnitude on a tap
-const THROW_DAMP = 0.5; // exponential decay per second while thrown
-const RESTITUTION = 0.88; // energy kept on a wall bounce
+const THROW_SPEED = 1.05; // tap impulse — a lob, not a bullet
+const MAX_THROW_SPEED = 1.4; // cap on a drag flick so it can't be launched
+const THROW_DAMP = 0.62; // exponential decay per second while thrown
+const RESTITUTION = 0.82; // energy kept on a wall bounce
 const CALM_SPEED = 0.17; // below this the throw hands back to the idle drift
 const BLOOD_MIN_SPEED = 0.5; // only hard hits bleed — drifting must not spray
 
 // Instead of spinning the plane flat, throws and impacts push the shader's
-// depth-parallax so the head appears to turn in 3D. Flat z-rotation reads as a
-// sticker being twirled; this reads as volume.
-const TWIST_FROM_THROW = 0.5;
-const TWIST_FROM_IMPACT = 0.7;
-const TWIST_DECAY = 2.6; // per second
+// depth-parallax so the head appears to turn in 3D. The twist is a spring, not
+// an instant offset that decays: an impulse feeds its velocity so the turn
+// eases in AND out — a step change read as a hard snap on every bounce.
+const TWIST_SPRING = { stiffness: 40, damping: 13 }; // near-critical, smooth
+const TWIST_FROM_THROW = 1.4; // velocity impulse per unit throw speed
+const TWIST_FROM_IMPACT = 1.5; // velocity impulse per unit impact speed
+const TWIST_MAX = 1.0;
 
 // Squeeze while held (TZ follow-up: "as if squeezed by a fist").
-const HOLD_RAMP = 1.7; // how fast the squeeze builds, per second
-const SQUASH_SPRING = { stiffness: 190, damping: 11 }; // springy release
-const IMPACT_SQUASH = 0.35;
+const HOLD_RAMP = 1.4; // how fast the squeeze builds, per second
+// Well-damped so it doesn't wobble while you drag it around (that read as a
+// dirty jitter); still a touch under critical (~24.5) for a soft settle.
+const SQUASH_SPRING = { stiffness: 150, damping: 23 };
+const IMPACT_SQUASH = 0.3;
 
 // The texture is 1996² with the head occupying x 164–1832, y 444–1576 (TZ §1.3),
 // so the plane carries empty margins. Collisions and splashes use the *visible*
@@ -176,8 +181,9 @@ export function Head3D() {
     let velY = Math.sin(wander) * IDLE_SPEED;
     let thrown = false;
 
-    let twistX = 0;
-    let twistY = 0;
+    // Twist as springs — impulses feed velocity so turns ease in and out.
+    let twistX: SpringState = { value: 0, velocity: 0 };
+    let twistY: SpringState = { value: 0, velocity: 0 };
     let squash: SpringState = { value: 0, velocity: 0 };
     let holding = 0; // seconds the pointer has been held down on the head
 
@@ -185,6 +191,9 @@ export function Head3D() {
     let downTime = 0;
     let lastPX = 0;
     let lastPY = 0;
+    let lastMoveT = 0;
+    let dragVX = 0; // smoothed drag velocity (world units/sec)
+    let dragVY = 0;
     let grabU = 0;
     let grabV = 0;
 
@@ -205,11 +214,19 @@ export function Head3D() {
 
     const onPointerMove = (e: PointerEvent) => {
       if (dragging) {
+        const now = performance.now();
+        // Real elapsed time, clamped, so a burst of high-frequency mouse events
+        // doesn't inflate the velocity into a bullet on release.
+        const mdt = Math.min(Math.max((now - lastMoveT) / 1000, 1 / 240), 1 / 30);
+        lastMoveT = now;
         const k = 2 / H; // px → world units
-        posX += (e.clientX - lastPX) * k;
-        posY -= (e.clientY - lastPY) * k;
-        velX = (e.clientX - lastPX) * k * 60; // per-second velocity for the throw
-        velY = -(e.clientY - lastPY) * k * 60;
+        const dx = (e.clientX - lastPX) * k;
+        const dy = -(e.clientY - lastPY) * k;
+        posX += dx;
+        posY += dy;
+        // Smooth the reported velocity — raw single-frame deltas are jittery.
+        dragVX = lerp(dragVX, dx / mdt, 0.4);
+        dragVY = lerp(dragVY, dy / mdt, 0.4);
         lastPX = e.clientX;
         lastPY = e.clientY;
       }
@@ -228,10 +245,12 @@ export function Head3D() {
       dragging = true;
       holding = 0;
       downTime = performance.now();
+      lastMoveT = downTime;
       lastPX = e.clientX;
       lastPY = e.clientY;
       grabU = u * 2 - 1;
       grabV = -(v * 2 - 1);
+      dragVX = dragVY = 0;
       velX = velY = 0;
     };
 
@@ -242,18 +261,24 @@ export function Head3D() {
       document.body.style.userSelect = '';
       thrown = true;
       const quick = performance.now() - downTime < 220;
-      const speed = Math.hypot(velX, velY);
+      let speed = Math.hypot(dragVX, dragVY);
       if (quick && speed < 0.25) {
-        // A tap → impulse away from where it was poked.
+        // A tap → gentle lob away from where it was poked.
         const len = Math.hypot(grabU, grabV) || 1;
         velX = (grabU / len) * THROW_SPEED;
-        velY = (grabV / len) * THROW_SPEED + 0.3;
+        velY = (grabV / len) * THROW_SPEED + 0.2;
+      } else {
+        // Drag flick, capped so it can't be launched off like a bullet.
+        const capped = Math.min(speed, MAX_THROW_SPEED);
+        velX = speed > 1e-4 ? (dragVX / speed) * capped : 0;
+        velY = speed > 1e-4 ? (dragVY / speed) * capped : 0;
       }
-      // Twist in 3D along the throw, so you see the volume turn.
-      twistX -= velX * TWIST_FROM_THROW;
-      twistY -= velY * TWIST_FROM_THROW;
-      // Release the squeeze with a bit of overshoot.
-      squash.velocity -= 2.2;
+      speed = Math.hypot(velX, velY);
+      // Twist impulse along the throw — fed into the spring's velocity so the
+      // turn eases rather than snapping.
+      twistX.velocity -= velX * TWIST_FROM_THROW;
+      twistY.velocity -= velY * TWIST_FROM_THROW;
+      // Let the squeeze spring back on its own (no hard kick — that wobbled).
     };
 
     window.addEventListener('pointermove', onPointerMove);
@@ -263,9 +288,10 @@ export function Head3D() {
 
     /** Bounce against a wall, bleed if the hit was hard. n points inward. */
     const hitWall = (nx: number, ny: number, impact: number) => {
-      // Impacts twist the head and dent it briefly, whatever their strength.
-      twistX += nx * impact * TWIST_FROM_IMPACT;
-      twistY -= ny * impact * TWIST_FROM_IMPACT;
+      // Impulse into the twist spring's velocity, so the turn swings in and out
+      // smoothly instead of jumping — a step here read as a hard snap.
+      twistX.velocity += nx * impact * TWIST_FROM_IMPACT;
+      twistY.velocity -= ny * impact * TWIST_FROM_IMPACT;
       squash.velocity += Math.min(impact, 2) * IMPACT_SQUASH * 6;
 
       if (impact < BLOOD_MIN_SPEED) return;
@@ -283,15 +309,16 @@ export function Head3D() {
       last = now;
       const t = now / 1000;
 
-      // Orientation is purely physical: twist from throws/impacts, decaying
-      // back to face-on. No cursor tracking.
-      const decayTwist = Math.exp(-TWIST_DECAY * dt);
-      twistX *= decayTwist;
-      twistY *= decayTwist;
-      uniforms.uPointer.value.set(clamp(twistX, -1.6, 1.6), clamp(twistY, -1.6, 1.6));
-      // Light rides the twist too, so a throw shades the turn; at rest it's
-      // a gentle constant from slightly above.
-      uniforms.uLightDir.value.set(twistX * 0.8, twistY * 0.8 + 0.15);
+      // Orientation is purely physical: twist springs back to face-on, so
+      // throws and bounces ease in and out. No cursor tracking.
+      twistX = stepSpring(twistX, 0, TWIST_SPRING, dt);
+      twistY = stepSpring(twistY, 0, TWIST_SPRING, dt);
+      const tx = clamp(twistX.value, -TWIST_MAX, TWIST_MAX);
+      const ty = clamp(twistY.value, -TWIST_MAX, TWIST_MAX);
+      uniforms.uPointer.value.set(tx, ty);
+      // Light rides the twist too, so a turn shades; at rest it's a gentle
+      // constant from slightly above.
+      uniforms.uLightDir.value.set(tx * 0.8, ty * 0.8 + 0.15);
 
       // Squeeze builds while held and springs back once let go.
       if (dragging) holding += dt;
