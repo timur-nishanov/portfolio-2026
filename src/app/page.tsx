@@ -13,9 +13,9 @@ export default function Home() {
       <main>
         <Hero />
         <CasesSection />
-        {/* RANDOM sits between WORKS and AWARDS in the nav order (TZ §4). */}
-        <Placeholder id="random" label="RANDOM — COMING SOON" />
+        {/* Awards after the cases; Random then sits after Awards. */}
         <AwardsSection />
+        <Placeholder id="random" label="RANDOM — COMING SOON" />
         <Placeholder id="life" label="LIFE — COMING SOON" />
       </main>
       <Footer />

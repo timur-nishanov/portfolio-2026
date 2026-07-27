@@ -195,6 +195,19 @@ export function Head3D() {
     let squash: SpringState = { value: 0, velocity: 0 };
     let holding = 0; // seconds the pointer has been held down on the head
 
+    // Onboarding: a couple of gentle self-squeezes shortly after load, to hint
+    // the head is grabbable. Cancelled the moment the user interacts.
+    const introStart = performance.now();
+    const INTRO_TL = [
+      { t: 1500, v: 0.42 },
+      { t: 1950, v: 0.0 },
+      { t: 2550, v: 0.42 },
+      { t: 3000, v: 0.0 },
+    ];
+    let introIdx = 0;
+    let introDone = false;
+    let introSquash = 0;
+
     let dragging = false;
     let downTime = 0;
     let lastPX = 0;
@@ -304,10 +317,20 @@ export function Head3D() {
       squash.velocity += Math.min(impact, 2) * IMPACT_SQUASH * 6;
 
       if (impact < BLOOD_MIN_SPEED) return;
-      // Contact point: head centre pushed out to the silhouette edge it touched.
-      const cx = toStageX(posX) - nx * (sizePx / 2) * HEAD_W_FRAC;
-      const cy = toStageY(posY) + ny * (sizePx / 2) * HEAD_H_FRAC;
-      blood.splash(cx, cy, nx, -ny, impact);
+      // Origin sits ON the head's edge that struck (a touch inside the
+      // silhouette), not glued to the wall line — so the spray reads as coming
+      // off the head, not off the wall.
+      const cx = toStageX(posX) - nx * (sizePx / 2) * HEAD_W_FRAC * 0.72;
+      const cy = toStageY(posY) + ny * (sizePx / 2) * HEAD_H_FRAC * 0.72;
+      // Screen-space outward direction (head → wall): (-nx, +ny). Blood flings
+      // off the head that way but mostly falls, so it drips off the head rather
+      // than shooting back into the page from the wall.
+      let dx = -nx * 0.55;
+      let dy = ny * 0.55 + 0.85; // strong downward bias — it should fall
+      const dl = Math.hypot(dx, dy) || 1;
+      dx /= dl;
+      dy /= dl;
+      blood.splash(cx, cy, dx, dy, impact);
     };
 
     // ---- loop --------------------------------------------------------------
@@ -339,8 +362,19 @@ export function Head3D() {
         const bleed = Math.exp(-2.5 * dt);
         dragVX *= bleed;
         dragVY *= bleed;
+        introDone = true; // any grab ends the onboarding hint
+        introSquash = 0;
       }
-      const squashTarget = dragging ? Math.min(1, holding * HOLD_RAMP) : 0;
+      // Advance the onboarding squeeze timeline.
+      if (!introDone) {
+        const el = now - introStart;
+        while (introIdx < INTRO_TL.length && el >= INTRO_TL[introIdx].t) {
+          introSquash = INTRO_TL[introIdx].v;
+          introIdx += 1;
+        }
+        if (introIdx >= INTRO_TL.length) introDone = true;
+      }
+      const squashTarget = dragging ? Math.min(1, holding * HOLD_RAMP) : introSquash;
       squash = stepSpring(squash, squashTarget, SQUASH_SPRING, dt);
       uniforms.uSquash.value = clamp(squash.value, -0.35, 1);
 

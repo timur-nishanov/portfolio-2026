@@ -16,8 +16,8 @@ export type CaseLink = {
 export type CaseLogo = {
   src: string;
   /**
-   * Placement as a percentage of the card box, straight from the Figma.
-   * Negative `y` means the logo deliberately breaks past the card's top edge.
+   * Placement as a percentage of the card box. Anchored over the media column
+   * (media side flips with the layout). Negative `y` bleeds past the top edge.
    */
   x: number;
   y: number;
@@ -47,18 +47,10 @@ export type Case = {
 // dropping the files in later cannot move the layout. TODO(media).
 const MEDIA_ASPECT = '650/654';
 
+// Order set by Timur: Chums, Design Battle, Yandex Go, Rally, Meama. Layout
+// alternates by position (text-left first), and each logo sits over that row's
+// media column.
 export const cases: Case[] = [
-  {
-    id: 'case-go',
-    titleLine1: 'Yandex Go Superapp.',
-    titleLine2: 'Beri Zaryad',
-    description:
-      "Some stations ran empty at peak hours, others sat overloaded — courier rebalancing ate the margin. Field tests in two cities showed the blocker wasn't unwillingness but uncertainty: where to go, will it fit, will the discount apply. Answer: bonus stations with routing, one-line rules and instant reward confirmation.",
-    links: [{ label: 'CASE STUDY', href: null /* TODO */ }],
-    media: { type: 'image', src: null, aspect: MEDIA_ASPECT, alt: 'Yandex Go Beri Zaryad app screens' },
-    logo: { src: assets.logoGo, x: 32, y: -7, w: 21, drift: { x: -18, y: 70, rot: 8 } },
-    layout: 'text-left',
-  },
   {
     id: 'case-chums',
     titleLine1: 'Chums Messenger.',
@@ -70,8 +62,8 @@ export const cases: Case[] = [
       { label: 'APPSTORE', href: null /* TODO */ },
     ],
     media: { type: 'image', src: null, aspect: MEDIA_ASPECT, alt: 'Chums Messenger app screens' },
-    logo: { src: assets.logoChums, x: 82, y: -12, w: 17.5, drift: { x: 22, y: -85, rot: -10 } },
-    layout: 'text-right',
+    logo: { src: assets.logoChums, x: 74, y: -12, w: 17.5, drift: { x: 22, y: -85, rot: -10 } },
+    layout: 'text-left',
   },
   {
     id: 'case-battle',
@@ -84,23 +76,19 @@ export const cases: Case[] = [
       { label: 'PITCHDECK', href: null /* TODO */ },
     ],
     media: { type: 'image', src: null, aspect: MEDIA_ASPECT, alt: 'Yandex Design Battle Alice app screens' },
-    logo: { src: assets.logoAlice, x: 5, y: -13, w: 21, drift: { x: 26, y: 60, rot: 6 } },
-    layout: 'text-left',
+    logo: { src: assets.logoAlice, x: 6, y: -13, w: 21, drift: { x: 26, y: 60, rot: 6 } },
+    layout: 'text-right',
   },
   {
-    id: 'case-meama',
-    titleLine1: 'Meama coffee.',
-    titleLine2: 'Europe and Georgian taste',
-    // TODO(copy): real description from Timur — placeholder mirrors the mockup tone.
+    id: 'case-go',
+    titleLine1: 'Yandex Go Superapp.',
+    titleLine2: 'Beri Zaryad',
     description:
-      'Capsule coffee crossing from Georgia into Europe: one brand, two very different shelves. The work was to keep the Georgian warmth legible to a European buyer without watering it down — packaging system, storefront and the flows that carry the taste from cart to doorstep.',
-    links: [
-      { label: 'CASE STUDY', href: null /* TODO */ },
-      { label: 'MEAMA.DE', href: null /* TODO */ },
-    ],
-    media: { type: 'image', src: null, aspect: MEDIA_ASPECT, alt: 'Meama coffee screens' },
-    logo: { src: assets.logoMeama, x: 66, y: -9, w: 17, drift: { x: -20, y: -72, rot: -7 } },
-    layout: 'text-right',
+      "Some stations ran empty at peak hours, others sat overloaded — courier rebalancing ate the margin. Field tests in two cities showed the blocker wasn't unwillingness but uncertainty: where to go, will it fit, will the discount apply. Answer: bonus stations with routing, one-line rules and instant reward confirmation.",
+    links: [{ label: 'CASE STUDY', href: null /* TODO */ }],
+    media: { type: 'image', src: null, aspect: MEDIA_ASPECT, alt: 'Yandex Go Beri Zaryad app screens' },
+    logo: { src: assets.logoGo, x: 58, y: -8, w: 22, drift: { x: -18, y: 70, rot: 8 } },
+    layout: 'text-left',
   },
   {
     id: 'case-rally',
@@ -112,6 +100,20 @@ export const cases: Case[] = [
     links: [{ label: 'TESTFLIGHT SOON', href: null }], // inactive by design (TZ §9.2)
     media: { type: 'image', src: null, aspect: MEDIA_ASPECT, alt: 'Rally app screens' },
     logo: null, // no Rally logo in the repo
+    layout: 'text-right',
+  },
+  {
+    id: 'case-meama',
+    titleLine1: 'Meama coffee.',
+    titleLine2: 'Europe and Georgian taste',
+    description:
+      'An international coffee brand headquartered in Berlin and Vienna, part of a large European ecosystem and expanding fast across the continent. I owned the product side of the site: reworked the overall UX, ran the discovery that validated a stack of hypotheses, concepts and design decisions, and reshaped the subscription flow so more people actually finished it.',
+    links: [
+      { label: 'CASE STUDY', href: null /* TODO */ },
+      { label: 'MEAMA.DE', href: null /* TODO */ },
+    ],
+    media: { type: 'image', src: null, aspect: MEDIA_ASPECT, alt: 'Meama coffee screens' },
+    logo: { src: assets.logoMeama, x: 66, y: -9, w: 17, drift: { x: -20, y: -72, rot: -7 } },
     layout: 'text-left',
   },
 ];

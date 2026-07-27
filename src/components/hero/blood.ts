@@ -43,12 +43,15 @@ export function createBloodField(canvas: HTMLCanvasElement) {
   const splash = (x: number, y: number, nx: number, ny: number, power: number) => {
     const strength = Math.min(power, 3);
     const count = Math.round(8 + strength * 9);
+    const center = Math.atan2(ny, nx);
     for (let i = 0; i < count; i++) {
-      // Spread around the normal, biased along the wall for a realistic fan.
-      const spread = (Math.random() - 0.5) * Math.PI * 0.95;
-      const baseAngle = Math.atan2(ny, nx) + spread;
-      const speed = (90 + Math.random() * 320) * (0.45 + strength * 0.35);
-      const drip = Math.random() < 0.22;
+      // A fairly directed fan around the given direction (mostly downward),
+      // so the drops fall off the head instead of spraying everywhere.
+      const spread = (Math.random() - 0.5) * Math.PI * 0.7;
+      const baseAngle = center + spread;
+      // Slower launch — the drops should stay near the head and drip, not shoot.
+      const speed = (55 + Math.random() * 190) * (0.4 + strength * 0.3);
+      const drip = Math.random() < 0.24;
       drops.push({
         x: x + (Math.random() - 0.5) * 26,
         y: y + (Math.random() - 0.5) * 26,

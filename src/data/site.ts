@@ -1,8 +1,7 @@
 export const site = {
   // TODO: confirm the real contact address with Timur.
   email: 'timanemetis@gmail.com',
-  // TODO: confirm telegram handle.
-  telegram: 'https://t.me/timur',
+  telegram: 'https://t.me/Nemetis',
   hero: {
     // One paragraph, rendered white with mix-blend-difference (Figma node 1:281).
     // Line breaks come from the layout width, not manual <br> — the blend over
