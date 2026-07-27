@@ -5,9 +5,12 @@ import { useEffect, useState } from 'react';
 /**
  * Header hide-on-scroll state (TZ §5.3). Works off scroll *delta*, not absolute
  * position, with an 8px threshold so trackpad micro-moves don't flicker it.
- * Always visible above scrollY 120 and while `hovered` is held by the header.
+ * Always visible above scrollY 120 and while the cursor is over the header.
+ *
+ * `hoveredRef` is a ref rather than a boolean so hovering the header does not
+ * re-render it — a re-render mid-hover would restart the nav scramble.
  */
-export function useHideOnScroll(hovered: boolean): boolean {
+export function useHideOnScroll(hoveredRef: React.RefObject<boolean>): boolean {
   const [hidden, setHidden] = useState(false);
 
   useEffect(() => {
@@ -25,11 +28,11 @@ export function useHideOnScroll(hovered: boolean): boolean {
         setHidden(false);
         return;
       }
-      // Accumulate small deltas until they clear the threshold, then commit.
       if (Math.sign(delta) !== Math.sign(acc)) acc = 0;
       acc += delta;
       if (acc > THRESHOLD) {
-        setHidden(true);
+        // Cursor parked on the header pins it open.
+        if (!hoveredRef.current) setHidden(true);
         acc = 0;
       } else if (acc < -THRESHOLD) {
         setHidden(false);
@@ -39,8 +42,7 @@ export function useHideOnScroll(hovered: boolean): boolean {
 
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
-  }, []);
+  }, [hoveredRef]);
 
-  // Cursor over the header pins it open.
-  return hidden && !hovered;
+  return hidden;
 }

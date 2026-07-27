@@ -3,11 +3,12 @@ import { AwardCard } from './AwardCard';
 
 export function AwardsSection() {
   return (
-    <section id="awards" aria-labelledby="awards-heading" className="py-24 md:py-32">
+    <section id="awards" aria-labelledby="awards-heading" className="py-[clamp(64px,8vw,120px)]">
       <h2 id="awards-heading" className="sr-only">
         Awards
       </h2>
-      <div className="container-x grid grid-cols-1 gap-x-10 gap-y-16 sm:grid-cols-2">
+      {/* 2 columns of 684 at 1440, 178px row gap (Figma). */}
+      <div className="container-awards grid grid-cols-1 gap-x-0 gap-y-[clamp(56px,12.36vw,178px)] sm:grid-cols-2">
         {awards.map((a) => (
           <AwardCard key={a.id} award={a} />
         ))}

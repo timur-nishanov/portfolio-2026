@@ -3,17 +3,26 @@
 import Image from 'next/image';
 import { useEffect, useRef } from 'react';
 import type { CaseLogo } from '@/data/cases';
-import { q } from '@/lib/lerp';
+import { clamp, q } from '@/lib/lerp';
 import { useSmoothScroll } from '@/components/providers/SmoothScrollProvider';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 
 /**
  * Big case logo that drifts on scroll (TZ §8). Driven by the single Lenis rAF
- * loop, not a per-element scroll listener. Distinct coefficient per logo; the
- * translate is proportional to how far the card centre sits from the viewport
- * centre, so the logo lags the card and reads as depth. pointer-events: none.
+ * loop, not a per-element scroll listener.
+ *
+ * Travel is normalised: `progress` runs -1..1 across the card's transit through
+ * the viewport and scales a small per-logo px amplitude, so each logo stays in
+ * its own case's neighbourhood. Direction differs per logo (see cases.ts) —
+ * matching vectors read as one flat sheet sliding, not depth.
  */
-export function FloatingLogo({ logo, trackRef }: { logo: CaseLogo; trackRef: React.RefObject<HTMLElement | null> }) {
+export function FloatingLogo({
+  logo,
+  trackRef,
+}: {
+  logo: CaseLogo;
+  trackRef: React.RefObject<HTMLElement | null>;
+}) {
   const { register } = useSmoothScroll();
   const isMobile = useIsMobile();
   const elRef = useRef<HTMLDivElement>(null);
@@ -30,16 +39,21 @@ export function FloatingLogo({ logo, trackRef }: { logo: CaseLogo; trackRef: Rea
         inView.current = entry.isIntersecting;
         el.style.willChange = entry.isIntersecting ? 'transform' : 'auto';
       },
-      { rootMargin: '20% 0px 20% 0px' },
+      { rootMargin: '25% 0px 25% 0px' },
     );
     io.observe(track);
 
     const onFrame = () => {
       if (!inView.current) return;
       const rect = track.getBoundingClientRect();
-      const centerDelta = rect.top + rect.height / 2 - window.innerHeight / 2;
-      const y = -centerDelta * logo.parallax;
-      el.style.transform = `translate3d(0, ${q(y)}px, 0)`;
+      const vh = window.innerHeight;
+      const span = vh / 2 + rect.height / 2;
+      // -1 when the card sits below the fold, +1 once it has passed above it.
+      const progress = clamp((vh / 2 - (rect.top + rect.height / 2)) / span, -1, 1);
+      const { x, y, rot } = logo.drift;
+      el.style.transform = `translate3d(${q(progress * x)}px, ${q(progress * y)}px, 0) rotate(${q(
+        progress * rot,
+      )}deg)`;
     };
     const unregister = register(onFrame);
 
@@ -47,15 +61,16 @@ export function FloatingLogo({ logo, trackRef }: { logo: CaseLogo; trackRef: Rea
       io.disconnect();
       unregister();
     };
-  }, [register, logo.parallax, trackRef, isMobile]);
+  }, [register, logo.drift, trackRef, isMobile]);
 
   return (
     <div
       ref={elRef}
       aria-hidden="true"
-      className={`pointer-events-none absolute z-20 select-none ${logo.position}`}
+      className="pointer-events-none absolute z-20 select-none"
+      style={{ left: `${logo.x}%`, top: `${logo.y}%`, width: `${logo.w}%` }}
     >
-      <Image src={logo.src} alt="" width={240} height={240} className="h-auto w-full" />
+      <Image src={logo.src} alt="" width={590} height={590} className="h-auto w-full" />
     </div>
   );
 }

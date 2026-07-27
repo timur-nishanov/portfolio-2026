@@ -16,8 +16,10 @@ export function Header() {
   const { scrollTo } = useSmoothScroll();
   const observed = useActiveSection(NAV_IDS);
   const [active, setActive] = useState(NAV_IDS[0]);
-  const [hovered, setHovered] = useState(false);
-  const hidden = useHideOnScroll(hovered);
+  // Hover lives in a ref, not state: re-rendering the header on mouseenter
+  // would re-render the nav items and interrupt the scramble mid-flight.
+  const hoveredRef = useRef(false);
+  const hidden = useHideOnScroll(hoveredRef);
   const lockUntil = useRef(0);
 
   // Observer drives the active item, except briefly after a click so the pill
@@ -37,16 +39,26 @@ export function Header() {
 
   return (
     <header
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      className="fixed inset-x-0 z-50 flex justify-center"
+      onMouseEnter={() => {
+        hoveredRef.current = true;
+      }}
+      onMouseLeave={() => {
+        hoveredRef.current = false;
+      }}
+      className="fixed inset-x-0 z-50 flex justify-center px-4"
       style={{
         top: 'var(--header-top)',
         transform: hidden ? 'translateY(-140%)' : 'translateY(0)',
         transition: 'transform 400ms cubic-bezier(0.32, 0.72, 0, 1)',
       }}
     >
-      <nav className="flex items-center gap-3" aria-label="Primary">
+      {/* Wraps below ~630px: the pill keeps the first row and the two buttons
+          drop to a second one, rather than running off the screen. */}
+      <nav
+        className="flex flex-wrap items-center justify-center"
+        style={{ gap: 'var(--header-gap)' }}
+        aria-label="Primary"
+      >
         <NavPill activeId={active} onSelect={onSelect} />
         <CopyMailButton />
         <MagneticButton
@@ -55,7 +67,8 @@ export function Header() {
           target="_blank"
           rel="noopener noreferrer"
           className="glass-solid rounded-full"
-          labelClassName="pixel px-6 py-3.5 text-[12px] text-white"
+          labelClassName="pixel text-white"
+          style={{ width: 'var(--btn-w)', height: 'var(--btn-h)' }}
         >
           TELEGRAM
         </MagneticButton>

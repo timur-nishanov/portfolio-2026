@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { assets } from '@/data/assets';
 import { clamp } from '@/lib/lerp';
 import { stepSpring, type SpringState } from '@/lib/spring';
+import { createBloodField } from './blood';
 import fragmentShader from './head.frag';
 import vertexShader from './head.vert';
 
@@ -15,9 +16,21 @@ const TILT_STRENGTH = 0.17; // ≈ ±20° of felt rotation with mirror-fill
 const DEPTH_PIVOT = 0.62; // cheek level — most natural pivot
 const LIGHT_STRENGTH = 0.3;
 const FOLLOW_SPRING = { stiffness: 90, damping: 18 };
-const THROW_DAMP = 0.94; // per-frame inertia decay
-const RETURN_PULL = 0.025; // soft spring back to origin
-const BOUND = 0.72; // keep the head inside its box (≈ hero zone)
+
+// --- flight physics (world units, where the viewport height spans 2) --------
+const IDLE_SPEED = 0.055; // calm drift
+const IDLE_STEER = 1.2; // how fast idle velocity converges on the wander dir
+const THROW_SPEED = 2.1; // impulse magnitude on a tap
+const THROW_DAMP = 0.5; // exponential decay per second while thrown
+const RESTITUTION = 0.88; // energy kept on a wall bounce
+const CALM_SPEED = 0.17; // below this the throw hands back to the idle drift
+const BLOOD_MIN_SPEED = 0.5; // only hard hits bleed — drifting must not spray
+
+// The texture is 1996² with the head occupying x 164–1832, y 444–1576 (TZ §1.3),
+// so the plane carries empty margins. Collisions and splashes use the *visible*
+// silhouette, otherwise the head bounces off thin air well before the edge.
+const HEAD_W_FRAC = 1668 / 1996;
+const HEAD_H_FRAC = 1132 / 1996;
 
 export function Head3D() {
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -26,19 +39,33 @@ export function Head3D() {
     const wrap = wrapRef.current;
     if (!wrap) return;
 
+    // getComputedStyle on a custom property hands back the authored token
+    // ("clamp(...)"), not a resolved length — so measure it with a probe whose
+    // width *is* the variable and read the laid-out box instead.
+    const probe = document.createElement('div');
+    probe.style.cssText =
+      'position:absolute;top:0;left:0;height:0;visibility:hidden;pointer-events:none;width:var(--head-size)';
+    wrap.appendChild(probe);
+
     const canvas = document.createElement('canvas');
-    canvas.style.width = '100%';
-    canvas.style.height = '100%';
-    canvas.style.display = 'block';
-    // Behind the hero text; all interaction is read from window + alpha test.
-    canvas.style.pointerEvents = 'none';
-    wrap.appendChild(canvas);
+    const bloodCanvas = document.createElement('canvas');
+    for (const c of [canvas, bloodCanvas]) {
+      c.style.position = 'absolute';
+      c.style.inset = '0';
+      c.style.width = '100%';
+      c.style.height = '100%';
+      c.style.display = 'block';
+      c.style.pointerEvents = 'none'; // clicks always fall through to the page
+      wrap.appendChild(c);
+    }
 
     const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
 
     const scene = new THREE.Scene();
+    // Orthographic in "world" units: y spans -1..1 over the viewport height,
+    // x spans -aspect..aspect, so a square stays square at any window size.
     const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 10);
     camera.position.z = 1;
 
@@ -48,7 +75,7 @@ export function Head3D() {
     colorTex.minFilter = THREE.LinearFilter;
     colorTex.magFilter = THREE.LinearFilter;
     const depthTex = loader.load(assets.headDepth);
-    depthTex.colorSpace = THREE.NoColorSpace; // raw depth values, do not gamma them
+    depthTex.colorSpace = THREE.NoColorSpace; // raw depth values, never gamma them
     depthTex.minFilter = THREE.LinearFilter;
     depthTex.magFilter = THREE.LinearFilter;
 
@@ -74,13 +101,14 @@ export function Head3D() {
     const mesh = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material);
     scene.add(mesh);
 
+    const blood = createBloodField(bloodCanvas);
+
     // ---- alpha hit test (grab only opaque head pixels) --------------------
     const hitCanvas = document.createElement('canvas');
     hitCanvas.width = hitCanvas.height = 128;
     const hitCtx = hitCanvas.getContext('2d', { willReadFrequently: true });
     let alphaData: Uint8ClampedArray | null = null;
     const hitImg = new Image();
-    hitImg.crossOrigin = 'anonymous';
     hitImg.onload = () => {
       if (!hitCtx) return;
       hitCtx.drawImage(hitImg, 0, 0, 128, 128);
@@ -89,125 +117,212 @@ export function Head3D() {
     hitImg.src = assets.headColor;
 
     const isOnHead = (u: number, v: number) => {
+      if (u < 0 || u > 1 || v < 0 || v > 1) return false;
       if (!alphaData) return false;
       const px = clamp(Math.floor(u * 128), 0, 127);
       const py = clamp(Math.floor(v * 128), 0, 127);
       return alphaData[(py * 128 + px) * 4 + 3] > 40;
     };
 
-    // ---- state ------------------------------------------------------------
-    let width = wrap.clientWidth || 1;
-    let height = wrap.clientHeight || 1;
+    // ---- viewport-dependent geometry --------------------------------------
+    let W = window.innerWidth;
+    let H = window.innerHeight;
+    let aspect = W / H;
+    let half = 0.25; // head half-extent in world units
+    let sizePx = 320;
+
     const resize = () => {
-      width = wrap.clientWidth || 1;
-      height = wrap.clientHeight || 1;
-      renderer.setSize(width, height, false);
+      W = wrap.clientWidth || window.innerWidth;
+      H = wrap.clientHeight || window.innerHeight;
+      aspect = W / H;
+      renderer.setSize(W, H, false);
+      camera.left = -aspect;
+      camera.right = aspect;
+      camera.updateProjectionMatrix();
+
+      // --head-size is the on-screen edge length of the plane.
+      sizePx = probe.getBoundingClientRect().width || Math.min(W, H) * 0.44;
+      mesh.scale.setScalar(sizePx / H);
+      half = sizePx / H;
+
+      blood.resize(W, H, renderer.getPixelRatio());
     };
     resize();
     const ro = new ResizeObserver(resize);
     ro.observe(wrap);
 
-    // pointer target (viewport-normalised) + smoothed springs
-    const target = new THREE.Vector2(0, 0);
+    // ---- state -------------------------------------------------------------
+    const pointerTarget = new THREE.Vector2(0, 0);
     let sx: SpringState = { value: 0, velocity: 0 };
     let sy: SpringState = { value: 0, velocity: 0 };
 
-    // throw physics
     let posX = 0;
     let posY = 0;
     let velX = 0;
     let velY = 0;
     let rot = 0;
     let angVel = 0;
+    let thrown = false;
+    let wander = Math.random() * Math.PI * 2;
+
     let dragging = false;
     let downTime = 0;
     let lastPX = 0;
     let lastPY = 0;
-    let downLocalX = 0;
-    let downLocalY = 0;
+    let grabU = 0;
+    let grabV = 0;
 
-    const localFromEvent = (e: PointerEvent) => {
-      const r = canvas.getBoundingClientRect();
-      return { u: (e.clientX - r.left) / r.width, v: (e.clientY - r.top) / r.height, r };
+    // world <-> screen helpers (world y is up, screen y is down)
+    const toScreenX = (wx: number) => W / 2 + wx * (H / 2);
+    const toScreenY = (wy: number) => H / 2 - wy * (H / 2);
+
+    const headUV = (clientX: number, clientY: number) => {
+      const cx = toScreenX(posX);
+      const cy = toScreenY(posY);
+      return {
+        u: (clientX - (cx - sizePx / 2)) / sizePx,
+        v: (clientY - (cy - sizePx / 2)) / sizePx,
+      };
     };
 
     const onPointerMove = (e: PointerEvent) => {
-      // Global tilt follow.
-      target.set((e.clientX / window.innerWidth) * 2 - 1, -((e.clientY / window.innerHeight) * 2 - 1));
-      uniforms.uLightDir.value.set(target.x, target.y);
+      pointerTarget.set((e.clientX / W) * 2 - 1, -((e.clientY / H) * 2 - 1));
+      uniforms.uLightDir.value.set(pointerTarget.x, pointerTarget.y);
 
       if (dragging) {
-        const dxPx = e.clientX - lastPX;
-        const dyPx = e.clientY - lastPY;
-        const k = 2 / (canvas.getBoundingClientRect().width || width);
-        posX = clamp(posX + dxPx * k, -BOUND, BOUND);
-        posY = clamp(posY - dyPx * k, -BOUND, BOUND);
-        velX = dxPx * k;
-        velY = -dyPx * k;
+        const k = 2 / H; // px → world units
+        posX += (e.clientX - lastPX) * k;
+        posY -= (e.clientY - lastPY) * k;
+        velX = (e.clientX - lastPX) * k * 60; // per-second velocity for the throw
+        velY = -(e.clientY - lastPY) * k * 60;
         lastPX = e.clientX;
         lastPY = e.clientY;
       }
     };
 
     const onPointerDown = (e: PointerEvent) => {
-      const { u, v, r } = localFromEvent(e);
-      if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) return;
-      // account for current head offset when testing the (static) alpha map
-      if (!isOnHead(u - posX / 2, v + posY / 2)) return;
+      const { u, v } = headUV(e.clientX, e.clientY);
+      // Miss → the event is left alone, so links and text under the transparent
+      // part of the plane keep working (TZ §7.1).
+      if (!isOnHead(u, v)) return;
+      // Hit → claim the gesture, otherwise dragging the head paints a text
+      // selection across the copy underneath.
+      e.preventDefault();
+      document.getSelection()?.removeAllRanges();
+      document.body.style.userSelect = 'none';
       dragging = true;
       downTime = performance.now();
       lastPX = e.clientX;
       lastPY = e.clientY;
-      downLocalX = u * 2 - 1;
-      downLocalY = -(v * 2 - 1);
+      grabU = u * 2 - 1;
+      grabV = -(v * 2 - 1);
       velX = velY = 0;
     };
 
     const onPointerUp = () => {
       if (!dragging) return;
       dragging = false;
-      const quick = performance.now() - downTime < 200;
-      const moved = Math.hypot(velX, velY) > 0.002;
-      if (quick && !moved) {
-        // A tap → impulse away from centre, plus a little spin (TZ §7.2).
-        const len = Math.hypot(downLocalX, downLocalY) || 1;
-        velX = (downLocalX / len) * 0.05;
-        velY = (downLocalY / len) * 0.05 + 0.02;
-        angVel = downLocalX * 0.06;
+      document.body.style.userSelect = '';
+      thrown = true;
+      const quick = performance.now() - downTime < 220;
+      const speed = Math.hypot(velX, velY);
+      if (quick && speed < 0.25) {
+        // A tap → impulse away from where it was poked, plus a little spin.
+        const len = Math.hypot(grabU, grabV) || 1;
+        velX = (grabU / len) * THROW_SPEED;
+        velY = (grabV / len) * THROW_SPEED + 0.3;
+        angVel = -grabU * 2.2;
       } else {
-        angVel = velX * 0.4;
+        angVel = velX * 0.9;
       }
     };
 
     window.addEventListener('pointermove', onPointerMove);
-    window.addEventListener('pointerdown', onPointerDown);
+    // Not passive: grabbing the head calls preventDefault to stop text selection.
+    window.addEventListener('pointerdown', onPointerDown, { passive: false });
     window.addEventListener('pointerup', onPointerUp);
 
-    // ---- loop -------------------------------------------------------------
+    /** Bounce against a wall, bleed if the hit was hard. n points inward. */
+    const hitWall = (nx: number, ny: number, impact: number) => {
+      if (impact < BLOOD_MIN_SPEED) return;
+      // Contact point: head centre pushed out to the silhouette edge it touched.
+      const cx = toScreenX(posX) - nx * (sizePx / 2) * HEAD_W_FRAC;
+      const cy = toScreenY(posY) + ny * (sizePx / 2) * HEAD_H_FRAC;
+      blood.splash(cx, cy, nx, -ny, impact);
+    };
+
+    // ---- loop --------------------------------------------------------------
     let raf = 0;
     let last = performance.now();
     const loop = (now: number) => {
       const dt = Math.min((now - last) / 1000, 1 / 30);
       last = now;
+      const t = now / 1000;
 
-      sx = stepSpring(sx, target.x, FOLLOW_SPRING, dt);
-      sy = stepSpring(sy, target.y, FOLLOW_SPRING, dt);
+      sx = stepSpring(sx, pointerTarget.x, FOLLOW_SPRING, dt);
+      sy = stepSpring(sy, pointerTarget.y, FOLLOW_SPRING, dt);
       uniforms.uPointer.value.set(sx.value, sy.value);
 
       if (!dragging) {
-        // inertia + soft return
-        velX = velX * THROW_DAMP - posX * RETURN_PULL;
-        velY = velY * THROW_DAMP - posY * RETURN_PULL;
-        posX = clamp(posX + velX, -BOUND, BOUND);
-        posY = clamp(posY + velY, -BOUND, BOUND);
-        if (Math.abs(posX) >= BOUND) velX = 0;
-        if (Math.abs(posY) >= BOUND) velY = 0;
-        angVel = angVel * THROW_DAMP - rot * RETURN_PULL;
-        rot += angVel;
+        if (thrown) {
+          const decay = Math.exp(-THROW_DAMP * dt);
+          velX *= decay;
+          velY *= decay;
+          if (Math.hypot(velX, velY) < CALM_SPEED) {
+            thrown = false;
+            wander = Math.atan2(velY, velX);
+          }
+        } else {
+          // Calm float: steer toward a slowly wandering direction. Edges still
+          // bounce, so it keeps exploring the viewport on its own.
+          wander += (Math.sin(t * 0.31) * 0.6 + Math.sin(t * 0.17 + 2) * 0.4) * dt;
+          const k = 1 - Math.exp(-IDLE_STEER * dt);
+          velX += (Math.cos(wander) * IDLE_SPEED - velX) * k;
+          velY += (Math.sin(wander) * IDLE_SPEED - velY) * k;
+        }
+
+        posX += velX * dt;
+        posY += velY * dt;
+
+        // Bounce off the viewport edges, using the visible silhouette.
+        const maxX = aspect - half * HEAD_W_FRAC;
+        const maxY = 1 - half * HEAD_H_FRAC;
+        if (posX < -maxX) {
+          posX = -maxX;
+          const impact = Math.abs(velX);
+          velX = Math.abs(velX) * RESTITUTION;
+          angVel += velY * 0.6;
+          hitWall(1, 0, impact);
+        } else if (posX > maxX) {
+          posX = maxX;
+          const impact = Math.abs(velX);
+          velX = -Math.abs(velX) * RESTITUTION;
+          angVel -= velY * 0.6;
+          hitWall(-1, 0, impact);
+        }
+        if (posY < -maxY) {
+          posY = -maxY;
+          const impact = Math.abs(velY);
+          velY = Math.abs(velY) * RESTITUTION;
+          angVel += velX * 0.6;
+          hitWall(0, 1, impact);
+        } else if (posY > maxY) {
+          posY = maxY;
+          const impact = Math.abs(velY);
+          velY = -Math.abs(velY) * RESTITUTION;
+          angVel -= velX * 0.6;
+          hitWall(0, -1, impact);
+        }
+
+        angVel *= Math.exp(-1.4 * dt);
+        rot += angVel * dt;
+        rot *= Math.exp(-0.6 * dt); // ease back toward upright
       }
+
       mesh.position.set(posX, posY, 0);
       mesh.rotation.z = rot;
 
+      blood.step(dt);
       renderer.render(scene, camera);
       raf = requestAnimationFrame(loop);
     };
@@ -216,6 +331,7 @@ export function Head3D() {
     return () => {
       cancelAnimationFrame(raf);
       ro.disconnect();
+      document.body.style.userSelect = '';
       window.removeEventListener('pointermove', onPointerMove);
       window.removeEventListener('pointerdown', onPointerDown);
       window.removeEventListener('pointerup', onPointerUp);
@@ -225,8 +341,11 @@ export function Head3D() {
       depthTex.dispose();
       renderer.dispose();
       canvas.remove();
+      bloodCanvas.remove();
+      probe.remove();
     };
   }, []);
 
-  return <div ref={wrapRef} className="absolute inset-0" aria-hidden="true" />;
+  // Above the page content, below the header (z-50). Never eats pointer events.
+  return <div ref={wrapRef} className="pointer-events-none fixed inset-0 z-40" aria-hidden="true" />;
 }

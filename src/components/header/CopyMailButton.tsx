@@ -38,7 +38,8 @@ export function CopyMailButton() {
     <MagneticButton
       onClick={copy}
       className="glass rounded-full"
-      labelClassName="pixel px-6 py-3.5 text-[12px] text-ink"
+      labelClassName="pixel text-ink"
+      style={{ width: 'var(--btn-w)', height: 'var(--btn-h)' }}
     >
       <span aria-live="polite">{copied ? 'COPIED' : 'COPY MAIL'}</span>
     </MagneticButton>

@@ -4,7 +4,7 @@ export type CaseMedia = {
   type: 'image' | 'video';
   src: string | null; // null = empty slot, render skeleton
   poster?: string;
-  aspect: string; // e.g. '4/3' — fixes the slot size regardless of the file
+  aspect: string; // e.g. '650/654' — fixes the slot size regardless of the file
   alt: string;
 };
 
@@ -15,10 +15,20 @@ export type CaseLink = {
 
 export type CaseLogo = {
   src: string;
-  parallax: number; // 0.10 … 0.35, distinct per logo (TZ §8)
-  // Tailwind utility classes for placement + size of the floating logo,
-  // anchored to the media column. Logos intentionally bleed past the card.
-  position: string;
+  /**
+   * Placement as a percentage of the card box, straight from the Figma.
+   * Negative `y` means the logo deliberately breaks past the card's top edge.
+   */
+  x: number;
+  y: number;
+  w: number;
+  /**
+   * Scroll-parallax travel in px at the extremes of the card's viewport
+   * transit. Signs differ per logo on purpose — identical vectors kill the
+   * sense of depth (TZ §8) — and the amplitudes stay small so each logo
+   * hangs around its own case instead of wandering off.
+   */
+  drift: { x: number; y: number; rot: number };
 };
 
 export type Case = {
@@ -33,8 +43,10 @@ export type Case = {
 };
 
 // Mockups not delivered yet → media.src = null everywhere (skeleton slots).
-// aspect '4/3' is a provisional slot proportion for the twin-phone mockups;
-// swap to the real proportion from asset inventory once files land. TODO(media).
+// Slot proportion 650/654 is the real mockup group box from the Figma, so
+// dropping the files in later cannot move the layout. TODO(media).
+const MEDIA_ASPECT = '650/654';
+
 export const cases: Case[] = [
   {
     id: 'case-go',
@@ -43,8 +55,8 @@ export const cases: Case[] = [
     description:
       "Some stations ran empty at peak hours, others sat overloaded — courier rebalancing ate the margin. Field tests in two cities showed the blocker wasn't unwillingness but uncertainty: where to go, will it fit, will the discount apply. Answer: bonus stations with routing, one-line rules and instant reward confirmation.",
     links: [{ label: 'CASE STUDY', href: null /* TODO */ }],
-    media: { type: 'image', src: null, aspect: '4/3', alt: 'Yandex Go Beri Zaryad app screens' },
-    logo: { src: assets.logoGo, parallax: 0.18, position: 'top-[-7%] left-[34%] w-[30%]' },
+    media: { type: 'image', src: null, aspect: MEDIA_ASPECT, alt: 'Yandex Go Beri Zaryad app screens' },
+    logo: { src: assets.logoGo, x: 32, y: -7, w: 21, drift: { x: -18, y: 70, rot: 8 } },
     layout: 'text-left',
   },
   {
@@ -57,8 +69,8 @@ export const cases: Case[] = [
       { label: 'CASE STUDY', href: null /* TODO */ },
       { label: 'APPSTORE', href: null /* TODO */ },
     ],
-    media: { type: 'image', src: null, aspect: '4/3', alt: 'Chums Messenger app screens' },
-    logo: { src: assets.logoChums, parallax: 0.3, position: 'top-[-8%] right-[2%] w-[24%]' },
+    media: { type: 'image', src: null, aspect: MEDIA_ASPECT, alt: 'Chums Messenger app screens' },
+    logo: { src: assets.logoChums, x: 82, y: -12, w: 17.5, drift: { x: 22, y: -85, rot: -10 } },
     layout: 'text-right',
   },
   {
@@ -71,8 +83,8 @@ export const cases: Case[] = [
       { label: 'CASE STUDY', href: null /* TODO */ },
       { label: 'PITCHDECK', href: null /* TODO */ },
     ],
-    media: { type: 'image', src: null, aspect: '4/3', alt: 'Yandex Design Battle Alice app screens' },
-    logo: { src: assets.logoAlice, parallax: 0.12, position: 'top-[-9%] left-[2%] w-[26%]' },
+    media: { type: 'image', src: null, aspect: MEDIA_ASPECT, alt: 'Yandex Design Battle Alice app screens' },
+    logo: { src: assets.logoAlice, x: 5, y: -13, w: 21, drift: { x: 26, y: 60, rot: 6 } },
     layout: 'text-left',
   },
   {
@@ -86,8 +98,8 @@ export const cases: Case[] = [
       { label: 'CASE STUDY', href: null /* TODO */ },
       { label: 'MEAMA.DE', href: null /* TODO */ },
     ],
-    media: { type: 'image', src: null, aspect: '4/3', alt: 'Meama coffee screens' },
-    logo: { src: assets.logoMeama, parallax: 0.22, position: 'top-[-6%] right-[4%] w-[22%]' },
+    media: { type: 'image', src: null, aspect: MEDIA_ASPECT, alt: 'Meama coffee screens' },
+    logo: { src: assets.logoMeama, x: 66, y: -9, w: 17, drift: { x: -20, y: -72, rot: -7 } },
     layout: 'text-right',
   },
   {
@@ -98,7 +110,7 @@ export const cases: Case[] = [
     description:
       'Learn English from the things you already read: drop in your own files and Rally turns them into drills, decks and spaced review. Designed the onboarding and the study loop so the app feels like a tutor that read your documents, not a generic course.',
     links: [{ label: 'TESTFLIGHT SOON', href: null }], // inactive by design (TZ §9.2)
-    media: { type: 'image', src: null, aspect: '4/3', alt: 'Rally app screens' },
+    media: { type: 'image', src: null, aspect: MEDIA_ASPECT, alt: 'Rally app screens' },
     logo: null, // no Rally logo in the repo
     layout: 'text-left',
   },

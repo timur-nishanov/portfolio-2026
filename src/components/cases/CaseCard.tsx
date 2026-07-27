@@ -9,12 +9,14 @@ import { MagneticButton } from '@/components/header/MagneticButton';
 import { MediaSlot } from './MediaSlot';
 import { FloatingLogo } from './FloatingLogo';
 
-const MAX_TILT = 2.5; // deg — more than this reads as a cheap 2014 tilt.js (TZ §9.3)
+// Dialled back from the first pass — still reads as the plate adjusting to the
+// cursor, without the lurch. Ceiling stays well under the 2.5° cap (TZ §9.3).
+const MAX_TILT = 1.8; // deg
 const TILT_LERP = 0.12;
 const GLARE_RADIUS = 320;
-const GLARE_MAX = 0.35;
-const MEDIA_X = 26; // px inner-parallax amplitude (media lags the card)
-const MEDIA_Y = 16;
+const GLARE_MAX = 0.28;
+const MEDIA_X = 18; // px inner-parallax amplitude (media lags the card)
+const MEDIA_Y = 11;
 const RETURN = '600ms cubic-bezier(0.22, 1, 0.36, 1)';
 
 export function CaseCard({ data }: { data: Case }) {
@@ -24,7 +26,6 @@ export function CaseCard({ data }: { data: Case }) {
   const cardRef = useRef<HTMLDivElement>(null);
   const glareRef = useRef<HTMLDivElement>(null);
   const mediaRef = useRef<HTMLDivElement>(null);
-  const trackRef = useRef<HTMLDivElement>(null); // stable box for logo parallax
 
   useEffect(() => {
     if (!canHover || reduced) return;
@@ -43,11 +44,6 @@ export function CaseCard({ data }: { data: Case }) {
     let curMX = 0;
     let curMY = 0;
 
-    const clearTransition = () => {
-      card.style.transition = '';
-      media.style.transition = '';
-    };
-
     const loop = () => {
       curRX = lerp(curRX, -py * MAX_TILT, TILT_LERP);
       curRY = lerp(curRY, px * MAX_TILT, TILT_LERP);
@@ -60,7 +56,8 @@ export function CaseCard({ data }: { data: Case }) {
 
     const onEnter = () => {
       hovering = true;
-      clearTransition();
+      card.style.transition = '';
+      media.style.transition = '';
       glare.style.opacity = String(GLARE_MAX);
       cancelAnimationFrame(raf);
       raf = requestAnimationFrame(loop);
@@ -102,16 +99,16 @@ export function CaseCard({ data }: { data: Case }) {
 
   const TextBlock = (
     <div className="flex flex-col justify-center">
-      <h3 className="font-hoves text-[clamp(26px,3vw,34px)] font-medium leading-[1.12] text-ink">
+      {/* Regular weight per Figma — 40px / 120%, no medium. */}
+      <h3 className="t-case-title text-ink">
         <span className="block">{data.titleLine1}</span>
         <span className="block">{data.titleLine2}</span>
       </h3>
-      <p className="mt-5 max-w-[30rem] font-hoves text-[15px] leading-[1.5] text-ink-muted">
+      <p className="t-body mt-[clamp(16px,2vw,29px)] max-w-[512px] text-ink-muted">
         {data.description}
       </p>
-      <div className="mt-8 flex flex-wrap gap-3">
+      <div className="mt-[clamp(20px,3vw,44px)] flex flex-wrap gap-[clamp(8px,1.1vw,16px)]">
         {data.links.map((link) => {
-          const inactive = link.href === null;
           const isSoon = link.label === 'TESTFLIGHT SOON';
           return (
             <MagneticButton
@@ -121,9 +118,8 @@ export function CaseCard({ data }: { data: Case }) {
               magnetic={!isSoon}
               disabled={isSoon}
               className="glass rounded-full"
-              labelClassName={`pixel px-6 py-3.5 text-[12px] ${
-                isSoon ? 'text-ink-muted' : 'text-ink'
-              }`}
+              labelClassName={`pixel ${isSoon ? 'text-ink-muted' : 'text-ink'}`}
+              style={{ width: 'var(--btn-w)', height: 'var(--btn-h)' }}
             >
               {link.label}
             </MagneticButton>
@@ -134,35 +130,48 @@ export function CaseCard({ data }: { data: Case }) {
   );
 
   const MediaBlock = (
-    <div ref={trackRef} className="relative">
-      {data.logo ? <FloatingLogo logo={data.logo} trackRef={trackRef} /> : null}
-      <div ref={mediaRef} className="will-change-transform">
+    <div className="relative z-10 flex items-center justify-center">
+      <div ref={mediaRef} className="w-full will-change-transform">
         <MediaSlot media={data.media} />
       </div>
     </div>
   );
 
+  // Columns are not 50/50 — the Figma gives the text 512 and the media 650,
+  // with a 78 gap. Mirrored for the text-right cards.
+  const gridCols = textFirst
+    ? 'md:grid-cols-[512fr_650fr]'
+    : 'md:grid-cols-[650fr_512fr]';
+
   return (
-    <div ref={rootRef} style={{ perspective: '1200px' }} className="[transform-style:preserve-3d]">
+    <div ref={rootRef} style={{ perspective: '1200px' }}>
+      {/* Card box is the Figma 1400x763 proportion; aspect-ratio yields to
+          content, so nothing can be clipped at awkward breakpoints. */}
       <div
         ref={cardRef}
-        className="relative grid grid-cols-1 gap-8 overflow-visible rounded-card bg-surface p-8 will-change-transform md:grid-cols-2 md:gap-10 md:p-12"
+        className={`relative grid grid-cols-1 items-center gap-[clamp(24px,5.57vw,78px)] rounded-card bg-surface px-[clamp(20px,5.71vw,80px)] py-[clamp(28px,4vw,54px)] will-change-transform md:aspect-[1400/763] ${gridCols}`}
       >
+        {/* Logo is positioned against the card box — its %s come from the
+            Figma, including the deliberate bleed past the top edge. */}
+        {data.logo ? <FloatingLogo logo={data.logo} trackRef={cardRef} /> : null}
+
         {/* Glare — soft-light, above content, non-interactive (TZ §9.3). */}
         <div
           ref={glareRef}
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 z-30 rounded-card opacity-0 transition-opacity duration-300 [mix-blend-mode:soft-light]"
         />
+        {/* DOM order matches the visual order, so no `order` overrides are
+            needed and the column sizes always line up with their content. */}
         {textFirst ? (
           <>
-            {TextBlock}
+            <div className="relative z-10">{TextBlock}</div>
             {MediaBlock}
           </>
         ) : (
           <>
-            <div className="md:order-2">{TextBlock}</div>
-            <div className="md:order-1">{MediaBlock}</div>
+            {MediaBlock}
+            <div className="relative z-10">{TextBlock}</div>
           </>
         )}
       </div>

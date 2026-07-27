@@ -1,6 +1,6 @@
 'use client';
 
-import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
+import { forwardRef, memo, useEffect, useImperativeHandle, useRef } from 'react';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 export type ScrambleHandle = { play: () => void };
@@ -8,7 +8,6 @@ export type ScrambleHandle = { play: () => void };
 // Substitution glyphs: digits + a few 5by7 symbols. No latin — it reads as a
 // typo rather than an effect (TZ §5.4).
 const GLYPHS = '0123456789#%*+=/<>'.split('');
-const randGlyph = () => GLYPHS[(Math.random() * GLYPHS.length) | 0];
 
 const LOCK_STEP = 28; // ms — char i locks at i * LOCK_STEP
 const SWAP_EVERY = 45; // ms — random glyph swap cadence before a char locks
@@ -26,8 +25,12 @@ type Props = {
  * via textContent on an aria-hidden layer; the real text lives in aria-label so
  * screen readers never see the churn. 5by7 is monospace, so width is stable and
  * the pill doesn't twitch — do not change letter-spacing mid-effect.
+ *
+ * Memoised on purpose: a parent re-render mid-animation would re-render the
+ * `{text}` child and overwrite the textContent the rAF is driving, which reads
+ * as a hard flicker. Memo keeps React out of the way while the effect runs.
  */
-export const ScrambleText = forwardRef<ScrambleHandle, Props>(function ScrambleText(
+const ScrambleTextInner = forwardRef<ScrambleHandle, Props>(function ScrambleText(
   { text, className = '', active = false },
   ref,
 ) {
@@ -45,7 +48,11 @@ export const ScrambleText = forwardRef<ScrambleHandle, Props>(function ScrambleT
     const total = text.length * LOCK_STEP + TAIL;
 
     const tick = (now: number) => {
-      const elapsed = now - startRef.current;
+      // rAF reports the frame's start time, which can predate the
+      // performance.now() taken in the event handler — without the clamp the
+      // first frame runs with a negative elapsed and indexes GLYPHS below zero,
+      // painting "undefined" into the label.
+      const elapsed = Math.max(0, now - startRef.current);
       let out = '';
       for (let i = 0; i < text.length; i++) {
         const ch = text[i];
@@ -57,9 +64,9 @@ export const ScrambleText = forwardRef<ScrambleHandle, Props>(function ScrambleT
         if (elapsed >= lockAt) {
           out += ch; // locked to final glyph
         } else {
-          // swap on a coarse cadence so it doesn't strobe every frame
-          const seed = Math.floor(elapsed / SWAP_EVERY) + i;
-          out += GLYPHS[seed % GLYPHS.length] === ch ? randGlyph() : GLYPHS[seed % GLYPHS.length];
+          // Swap on a coarse cadence so it doesn't strobe every frame.
+          const seed = Math.floor(elapsed / SWAP_EVERY) + i * 7;
+          out += GLYPHS[((seed % GLYPHS.length) + GLYPHS.length) % GLYPHS.length];
         }
       }
       el.textContent = out;
@@ -82,7 +89,13 @@ export const ScrambleText = forwardRef<ScrambleHandle, Props>(function ScrambleT
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active]);
 
-  useEffect(() => () => cancelAnimationFrame(rafRef.current), []);
+  // Cancel in flight and restore the true text if we unmount mid-scramble.
+  useEffect(
+    () => () => {
+      cancelAnimationFrame(rafRef.current);
+    },
+    [],
+  );
 
   return (
     <span className={className} aria-label={text}>
@@ -92,3 +105,5 @@ export const ScrambleText = forwardRef<ScrambleHandle, Props>(function ScrambleT
     </span>
   );
 });
+
+export const ScrambleText = memo(ScrambleTextInner);
