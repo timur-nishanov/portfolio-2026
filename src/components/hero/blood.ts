@@ -15,6 +15,10 @@ type Drop = {
   maxLife: number;
   /** Sticky drips cling to the wall and crawl instead of flying. */
   drip: boolean;
+  /** Per-drop gravity multiplier — varies how quickly each one arcs down. */
+  gScale: number;
+  /** Per-drop horizontal drag — low values let sideways spatter carry further. */
+  drag: number;
 };
 
 const GRAVITY = 1500; // px/s²
@@ -39,15 +43,26 @@ export function createBloodField(canvas: HTMLCanvasElement) {
   /**
    * Spray from a contact point. (nx, ny) is the inward wall normal in *screen*
    * space, `power` the impact speed in world units — it scales count and spread.
+   *
+   * Real splatter isn't a single cone: a fast main spray off the normal, plus
+   * a handful of stray back-spatter droplets that fling off at wide or even
+   * reversed angles. Mixing the two, and letting the main spray keep more of
+   * its sideways momentum (less drag below), is what stops everything reading
+   * as "it just falls down" once gravity takes over.
    */
   const splash = (x: number, y: number, nx: number, ny: number, power: number) => {
     const strength = Math.min(power, 3);
     const count = Math.round(8 + strength * 9);
+    const center = Math.atan2(ny, nx);
     for (let i = 0; i < count; i++) {
-      // Spread around the normal, biased along the wall for a realistic fan.
-      const spread = (Math.random() - 0.5) * Math.PI * 0.95;
-      const baseAngle = Math.atan2(ny, nx) + spread;
-      const speed = (90 + Math.random() * 320) * (0.45 + strength * 0.35);
+      // Most droplets fan out around the impact normal; a minority fly wide —
+      // anywhere from perpendicular to nearly backward — like stray spatter.
+      const wild = Math.random() < 0.22;
+      const spread = wild
+        ? (Math.random() - 0.5) * Math.PI * 1.9
+        : (Math.random() - 0.5) * Math.PI * 0.95;
+      const baseAngle = center + spread;
+      const speed = (90 + Math.random() * 320) * (0.45 + strength * 0.35) * (wild ? 0.55 : 1);
       const drip = Math.random() < 0.22;
       drops.push({
         x: x + (Math.random() - 0.5) * 26,
@@ -58,6 +73,10 @@ export function createBloodField(canvas: HTMLCanvasElement) {
         life: 0,
         maxLife: drip ? 1.8 + Math.random() * 1.4 : 0.9 + Math.random() * 0.9,
         drip,
+        // Per-drop gravity and drag variance so trajectories fan out into
+        // different arcs instead of every drop converging on the same curve.
+        gScale: 0.75 + Math.random() * 0.6,
+        drag: drip ? 0.9 : 0.25 + Math.random() * 0.45,
       });
     }
     // Keep the field bounded if someone spams the head into a corner.
@@ -74,10 +93,10 @@ export function createBloodField(canvas: HTMLCanvasElement) {
 
     for (const d of drops) {
       d.life += dt;
-      d.vy += GRAVITY * (d.drip ? 0.22 : 1) * dt;
+      d.vy += GRAVITY * (d.drip ? 0.22 : 1) * d.gScale * dt;
       d.x += d.vx * dt;
       d.y += d.vy * dt;
-      if (!d.drip) d.vx *= Math.exp(-0.9 * dt);
+      if (!d.drip) d.vx *= Math.exp(-d.drag * dt);
 
       const k = d.life / d.maxLife;
       const alpha = k < 0.75 ? 1 : 1 - (k - 0.75) / 0.25;
