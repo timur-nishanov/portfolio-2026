@@ -48,7 +48,12 @@ export function Header() {
       className="fixed inset-x-0 z-50 flex justify-center px-4"
       style={{
         top: 'var(--header-top)',
-        transform: hidden ? 'translateY(-140%)' : 'translateY(0)',
+        // Hide by lifting the whole thing (its own height + the top offset +
+        // a buffer) past the top edge, so its bottom clears y=0 at any height —
+        // -140% could leave a sliver on taller/wrapped headers.
+        transform: hidden
+          ? 'translateY(calc(-100% - var(--header-top) - 24px))'
+          : 'translateY(0)',
         transition: 'transform 400ms cubic-bezier(0.32, 0.72, 0, 1)',
       }}
     >

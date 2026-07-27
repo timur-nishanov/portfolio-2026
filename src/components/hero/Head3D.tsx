@@ -15,7 +15,6 @@ import vertexShader from './head.vert';
 const TILT_STRENGTH = 0.17; // ≈ ±20° of felt rotation with mirror-fill
 const DEPTH_PIVOT = 0.62; // cheek level — most natural pivot
 const LIGHT_STRENGTH = 0.3;
-const FOLLOW_SPRING = { stiffness: 90, damping: 18 };
 
 // --- flight physics (world units, where the stage height spans 2) ----------
 const IDLE_SPEED = 0.055; // calm drift
@@ -166,9 +165,8 @@ export function Head3D() {
     ro.observe(wrap);
 
     // ---- state -------------------------------------------------------------
-    const pointerTarget = new THREE.Vector2(0, 0);
-    let sx: SpringState = { value: 0, velocity: 0 };
-    let sy: SpringState = { value: 0, velocity: 0 };
+    // The head deliberately does NOT track the cursor (per request). Its only
+    // orientation comes from throws and wall impacts via `twist` below.
 
     // Start already in motion — a head sitting dead still on load looks broken.
     let wander = Math.random() * Math.PI * 2;
@@ -206,13 +204,6 @@ export function Head3D() {
     };
 
     const onPointerMove = (e: PointerEvent) => {
-      const r = rect();
-      pointerTarget.set(
-        ((e.clientX - r.left) / W) * 2 - 1,
-        -(((e.clientY - r.top) / H) * 2 - 1),
-      );
-      uniforms.uLightDir.value.set(pointerTarget.x, pointerTarget.y);
-
       if (dragging) {
         const k = 2 / H; // px → world units
         posX += (e.clientX - lastPX) * k;
@@ -292,17 +283,15 @@ export function Head3D() {
       last = now;
       const t = now / 1000;
 
-      sx = stepSpring(sx, pointerTarget.x, FOLLOW_SPRING, dt);
-      sy = stepSpring(sy, pointerTarget.y, FOLLOW_SPRING, dt);
-
-      // Twist rides on top of the cursor-follow, then decays back.
+      // Orientation is purely physical: twist from throws/impacts, decaying
+      // back to face-on. No cursor tracking.
       const decayTwist = Math.exp(-TWIST_DECAY * dt);
       twistX *= decayTwist;
       twistY *= decayTwist;
-      uniforms.uPointer.value.set(
-        clamp(sx.value + twistX, -1.6, 1.6),
-        clamp(sy.value + twistY, -1.6, 1.6),
-      );
+      uniforms.uPointer.value.set(clamp(twistX, -1.6, 1.6), clamp(twistY, -1.6, 1.6));
+      // Light rides the twist too, so a throw shades the turn; at rest it's
+      // a gentle constant from slightly above.
+      uniforms.uLightDir.value.set(twistX * 0.8, twistY * 0.8 + 0.15);
 
       // Squeeze builds while held and springs back once let go.
       if (dragging) holding += dt;
