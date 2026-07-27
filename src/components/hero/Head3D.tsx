@@ -317,9 +317,11 @@ export function Head3D() {
       squash.velocity += Math.min(impact, 2) * IMPACT_SQUASH * 6;
 
       if (impact < BLOOD_MIN_SPEED) return;
-      // Contact point: head centre pushed out to the silhouette edge it touched.
-      const cx = toStageX(posX) - nx * (sizePx / 2) * HEAD_W_FRAC;
-      const cy = toStageY(posY) + ny * (sizePx / 2) * HEAD_H_FRAC;
+      // Contact point: pulled in ~15% from the silhouette edge, so the splash
+      // originates visibly ON the head's surface rather than glued to the wall
+      // line — sitting exactly at the wall read as "blood from the wall".
+      const cx = toStageX(posX) - nx * (sizePx / 2) * HEAD_W_FRAC * 0.85;
+      const cy = toStageY(posY) + ny * (sizePx / 2) * HEAD_H_FRAC * 0.85;
       blood.splash(cx, cy, nx, -ny, impact);
     };
 

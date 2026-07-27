@@ -62,21 +62,28 @@ export function createBloodField(canvas: HTMLCanvasElement) {
         ? (Math.random() - 0.5) * Math.PI * 1.9
         : (Math.random() - 0.5) * Math.PI * 0.95;
       const baseAngle = center + spread;
-      const speed = (90 + Math.random() * 320) * (0.45 + strength * 0.35) * (wild ? 0.55 : 1);
+      // Kept modest on purpose: this used to fling drops halfway across the
+      // hero, which read as spraying off the wall rather than off the head.
+      // A shorter, quicker launch keeps the whole splash near the head.
+      const speed = (40 + Math.random() * 110) * (0.55 + strength * 0.3) * (wild ? 0.6 : 1);
       const drip = Math.random() < 0.22;
       drops.push({
-        x: x + (Math.random() - 0.5) * 26,
-        y: y + (Math.random() - 0.5) * 26,
+        x: x + (Math.random() - 0.5) * 22,
+        y: y + (Math.random() - 0.5) * 22,
         vx: Math.cos(baseAngle) * speed * (drip ? 0.15 : 1),
         vy: Math.sin(baseAngle) * speed * (drip ? 0.15 : 1),
         r: (drip ? 2.4 : 1.6) + Math.random() * (drip ? 4 : 4.6),
         life: 0,
-        maxLife: drip ? 1.8 + Math.random() * 1.4 : 0.9 + Math.random() * 0.9,
+        // Shorter for the flying drops too — they should land near the head,
+        // not still be travelling a second and a half later.
+        maxLife: drip ? 1.5 + Math.random() * 1.2 : 0.5 + Math.random() * 0.55,
         drip,
         // Per-drop gravity and drag variance so trajectories fan out into
         // different arcs instead of every drop converging on the same curve.
-        gScale: 0.75 + Math.random() * 0.6,
-        drag: drip ? 0.9 : 0.25 + Math.random() * 0.45,
+        // Both skew higher than before — arcs stay short and steep rather than
+        // floaty, which keeps the landing spot close to the origin.
+        gScale: 0.95 + Math.random() * 0.7,
+        drag: drip ? 0.9 : 0.55 + Math.random() * 0.55,
       });
     }
     // Keep the field bounded if someone spams the head into a corner.
