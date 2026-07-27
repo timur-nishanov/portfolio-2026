@@ -56,6 +56,20 @@ const IMPACT_SQUASH = 0.3;
 const HEAD_W_FRAC = 1668 / 1996;
 const HEAD_H_FRAC = 1132 / 1996;
 
+// Where a bruise can land, in texture UV (v runs bottom-up). Kept inside the
+// facial skin — pushing marks out to the silhouette edge put them on hair and
+// ears, where they barely read.
+const FACE_LEFT = 0.28;
+const FACE_RIGHT = 0.72;
+const FACE_TOP = 0.6; // forehead
+const FACE_BOTTOM = 0.29; // chin
+
+// Impact bruises on the face.
+const MAX_MARKS = 6;
+const MARK_FADE = 7; // seconds a bruise takes to disappear
+// Matched to BLOOD_MIN_SPEED: if a hit drew blood it should leave a mark too.
+const MARK_MIN_IMPACT = 0.5;
+
 export function Head3D() {
   const wrapRef = useRef<HTMLDivElement>(null);
 
@@ -113,6 +127,11 @@ export function Head3D() {
       uLightStrength: { value: LIGHT_STRENGTH },
       uTexel: { value: new THREE.Vector2(1 / 1996, 1 / 1996) },
       uSquash: { value: 0 },
+      // xy = UV position on the face, z = strength. Fixed length to match the
+      // shader's compile-time array bound.
+      uMarks: {
+        value: Array.from({ length: MAX_MARKS }, () => new THREE.Vector3(0, 0, 0)),
+      },
     };
 
     const material = new THREE.ShaderMaterial({
@@ -308,6 +327,39 @@ export function Head3D() {
     window.addEventListener('pointerdown', onPointerDown, { passive: false });
     window.addEventListener('pointerup', onPointerUp);
 
+    // Bruise slots, reused round-robin once all six are taken.
+    const marks = uniforms.uMarks.value;
+    let markSlot = 0;
+
+    /**
+     * Stamp a bruise where the head struck. The contact sits on the silhouette
+     * edge facing the wall, jittered along that edge so repeat hits don't stack
+     * in the same spot.
+     */
+    const addMark = (nx: number, ny: number, impact: number) => {
+      if (impact < MARK_MIN_IMPACT) return;
+      const jitter = () => 0.5 + (Math.random() - 0.5) * 0.55;
+      let u: number;
+      let v: number;
+      if (nx > 0) {
+        u = FACE_LEFT; // hit the left wall → mark on the left cheek
+        v = FACE_BOTTOM + (FACE_TOP - FACE_BOTTOM) * jitter();
+      } else if (nx < 0) {
+        u = FACE_RIGHT;
+        v = FACE_BOTTOM + (FACE_TOP - FACE_BOTTOM) * jitter();
+      } else if (ny > 0) {
+        u = FACE_LEFT + (FACE_RIGHT - FACE_LEFT) * jitter();
+        v = FACE_BOTTOM; // hit the bottom → mark on the chin
+      } else {
+        u = FACE_LEFT + (FACE_RIGHT - FACE_LEFT) * jitter();
+        v = FACE_TOP;
+      }
+      // Harder knocks bruise darker, but cap it so it never goes cartoonish.
+      const strength = Math.min(0.6 + (impact - MARK_MIN_IMPACT) * 0.4, 1);
+      marks[markSlot].set(u, v, strength);
+      markSlot = (markSlot + 1) % MAX_MARKS;
+    };
+
     /** Bounce against a wall, bleed if the hit was hard. n points inward. */
     const hitWall = (nx: number, ny: number, impact: number) => {
       // Impulse into the twist spring's velocity, so the turn swings in and out
@@ -315,6 +367,7 @@ export function Head3D() {
       twistX.velocity += nx * impact * TWIST_FROM_IMPACT;
       twistY.velocity -= ny * impact * TWIST_FROM_IMPACT;
       squash.velocity += Math.min(impact, 2) * IMPACT_SQUASH * 6;
+      addMark(nx, ny, impact);
 
       if (impact < BLOOD_MIN_SPEED) return;
       // Contact point: pulled in ~15% from the silhouette edge, so the splash
@@ -366,6 +419,11 @@ export function Head3D() {
         }
         if (introIdx >= INTRO_TL.length) introDone = true;
       }
+      // Bruises heal over time.
+      for (let i = 0; i < MAX_MARKS; i++) {
+        if (marks[i].z > 0) marks[i].z = Math.max(0, marks[i].z - dt / MARK_FADE);
+      }
+
       const squashTarget = dragging ? Math.min(1, holding * HOLD_RAMP) : introSquash;
       squash = stepSpring(squash, squashTarget, SQUASH_SPRING, dt);
       uniforms.uSquash.value = clamp(squash.value, -0.35, 1);

@@ -10,6 +10,11 @@ uniform float uLightStrength;
 uniform vec2 uTexel;         // 1/resolution for gradients
 uniform float uSquash;       // 0 = relaxed, 1 = fully squeezed
 
+// Impact bruises: xy = position in texture UV, z = strength (0 = unused).
+// Fixed-size array so the loop bound stays a compile-time constant.
+#define MAX_MARKS 6
+uniform vec3 uMarks[MAX_MARKS];
+
 varying vec2 vUv;
 
 float depthAt(vec2 uv) {
@@ -74,6 +79,24 @@ void main() {
   vec3 lightDir = normalize(vec3(uLightDir, 0.9));
   float diff = clamp(dot(n, lightDir), 0.0, 1.0) - 0.5;
   col.rgb += diff * uLightStrength;
+
+  // Bruises left by wall impacts. Sampled in the displaced UV so each mark
+  // rides the face like it's painted on the skin, and shaped with two
+  // falloffs — a soft outer flush plus a darker core — so it reads as a
+  // welt rather than a flat disc.
+  float bruise = 0.0;
+  for (int i = 0; i < MAX_MARKS; i++) {
+    vec3 m = uMarks[i];
+    float d = distance(duv, m.xy);
+    float outer = 1.0 - smoothstep(0.0, 0.10, d);
+    float core = 1.0 - smoothstep(0.0, 0.045, d);
+    bruise += m.z * (outer * 0.55 + core * 0.65);
+  }
+  bruise = clamp(bruise, 0.0, 1.0);
+  if (bruise > 0.001) {
+    vec3 welt = vec3(0.42, 0.05, 0.09);
+    col.rgb = mix(col.rgb, mix(col.rgb * 0.5, welt, 0.5), bruise * 0.8);
+  }
 
   gl_FragColor = vec4(col.rgb, col.a);
 }

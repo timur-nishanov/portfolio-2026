@@ -9,9 +9,11 @@ export type ScrambleHandle = { play: () => void };
 // typo rather than an effect (TZ §5.4).
 const GLYPHS = '0123456789#%*+=/<>'.split('');
 
-const LOCK_STEP = 28; // ms — char i locks at i * LOCK_STEP
-const SWAP_EVERY = 45; // ms — random glyph swap cadence before a char locks
-const TAIL = 220; // ms — trailing settle time
+// Paced so the reveal is readable rather than a blink — it was over almost
+// before the eye caught it.
+const LOCK_STEP = 62; // ms — char i locks at i * LOCK_STEP
+const SWAP_EVERY = 80; // ms — random glyph swap cadence before a char locks
+const TAIL = 320; // ms — trailing settle time
 
 type Props = {
   text: string;
