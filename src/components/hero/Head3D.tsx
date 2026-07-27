@@ -19,11 +19,14 @@ const LIGHT_STRENGTH = 0.3;
 // --- flight physics (world units, where the stage height spans 2) ----------
 const IDLE_SPEED = 0.055; // calm drift
 const IDLE_STEER = 1.2; // how fast idle velocity converges on the wander dir
-const THROW_SPEED = 1.7; // tap impulse — a firm fling, just not a bullet
+const THROW_SPEED = 1.8; // tap impulse — a firm fling, just not a bullet
 const MAX_THROW_SPEED = 2.6; // cap on a drag flick (uncapped it launched like a shot)
-const THROW_DAMP = 0.42; // low decay so a throw keeps gliding — that's the heft
-const RESTITUTION = 0.84; // energy kept on a wall bounce
-const CALM_SPEED = 0.17; // below this the throw hands back to the idle drift
+// Heft lives here, not in peak speed: a low decay + lively bounces + a low
+// settle threshold let a throw carry its momentum and ricochet for a while,
+// which reads as weight. Raising THROW_SPEED instead just makes a bullet.
+const THROW_DAMP = 0.26; // glides a long time after release
+const RESTITUTION = 0.9; // keeps most of its energy on a wall bounce
+const CALM_SPEED = 0.1; // stays "thrown" longer before handing back to drift
 const BLOOD_MIN_SPEED = 0.5; // only hard hits bleed — drifting must not spray
 
 // Instead of spinning the plane flat, throws and impacts push the shader's
