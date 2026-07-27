@@ -8,6 +8,7 @@ uniform float uStrength;     // scales parallax offset (sets the felt angle)
 uniform vec2 uLightDir;      // 2d light direction (follows cursor)
 uniform float uLightStrength;
 uniform vec2 uTexel;         // 1/resolution for gradients
+uniform float uSquash;       // 0 = relaxed, 1 = fully squeezed
 
 varying vec2 vUv;
 
@@ -17,6 +18,16 @@ float depthAt(vec2 uv) {
 
 void main() {
   vec2 uv = vUv;
+
+  // Squeeze: sampling a wider box horizontally makes the face read as
+  // compressed, and a shorter box vertically makes it bulge — like a fist
+  // closing around it. Negative uSquash (impact rebound) stretches instead.
+  if (abs(uSquash) > 0.001) {
+    vec2 sc = uv - 0.5;
+    sc.x *= (1.0 + uSquash * 0.5);
+    sc.y *= (1.0 - uSquash * 0.28);
+    uv = sc + 0.5;
+  }
 
   // Depth-proportional UV shift: near features (nose) travel more than far
   // ones (hair), which the brain reads as a 3D turn (TZ §7.2).

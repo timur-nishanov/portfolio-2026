@@ -9,14 +9,14 @@ import { MagneticButton } from '@/components/header/MagneticButton';
 import { MediaSlot } from './MediaSlot';
 import { FloatingLogo } from './FloatingLogo';
 
-// Dialled back from the first pass — still reads as the plate adjusting to the
-// cursor, without the lurch. Ceiling stays well under the 2.5° cap (TZ §9.3).
-const MAX_TILT = 1.8; // deg
+// Dialled back twice on review: the card should feel like it acknowledges the
+// cursor, nothing more. Far under the 2.5° cap (TZ §9.3).
+const MAX_TILT = 1.0; // deg
 const TILT_LERP = 0.12;
 const GLARE_RADIUS = 320;
-const GLARE_MAX = 0.28;
-const MEDIA_X = 18; // px inner-parallax amplitude (media lags the card)
-const MEDIA_Y = 11;
+const GLARE_MAX = 0.22;
+const MEDIA_X = 8; // px inner-parallax amplitude (media lags the card)
+const MEDIA_Y = 5;
 const RETURN = '600ms cubic-bezier(0.22, 1, 0.36, 1)';
 
 export function CaseCard({ data }: { data: Case }) {

@@ -1,15 +1,18 @@
 import { site } from '@/data/site';
+import { FloatingHead } from './FloatingHead';
 
 export function Hero() {
   return (
     <section
       id="main"
       aria-labelledby="hero-heading"
-      className="relative flex min-h-[100svh] items-center"
+      // The head's stage is this box: it plays inside the hero and scrolls away
+      // with it, rather than trailing the reader down the page.
+      className="relative flex min-h-[100svh] items-center pt-[clamp(60px,8.3vw,120px)]"
     >
+      <FloatingHead />
       <div className="container-hero relative w-full">
-        {/* The head is no longer part of this box — it floats over the whole
-            viewport (see FloatingHead), so the copy is plain dark text.
+        {/* Plain dark text — the head floats over it, so no blend mode.
             1184px at 1440 is what breaks it to five lines, per the Figma. */}
         <h1 id="hero-heading" className="t-hero text-ink">
           {site.hero.text}

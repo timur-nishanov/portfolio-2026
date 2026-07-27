@@ -41,7 +41,7 @@ export function CopyMailButton() {
       labelClassName="pixel text-ink"
       style={{ width: 'var(--btn-w)', height: 'var(--btn-h)' }}
     >
-      <span aria-live="polite">{copied ? 'COPIED' : 'COPY MAIL'}</span>
+      {copied ? 'COPIED' : 'COPY MAIL'}
     </MagneticButton>
   );
 }

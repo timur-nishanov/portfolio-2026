@@ -1,7 +1,6 @@
 import { SmoothScrollProvider } from '@/components/providers/SmoothScrollProvider';
 import { Header } from '@/components/header/Header';
 import { Hero } from '@/components/hero/Hero';
-import { FloatingHead } from '@/components/hero/FloatingHead';
 import { CasesSection } from '@/components/cases/CasesSection';
 import { AwardsSection } from '@/components/awards/AwardsSection';
 import { Placeholder } from '@/components/ui/Placeholder';
@@ -11,8 +10,6 @@ export default function Home() {
   return (
     <SmoothScrollProvider>
       <Header />
-      {/* Floats over the page content, under the header (TZ §7.1 + follow-up). */}
-      <FloatingHead />
       <main>
         <Hero />
         <CasesSection />

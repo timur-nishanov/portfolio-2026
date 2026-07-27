@@ -17,7 +17,7 @@ const DEPTH_PIVOT = 0.62; // cheek level — most natural pivot
 const LIGHT_STRENGTH = 0.3;
 const FOLLOW_SPRING = { stiffness: 90, damping: 18 };
 
-// --- flight physics (world units, where the viewport height spans 2) --------
+// --- flight physics (world units, where the stage height spans 2) ----------
 const IDLE_SPEED = 0.055; // calm drift
 const IDLE_STEER = 1.2; // how fast idle velocity converges on the wander dir
 const THROW_SPEED = 2.1; // impulse magnitude on a tap
@@ -25,6 +25,18 @@ const THROW_DAMP = 0.5; // exponential decay per second while thrown
 const RESTITUTION = 0.88; // energy kept on a wall bounce
 const CALM_SPEED = 0.17; // below this the throw hands back to the idle drift
 const BLOOD_MIN_SPEED = 0.5; // only hard hits bleed — drifting must not spray
+
+// Instead of spinning the plane flat, throws and impacts push the shader's
+// depth-parallax so the head appears to turn in 3D. Flat z-rotation reads as a
+// sticker being twirled; this reads as volume.
+const TWIST_FROM_THROW = 0.5;
+const TWIST_FROM_IMPACT = 0.7;
+const TWIST_DECAY = 2.6; // per second
+
+// Squeeze while held (TZ follow-up: "as if squeezed by a fist").
+const HOLD_RAMP = 1.7; // how fast the squeeze builds, per second
+const SQUASH_SPRING = { stiffness: 190, damping: 11 }; // springy release
+const IMPACT_SQUASH = 0.35;
 
 // The texture is 1996² with the head occupying x 164–1832, y 444–1576 (TZ §1.3),
 // so the plane carries empty margins. Collisions and splashes use the *visible*
@@ -64,7 +76,7 @@ export function Head3D() {
     renderer.outputColorSpace = THREE.SRGBColorSpace;
 
     const scene = new THREE.Scene();
-    // Orthographic in "world" units: y spans -1..1 over the viewport height,
+    // Orthographic in "world" units: y spans -1..1 over the stage height,
     // x spans -aspect..aspect, so a square stays square at any window size.
     const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 10);
     camera.position.z = 1;
@@ -88,6 +100,7 @@ export function Head3D() {
       uLightDir: { value: new THREE.Vector2(0, 0) },
       uLightStrength: { value: LIGHT_STRENGTH },
       uTexel: { value: new THREE.Vector2(1 / 1996, 1 / 1996) },
+      uSquash: { value: 0 },
     };
 
     const material = new THREE.ShaderMaterial({
@@ -124,11 +137,13 @@ export function Head3D() {
       return alphaData[(py * 128 + px) * 4 + 3] > 40;
     };
 
-    // ---- viewport-dependent geometry --------------------------------------
-    let W = window.innerWidth;
-    let H = window.innerHeight;
+    // ---- stage geometry ----------------------------------------------------
+    // The stage is the hero box, not the window: the head plays inside the hero
+    // and scrolls away with it rather than trailing the reader down the page.
+    let W = wrap.clientWidth || window.innerWidth;
+    let H = wrap.clientHeight || window.innerHeight;
     let aspect = W / H;
-    let half = 0.25; // head half-extent in world units
+    let half = 0.25;
     let sizePx = 320;
 
     const resize = () => {
@@ -140,8 +155,7 @@ export function Head3D() {
       camera.right = aspect;
       camera.updateProjectionMatrix();
 
-      // --head-size is the on-screen edge length of the plane.
-      sizePx = probe.getBoundingClientRect().width || Math.min(W, H) * 0.44;
+      sizePx = probe.getBoundingClientRect().width || Math.min(W, H) * 0.5;
       mesh.scale.setScalar(sizePx / H);
       half = sizePx / H;
 
@@ -156,14 +170,18 @@ export function Head3D() {
     let sx: SpringState = { value: 0, velocity: 0 };
     let sy: SpringState = { value: 0, velocity: 0 };
 
+    // Start already in motion — a head sitting dead still on load looks broken.
+    let wander = Math.random() * Math.PI * 2;
     let posX = 0;
     let posY = 0;
-    let velX = 0;
-    let velY = 0;
-    let rot = 0;
-    let angVel = 0;
+    let velX = Math.cos(wander) * IDLE_SPEED;
+    let velY = Math.sin(wander) * IDLE_SPEED;
     let thrown = false;
-    let wander = Math.random() * Math.PI * 2;
+
+    let twistX = 0;
+    let twistY = 0;
+    let squash: SpringState = { value: 0, velocity: 0 };
+    let holding = 0; // seconds the pointer has been held down on the head
 
     let dragging = false;
     let downTime = 0;
@@ -172,13 +190,15 @@ export function Head3D() {
     let grabU = 0;
     let grabV = 0;
 
-    // world <-> screen helpers (world y is up, screen y is down)
-    const toScreenX = (wx: number) => W / 2 + wx * (H / 2);
-    const toScreenY = (wy: number) => H / 2 - wy * (H / 2);
+    // Stage coords are relative to the wrapper, which scrolls with the hero.
+    const rect = () => wrap.getBoundingClientRect();
+    const toStageX = (wx: number) => W / 2 + wx * (H / 2);
+    const toStageY = (wy: number) => H / 2 - wy * (H / 2);
 
     const headUV = (clientX: number, clientY: number) => {
-      const cx = toScreenX(posX);
-      const cy = toScreenY(posY);
+      const r = rect();
+      const cx = r.left + toStageX(posX);
+      const cy = r.top + toStageY(posY);
       return {
         u: (clientX - (cx - sizePx / 2)) / sizePx,
         v: (clientY - (cy - sizePx / 2)) / sizePx,
@@ -186,7 +206,11 @@ export function Head3D() {
     };
 
     const onPointerMove = (e: PointerEvent) => {
-      pointerTarget.set((e.clientX / W) * 2 - 1, -((e.clientY / H) * 2 - 1));
+      const r = rect();
+      pointerTarget.set(
+        ((e.clientX - r.left) / W) * 2 - 1,
+        -(((e.clientY - r.top) / H) * 2 - 1),
+      );
       uniforms.uLightDir.value.set(pointerTarget.x, pointerTarget.y);
 
       if (dragging) {
@@ -211,6 +235,7 @@ export function Head3D() {
       document.getSelection()?.removeAllRanges();
       document.body.style.userSelect = 'none';
       dragging = true;
+      holding = 0;
       downTime = performance.now();
       lastPX = e.clientX;
       lastPY = e.clientY;
@@ -222,19 +247,22 @@ export function Head3D() {
     const onPointerUp = () => {
       if (!dragging) return;
       dragging = false;
+      holding = 0;
       document.body.style.userSelect = '';
       thrown = true;
       const quick = performance.now() - downTime < 220;
       const speed = Math.hypot(velX, velY);
       if (quick && speed < 0.25) {
-        // A tap → impulse away from where it was poked, plus a little spin.
+        // A tap → impulse away from where it was poked.
         const len = Math.hypot(grabU, grabV) || 1;
         velX = (grabU / len) * THROW_SPEED;
         velY = (grabV / len) * THROW_SPEED + 0.3;
-        angVel = -grabU * 2.2;
-      } else {
-        angVel = velX * 0.9;
       }
+      // Twist in 3D along the throw, so you see the volume turn.
+      twistX -= velX * TWIST_FROM_THROW;
+      twistY -= velY * TWIST_FROM_THROW;
+      // Release the squeeze with a bit of overshoot.
+      squash.velocity -= 2.2;
     };
 
     window.addEventListener('pointermove', onPointerMove);
@@ -244,10 +272,15 @@ export function Head3D() {
 
     /** Bounce against a wall, bleed if the hit was hard. n points inward. */
     const hitWall = (nx: number, ny: number, impact: number) => {
+      // Impacts twist the head and dent it briefly, whatever their strength.
+      twistX += nx * impact * TWIST_FROM_IMPACT;
+      twistY -= ny * impact * TWIST_FROM_IMPACT;
+      squash.velocity += Math.min(impact, 2) * IMPACT_SQUASH * 6;
+
       if (impact < BLOOD_MIN_SPEED) return;
       // Contact point: head centre pushed out to the silhouette edge it touched.
-      const cx = toScreenX(posX) - nx * (sizePx / 2) * HEAD_W_FRAC;
-      const cy = toScreenY(posY) + ny * (sizePx / 2) * HEAD_H_FRAC;
+      const cx = toStageX(posX) - nx * (sizePx / 2) * HEAD_W_FRAC;
+      const cy = toStageY(posY) + ny * (sizePx / 2) * HEAD_H_FRAC;
       blood.splash(cx, cy, nx, -ny, impact);
     };
 
@@ -261,7 +294,21 @@ export function Head3D() {
 
       sx = stepSpring(sx, pointerTarget.x, FOLLOW_SPRING, dt);
       sy = stepSpring(sy, pointerTarget.y, FOLLOW_SPRING, dt);
-      uniforms.uPointer.value.set(sx.value, sy.value);
+
+      // Twist rides on top of the cursor-follow, then decays back.
+      const decayTwist = Math.exp(-TWIST_DECAY * dt);
+      twistX *= decayTwist;
+      twistY *= decayTwist;
+      uniforms.uPointer.value.set(
+        clamp(sx.value + twistX, -1.6, 1.6),
+        clamp(sy.value + twistY, -1.6, 1.6),
+      );
+
+      // Squeeze builds while held and springs back once let go.
+      if (dragging) holding += dt;
+      const squashTarget = dragging ? Math.min(1, holding * HOLD_RAMP) : 0;
+      squash = stepSpring(squash, squashTarget, SQUASH_SPRING, dt);
+      uniforms.uSquash.value = clamp(squash.value, -0.35, 1);
 
       if (!dragging) {
         if (thrown) {
@@ -274,7 +321,7 @@ export function Head3D() {
           }
         } else {
           // Calm float: steer toward a slowly wandering direction. Edges still
-          // bounce, so it keeps exploring the viewport on its own.
+          // bounce, so it keeps exploring the stage on its own.
           wander += (Math.sin(t * 0.31) * 0.6 + Math.sin(t * 0.17 + 2) * 0.4) * dt;
           const k = 1 - Math.exp(-IDLE_STEER * dt);
           velX += (Math.cos(wander) * IDLE_SPEED - velX) * k;
@@ -284,43 +331,35 @@ export function Head3D() {
         posX += velX * dt;
         posY += velY * dt;
 
-        // Bounce off the viewport edges, using the visible silhouette.
+        // Bounce off the stage edges, using the visible silhouette.
         const maxX = aspect - half * HEAD_W_FRAC;
         const maxY = 1 - half * HEAD_H_FRAC;
         if (posX < -maxX) {
           posX = -maxX;
           const impact = Math.abs(velX);
           velX = Math.abs(velX) * RESTITUTION;
-          angVel += velY * 0.6;
           hitWall(1, 0, impact);
         } else if (posX > maxX) {
           posX = maxX;
           const impact = Math.abs(velX);
           velX = -Math.abs(velX) * RESTITUTION;
-          angVel -= velY * 0.6;
           hitWall(-1, 0, impact);
         }
         if (posY < -maxY) {
           posY = -maxY;
           const impact = Math.abs(velY);
           velY = Math.abs(velY) * RESTITUTION;
-          angVel += velX * 0.6;
           hitWall(0, 1, impact);
         } else if (posY > maxY) {
           posY = maxY;
           const impact = Math.abs(velY);
           velY = -Math.abs(velY) * RESTITUTION;
-          angVel -= velX * 0.6;
           hitWall(0, -1, impact);
         }
-
-        angVel *= Math.exp(-1.4 * dt);
-        rot += angVel * dt;
-        rot *= Math.exp(-0.6 * dt); // ease back toward upright
       }
 
+      // No flat z-rotation on purpose — the turn is sold by the depth shader.
       mesh.position.set(posX, posY, 0);
-      mesh.rotation.z = rot;
 
       blood.step(dt);
       renderer.render(scene, camera);
@@ -346,6 +385,6 @@ export function Head3D() {
     };
   }, []);
 
-  // Above the page content, below the header (z-50). Never eats pointer events.
-  return <div ref={wrapRef} className="pointer-events-none fixed inset-0 z-40" aria-hidden="true" />;
+  // Fills the hero box. Above the page content, below the header (z-50).
+  return <div ref={wrapRef} className="pointer-events-none absolute inset-0 z-40" aria-hidden="true" />;
 }

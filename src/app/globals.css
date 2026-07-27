@@ -22,14 +22,19 @@
   --nav-item-w: clamp(62px, 9.722vw, 140px);
   --nav-item-h: clamp(42px, 4.444vw, 64px);
   --nav-pad: clamp(5px, 0.556vw, 8px);
+  /* Buttons use this as a *minimum* — long labels (TESTFLIGHT SOON) grow the
+     box and keep their side padding rather than squeezing the text. */
   --btn-w: clamp(118px, 13.194vw, 190px);
   --btn-h: clamp(42px, 5.556vw, 80px);
+  --btn-pad-x: clamp(18px, 2.2vw, 32px);
   --header-gap: clamp(10px, 1.389vw, 20px);
-  --header-top: clamp(16px, 5.417vw, 78px);
+  /* Sits higher than the Figma's 78 so it clears the hero heading, which also
+     moved down — the header stays on screen while reading, so they collided. */
+  --header-top: clamp(14px, 3.9vw, 56px);
 
-  /* Floating head — plane edge length. The visible silhouette is ~84% of this
-     wide and ~57% tall, so the plane runs large on purpose. */
-  --head-size: clamp(240px, 40vw, 600px);
+  /* Head plane edge length. The visible silhouette is ~84% of this wide and
+     ~57% tall, so the plane runs large on purpose. */
+  --head-size: clamp(300px, 50vw, 750px);
 }
 
 * {

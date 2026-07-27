@@ -89,6 +89,16 @@ const ScrambleTextInner = forwardRef<ScrambleHandle, Props>(function ScrambleTex
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active]);
 
+  // Replay when the label itself changes (COPY MAIL → COPIED).
+  const prevText = useRef(text);
+  useEffect(() => {
+    if (prevText.current !== text) {
+      prevText.current = text;
+      play();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [text]);
+
   // Cancel in flight and restore the true text if we unmount mid-scramble.
   useEffect(
     () => () => {
