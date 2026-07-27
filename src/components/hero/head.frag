@@ -2,10 +2,10 @@ precision highp float;
 
 uniform sampler2D uColor;
 uniform sampler2D uDepth;
-uniform vec2 uPointer;       // smoothed, -1..1
+uniform vec2 uPointer;       // felt turn, -1..1 (from physics, not the cursor)
 uniform float uDepthPivot;   // ~0.62, rotation happens around cheek level
 uniform float uStrength;     // scales parallax offset (sets the felt angle)
-uniform vec2 uLightDir;      // 2d light direction (follows cursor)
+uniform vec2 uLightDir;      // 2d light direction
 uniform float uLightStrength;
 uniform vec2 uTexel;         // 1/resolution for gradients
 uniform float uSquash;       // 0 = relaxed, 1 = fully squeezed
@@ -37,10 +37,26 @@ void main() {
 
   vec4 direct = texture2D(uColor, duv);
 
+  // Hide the mirror seam running down the texture centre. The head is
+  // mirror-symmetric (TZ §1.3), so x≈0.5 is a hard join line. In a narrow band
+  // there, replace the sample with a short horizontal blur that averages across
+  // the join, dissolving the line without smearing the rest of the face.
+  float seam = 1.0 - smoothstep(0.0, 0.05, abs(duv.x - 0.5));
+  if (seam > 0.001) {
+    float bx = uTexel.x * 4.0;
+    vec4 acc = texture2D(uColor, duv + vec2(-3.0 * bx, 0.0))
+             + texture2D(uColor, duv + vec2(-2.0 * bx, 0.0))
+             + texture2D(uColor, duv + vec2(-1.0 * bx, 0.0))
+             + direct
+             + texture2D(uColor, duv + vec2( 1.0 * bx, 0.0))
+             + texture2D(uColor, duv + vec2( 2.0 * bx, 0.0))
+             + texture2D(uColor, duv + vec2( 3.0 * bx, 0.0));
+    acc *= (1.0 / 7.0);
+    direct = mix(direct, acc, seam);
+  }
+
   // Mirror-fill: at big angles the displaced sample falls off the silhouette
-  // (alpha drops / edge smears). The head is mirror-symmetric, so the missing
-  // pixels are the same face flipped in x. Blend across a soft band so the seam
-  // on the low-poly facets doesn't read (TZ §7.2).
+  // (alpha drops / edge smears). Take the missing pixels from the flipped half.
   vec4 mirror = texture2D(uColor, vec2(1.0 - duv.x, duv.y));
   float exposure = 1.0 - smoothstep(0.35, 0.6, direct.a);
   vec4 col = mix(direct, mirror, exposure);

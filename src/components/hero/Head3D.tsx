@@ -19,10 +19,10 @@ const LIGHT_STRENGTH = 0.3;
 // --- flight physics (world units, where the stage height spans 2) ----------
 const IDLE_SPEED = 0.055; // calm drift
 const IDLE_STEER = 1.2; // how fast idle velocity converges on the wander dir
-const THROW_SPEED = 1.05; // tap impulse — a lob, not a bullet
-const MAX_THROW_SPEED = 1.4; // cap on a drag flick so it can't be launched
-const THROW_DAMP = 0.62; // exponential decay per second while thrown
-const RESTITUTION = 0.82; // energy kept on a wall bounce
+const THROW_SPEED = 1.7; // tap impulse — a firm fling, just not a bullet
+const MAX_THROW_SPEED = 2.6; // cap on a drag flick (uncapped it launched like a shot)
+const THROW_DAMP = 0.42; // low decay so a throw keeps gliding — that's the heft
+const RESTITUTION = 0.84; // energy kept on a wall bounce
 const CALM_SPEED = 0.17; // below this the throw hands back to the idle drift
 const BLOOD_MIN_SPEED = 0.5; // only hard hits bleed — drifting must not spray
 
@@ -31,9 +31,14 @@ const BLOOD_MIN_SPEED = 0.5; // only hard hits bleed — drifting must not spray
 // an instant offset that decays: an impulse feeds its velocity so the turn
 // eases in AND out — a step change read as a hard snap on every bounce.
 const TWIST_SPRING = { stiffness: 40, damping: 13 }; // near-critical, smooth
-const TWIST_FROM_THROW = 1.4; // velocity impulse per unit throw speed
+const TWIST_FROM_THROW = 1.0; // velocity impulse per unit throw speed
 const TWIST_FROM_IMPACT = 1.5; // velocity impulse per unit impact speed
 const TWIST_MAX = 1.0;
+
+// Autonomous idle sway — a slow, cursor-independent turn so the head keeps its
+// 3D life at rest. Replaces the dimensionality the cursor-follow used to give,
+// without the head tracking anything.
+const IDLE_SWAY = 0.2;
 
 // Squeeze while held (TZ follow-up: "as if squeezed by a fist").
 const HOLD_RAMP = 1.4; // how fast the squeeze builds, per second
@@ -224,9 +229,10 @@ export function Head3D() {
         const dy = -(e.clientY - lastPY) * k;
         posX += dx;
         posY += dy;
-        // Smooth the reported velocity — raw single-frame deltas are jittery.
-        dragVX = lerp(dragVX, dx / mdt, 0.4);
-        dragVY = lerp(dragVY, dy / mdt, 0.4);
+        // Smooth the reported velocity, but stay responsive to a flick so the
+        // release has real momentum (too much smoothing killed the throw).
+        dragVX = lerp(dragVX, dx / mdt, 0.55);
+        dragVY = lerp(dragVY, dy / mdt, 0.55);
         lastPX = e.clientX;
         lastPY = e.clientY;
       }
@@ -313,15 +319,24 @@ export function Head3D() {
       // throws and bounces ease in and out. No cursor tracking.
       twistX = stepSpring(twistX, 0, TWIST_SPRING, dt);
       twistY = stepSpring(twistY, 0, TWIST_SPRING, dt);
-      const tx = clamp(twistX.value, -TWIST_MAX, TWIST_MAX);
-      const ty = clamp(twistY.value, -TWIST_MAX, TWIST_MAX);
+      // Add the slow autonomous sway so the head has 3D life even at rest.
+      const swayX = Math.sin(t * 0.42) * IDLE_SWAY + Math.sin(t * 0.19 + 1.3) * IDLE_SWAY * 0.5;
+      const swayY = Math.sin(t * 0.33 + 2.1) * IDLE_SWAY * 0.7;
+      const tx = clamp(twistX.value + swayX, -TWIST_MAX, TWIST_MAX);
+      const ty = clamp(twistY.value + swayY, -TWIST_MAX, TWIST_MAX);
       uniforms.uPointer.value.set(tx, ty);
-      // Light rides the twist too, so a turn shades; at rest it's a gentle
-      // constant from slightly above.
+      // Light rides the turn, so it shades; at rest it's a gentle constant.
       uniforms.uLightDir.value.set(tx * 0.8, ty * 0.8 + 0.15);
 
-      // Squeeze builds while held and springs back once let go.
-      if (dragging) holding += dt;
+      // Squeeze builds while held and springs back once let go. A pause in the
+      // drag bleeds the tracked velocity, so releasing after holding still
+      // doesn't fling a stale direction.
+      if (dragging) {
+        holding += dt;
+        const bleed = Math.exp(-2.5 * dt);
+        dragVX *= bleed;
+        dragVY *= bleed;
+      }
       const squashTarget = dragging ? Math.min(1, holding * HOLD_RAMP) : 0;
       squash = stepSpring(squash, squashTarget, SQUASH_SPRING, dt);
       uniforms.uSquash.value = clamp(squash.value, -0.35, 1);
