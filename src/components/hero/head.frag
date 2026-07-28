@@ -87,37 +87,53 @@ void main() {
   float diff = clamp(dot(n, lightDir), 0.0, 1.0) - 0.5;
   col.rgb += diff * uLightStrength;
 
-  // Bruises left by wall impacts. Sampled in the displaced UV so each mark
-  // rides the face like it's painted on the skin, and shaped with two
-  // falloffs — a soft outer flush plus a darker core — so it reads as a
-  // welt rather than a flat disc. Each mark also picks one of three looks
-  // from a hash of its own position, so repeat hits don't all read identical:
-  // a classic red-purple bruise, a wider soft black-eye swell, or a small
-  // tight dark scuff.
+  // Marks left by wall impacts. Sampled in the displaced UV so each rides the
+  // face like it's painted on the skin. Each picks one of four looks from a
+  // hash of its own position, so repeat hits never read identical: a thin red
+  // scratch, a wider soft black-eye swell, a small tight dark scuff, or the
+  // classic red-purple bruise. The blotches use two radial falloffs (soft
+  // outer flush + darker core); the scratch uses an anisotropic field —
+  // distance squashed hard across a random axis and stretched along it — so
+  // it draws a fine streak instead of a disc.
   float rawSum = 0.0;
   vec3 colorSum = vec3(0.0);
   for (int i = 0; i < MAX_MARKS; i++) {
     vec3 m = uMarks[i];
-    float d = distance(duv, m.xy);
+    vec2 rel = duv - m.xy;
+    float d = length(rel);
     float kind = hash(m.xy);
     float sizeJitter = 0.85 + hash(m.xy + 4.7) * 0.3;
-    float outerR = 0.10 * sizeJitter;
-    float coreR = 0.045 * sizeJitter;
-    vec3 welt = vec3(0.42, 0.05, 0.09);
-    if (kind > 0.66) {
+    float amt;
+    vec3 welt;
+    if (kind > 0.75) {
+      // Scratch: rotate into the mark's own axis, then squash across / stretch
+      // along it to get a thin graze at a random angle. Fresh, bright red.
+      float ang = hash(m.xy + 9.1) * 6.2831853;
+      float ca = cos(ang);
+      float sa = sin(ang);
+      vec2 r = vec2(rel.x * ca - rel.y * sa, rel.x * sa + rel.y * ca);
+      float sd = length(vec2(r.x / (0.006 * sizeJitter), r.y / (0.09 * sizeJitter)));
+      amt = m.z * (1.0 - smoothstep(0.35, 1.0, sd));
+      welt = vec3(0.58, 0.05, 0.06);
+    } else if (kind > 0.5) {
       // Black-eye: wider and softer, cooler/darker tone — reads as swelling.
-      outerR = 0.17 * sizeJitter;
-      coreR = 0.085 * sizeJitter;
+      float outer = 1.0 - smoothstep(0.0, 0.17 * sizeJitter, d);
+      float core = 1.0 - smoothstep(0.0, 0.085 * sizeJitter, d);
+      amt = m.z * (outer * 0.55 + core * 0.65);
       welt = vec3(0.15, 0.06, 0.21);
-    } else if (kind > 0.33) {
+    } else if (kind > 0.25) {
       // Scuff: small and dark, little spread.
-      outerR = 0.06 * sizeJitter;
-      coreR = 0.026 * sizeJitter;
+      float outer = 1.0 - smoothstep(0.0, 0.06 * sizeJitter, d);
+      float core = 1.0 - smoothstep(0.0, 0.026 * sizeJitter, d);
+      amt = m.z * (outer * 0.55 + core * 0.65);
       welt = vec3(0.27, 0.11, 0.10);
+    } else {
+      // Classic red-purple bruise.
+      float outer = 1.0 - smoothstep(0.0, 0.10 * sizeJitter, d);
+      float core = 1.0 - smoothstep(0.0, 0.045 * sizeJitter, d);
+      amt = m.z * (outer * 0.55 + core * 0.65);
+      welt = vec3(0.42, 0.05, 0.09);
     }
-    float outer = 1.0 - smoothstep(0.0, outerR, d);
-    float core = 1.0 - smoothstep(0.0, coreR, d);
-    float amt = m.z * (outer * 0.55 + core * 0.65);
     rawSum += amt;
     colorSum += welt * amt;
   }

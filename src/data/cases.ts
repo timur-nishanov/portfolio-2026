@@ -56,8 +56,6 @@ export type Case = {
 
 // Twin-phone slot proportion — near-square once two phones sit side by side.
 const PHONES_ASPECT = '1/1';
-// Remaining single skeleton slots (mockups still pending).
-const MEDIA_ASPECT = '650/654';
 
 // Order set by Timur: Chums, Design Battle, Meama, Yandex Go (Beri Zaryad),
 // Rally last. Layout alternates by position (text-left first); each logo sits
@@ -96,7 +94,17 @@ export const cases: Case[] = [
       { label: 'CASE STUDY', href: null /* TODO */ },
       { label: 'PITCHDECK', href: null /* TODO */ },
     ],
-    media: { type: 'image', src: null, aspect: MEDIA_ASPECT, alt: 'Yandex Design Battle Alice app screens' },
+    media: {
+      type: 'image',
+      src: null,
+      aspect: PHONES_ASPECT,
+      alt: 'Yandex Design Battle Alice app screens',
+      phones: [
+        // Pre-composited phones (frame baked in) — placeholders until the video.
+        { framed: false, type: 'image', src: assets.aliceStatic1, alt: 'Alice lock-screen suggestions' },
+        { framed: false, type: 'image', src: assets.aliceStatic2, alt: 'Alice studio mode' },
+      ],
+    },
     logo: { src: assets.logoAlice, x: -4, y: -13, w: 21, drift: { x: 26, y: 60, rot: 6 } },
     layout: 'text-right',
   },
@@ -133,16 +141,18 @@ export const cases: Case[] = [
     description:
       "Some stations ran empty at peak hours, others sat overloaded — courier rebalancing ate the margin. Field tests in two cities showed the blocker wasn't unwillingness but uncertainty: where to go, will it fit, will the discount apply. Answer: bonus stations with routing, one-line rules and instant reward confirmation.",
     links: [{ label: 'CASE STUDY', href: null /* TODO */ }],
-    // Self-contained scene video: 16:9 with three phones side by side. A square
-    // object-cover box shows ~56% of the width; pulling the window close to the
-    // left edge frames the first two phones (lock screen + main) and leaves the
-    // third — the blue banner — outside the crop.
+    // Self-contained scene video: 3840×2160 with three phones side by side —
+    // lock screen (~336–1306px), the green "main" screen (~1402–2429px) and the
+    // blue banner (~2477–3514px). The 1:1 object-cover box shows a 2160px-wide
+    // window; positioning it at 18% (left edge ≈300px) frames the first two
+    // phones whole and leaves the blue banner outside the crop. Measured from a
+    // decoded frame, not guessed.
     media: {
       type: 'video',
       src: assets.goVideo,
       aspect: '1/1',
       fit: 'cover',
-      objectPosition: '8% 50%',
+      objectPosition: '18% 50%',
       alt: 'Yandex Go Beri Zaryad app scene',
     },
     logo: { src: assets.logoGo, x: -4, y: -7, w: 22, drift: { x: -18, y: 70, rot: 8 } },
@@ -156,7 +166,17 @@ export const cases: Case[] = [
     description:
       'Learn English from the things you already read: drop in your own files and Rally turns them into drills, decks and spaced review. Designed the onboarding and the study loop so the app feels like a tutor that read your documents, not a generic course.',
     links: [{ label: 'TESTFLIGHT SOON', href: null }], // inactive by design (TZ §9.2)
-    media: { type: 'image', src: null, aspect: MEDIA_ASPECT, alt: 'Rally app screens' },
+    media: {
+      type: 'image',
+      src: null,
+      aspect: PHONES_ASPECT,
+      alt: 'Rally app screens',
+      phones: [
+        // Pre-composited phones (frame baked in) — placeholders until the video.
+        { framed: false, type: 'image', src: assets.rallyStatic1, alt: 'Rally home — pick up where you left off' },
+        { framed: false, type: 'image', src: assets.rallyStatic2, alt: 'Rally study screen' },
+      ],
+    },
     logo: null, // no Rally logo in the repo
     layout: 'text-left',
   },

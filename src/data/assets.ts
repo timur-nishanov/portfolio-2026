@@ -28,6 +28,16 @@ export const assets = {
   meamaStatic: '/mockups/meama-static.png', // meama-static-case.png — pre-composited phone
   goVideo: '/mockups/go-video.mp4', // go-video.mp4 — 16:9 scene of both Beri Zaryad phones
   imacFrame: '/mockups/imac-frame.png', // iMac 27" Silver — bezel with transparent screen (for recordings)
+  // Design Battle / Rally placeholder screens (pre-composited phones) — stand in
+  // until Timur supplies the real case videos.
+  aliceStatic1: '/mockups/alice-static-1.png',
+  aliceStatic2: '/mockups/alice-static-2.png',
+  rallyStatic1: '/mockups/rally-static-1.png',
+  rallyStatic2: '/mockups/rally-static-2.png',
+  // Desktop mockup recordings, DevTools/browser chrome cropped out and re-encoded
+  // web-safe (crop 2336×1440 → 1600w H.264). Go inside the Random iMac frames.
+  deskArtem: '/mockups/desk-artem.mp4', // artemartemartem.com screen recording
+  deskStepicon: '/mockups/desk-stepicon.mp4', // stepicon2026.vercel.app screen recording
 
   // Random section (already-composited stills).
   randomAlice: '/random/alice-random.png',
