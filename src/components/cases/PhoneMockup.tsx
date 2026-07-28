@@ -36,11 +36,12 @@ export function PhoneMockup({ phone }: { phone: PhoneScreen }) {
   // Already-a-mockup render: draw as-is, no iPhone frame layered on top.
   if (!phone.framed) {
     return (
-      <div className="relative h-full" style={{ aspectRatio: PHONE_AR }}>
+      <div className="relative h-full overflow-hidden" style={{ aspectRatio: PHONE_AR }}>
         {phone.type === 'video' ? (
           <video
             ref={videoRef}
             className="h-full w-full object-cover"
+            style={phone.scale ? { transform: `scale(${phone.scale})` } : undefined}
             autoPlay
             muted
             loop

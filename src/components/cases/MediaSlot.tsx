@@ -69,6 +69,7 @@ export function MediaSlot({ media }: { media: CaseMedia }) {
         <video
           ref={videoRef}
           className={`h-full w-full ${media.fit === 'cover' ? 'object-cover' : 'object-contain'}`}
+          style={media.objectPosition ? { objectPosition: media.objectPosition } : undefined}
           autoPlay
           muted
           loop

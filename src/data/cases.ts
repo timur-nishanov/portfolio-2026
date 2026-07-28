@@ -9,6 +9,11 @@ export type PhoneScreen = {
   src: string;
   poster?: string;
   alt: string;
+  /**
+   * Zoom for an unframed source whose phone sits inset in its own canvas —
+   * scales it up so the phone reads at the same size as its neighbour.
+   */
+  scale?: number;
 };
 
 export type CaseMedia = {
@@ -19,6 +24,8 @@ export type CaseMedia = {
   alt: string;
   /** object-fit for a single image/video slot. Defaults to contain. */
   fit?: 'cover' | 'contain';
+  /** object-position for a cover slot — picks which part of the frame shows. */
+  objectPosition?: string;
   /** When set, render these phones side by side instead of the single slot. */
   phones?: PhoneScreen[];
 };
@@ -110,7 +117,9 @@ export const cases: Case[] = [
       alt: 'Meama coffee app screens',
       phones: [
         // Video already contains its own phone mockup — draw it as-is, no frame.
-        { framed: false, type: 'video', src: assets.meamaCase, alt: 'Meama catalogue animation' },
+        // Its phone sits inset in a landscape canvas, so zoom until it matches
+        // the static phone beside it.
+        { framed: false, type: 'video', src: assets.meamaCase, alt: 'Meama catalogue animation', scale: 1.35 },
         { framed: false, type: 'image', src: assets.meamaStatic, alt: 'Meama product screen' },
       ],
     },
@@ -124,14 +133,16 @@ export const cases: Case[] = [
     description:
       "Some stations ran empty at peak hours, others sat overloaded — courier rebalancing ate the margin. Field tests in two cities showed the blocker wasn't unwillingness but uncertainty: where to go, will it fit, will the discount apply. Answer: bonus stations with routing, one-line rules and instant reward confirmation.",
     links: [{ label: 'CASE STUDY', href: null /* TODO */ }],
-    // Self-contained scene video (both phones on the light background). Source
-    // is 16:9; a square object-cover box trims the wide side margins so the two
-    // phones read at the same size as the mockup reference.
+    // Self-contained scene video: 16:9 with three phones side by side. A square
+    // object-cover box shows ~56% of the width; shifting the window left of
+    // centre frames the first two phones whole (lock screen + main) and leaves
+    // the third — the blue banner — outside the crop.
     media: {
       type: 'video',
       src: assets.goVideo,
       aspect: '1/1',
       fit: 'cover',
+      objectPosition: '43% 50%',
       alt: 'Yandex Go Beri Zaryad app scene',
     },
     logo: { src: assets.logoGo, x: 5, y: -22, w: 22, drift: { x: -18, y: 70, rot: 8 } },

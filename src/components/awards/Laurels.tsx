@@ -34,14 +34,13 @@ const PATHS = [
 export function Laurels({ tier }: { tier: Award['tier'] }) {
   const color = tier === 'gold' ? 'var(--laurel-gold)' : 'var(--laurel-teal)';
   return (
+    // 123×80 at the 1440 reference — the Figma size, twice what it was.
     <svg
-      width="62"
-      height="40"
       viewBox="0 0 123 80"
       fill="none"
       role="img"
       aria-hidden="true"
-      style={{ color }}
+      style={{ color, width: 'clamp(76px, 8.54vw, 123px)', height: 'auto' }}
     >
       {PATHS.map((d, i) => (
         <path key={i} d={d} fill="currentColor" />
