@@ -142,7 +142,7 @@ export const cases: Case[] = [
       src: assets.goVideo,
       aspect: '1/1',
       fit: 'cover',
-      objectPosition: '15% 50%',
+      objectPosition: '8% 50%',
       alt: 'Yandex Go Beri Zaryad app scene',
     },
     logo: { src: assets.logoGo, x: -4, y: -7, w: 22, drift: { x: -18, y: 70, rot: 8 } },

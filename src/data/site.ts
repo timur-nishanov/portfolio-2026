@@ -7,7 +7,7 @@ export const site = {
     // Line breaks come from the layout width, not manual <br> — the blend over
     // the head produces the blue accent words seen in the mockup.
     text:
-      "Hey! I'm Timur. I design apps, concepts and interfaces, build them in code and watch the results. Worked with Yandex, Stepik, HSE, Meama, Sber, Moneta and etc.",
+      "Hey! I'm Timur. I design apps, concepts and interfaces, build them in code and watch the results. Collaborated with Yandex, Stepik, HSE, Meama, Sber, Moneta and etc.",
   },
   // Statement block after the random section (Figma text node 1:282).
   about:

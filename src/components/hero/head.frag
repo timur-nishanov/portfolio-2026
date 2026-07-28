@@ -21,6 +21,13 @@ float depthAt(vec2 uv) {
   return texture2D(uDepth, uv).r;
 }
 
+// Deterministic per-mark pseudo-random, seeded off the mark's own UV — same
+// mark always reads the same, but different marks (different jittered spots)
+// land on different looks.
+float hash(vec2 p) {
+  return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+}
+
 void main() {
   vec2 uv = vUv;
 
@@ -83,19 +90,41 @@ void main() {
   // Bruises left by wall impacts. Sampled in the displaced UV so each mark
   // rides the face like it's painted on the skin, and shaped with two
   // falloffs — a soft outer flush plus a darker core — so it reads as a
-  // welt rather than a flat disc.
-  float bruise = 0.0;
+  // welt rather than a flat disc. Each mark also picks one of three looks
+  // from a hash of its own position, so repeat hits don't all read identical:
+  // a classic red-purple bruise, a wider soft black-eye swell, or a small
+  // tight dark scuff.
+  float rawSum = 0.0;
+  vec3 colorSum = vec3(0.0);
   for (int i = 0; i < MAX_MARKS; i++) {
     vec3 m = uMarks[i];
     float d = distance(duv, m.xy);
-    float outer = 1.0 - smoothstep(0.0, 0.10, d);
-    float core = 1.0 - smoothstep(0.0, 0.045, d);
-    bruise += m.z * (outer * 0.55 + core * 0.65);
-  }
-  bruise = clamp(bruise, 0.0, 1.0);
-  if (bruise > 0.001) {
+    float kind = hash(m.xy);
+    float sizeJitter = 0.85 + hash(m.xy + 4.7) * 0.3;
+    float outerR = 0.10 * sizeJitter;
+    float coreR = 0.045 * sizeJitter;
     vec3 welt = vec3(0.42, 0.05, 0.09);
-    col.rgb = mix(col.rgb, mix(col.rgb * 0.5, welt, 0.5), bruise * 0.8);
+    if (kind > 0.66) {
+      // Black-eye: wider and softer, cooler/darker tone — reads as swelling.
+      outerR = 0.17 * sizeJitter;
+      coreR = 0.085 * sizeJitter;
+      welt = vec3(0.15, 0.06, 0.21);
+    } else if (kind > 0.33) {
+      // Scuff: small and dark, little spread.
+      outerR = 0.06 * sizeJitter;
+      coreR = 0.026 * sizeJitter;
+      welt = vec3(0.27, 0.11, 0.10);
+    }
+    float outer = 1.0 - smoothstep(0.0, outerR, d);
+    float core = 1.0 - smoothstep(0.0, coreR, d);
+    float amt = m.z * (outer * 0.55 + core * 0.65);
+    rawSum += amt;
+    colorSum += welt * amt;
+  }
+  float bruise = clamp(rawSum, 0.0, 1.0);
+  if (bruise > 0.001) {
+    vec3 avgWelt = colorSum / max(rawSum, 0.0001);
+    col.rgb = mix(col.rgb, mix(col.rgb * 0.5, avgWelt, 0.5), bruise * 0.8);
   }
 
   gl_FragColor = vec4(col.rgb, col.a);
