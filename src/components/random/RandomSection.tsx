@@ -31,19 +31,27 @@ type Tile = {
 
 const IMAC = { w: 2760, h: 2221 };
 
+// `p` is tiered by depth (z) rather than picked per item: the big full-width
+// mockups read as background and barely drift, the small overlapping items
+// read as foreground and drift the most. Flat-magnitude values across items
+// (previous pass) all landed in the same ~50-90 band regardless of depth, so
+// the difference in felt speed washed out — this tiering is what actually
+// produces it. Each tile also transits its OWN (much shorter) bounding box
+// rather than the whole section, so keep magnitudes modest or it reads as
+// too strong over that short a scroll distance.
 const tiles: Tile[] = [
-  { src: assets.randomAppleWatch, alt: 'Apple Watch concept', w: 353, h: 398, l: 79.35, t: 0.0, wpct: 17.03, z: 40, p: 62 },
-  { src: null, alt: 'artemartemartem.com — recording pending', w: IMAC.w, h: IMAC.h, l: 0, t: 1.07, wpct: 100, z: 10, p: -18 },
-  { src: assets.randomWallet, alt: 'Ever Wallet screen', w: 500, h: 1028, l: 4.93, t: 11.21, wpct: 24.06, z: 30, p: 84 },
-  { src: assets.randomSoyun, alt: 'Soyun — Verbal musica poster', w: 939, h: 1329, l: 27.32, t: 19.15, wpct: 45.36, z: 20, p: -54 },
-  { src: assets.randomBergman, alt: 'Bergman poster', w: 702, h: 993, l: 66.09, t: 25.48, wpct: 33.91, z: 20, p: 50 },
-  { src: assets.randomSmartbot, alt: 'Chatbot constructor — landing', w: 2070, h: 1220, l: 0, t: 33.92, wpct: 100, z: 10, p: -18 },
-  { src: assets.randomPoorThings, alt: 'Poor Things screen', w: 513, h: 1041, l: 21.38, t: 43.41, wpct: 24.78, z: 30, p: 76 },
-  { src: null, alt: 'stepicon2026 — recording pending', w: IMAC.w, h: IMAC.h, l: 0, t: 50.05, wpct: 100, z: 10, p: -18 },
-  { src: assets.randomRides, alt: 'Rides app screen', w: 576, h: 1185, l: 4.42, t: 63.1, wpct: 27.75, z: 30, p: 88 },
-  { src: assets.randomAlice, alt: 'Alice in Wonderland poster', w: 843, h: 1341, l: 29.64, t: 68.19, wpct: 40.72, z: 20, p: -50 },
-  { src: assets.randomBoot, alt: 'Boot product shot', w: 629, h: 705, l: 66.96, t: 77.71, wpct: 30.36, z: 20, p: 96 },
-  { src: assets.randomMoneta, alt: 'Moneta — online payments platform, on an iMac', w: 2070, h: 1666, l: 0, t: 83.51, wpct: 100, z: 10, p: -18 },
+  { src: assets.randomAppleWatch, alt: 'Apple Watch concept', w: 353, h: 398, l: 79.35, t: 0.0, wpct: 17.03, z: 40, p: 68 },
+  { src: null, alt: 'artemartemartem.com — recording pending', w: IMAC.w, h: IMAC.h, l: 0, t: 1.07, wpct: 100, z: 10, p: -10 },
+  { src: assets.randomWallet, alt: 'Ever Wallet screen', w: 500, h: 1028, l: 4.93, t: 11.21, wpct: 24.06, z: 30, p: 52 },
+  { src: assets.randomSoyun, alt: 'Soyun — Verbal musica poster', w: 939, h: 1329, l: 27.32, t: 19.15, wpct: 45.36, z: 20, p: -28 },
+  { src: assets.randomBergman, alt: 'Bergman poster', w: 702, h: 993, l: 66.09, t: 25.48, wpct: 33.91, z: 20, p: 30 },
+  { src: assets.randomSmartbot, alt: 'Chatbot constructor — landing', w: 2070, h: 1220, l: 0, t: 33.92, wpct: 100, z: 10, p: -10 },
+  { src: assets.randomPoorThings, alt: 'Poor Things screen', w: 513, h: 1041, l: 21.38, t: 43.41, wpct: 24.78, z: 30, p: 48 },
+  { src: null, alt: 'stepicon2026 — recording pending', w: IMAC.w, h: IMAC.h, l: 0, t: 50.05, wpct: 100, z: 10, p: -10 },
+  { src: assets.randomRides, alt: 'Rides app screen', w: 576, h: 1185, l: 4.42, t: 63.1, wpct: 27.75, z: 30, p: 56 },
+  { src: assets.randomAlice, alt: 'Alice in Wonderland poster', w: 843, h: 1341, l: 29.64, t: 68.19, wpct: 40.72, z: 20, p: -32 },
+  { src: assets.randomBoot, alt: 'Boot product shot', w: 629, h: 705, l: 66.96, t: 77.71, wpct: 30.36, z: 20, p: 34 },
+  { src: assets.randomMoneta, alt: 'Moneta — online payments platform, on an iMac', w: 2070, h: 1666, l: 0, t: 83.51, wpct: 100, z: 10, p: -10 },
 ];
 
 // iMac screen cutout, measured from imac-frame.png (2760×2221).

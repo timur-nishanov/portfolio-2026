@@ -7,6 +7,11 @@ import { clamp, easeInOut, q } from '@/lib/lerp';
 import { useSmoothScroll } from '@/components/providers/SmoothScrollProvider';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 
+// Timur wants to preview the cases section with the logos out entirely for
+// now — data and positions stay in cases.ts, this just stops the render.
+// Flip back to true to bring them back.
+const SHOW_LOGOS = false;
+
 /**
  * Big case logo that drifts on scroll (TZ §8). Driven by the single Lenis rAF
  * loop, not a per-element scroll listener.
@@ -31,7 +36,7 @@ export function FloatingLogo({
   useEffect(() => {
     const el = elRef.current;
     const track = trackRef.current;
-    if (!el || !track || isMobile) return;
+    if (!el || !track || isMobile || !SHOW_LOGOS) return;
 
     // will-change only while the card is on screen (TZ §8).
     const io = new IntersectionObserver(
@@ -68,7 +73,7 @@ export function FloatingLogo({
 
   // Mobile cards are narrow enough that the logo just overlaps the copy —
   // drop it there entirely (TODO: a mobile-specific placement later).
-  if (isMobile) return null;
+  if (!SHOW_LOGOS || isMobile) return null;
 
   return (
     <div
