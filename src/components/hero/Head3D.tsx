@@ -12,7 +12,7 @@ import vertexShader from './head.vert';
 // Parallax strength → felt turn angle. Raised from ±14° once the mirror-fill
 // kept the silhouette clean; the seam on the low-poly facets is the ceiling.
 // Locked here per TZ §7.2 (find the max experimentally, then pin it).
-const TILT_STRENGTH = 0.17; // ≈ ±20° of felt rotation with mirror-fill
+const TILT_STRENGTH = 0.2; // ≈ ±23° of felt rotation with mirror-fill — nudged up, was reading too subtle
 const DEPTH_PIVOT = 0.62; // cheek level — most natural pivot
 const LIGHT_STRENGTH = 0.3;
 

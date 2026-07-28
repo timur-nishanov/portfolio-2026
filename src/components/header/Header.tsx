@@ -54,7 +54,7 @@ export function Header() {
         transform: hidden
           ? 'translateY(calc(-100% - var(--header-top) - 24px))'
           : 'translateY(0)',
-        transition: 'transform 400ms cubic-bezier(0.32, 0.72, 0, 1)',
+        transition: 'transform 650ms cubic-bezier(0.22, 1, 0.36, 1)',
       }}
     >
       {/* Wraps below ~630px: the pill keeps the first row and the two buttons

@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { useEffect, useRef } from 'react';
 import type { CaseLogo } from '@/data/cases';
-import { clamp, q } from '@/lib/lerp';
+import { clamp, easeInOut, q } from '@/lib/lerp';
 import { useSmoothScroll } from '@/components/providers/SmoothScrollProvider';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 
@@ -50,9 +50,12 @@ export function FloatingLogo({
       const span = vh / 2 + rect.height / 2;
       // -1 when the card sits below the fold, +1 once it has passed above it.
       const progress = clamp((vh / 2 - (rect.top + rect.height / 2)) / span, -1, 1);
+      // Eased rather than linear — the drift settles in and out instead of
+      // sliding at a constant rate.
+      const eased = easeInOut(progress);
       const { x, y, rot } = logo.drift;
-      el.style.transform = `translate3d(${q(progress * x)}px, ${q(progress * y)}px, 0) rotate(${q(
-        progress * rot,
+      el.style.transform = `translate3d(${q(eased * x)}px, ${q(eased * y)}px, 0) rotate(${q(
+        eased * rot,
       )}deg)`;
     };
     const unregister = register(onFrame);
@@ -62,6 +65,10 @@ export function FloatingLogo({
       unregister();
     };
   }, [register, logo.drift, trackRef, isMobile]);
+
+  // Mobile cards are narrow enough that the logo just overlaps the copy —
+  // drop it there entirely (TODO: a mobile-specific placement later).
+  if (isMobile) return null;
 
   return (
     <div

@@ -83,7 +83,7 @@ export const cases: Case[] = [
         { framed: false, type: 'image', src: assets.chumsPreview, alt: 'Chums — choose your server screen' },
       ],
     },
-    logo: { src: assets.logoChums, x: 81, y: -12, w: 17.5, drift: { x: 22, y: -85, rot: -10 } },
+    logo: { src: assets.logoChums, x: 83, y: -12, w: 17.5, drift: { x: 22, y: -85, rot: -10 } },
     layout: 'text-left',
   },
   {
@@ -97,7 +97,7 @@ export const cases: Case[] = [
       { label: 'PITCHDECK', href: null /* TODO */ },
     ],
     media: { type: 'image', src: null, aspect: MEDIA_ASPECT, alt: 'Yandex Design Battle Alice app screens' },
-    logo: { src: assets.logoAlice, x: -1, y: -13, w: 21, drift: { x: 26, y: 60, rot: 6 } },
+    logo: { src: assets.logoAlice, x: -4, y: -13, w: 21, drift: { x: 26, y: 60, rot: 6 } },
     layout: 'text-right',
   },
   {
@@ -123,7 +123,7 @@ export const cases: Case[] = [
         { framed: false, type: 'image', src: assets.meamaStatic, alt: 'Meama product screen' },
       ],
     },
-    logo: { src: assets.logoMeama, x: 73, y: -7, w: 17, drift: { x: -20, y: -72, rot: -7 } },
+    logo: { src: assets.logoMeama, x: 83, y: -7, w: 17, drift: { x: -20, y: -72, rot: -7 } },
     layout: 'text-left',
   },
   {
@@ -145,7 +145,7 @@ export const cases: Case[] = [
       objectPosition: '15% 50%',
       alt: 'Yandex Go Beri Zaryad app scene',
     },
-    logo: { src: assets.logoGo, x: -3, y: -7, w: 22, drift: { x: -18, y: 70, rot: 8 } },
+    logo: { src: assets.logoGo, x: -4, y: -7, w: 22, drift: { x: -18, y: 70, rot: 8 } },
     layout: 'text-right',
   },
   {

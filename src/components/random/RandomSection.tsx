@@ -3,8 +3,9 @@
 import Image from 'next/image';
 import { useEffect, useRef } from 'react';
 import { assets } from '@/data/assets';
-import { q } from '@/lib/lerp';
+import { clamp, easeInOut, q } from '@/lib/lerp';
 import { useSmoothScroll } from '@/components/providers/SmoothScrollProvider';
+import { useIsMobile } from '@/hooks/useMediaQuery';
 
 // Absolute collage transcribed from the Figma (frame 1:277). The four desktop
 // mockups span the full content band (≈30px side margins at the 1440 reference);
@@ -73,33 +74,47 @@ function ImacPlaceholder({ alt }: { alt: string }) {
   );
 }
 
-function RandomTile({ tile, sectionRef }: { tile: Tile; sectionRef: React.RefObject<HTMLElement | null> }) {
+function RandomTile({ tile }: { tile: Tile }) {
   const { register } = useSmoothScroll();
+  const isMobile = useIsMobile();
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const el = ref.current;
-    const section = sectionRef.current;
-    if (!el || !section) return;
+    if (!el) return;
     let inView = false;
     const io = new IntersectionObserver(([e]) => (inView = e.isIntersecting), {
       rootMargin: '20% 0px 20% 0px',
     });
     io.observe(el);
 
+    // Weaker and tighter on mobile — the giant collage reads as one long
+    // column there, so full desktop amplitude felt like everything sliding
+    // downward together rather than an independent drift per item.
+    const amplitude = tile.p * (isMobile ? 0.4 : 1);
+    // Tracks the transform we applied last frame so it can be backed out of
+    // the measured rect below — each tile drifts against its OWN transit
+    // through the viewport (like the case logos), not the whole section, so
+    // items move independently instead of lock-stepped to one shared value.
+    let lastY = 0;
+
     const onFrame = () => {
       if (!inView) return;
-      const r = section.getBoundingClientRect();
+      const r = el.getBoundingClientRect();
+      const baseTop = r.top - lastY;
       const vh = window.innerHeight;
-      const progress = (vh / 2 - (r.top + r.height / 2)) / (vh / 2 + r.height / 2);
-      el.style.transform = `translate3d(0, ${q(progress * tile.p)}px, 0)`;
+      const span = vh / 2 + r.height / 2;
+      const progress = clamp((vh / 2 - (baseTop + r.height / 2)) / span, -1, 1);
+      const y = easeInOut(progress) * amplitude;
+      el.style.transform = `translate3d(0, ${q(y)}px, 0)`;
+      lastY = y;
     };
     const off = register(onFrame);
     return () => {
       io.disconnect();
       off();
     };
-  }, [register, sectionRef, tile.p]);
+  }, [register, tile.p, isMobile]);
 
   return (
     <div
@@ -126,14 +141,8 @@ function RandomTile({ tile, sectionRef }: { tile: Tile; sectionRef: React.RefObj
 }
 
 export function RandomSection() {
-  const sectionRef = useRef<HTMLElement>(null);
   return (
-    <section
-      ref={sectionRef}
-      id="random"
-      aria-labelledby="random-heading"
-      className="py-[clamp(48px,7vw,110px)]"
-    >
+    <section id="random" aria-labelledby="random-heading" className="py-[clamp(48px,7vw,110px)]">
       <h2 id="random-heading" className="sr-only">
         Random
       </h2>
@@ -141,7 +150,7 @@ export function RandomSection() {
       <div className="mx-auto w-full max-w-[1440px] px-[clamp(16px,2.083vw,30px)]">
         <div className="relative w-full" style={{ aspectRatio: CANVAS_AR }}>
           {tiles.map((t, i) => (
-            <RandomTile key={i} tile={t} sectionRef={sectionRef} />
+            <RandomTile key={i} tile={t} />
           ))}
         </div>
       </div>
