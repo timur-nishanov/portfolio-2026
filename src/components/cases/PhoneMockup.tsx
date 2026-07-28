@@ -33,17 +33,33 @@ export function PhoneMockup({ phone }: { phone: PhoneScreen }) {
     return () => io.disconnect();
   }, []);
 
-  // Already-composited phone render: just the image, no frame layering needed.
+  // Already-a-mockup render: draw as-is, no iPhone frame layered on top.
   if (!phone.framed) {
     return (
       <div className="relative h-full" style={{ aspectRatio: PHONE_AR }}>
-        <Image
-          src={phone.src}
-          alt={phone.alt}
-          fill
-          sizes="(max-width: 767px) 45vw, 340px"
-          className="object-contain"
-        />
+        {phone.type === 'video' ? (
+          <video
+            ref={videoRef}
+            className="h-full w-full object-cover"
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="metadata"
+            poster={phone.poster}
+            aria-label={phone.alt}
+          >
+            <source src={phone.src} type={phone.src.endsWith('.webm') ? 'video/webm' : 'video/mp4'} />
+          </video>
+        ) : (
+          <Image
+            src={phone.src}
+            alt={phone.alt}
+            fill
+            sizes="(max-width: 767px) 45vw, 340px"
+            className="object-contain"
+          />
+        )}
       </div>
     );
   }

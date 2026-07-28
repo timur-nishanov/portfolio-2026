@@ -1,12 +1,15 @@
 import { assets } from './assets';
 
 // A single phone in a twin-phone media block.
-export type PhoneScreen =
-  // Bare screen recording / screenshot dropped into the empty iPhone frame.
-  | { framed: true; type: 'video'; src: string; poster?: string; alt: string }
-  | { framed: true; type: 'image'; src: string; alt: string }
-  // Already-composited phone render (frame baked in) — drawn as-is.
-  | { framed: false; src: string; alt: string };
+// framed=true wraps the source in the iPhone frame (for a bare screen);
+// framed=false draws it as-is (a render / video that already IS a mockup).
+export type PhoneScreen = {
+  framed: boolean;
+  type: 'image' | 'video';
+  src: string;
+  poster?: string;
+  alt: string;
+};
 
 export type CaseMedia = {
   type: 'image' | 'video';
@@ -70,7 +73,7 @@ export const cases: Case[] = [
       alt: 'Chums Messenger app screens',
       phones: [
         { framed: true, type: 'video', src: assets.chumsChatVideo, alt: 'Chums chat animation' },
-        { framed: false, src: assets.chumsPreview, alt: 'Chums — choose your server screen' },
+        { framed: false, type: 'image', src: assets.chumsPreview, alt: 'Chums — choose your server screen' },
       ],
     },
     logo: { src: assets.logoChums, x: 74, y: -12, w: 17.5, drift: { x: 22, y: -85, rot: -10 } },
@@ -106,12 +109,12 @@ export const cases: Case[] = [
       aspect: PHONES_ASPECT,
       alt: 'Meama coffee app screens',
       phones: [
-        // Landscape source cropped to fill the portrait screen (object-cover).
-        { framed: true, type: 'video', src: assets.meamaCase, alt: 'Meama catalogue animation' },
-        { framed: false, src: assets.meamaStatic, alt: 'Meama product screen' },
+        // Video already contains its own phone mockup — draw it as-is, no frame.
+        { framed: false, type: 'video', src: assets.meamaCase, alt: 'Meama catalogue animation' },
+        { framed: false, type: 'image', src: assets.meamaStatic, alt: 'Meama product screen' },
       ],
     },
-    logo: { src: assets.logoMeama, x: 66, y: -9, w: 17, drift: { x: -20, y: -72, rot: -7 } },
+    logo: { src: assets.logoMeama, x: 66, y: -22, w: 17, drift: { x: -20, y: -72, rot: -7 } },
     layout: 'text-left',
   },
   {
@@ -122,16 +125,16 @@ export const cases: Case[] = [
       "Some stations ran empty at peak hours, others sat overloaded — courier rebalancing ate the margin. Field tests in two cities showed the blocker wasn't unwillingness but uncertainty: where to go, will it fit, will the discount apply. Answer: bonus stations with routing, one-line rules and instant reward confirmation.",
     links: [{ label: 'CASE STUDY', href: null /* TODO */ }],
     // Self-contained scene video (both phones on the light background). Source
-    // is 16:9; shown in a 4:3 box with object-cover so it fills the media
-    // column height instead of floating short, trimming ~12% off each side.
+    // is 16:9; a square object-cover box trims the wide side margins so the two
+    // phones read at the same size as the mockup reference.
     media: {
       type: 'video',
       src: assets.goVideo,
-      aspect: '4/3',
+      aspect: '1/1',
       fit: 'cover',
       alt: 'Yandex Go Beri Zaryad app scene',
     },
-    logo: { src: assets.logoGo, x: 5, y: -10, w: 22, drift: { x: -18, y: 70, rot: 8 } },
+    logo: { src: assets.logoGo, x: 5, y: -22, w: 22, drift: { x: -18, y: 70, rot: 8 } },
     layout: 'text-right',
   },
   {
