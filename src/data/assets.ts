@@ -24,6 +24,22 @@ export const assets = {
   phoneFrame: '/mockups/iphone-frame.png', // mockup iphone.png — bezel with a fully transparent screen cutout
   chumsChatVideo: '/mockups/chums-chat.webm', // Chums chat screen.webm — goes inside the frame
   chumsPreview: '/mockups/chums-preview.png', // chums-preview-ready.png — pre-composited phone
+  meamaCase: '/mockups/meama-case.mp4', // Meama-Case.mp4 — landscape, cropped into the frame
+  meamaStatic: '/mockups/meama-static.png', // meama-static-case.png — pre-composited phone
+  goVideo: '/mockups/go-video.mp4', // go-video.mp4 — 16:9 scene of both Beri Zaryad phones
+  imacFrame: '/mockups/imac-frame.png', // iMac 27" Silver — bezel with transparent screen (for recordings)
+
+  // Random section (already-composited stills).
+  randomAlice: '/random/alice-random.png',
+  randomAppleWatch: '/random/apple-watch-random.png',
+  randomBergman: '/random/bergman-poster.png',
+  randomBoot: '/random/boot-random.png',
+  randomMoneta: '/random/moneta-random.png', // composited iMac — used by the About block
+  randomPoorThings: '/random/poorthings-random.png',
+  randomRides: '/random/rides-random.png',
+  randomSmartbot: '/random/smartbot-random.png',
+  randomSoyun: '/random/soyun-poster.png',
+  randomWallet: '/random/wallet-concept-random.png',
 } as const;
 
 export type AssetKey = keyof typeof assets;

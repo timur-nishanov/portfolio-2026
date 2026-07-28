@@ -73,7 +73,7 @@ export function PhoneMockup({ phone }: { phone: PhoneScreen }) {
           poster={phone.poster}
           aria-label={phone.alt}
         >
-          <source src={phone.src} type="video/webm" />
+          <source src={phone.src} type={phone.src.endsWith('.webm') ? 'video/webm' : 'video/mp4'} />
         </video>
       ) : (
         <div className="absolute overflow-hidden" style={screenStyle}>

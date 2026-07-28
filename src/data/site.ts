@@ -9,6 +9,9 @@ export const site = {
     text:
       "Hey! I'm Timur. I design apps, concepts and interfaces, build them in code and watch the results. Worked with Yandex, Stepik, HSE, Meama, Sber, Moneta and etc.",
   },
+  // Statement block after the random section (Figma text node 1:282).
+  about:
+    'Experienced mostly in B2C, Fintech and Web3. Focused on visuals and complex user flows. Skilled in research, vibecode, and AI-generations',
   meta: {
     title: 'Timur — Designer',
     description: 'Designer of apps, concepts and interfaces. Worked with Yandex, Stepik, HSE, Meama, Sber, Moneta.',

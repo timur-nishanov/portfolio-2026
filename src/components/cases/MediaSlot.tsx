@@ -58,11 +58,17 @@ export function MediaSlot({ media }: { media: CaseMedia }) {
           <span className="pixel relative text-[13px] text-ink-muted">MOCKUP</span>
         </div>
       ) : media.type === 'image' ? (
-        <Image src={media.src} alt={media.alt} fill sizes="(max-width: 767px) 90vw, 620px" className="object-contain" />
+        <Image
+          src={media.src}
+          alt={media.alt}
+          fill
+          sizes="(max-width: 767px) 90vw, 620px"
+          className={media.fit === 'cover' ? 'object-cover' : 'object-contain'}
+        />
       ) : (
         <video
           ref={videoRef}
-          className="h-full w-full object-contain"
+          className={`h-full w-full ${media.fit === 'cover' ? 'object-cover' : 'object-contain'}`}
           autoPlay
           muted
           loop
@@ -71,7 +77,7 @@ export function MediaSlot({ media }: { media: CaseMedia }) {
           poster={media.poster}
           aria-label={media.alt}
         >
-          {media.src ? <source src={media.src} /> : null}
+          <source src={media.src} type={media.src.endsWith('.webm') ? 'video/webm' : 'video/mp4'} />
         </video>
       )}
     </div>

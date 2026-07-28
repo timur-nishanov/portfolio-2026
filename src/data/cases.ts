@@ -14,6 +14,8 @@ export type CaseMedia = {
   poster?: string;
   aspect: string; // e.g. '650/654' — fixes the slot size regardless of the file
   alt: string;
+  /** object-fit for a single image/video slot. Defaults to contain. */
+  fit?: 'cover' | 'contain';
   /** When set, render these phones side by side instead of the single slot. */
   phones?: PhoneScreen[];
 };
@@ -25,19 +27,9 @@ export type CaseLink = {
 
 export type CaseLogo = {
   src: string;
-  /**
-   * Placement as a percentage of the card box. Anchored over the media column
-   * (media side flips with the layout). Negative `y` bleeds past the top edge.
-   */
   x: number;
   y: number;
   w: number;
-  /**
-   * Scroll-parallax travel in px at the extremes of the card's viewport
-   * transit. Signs differ per logo on purpose — identical vectors kill the
-   * sense of depth (TZ §8) — and the amplitudes stay small so each logo
-   * hangs around its own case instead of wandering off.
-   */
   drift: { x: number; y: number; rot: number };
 };
 
@@ -52,14 +44,14 @@ export type Case = {
   layout: 'text-left' | 'text-right';
 };
 
-// Mockups not delivered yet → media.src = null everywhere (skeleton slots).
-// Slot proportion 650/654 is the real mockup group box from the Figma, so
-// dropping the files in later cannot move the layout. TODO(media).
+// Twin-phone slot proportion — near-square once two phones sit side by side.
+const PHONES_ASPECT = '1/1';
+// Remaining single skeleton slots (mockups still pending).
 const MEDIA_ASPECT = '650/654';
 
-// Order set by Timur: Chums, Design Battle, Yandex Go, Rally, Meama. Layout
-// alternates by position (text-left first), and each logo sits over that row's
-// media column.
+// Order set by Timur: Chums, Design Battle, Meama, Yandex Go (Beri Zaryad),
+// Rally last. Layout alternates by position (text-left first); each logo sits
+// over that row's media column.
 export const cases: Case[] = [
   {
     id: 'case-chums',
@@ -74,9 +66,7 @@ export const cases: Case[] = [
     media: {
       type: 'video',
       src: null,
-      // Twin phones: chat animation in a live frame + the pre-composited
-      // "choose your server" screen. Near-square once the pair sits side by side.
-      aspect: '1/1',
+      aspect: PHONES_ASPECT,
       alt: 'Chums Messenger app screens',
       phones: [
         { framed: true, type: 'video', src: assets.chumsChatVideo, alt: 'Chums chat animation' },
@@ -101,15 +91,48 @@ export const cases: Case[] = [
     layout: 'text-right',
   },
   {
+    id: 'case-meama',
+    titleLine1: 'Meama coffee.',
+    titleLine2: 'Europe and Georgian taste',
+    description:
+      'An international coffee brand headquartered in Berlin and Vienna, part of a large European ecosystem and expanding fast across the continent. I owned the product side of the site: reworked the overall UX, ran the discovery that validated a stack of hypotheses, concepts and design decisions, and reshaped the subscription flow so more people actually finished it.',
+    links: [
+      { label: 'CASE STUDY', href: null /* TODO */ },
+      { label: 'MEAMA.DE', href: null /* TODO */ },
+    ],
+    media: {
+      type: 'video',
+      src: null,
+      aspect: PHONES_ASPECT,
+      alt: 'Meama coffee app screens',
+      phones: [
+        // Landscape source cropped to fill the portrait screen (object-cover).
+        { framed: true, type: 'video', src: assets.meamaCase, alt: 'Meama catalogue animation' },
+        { framed: false, src: assets.meamaStatic, alt: 'Meama product screen' },
+      ],
+    },
+    logo: { src: assets.logoMeama, x: 66, y: -9, w: 17, drift: { x: -20, y: -72, rot: -7 } },
+    layout: 'text-left',
+  },
+  {
     id: 'case-go',
     titleLine1: 'Yandex Go Superapp.',
     titleLine2: 'Beri Zaryad',
     description:
       "Some stations ran empty at peak hours, others sat overloaded — courier rebalancing ate the margin. Field tests in two cities showed the blocker wasn't unwillingness but uncertainty: where to go, will it fit, will the discount apply. Answer: bonus stations with routing, one-line rules and instant reward confirmation.",
     links: [{ label: 'CASE STUDY', href: null /* TODO */ }],
-    media: { type: 'image', src: null, aspect: MEDIA_ASPECT, alt: 'Yandex Go Beri Zaryad app screens' },
-    logo: { src: assets.logoGo, x: 58, y: -8, w: 22, drift: { x: -18, y: 70, rot: 8 } },
-    layout: 'text-left',
+    // Self-contained scene video (both phones on the light background). Source
+    // is 16:9; shown in a 4:3 box with object-cover so it fills the media
+    // column height instead of floating short, trimming ~12% off each side.
+    media: {
+      type: 'video',
+      src: assets.goVideo,
+      aspect: '4/3',
+      fit: 'cover',
+      alt: 'Yandex Go Beri Zaryad app scene',
+    },
+    logo: { src: assets.logoGo, x: 5, y: -10, w: 22, drift: { x: -18, y: 70, rot: 8 } },
+    layout: 'text-right',
   },
   {
     id: 'case-rally',
@@ -121,20 +144,6 @@ export const cases: Case[] = [
     links: [{ label: 'TESTFLIGHT SOON', href: null }], // inactive by design (TZ §9.2)
     media: { type: 'image', src: null, aspect: MEDIA_ASPECT, alt: 'Rally app screens' },
     logo: null, // no Rally logo in the repo
-    layout: 'text-right',
-  },
-  {
-    id: 'case-meama',
-    titleLine1: 'Meama coffee.',
-    titleLine2: 'Europe and Georgian taste',
-    description:
-      'An international coffee brand headquartered in Berlin and Vienna, part of a large European ecosystem and expanding fast across the continent. I owned the product side of the site: reworked the overall UX, ran the discovery that validated a stack of hypotheses, concepts and design decisions, and reshaped the subscription flow so more people actually finished it.',
-    links: [
-      { label: 'CASE STUDY', href: null /* TODO */ },
-      { label: 'MEAMA.DE', href: null /* TODO */ },
-    ],
-    media: { type: 'image', src: null, aspect: MEDIA_ASPECT, alt: 'Meama coffee screens' },
-    logo: { src: assets.logoMeama, x: 66, y: -9, w: 17, drift: { x: -20, y: -72, rot: -7 } },
     layout: 'text-left',
   },
 ];
