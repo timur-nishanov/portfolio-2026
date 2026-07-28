@@ -83,7 +83,7 @@ export const cases: Case[] = [
         { framed: false, type: 'image', src: assets.chumsPreview, alt: 'Chums — choose your server screen' },
       ],
     },
-    logo: { src: assets.logoChums, x: 74, y: -12, w: 17.5, drift: { x: 22, y: -85, rot: -10 } },
+    logo: { src: assets.logoChums, x: 81, y: -12, w: 17.5, drift: { x: 22, y: -85, rot: -10 } },
     layout: 'text-left',
   },
   {
@@ -97,7 +97,7 @@ export const cases: Case[] = [
       { label: 'PITCHDECK', href: null /* TODO */ },
     ],
     media: { type: 'image', src: null, aspect: MEDIA_ASPECT, alt: 'Yandex Design Battle Alice app screens' },
-    logo: { src: assets.logoAlice, x: 6, y: -13, w: 21, drift: { x: 26, y: 60, rot: 6 } },
+    logo: { src: assets.logoAlice, x: -1, y: -13, w: 21, drift: { x: 26, y: 60, rot: 6 } },
     layout: 'text-right',
   },
   {
@@ -123,7 +123,7 @@ export const cases: Case[] = [
         { framed: false, type: 'image', src: assets.meamaStatic, alt: 'Meama product screen' },
       ],
     },
-    logo: { src: assets.logoMeama, x: 66, y: -22, w: 17, drift: { x: -20, y: -72, rot: -7 } },
+    logo: { src: assets.logoMeama, x: 73, y: -7, w: 17, drift: { x: -20, y: -72, rot: -7 } },
     layout: 'text-left',
   },
   {
@@ -134,18 +134,18 @@ export const cases: Case[] = [
       "Some stations ran empty at peak hours, others sat overloaded — courier rebalancing ate the margin. Field tests in two cities showed the blocker wasn't unwillingness but uncertainty: where to go, will it fit, will the discount apply. Answer: bonus stations with routing, one-line rules and instant reward confirmation.",
     links: [{ label: 'CASE STUDY', href: null /* TODO */ }],
     // Self-contained scene video: 16:9 with three phones side by side. A square
-    // object-cover box shows ~56% of the width; shifting the window left of
-    // centre frames the first two phones whole (lock screen + main) and leaves
-    // the third — the blue banner — outside the crop.
+    // object-cover box shows ~56% of the width; pulling the window close to the
+    // left edge frames the first two phones (lock screen + main) and leaves the
+    // third — the blue banner — outside the crop.
     media: {
       type: 'video',
       src: assets.goVideo,
       aspect: '1/1',
       fit: 'cover',
-      objectPosition: '43% 50%',
+      objectPosition: '15% 50%',
       alt: 'Yandex Go Beri Zaryad app scene',
     },
-    logo: { src: assets.logoGo, x: 5, y: -22, w: 22, drift: { x: -18, y: 70, rot: 8 } },
+    logo: { src: assets.logoGo, x: -3, y: -7, w: 22, drift: { x: -18, y: 70, rot: 8 } },
     layout: 'text-right',
   },
   {
