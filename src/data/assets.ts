@@ -19,6 +19,11 @@ export const assets = {
   // path with currentColor. Kept here for reference / OG use.
   laurelGold: '/awards/laurel-gold.svg', // golden-award.svg (#FFD92D)
   laurelTeal: '/awards/laurel-teal.svg', // silver-award.svg (#0CCDD4)
+
+  // Case mockups.
+  phoneFrame: '/mockups/iphone-frame.png', // mockup iphone.png — bezel with a fully transparent screen cutout
+  chumsChatVideo: '/mockups/chums-chat.webm', // Chums chat screen.webm — goes inside the frame
+  chumsPreview: '/mockups/chums-preview.png', // chums-preview-ready.png — pre-composited phone
 } as const;
 
 export type AssetKey = keyof typeof assets;

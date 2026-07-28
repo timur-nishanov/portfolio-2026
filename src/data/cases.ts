@@ -1,11 +1,21 @@
 import { assets } from './assets';
 
+// A single phone in a twin-phone media block.
+export type PhoneScreen =
+  // Bare screen recording / screenshot dropped into the empty iPhone frame.
+  | { framed: true; type: 'video'; src: string; poster?: string; alt: string }
+  | { framed: true; type: 'image'; src: string; alt: string }
+  // Already-composited phone render (frame baked in) — drawn as-is.
+  | { framed: false; src: string; alt: string };
+
 export type CaseMedia = {
   type: 'image' | 'video';
   src: string | null; // null = empty slot, render skeleton
   poster?: string;
   aspect: string; // e.g. '650/654' — fixes the slot size regardless of the file
   alt: string;
+  /** When set, render these phones side by side instead of the single slot. */
+  phones?: PhoneScreen[];
 };
 
 export type CaseLink = {
@@ -61,7 +71,18 @@ export const cases: Case[] = [
       { label: 'CASE STUDY', href: null /* TODO */ },
       { label: 'APPSTORE', href: null /* TODO */ },
     ],
-    media: { type: 'image', src: null, aspect: MEDIA_ASPECT, alt: 'Chums Messenger app screens' },
+    media: {
+      type: 'video',
+      src: null,
+      // Twin phones: chat animation in a live frame + the pre-composited
+      // "choose your server" screen. Near-square once the pair sits side by side.
+      aspect: '1/1',
+      alt: 'Chums Messenger app screens',
+      phones: [
+        { framed: true, type: 'video', src: assets.chumsChatVideo, alt: 'Chums chat animation' },
+        { framed: false, src: assets.chumsPreview, alt: 'Chums — choose your server screen' },
+      ],
+    },
     logo: { src: assets.logoChums, x: 74, y: -12, w: 17.5, drift: { x: 22, y: -85, rot: -10 } },
     layout: 'text-left',
   },

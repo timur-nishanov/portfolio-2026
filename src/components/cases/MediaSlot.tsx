@@ -3,16 +3,19 @@
 import Image from 'next/image';
 import { useEffect, useRef } from 'react';
 import type { CaseMedia } from '@/data/cases';
+import { PhoneStrip } from './PhoneMockup';
 
 /**
  * Fixed-proportion media slot (TZ §12). The aspect-ratio is set from data and
  * never depends on whether a file exists, so dropping mockups in later can't
  * shift the layout. Empty slot → shimmering skeleton with a MOCKUP label.
+ * When `media.phones` is set, renders the twin-phone strip instead.
  */
 export function MediaSlot({ media }: { media: CaseMedia }) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  // Play videos only while in view — five autoplaying clips would drain battery.
+  // Play single-file videos only while in view — five autoplaying clips would
+  // drain battery. (The phone strip handles its own in-view playback.)
   useEffect(() => {
     const v = videoRef.current;
     if (!v) return;
@@ -26,6 +29,15 @@ export function MediaSlot({ media }: { media: CaseMedia }) {
     io.observe(v);
     return () => io.disconnect();
   }, []);
+
+  // Twin phones don't need the card clip/skeleton bg — they fill the slot.
+  if (media.phones && media.phones.length > 0) {
+    return (
+      <div className="relative w-full" style={{ aspectRatio: media.aspect.replace('/', ' / ') }}>
+        <PhoneStrip phones={media.phones} />
+      </div>
+    );
+  }
 
   return (
     <div
