@@ -26,6 +26,14 @@ export type CaseMedia = {
   fit?: 'cover' | 'contain';
   /** object-position for a cover slot — picks which part of the frame shows. */
   objectPosition?: string;
+  /**
+   * Let the media run past the card's inner padding to the card edge, where it
+   * gets clipped — the mockup reads bigger and half-off the card, as in the
+   * Figma. Side is the card edge it bleeds toward.
+   */
+  bleed?: 'right' | 'left';
+  /** Painted behind the media, so a hairline gap can never flash through. */
+  bg?: string;
   /** When set, render these phones side by side instead of the single slot. */
   phones?: PhoneScreen[];
 };
@@ -121,11 +129,18 @@ export const cases: Case[] = [
       { label: 'MEAMA.DE', href: null /* TODO */ },
     ],
     // Single ready-made iPad mockup (frame baked in) — replaced the twin-phone
-    // slot entirely.
+    // slot entirely. Runs to the card's right edge and is clipped there, so the
+    // tablet reads large and half-off the card (Figma). The box is 730×605 at
+    // the 1440 reference (650 column + the 80 card padding it eats); cover +
+    // left anchoring scales the 1794×1279 art to 849 wide, so ~119px of the
+    // tablet's right side is cropped by the card edge.
     media: {
       type: 'image',
       src: assets.meamaIpad,
-      aspect: '1794/1279',
+      aspect: '730/605',
+      fit: 'cover',
+      objectPosition: 'left center',
+      bleed: 'right',
       alt: 'Meama capsule shop, on an iPad',
     },
     logo: { src: assets.logoMeama, x: 83, y: -7, w: 17, drift: { x: -20, y: -72, rot: -7 } },
@@ -147,9 +162,13 @@ export const cases: Case[] = [
     media: {
       type: 'video',
       src: assets.goVideo,
+      poster: assets.goPoster,
       aspect: '1/1',
       fit: 'cover',
       objectPosition: '18% 50%',
+      // The clip's own backdrop. Painted under the video so the undecoded /
+      // between-loop frames can never show through as black bars.
+      bg: '#eeeeee',
       alt: 'Yandex Go Beri Zaryad app scene',
     },
     logo: { src: assets.logoGo, x: -4, y: -7, w: 22, drift: { x: -18, y: 70, rot: 8 } },

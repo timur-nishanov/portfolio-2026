@@ -42,7 +42,12 @@ export function MediaSlot({ media }: { media: CaseMedia }) {
   return (
     <div
       className="relative w-full overflow-hidden rounded-card"
-      style={{ aspectRatio: media.aspect.replace('/', ' / ') }}
+      style={{
+        aspectRatio: media.aspect.replace('/', ' / '),
+        // Sits under the media, so a hairline rounding gap at the box edge (or
+        // a not-yet-decoded video frame) shows this instead of black.
+        backgroundColor: media.bg,
+      }}
     >
       {media.src === null ? (
         <div className="absolute inset-0 grid place-items-center rounded-card bg-[#e7e7e7]">
@@ -62,19 +67,26 @@ export function MediaSlot({ media }: { media: CaseMedia }) {
           src={media.src}
           alt={media.alt}
           fill
-          sizes="(max-width: 767px) 90vw, 620px"
+          sizes="(max-width: 767px) 90vw, 730px"
           className={media.fit === 'cover' ? 'object-cover' : 'object-contain'}
+          style={{ objectPosition: media.objectPosition }}
         />
       ) : (
         <video
           ref={videoRef}
           className={`h-full w-full ${media.fit === 'cover' ? 'object-cover' : 'object-contain'}`}
-          style={media.objectPosition ? { objectPosition: media.objectPosition } : undefined}
+          style={{
+            objectPosition: media.objectPosition,
+            backgroundColor: media.bg,
+            // A hair over 100% so the scaled frame always overshoots the box —
+            // otherwise sub-pixel rounding can leave a dark seam down an edge.
+            transform: media.fit === 'cover' ? 'scale(1.004)' : undefined,
+          }}
           autoPlay
           muted
           loop
           playsInline
-          preload="metadata"
+          preload="auto"
           poster={media.poster}
           aria-label={media.alt}
         >

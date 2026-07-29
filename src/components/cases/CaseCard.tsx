@@ -46,8 +46,18 @@ export function CaseCard({ data }: { data: Case }) {
     </div>
   );
 
+  // A bleeding mockup eats the card's side padding so it reaches the card edge
+  // and is clipped there (MediaSlot already clips), reading bigger and half-off
+  // the card. The negative margin mirrors the card's own px clamp.
+  const bleedClass =
+    data.media.bleed === 'right'
+      ? 'md:mr-[calc(-1*clamp(20px,5.71vw,80px))]'
+      : data.media.bleed === 'left'
+        ? 'md:ml-[calc(-1*clamp(20px,5.71vw,80px))]'
+        : '';
+
   const MediaBlock = (
-    <div className="relative z-10 flex items-center justify-center">
+    <div className={`relative z-10 flex items-center justify-center ${bleedClass}`}>
       <div className="w-full">
         <MediaSlot media={data.media} />
       </div>

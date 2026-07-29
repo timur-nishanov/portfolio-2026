@@ -25,6 +25,7 @@ export const assets = {
   chumsChatVideo: '/mockups/chums-chat.webm', // Chums chat screen.webm — goes inside the frame
   chumsPreview: '/mockups/chums-preview.png', // chums-preview-ready.png — pre-composited phone
   goVideo: '/mockups/go-video.mp4', // go-video.mp4 — 16:9 scene of both Beri Zaryad phones
+  goPoster: '/mockups/go-poster.jpg', // first frame — shown until the clip decodes
   imacFrame: '/mockups/imac-frame.png', // iMac 27" Silver — bezel with transparent screen (for recordings)
   // Design Battle: bare screen capture (goes inside our iPhone frame, same
   // treatment as Chums) + a pre-composited second phone.

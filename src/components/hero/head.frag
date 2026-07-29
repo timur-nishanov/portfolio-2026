@@ -47,29 +47,44 @@ void main() {
   vec2 offset = uPointer * (d0 - uDepthPivot) * uStrength;
   vec2 duv = uv - offset;
 
-  vec4 direct = texture2D(uColor, duv);
+  // Swelling. Every impact puffs the skin around it: sampling from a point
+  // pulled toward the mark magnifies the texture there, so the area balloons
+  // and — near the silhouette — visibly deforms the outline. This is what
+  // sells "took a beating" without leaning on colour, and it stacks, so a
+  // face that's been thrown around a lot ends up genuinely misshapen.
+  vec2 swell = vec2(0.0);
+  for (int i = 0; i < MAX_MARKS; i++) {
+    vec3 m = uMarks[i];
+    vec2 rel = duv - m.xy;
+    float dd = length(rel);
+    float f = 1.0 - smoothstep(0.0, 0.17, dd);
+    swell += normalize(rel + vec2(1e-5)) * f * f * m.z * 0.02;
+  }
+  vec2 suv = duv - swell;
+
+  vec4 direct = texture2D(uColor, suv);
 
   // Hide the mirror seam running down the texture centre. The head is
   // mirror-symmetric (TZ §1.3), so x≈0.5 is a hard join line. In a narrow band
   // there, replace the sample with a short horizontal blur that averages across
   // the join, dissolving the line without smearing the rest of the face.
-  float seam = 1.0 - smoothstep(0.0, 0.05, abs(duv.x - 0.5));
+  float seam = 1.0 - smoothstep(0.0, 0.05, abs(suv.x - 0.5));
   if (seam > 0.001) {
     float bx = uTexel.x * 4.0;
-    vec4 acc = texture2D(uColor, duv + vec2(-3.0 * bx, 0.0))
-             + texture2D(uColor, duv + vec2(-2.0 * bx, 0.0))
-             + texture2D(uColor, duv + vec2(-1.0 * bx, 0.0))
+    vec4 acc = texture2D(uColor, suv + vec2(-3.0 * bx, 0.0))
+             + texture2D(uColor, suv + vec2(-2.0 * bx, 0.0))
+             + texture2D(uColor, suv + vec2(-1.0 * bx, 0.0))
              + direct
-             + texture2D(uColor, duv + vec2( 1.0 * bx, 0.0))
-             + texture2D(uColor, duv + vec2( 2.0 * bx, 0.0))
-             + texture2D(uColor, duv + vec2( 3.0 * bx, 0.0));
+             + texture2D(uColor, suv + vec2( 1.0 * bx, 0.0))
+             + texture2D(uColor, suv + vec2( 2.0 * bx, 0.0))
+             + texture2D(uColor, suv + vec2( 3.0 * bx, 0.0));
     acc *= (1.0 / 7.0);
     direct = mix(direct, acc, seam);
   }
 
   // Mirror-fill: at big angles the displaced sample falls off the silhouette
   // (alpha drops / edge smears). Take the missing pixels from the flipped half.
-  vec4 mirror = texture2D(uColor, vec2(1.0 - duv.x, duv.y));
+  vec4 mirror = texture2D(uColor, vec2(1.0 - suv.x, suv.y));
   float exposure = 1.0 - smoothstep(0.35, 0.6, direct.a);
   vec4 col = mix(direct, mirror, exposure);
 
@@ -88,59 +103,59 @@ void main() {
   col.rgb += diff * uLightStrength;
 
   // Marks left by wall impacts. Sampled in the displaced UV so each rides the
-  // face like it's painted on the skin. Each picks one of four looks from a
-  // hash of its own position, so repeat hits never read identical: a thin red
-  // scratch, a wider soft black-eye swell, a small tight dark scuff, or the
-  // classic red-purple bruise. The blotches use two radial falloffs (soft
-  // outer flush + darker core); the scratch uses an anisotropic field —
-  // distance squashed hard across a random axis and stretched along it — so
-  // it draws a fine streak instead of a disc.
+  // face like it's painted on the skin, shaped by two radial falloffs (soft
+  // outer flush + darker core). The look comes from a hash of the mark's own
+  // position, so repeat hits never read identical — but the palette is
+  // deliberately almost all red: only the top slice of the hash goes purple,
+  // so at most a mark or two is ever "blue". The radii are broken up by a
+  // per-pixel hash, which turns the perfect discs into raw, ragged abrasions.
   float rawSum = 0.0;
   vec3 colorSum = vec3(0.0);
   for (int i = 0; i < MAX_MARKS; i++) {
     vec3 m = uMarks[i];
-    vec2 rel = duv - m.xy;
-    float d = length(rel);
+    float d = distance(duv, m.xy);
     float kind = hash(m.xy);
     float sizeJitter = 0.85 + hash(m.xy + 4.7) * 0.3;
-    float amt;
+    // Ragged edge — a grazed patch, not a stamped circle.
+    float ragged = 0.82 + hash(floor(duv * 260.0)) * 0.36;
+
+    float outerR;
+    float coreR;
     vec3 welt;
-    if (kind > 0.75) {
-      // Scratch: rotate into the mark's own axis, then squash across / stretch
-      // along it to get a thin graze at a random angle. Fresh, bright red.
-      float ang = hash(m.xy + 9.1) * 6.2831853;
-      float ca = cos(ang);
-      float sa = sin(ang);
-      vec2 r = vec2(rel.x * ca - rel.y * sa, rel.x * sa + rel.y * ca);
-      float sd = length(vec2(r.x / (0.006 * sizeJitter), r.y / (0.09 * sizeJitter)));
-      amt = m.z * (1.0 - smoothstep(0.35, 1.0, sd));
-      welt = vec3(0.58, 0.05, 0.06);
-    } else if (kind > 0.5) {
-      // Black-eye: wider and softer, cooler/darker tone — reads as swelling.
-      float outer = 1.0 - smoothstep(0.0, 0.17 * sizeJitter, d);
-      float core = 1.0 - smoothstep(0.0, 0.085 * sizeJitter, d);
-      amt = m.z * (outer * 0.55 + core * 0.65);
-      welt = vec3(0.15, 0.06, 0.21);
-    } else if (kind > 0.25) {
-      // Scuff: small and dark, little spread.
-      float outer = 1.0 - smoothstep(0.0, 0.06 * sizeJitter, d);
-      float core = 1.0 - smoothstep(0.0, 0.026 * sizeJitter, d);
-      amt = m.z * (outer * 0.55 + core * 0.65);
-      welt = vec3(0.27, 0.11, 0.10);
+    if (kind > 0.86) {
+      // The rare one that's gone properly purple.
+      outerR = 0.15 * sizeJitter;
+      coreR = 0.075 * sizeJitter;
+      welt = vec3(0.17, 0.07, 0.20);
+    } else if (kind > 0.56) {
+      // Broad raw welt — the skin scraped and inflamed.
+      outerR = 0.13 * sizeJitter;
+      coreR = 0.058 * sizeJitter;
+      welt = vec3(0.56, 0.06, 0.07);
+    } else if (kind > 0.28) {
+      // Tight dark-red contusion.
+      outerR = 0.075 * sizeJitter;
+      coreR = 0.032 * sizeJitter;
+      welt = vec3(0.33, 0.05, 0.06);
     } else {
-      // Classic red-purple bruise.
-      float outer = 1.0 - smoothstep(0.0, 0.10 * sizeJitter, d);
-      float core = 1.0 - smoothstep(0.0, 0.045 * sizeJitter, d);
-      amt = m.z * (outer * 0.55 + core * 0.65);
-      welt = vec3(0.42, 0.05, 0.09);
+      // Classic red bruise.
+      outerR = 0.10 * sizeJitter;
+      coreR = 0.045 * sizeJitter;
+      welt = vec3(0.45, 0.05, 0.08);
     }
+
+    float outer = 1.0 - smoothstep(0.0, outerR * ragged, d);
+    float core = 1.0 - smoothstep(0.0, coreR * ragged, d);
+    float amt = m.z * (outer * 0.5 + core * 0.5);
     rawSum += amt;
     colorSum += welt * amt;
   }
   float bruise = clamp(rawSum, 0.0, 1.0);
   if (bruise > 0.001) {
     vec3 avgWelt = colorSum / max(rawSum, 0.0001);
-    col.rgb = mix(col.rgb, mix(col.rgb * 0.5, avgWelt, 0.5), bruise * 0.8);
+    // Keep it inflamed-red rather than muddy: darken the skin only a little and
+    // lean the blend toward the welt colour.
+    col.rgb = mix(col.rgb, mix(col.rgb * 0.66, avgWelt, 0.55), bruise * 0.7);
   }
 
   gl_FragColor = vec4(col.rgb, col.a);
