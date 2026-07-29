@@ -144,20 +144,23 @@ void main() {
       welt = vec3(0.50, 0.09, 0.10);
     }
 
-    // One wide, soft falloff only. The old tight `core` term stacked a small
-    // near-black disc in the middle of every mark, which read as a hole
-    // punched in the face rather than a bruise — the damage should come from
-    // the swelling above plus a diffuse flush, never a dot.
-    float amt = m.z * (1.0 - smoothstep(0.0, outerR * ragged, d)) * 0.62;
+    // Two falloffs: a wide diffuse flush plus a denser inner concentration so
+    // the mark actually reads as a red welt, not just a faint tint. The inner
+    // term stays soft (radius ~half the outer) — the black-dot artefact was
+    // the swelling singularity above, not this, so a visible red core is fine.
+    float outer = 1.0 - smoothstep(0.0, outerR * ragged, d);
+    float core = 1.0 - smoothstep(0.0, outerR * 0.5 * ragged, d);
+    float amt = m.z * (outer * 0.5 + core * 0.6);
     rawSum += amt;
     colorSum += welt * amt;
   }
   float bruise = clamp(rawSum, 0.0, 1.0);
   if (bruise > 0.001) {
     vec3 avgWelt = colorSum / max(rawSum, 0.0001);
-    // Tint toward the welt without crushing the skin dark — keeps it reading
-    // as inflammation over the existing texture.
-    col.rgb = mix(col.rgb, mix(col.rgb * 0.82, avgWelt, 0.5), bruise * 0.6);
+    // Lean firmly into the welt colour so the red is unmistakable, with only a
+    // mild darkening of the underlying skin — reads as a fresh bruise, still
+    // red rather than muddy brown.
+    col.rgb = mix(col.rgb, mix(col.rgb * 0.72, avgWelt, 0.6), bruise * 0.9);
   }
 
   gl_FragColor = vec4(col.rgb, col.a);

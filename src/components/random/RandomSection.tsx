@@ -79,16 +79,26 @@ function ImacScreen({ alt, video, screenBg }: { alt: string; video?: string; scr
     width: `${IMAC_SCREEN.width}%`,
     height: `${IMAC_SCREEN.height}%`,
   };
+  // The video overscans the cutout by ~0.8% on every side so its edge tucks
+  // UNDER the frame's opaque bezel — otherwise a hairline of the white page
+  // behind the tile shows between the video and the glass edge.
+  const OVER = 0.8;
+  const videoScreenStyle: React.CSSProperties = {
+    left: `${IMAC_SCREEN.left - OVER}%`,
+    top: `${IMAC_SCREEN.top - OVER}%`,
+    width: `${IMAC_SCREEN.width + OVER * 2}%`,
+    height: `${IMAC_SCREEN.height + OVER * 2}%`,
+    background: screenBg,
+  };
 
   return (
     <div className="relative h-full w-full">
       {video ? (
-        // Recording sits UNDER the frame, clipped to the screen rect. `cover`
-        // (not contain) pins it to the screen's top-left and scales until it
-        // reaches the far corner, so the glass is filled edge to edge with no
-        // letterbox strips — the clip is slightly narrower than 16:9, so what
-        // gets given up is a sliver off the bottom rather than white bars.
-        <div className="absolute overflow-hidden" style={{ ...screenStyle, background: screenBg }}>
+        // Recording sits UNDER the frame, clipped to the (overscanned) screen
+        // rect. `cover` pins it to the top-left and scales until it reaches the
+        // far corner, filling the glass edge to edge; the overscan hides any
+        // hairline of page-white at the cutout border.
+        <div className="absolute overflow-hidden" style={videoScreenStyle}>
           <video
             ref={videoRef}
             className="h-full w-full object-cover"

@@ -60,6 +60,12 @@ export type Case = {
   media: CaseMedia;
   logo: CaseLogo | null;
   layout: 'text-left' | 'text-right';
+  /**
+   * Give the media column extra width (and let the card grow past its fixed
+   * aspect if the narrower text needs it). Used for the Lendly laptop, which
+   * should read noticeably larger than the default 650-col mockups.
+   */
+  bigMedia?: boolean;
 };
 
 // Twin-phone slot proportion — near-square once two phones sit side by side.
@@ -221,5 +227,6 @@ export const cases: Case[] = [
     },
     logo: null, // no Lendly logo in the repo
     layout: 'text-right',
+    bigMedia: true,
   },
 ];
