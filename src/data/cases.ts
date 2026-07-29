@@ -196,4 +196,30 @@ export const cases: Case[] = [
     logo: null, // no Rally logo in the repo
     layout: 'text-left',
   },
+  {
+    id: 'case-lendly',
+    titleLine1: 'Lendly Invest.',
+    titleLine2: 'Crowdlanding platform',
+    description:
+      "On a crowdlending platform the investment flow is the revenue path: every extra step before a deal closes is a deal that doesn't. Interviews and usability tests with the platform's B2B investors showed the flow ran as one long undifferentiated stretch, so we broke it into discrete steps and rebuilt the site around it. Time to complete the core scenario dropped by roughly half, and follow-up research confirmed the flow felt materially easier",
+    links: [
+      { label: 'CASE STUDY', href: null /* TODO */ },
+      { label: 'PLATFORM', href: null /* TODO */ },
+    ],
+    // Ready-made MacBook mockup (frame baked in), mirrored from Meama: it runs
+    // out to the card's left edge so the laptop reads large. The source PNG's
+    // transparent margin was cropped off (to 1651×1194) so the art *is* the
+    // laptop — otherwise the padding shrank it inside the slot. Box matches
+    // that ratio, so contain fills it exactly and nothing is cut.
+    media: {
+      type: 'image',
+      src: assets.lendlyMacbook,
+      aspect: '1651/1194',
+      fit: 'contain',
+      bleed: 'left',
+      alt: 'Lendly Invest secondary market, on a MacBook',
+    },
+    logo: null, // no Lendly logo in the repo
+    layout: 'text-right',
+  },
 ];

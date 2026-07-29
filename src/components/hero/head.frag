@@ -52,13 +52,18 @@ void main() {
   // and — near the silhouette — visibly deforms the outline. This is what
   // sells "took a beating" without leaning on colour, and it stacks, so a
   // face that's been thrown around a lot ends up genuinely misshapen.
+  // Displacement scales with `rel` itself, not its direction. That matters:
+  // a normalize() here is undefined at the mark's centre and pushes a fixed
+  // amount in an arbitrary direction, which pinches the texture into a dark
+  // speck at every impact point. Scaling the vector instead goes cleanly to
+  // zero at the centre, and pulling each sample toward the mark magnifies the
+  // skin around it — a smooth bulge, no singularity.
   vec2 swell = vec2(0.0);
   for (int i = 0; i < MAX_MARKS; i++) {
     vec3 m = uMarks[i];
     vec2 rel = duv - m.xy;
-    float dd = length(rel);
-    float f = 1.0 - smoothstep(0.0, 0.17, dd);
-    swell += normalize(rel + vec2(1e-5)) * f * f * m.z * 0.02;
+    float f = 1.0 - smoothstep(0.0, 0.18, length(rel));
+    swell += rel * f * m.z * 0.3;
   }
   vec2 suv = duv - swell;
 
@@ -120,42 +125,39 @@ void main() {
     float ragged = 0.82 + hash(floor(duv * 260.0)) * 0.36;
 
     float outerR;
-    float coreR;
     vec3 welt;
     if (kind > 0.86) {
       // The rare one that's gone properly purple.
-      outerR = 0.15 * sizeJitter;
-      coreR = 0.075 * sizeJitter;
-      welt = vec3(0.17, 0.07, 0.20);
+      outerR = 0.17 * sizeJitter;
+      welt = vec3(0.19, 0.09, 0.22);
     } else if (kind > 0.56) {
-      // Broad raw welt — the skin scraped and inflamed.
-      outerR = 0.13 * sizeJitter;
-      coreR = 0.058 * sizeJitter;
-      welt = vec3(0.56, 0.06, 0.07);
+      // Broad raw flush — the skin scraped and inflamed.
+      outerR = 0.16 * sizeJitter;
+      welt = vec3(0.58, 0.10, 0.10);
     } else if (kind > 0.28) {
-      // Tight dark-red contusion.
-      outerR = 0.075 * sizeJitter;
-      coreR = 0.032 * sizeJitter;
-      welt = vec3(0.33, 0.05, 0.06);
+      // Deeper red patch.
+      outerR = 0.115 * sizeJitter;
+      welt = vec3(0.40, 0.08, 0.08);
     } else {
       // Classic red bruise.
-      outerR = 0.10 * sizeJitter;
-      coreR = 0.045 * sizeJitter;
-      welt = vec3(0.45, 0.05, 0.08);
+      outerR = 0.14 * sizeJitter;
+      welt = vec3(0.50, 0.09, 0.10);
     }
 
-    float outer = 1.0 - smoothstep(0.0, outerR * ragged, d);
-    float core = 1.0 - smoothstep(0.0, coreR * ragged, d);
-    float amt = m.z * (outer * 0.5 + core * 0.5);
+    // One wide, soft falloff only. The old tight `core` term stacked a small
+    // near-black disc in the middle of every mark, which read as a hole
+    // punched in the face rather than a bruise — the damage should come from
+    // the swelling above plus a diffuse flush, never a dot.
+    float amt = m.z * (1.0 - smoothstep(0.0, outerR * ragged, d)) * 0.62;
     rawSum += amt;
     colorSum += welt * amt;
   }
   float bruise = clamp(rawSum, 0.0, 1.0);
   if (bruise > 0.001) {
     vec3 avgWelt = colorSum / max(rawSum, 0.0001);
-    // Keep it inflamed-red rather than muddy: darken the skin only a little and
-    // lean the blend toward the welt colour.
-    col.rgb = mix(col.rgb, mix(col.rgb * 0.66, avgWelt, 0.55), bruise * 0.7);
+    // Tint toward the welt without crushing the skin dark — keeps it reading
+    // as inflammation over the existing texture.
+    col.rgb = mix(col.rgb, mix(col.rgb * 0.82, avgWelt, 0.5), bruise * 0.6);
   }
 
   gl_FragColor = vec4(col.rgb, col.a);

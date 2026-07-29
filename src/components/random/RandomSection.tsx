@@ -50,7 +50,7 @@ const tiles: Tile[] = [
   { src: assets.randomRides, alt: 'Rides app screen', w: 576, h: 1185, l: 4.42, t: 63.1, wpct: 27.75, z: 30, p: 88 },
   { src: assets.randomAlice, alt: 'Alice in Wonderland poster', w: 843, h: 1341, l: 29.64, t: 68.19, wpct: 40.72, z: 20, p: -50 },
   { src: assets.randomBoot, alt: 'Boot product shot', w: 629, h: 705, l: 66.96, t: 77.71, wpct: 30.36, z: 20, p: 96 },
-  { src: assets.randomMoneta, alt: 'Moneta — online payments platform, on an iMac', w: 2070, h: 1666, l: 0, t: 83.51, wpct: 100, z: 10, p: -18 },
+  { src: null, video: assets.deskMoneta, screenBg: '#0b1533', alt: 'Moneta — online payments platform, on an iMac', w: IMAC.w, h: IMAC.h, l: 0, t: 83.51, wpct: 100, z: 10, p: -18 },
 ];
 
 // iMac screen cutout, measured from imac-frame.png (2760×2221).
@@ -83,13 +83,16 @@ function ImacScreen({ alt, video, screenBg }: { alt: string; video?: string; scr
   return (
     <div className="relative h-full w-full">
       {video ? (
-        // Recording sits UNDER the frame, clipped to the screen rect. The clip
-        // is 16:10-ish (DevTools cropped out) so object-contain leaves a thin
-        // side letterbox — painted the page's own bg colour so it's invisible.
+        // Recording sits UNDER the frame, clipped to the screen rect. `cover`
+        // (not contain) pins it to the screen's top-left and scales until it
+        // reaches the far corner, so the glass is filled edge to edge with no
+        // letterbox strips — the clip is slightly narrower than 16:9, so what
+        // gets given up is a sliver off the bottom rather than white bars.
         <div className="absolute overflow-hidden" style={{ ...screenStyle, background: screenBg }}>
           <video
             ref={videoRef}
-            className="h-full w-full object-contain"
+            className="h-full w-full object-cover"
+            style={{ objectPosition: 'left top' }}
             autoPlay
             muted
             loop

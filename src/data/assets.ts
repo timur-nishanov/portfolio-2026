@@ -37,16 +37,19 @@ export const assets = {
   // supplies the real case video.
   rallyStatic1: '/mockups/rally-static-1.png',
   rallyStatic2: '/mockups/rally-static-2.png',
-  // Desktop mockup recording, DevTools/browser chrome cropped out and re-encoded
-  // web-safe (crop 2336×1440 → 1600w H.264). Goes inside the Random iMac frame.
+  // Lendly: ready-made MacBook mockup (frame baked in).
+  lendlyMacbook: '/mockups/lendly-macbook.png',
+  // Desktop mockup recordings that play inside the Random iMac frames.
+  // desk-artem had the browser DevTools panel docked right, so it was cropped
+  // (2336×1440) before re-encoding; moneta was already clean. Both 1600w H.264.
   deskArtem: '/mockups/desk-artem.mp4', // artemartemartem.com screen recording
+  deskMoneta: '/mockups/desk-moneta.mp4', // moneta.ru screen recording
 
   // Random section (already-composited stills).
   randomAlice: '/random/alice-random.png',
   randomAppleWatch: '/random/apple-watch-random.png',
   randomBergman: '/random/bergman-poster.png',
   randomBoot: '/random/boot-random.png',
-  randomMoneta: '/random/moneta-random.png', // composited iMac — used by the About block
   randomPoorThings: '/random/poorthings-random.png',
   randomRides: '/random/rides-random.png',
   randomSmartbot: '/random/smartbot-random.png',
