@@ -100,9 +100,11 @@ export const cases: Case[] = [
       aspect: PHONES_ASPECT,
       alt: 'Yandex Design Battle Alice app screens',
       phones: [
-        // Pre-composited phones (frame baked in) — placeholders until the video.
+        // Pre-composited phone (frame baked in).
         { framed: false, type: 'image', src: assets.aliceStatic1, alt: 'Alice lock-screen suggestions' },
-        { framed: false, type: 'image', src: assets.aliceStatic2, alt: 'Alice studio mode' },
+        // Bare screen capture — same treatment as Chums: drawn inside our own
+        // iPhone frame. Audio track was stripped (muted anyway via the tag).
+        { framed: true, type: 'video', src: assets.aliceVideo, alt: 'Alice avatar and character picker' },
       ],
     },
     logo: { src: assets.logoAlice, x: -4, y: -13, w: 21, drift: { x: 26, y: 60, rot: 6 } },
@@ -118,18 +120,13 @@ export const cases: Case[] = [
       { label: 'CASE STUDY', href: null /* TODO */ },
       { label: 'MEAMA.DE', href: null /* TODO */ },
     ],
+    // Single ready-made iPad mockup (frame baked in) — replaced the twin-phone
+    // slot entirely.
     media: {
-      type: 'video',
-      src: null,
-      aspect: PHONES_ASPECT,
-      alt: 'Meama coffee app screens',
-      phones: [
-        // Video already contains its own phone mockup — draw it as-is, no frame.
-        // Its phone sits inset in a landscape canvas, so zoom until it matches
-        // the static phone beside it.
-        { framed: false, type: 'video', src: assets.meamaCase, alt: 'Meama catalogue animation', scale: 1.35 },
-        { framed: false, type: 'image', src: assets.meamaStatic, alt: 'Meama product screen' },
-      ],
+      type: 'image',
+      src: assets.meamaIpad,
+      aspect: '1794/1279',
+      alt: 'Meama capsule shop, on an iPad',
     },
     logo: { src: assets.logoMeama, x: 83, y: -7, w: 17, drift: { x: -20, y: -72, rot: -7 } },
     layout: 'text-left',

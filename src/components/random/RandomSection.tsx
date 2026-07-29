@@ -12,9 +12,10 @@ import { useIsMobile } from '@/hooks/useMediaQuery';
 // the smaller items overlap them. Positions are % of a 1380×6736 band. `z` is
 // the stacking order (small items above the big ones); `p` = per-item scroll
 // parallax amplitude (px, varied sign) so they drift independently.
-// The artem / stepicon iMacs play screen recordings of artemartemartem.com and
-// stepicon2026.vercel.app inside the frame's screen cutout (Timur supplied the
-// clips; DevTools chrome was cropped out and they were re-encoded web-safe).
+// The artem iMac plays a screen recording of artemartemartem.com inside the
+// frame's screen cutout (DevTools chrome was cropped out of the source clip
+// and it was re-encoded web-safe). The stepicon iMac is a ready-made
+// pre-composited mockup PNG, same treatment as the Moneta tile below.
 const CANVAS_AR = '1380 / 6736';
 
 type Tile = {
@@ -45,7 +46,7 @@ const tiles: Tile[] = [
   { src: assets.randomBergman, alt: 'Bergman poster', w: 702, h: 993, l: 66.09, t: 25.48, wpct: 33.91, z: 20, p: 50 },
   { src: assets.randomSmartbot, alt: 'Chatbot constructor — landing', w: 2070, h: 1220, l: 0, t: 33.92, wpct: 100, z: 10, p: -18 },
   { src: assets.randomPoorThings, alt: 'Poor Things screen', w: 513, h: 1041, l: 21.38, t: 43.41, wpct: 24.78, z: 30, p: 76 },
-  { src: null, video: assets.deskStepicon, screenBg: '#000000', alt: 'stepicon2026 conference site, on an iMac', w: IMAC.w, h: IMAC.h, l: 0, t: 50.05, wpct: 100, z: 10, p: -18 },
+  { src: assets.randomStepicon, alt: 'stepicon2026 conference site, on an iMac', w: 2070, h: 1666, l: 0, t: 50.05, wpct: 100, z: 10, p: -18 },
   { src: assets.randomRides, alt: 'Rides app screen', w: 576, h: 1185, l: 4.42, t: 63.1, wpct: 27.75, z: 30, p: 88 },
   { src: assets.randomAlice, alt: 'Alice in Wonderland poster', w: 843, h: 1341, l: 29.64, t: 68.19, wpct: 40.72, z: 20, p: -50 },
   { src: assets.randomBoot, alt: 'Boot product shot', w: 629, h: 705, l: 66.96, t: 77.71, wpct: 30.36, z: 20, p: 96 },

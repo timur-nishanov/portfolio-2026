@@ -24,20 +24,21 @@ export const assets = {
   phoneFrame: '/mockups/iphone-frame.png', // mockup iphone.png — bezel with a fully transparent screen cutout
   chumsChatVideo: '/mockups/chums-chat.webm', // Chums chat screen.webm — goes inside the frame
   chumsPreview: '/mockups/chums-preview.png', // chums-preview-ready.png — pre-composited phone
-  meamaCase: '/mockups/meama-case.mp4', // Meama-Case.mp4 — landscape, cropped into the frame
-  meamaStatic: '/mockups/meama-static.png', // meama-static-case.png — pre-composited phone
   goVideo: '/mockups/go-video.mp4', // go-video.mp4 — 16:9 scene of both Beri Zaryad phones
   imacFrame: '/mockups/imac-frame.png', // iMac 27" Silver — bezel with transparent screen (for recordings)
-  // Design Battle / Rally placeholder screens (pre-composited phones) — stand in
-  // until Timur supplies the real case videos.
+  // Design Battle: bare screen capture (goes inside our iPhone frame, same
+  // treatment as Chums) + a pre-composited second phone.
   aliceStatic1: '/mockups/alice-static-1.png',
-  aliceStatic2: '/mockups/alice-static-2.png',
+  aliceVideo: '/mockups/alice-video.webm', // alice-vid.webm, audio track stripped
+  // Meama's twin-phone slot was replaced by a single ready-made iPad mockup.
+  meamaIpad: '/mockups/meama-ipad.png',
+  // Rally placeholder screens (pre-composited phones) — stand in until Timur
+  // supplies the real case video.
   rallyStatic1: '/mockups/rally-static-1.png',
   rallyStatic2: '/mockups/rally-static-2.png',
-  // Desktop mockup recordings, DevTools/browser chrome cropped out and re-encoded
-  // web-safe (crop 2336×1440 → 1600w H.264). Go inside the Random iMac frames.
+  // Desktop mockup recording, DevTools/browser chrome cropped out and re-encoded
+  // web-safe (crop 2336×1440 → 1600w H.264). Goes inside the Random iMac frame.
   deskArtem: '/mockups/desk-artem.mp4', // artemartemartem.com screen recording
-  deskStepicon: '/mockups/desk-stepicon.mp4', // stepicon2026.vercel.app screen recording
 
   // Random section (already-composited stills).
   randomAlice: '/random/alice-random.png',
@@ -49,6 +50,7 @@ export const assets = {
   randomRides: '/random/rides-random.png',
   randomSmartbot: '/random/smartbot-random.png',
   randomSoyun: '/random/soyun-poster.png',
+  randomStepicon: '/random/stepicon-random.png', // composited iMac — stepicon2026 mockup
   randomWallet: '/random/wallet-concept-random.png',
 } as const;
 
