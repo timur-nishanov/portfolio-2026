@@ -65,24 +65,13 @@ export function CaseCard({ data }: { data: Case }) {
   );
 
   // Columns are not 50/50 — the Figma gives the text 512 and the media 650,
-  // with a 78 gap. Mirrored for the text-right cards. bigMedia cards hand the
-  // media column a much larger share so the mockup reads large (Lendly).
-  const gridCols = data.bigMedia
-    ? textFirst
-      ? 'md:grid-cols-[minmax(0,440fr)_minmax(0,860fr)]'
-      : 'md:grid-cols-[minmax(0,860fr)_minmax(0,440fr)]'
-    : textFirst
-      ? 'md:grid-cols-[512fr_650fr]'
-      : 'md:grid-cols-[650fr_512fr]';
-
-  // Fixed aspect keeps every card the same height; but a bigMedia card has a
-  // narrow text column, so let it grow taller instead of clipping the copy.
-  const heightClass = data.bigMedia ? 'md:min-h-[clamp(0px,42.4vw,611px)]' : 'md:aspect-[1400/763]';
+  // with a 78 gap. Mirrored for the text-right cards.
+  const gridCols = textFirst ? 'md:grid-cols-[512fr_650fr]' : 'md:grid-cols-[650fr_512fr]';
 
   return (
     <div
       ref={cardRef}
-      className={`relative grid grid-cols-1 items-center gap-[clamp(24px,5.57vw,78px)] rounded-card bg-surface px-[clamp(20px,5.71vw,80px)] py-[clamp(28px,4vw,54px)] ${heightClass} ${gridCols}`}
+      className={`relative grid grid-cols-1 items-center gap-[clamp(24px,5.57vw,78px)] rounded-card bg-surface px-[clamp(20px,5.71vw,80px)] py-[clamp(28px,4vw,54px)] md:aspect-[1400/763] ${gridCols}`}
     >
       {/* Logo is positioned against the card box — its %s come from the Figma,
           including the deliberate bleed past the top edge. */}

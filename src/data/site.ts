@@ -11,7 +11,7 @@ export const site = {
   },
   // Statement block after the random section (Figma text node 1:282).
   about:
-    'Experienced mostly in B2C, Fintech and Web3. Focused on visuals and complex user flows. Skilled in research, vibecode, and AI-generations',
+    'Experienced mostly in B2C, Fintech and Web3. Focused on visuals and complex user flows. I build hypotheses, run user tests and measure if a design worked. Skilled in research, vibecode and AI-generations',
   meta: {
     title: 'Timur — Designer',
     description: 'Designer of apps, concepts and interfaces. Worked with Yandex, Stepik, HSE, Meama, Sber, Moneta.',

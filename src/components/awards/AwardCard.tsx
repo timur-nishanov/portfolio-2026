@@ -7,8 +7,10 @@ export function AwardCard({ award }: { award: Award }) {
   return (
     <article className="flex h-full flex-col items-center px-4 text-center">
       <Laurels tier={award.tier} />
-      {/* Same type as the case cards: 40px title, 20px body, both regular. */}
-      <h3 className="t-case-title mt-[clamp(20px,3.3vw,48px)] max-w-[22ch] text-ink">
+      {/* Same type as the case cards: 40px title, 20px body, both regular.
+          whitespace-pre-line honours the explicit \n in a title (used to drop
+          "Mention" onto its own line); titles without one still wrap by width. */}
+      <h3 className="t-case-title mt-[clamp(20px,3.3vw,48px)] max-w-[22ch] whitespace-pre-line text-ink">
         {award.title}
       </h3>
       <p className="t-body mt-[clamp(12px,1.7vw,24px)] max-w-[46ch] text-ink-muted">

@@ -29,5 +29,5 @@ export const awards: Award[] = [
     tier: 'teal',
     href: null,
   },
-  { id: 'awwwards-honorable', title: 'Awwwards Honorable Mention', description: AWARD_PLACEHOLDER, tier: 'teal', href: null },
+  { id: 'awwwards-honorable', title: 'Awwwards Honorable\nMention', description: AWARD_PLACEHOLDER, tier: 'teal', href: null },
 ];

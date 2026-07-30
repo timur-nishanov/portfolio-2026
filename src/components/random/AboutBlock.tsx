@@ -7,13 +7,11 @@ import { site } from '@/data/site';
 export function AboutBlock() {
   return (
     <section aria-label="About" className="py-[clamp(48px,7vw,110px)]">
-      {/* Wider than container-hero (which caps at 1184 content px, shared with
-          the Hero paragraph) — this block needs ~1250px to hold the line to 4
-          rows at the 1440 reference, confirmed via measurement (1220px→5
-          lines, 1225px→4). It wraps to more on narrower desktops/tablets,
-          which is fine. */}
-      <div className="mx-auto flex w-full max-w-[1298px] flex-col items-center px-6">
-        <p className="t-hero max-w-[1250px] text-ink">{site.about}</p>
+      {/* Uses the full content width (caps at the viewport minus padding on a
+          1440 screen) so the longer statement holds to ~6 lines rather than
+          stacking into a wall. Wraps to more on narrower desktops/tablets. */}
+      <div className="mx-auto flex w-full max-w-[1440px] flex-col items-center px-6">
+        <p className="t-hero text-ink">{site.about}</p>
       </div>
     </section>
   );

@@ -60,12 +60,6 @@ export type Case = {
   media: CaseMedia;
   logo: CaseLogo | null;
   layout: 'text-left' | 'text-right';
-  /**
-   * Give the media column extra width (and let the card grow past its fixed
-   * aspect if the narrower text needs it). Used for the Lendly laptop, which
-   * should read noticeably larger than the default 650-col mockups.
-   */
-  bigMedia?: boolean;
 };
 
 // Twin-phone slot proportion — near-square once two phones sit side by side.
@@ -217,6 +211,10 @@ export const cases: Case[] = [
     // transparent margin was cropped off (to 1651×1194) so the art *is* the
     // laptop — otherwise the padding shrank it inside the slot. Box matches
     // that ratio, so contain fills it exactly and nothing is cut.
+    // Cropped MacBook mockup, run out to the card's left edge (bleed) so it
+    // reads large without stealing width from the copy. Default column split —
+    // the wider bigMedia version squeezed the text to a narrow strip, which
+    // wrapped the title to three lines and forced the two buttons to stack.
     media: {
       type: 'image',
       src: assets.lendlyMacbook,
@@ -227,6 +225,5 @@ export const cases: Case[] = [
     },
     logo: null, // no Lendly logo in the repo
     layout: 'text-right',
-    bigMedia: true,
   },
 ];
