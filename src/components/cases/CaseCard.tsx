@@ -56,17 +56,34 @@ export function CaseCard({ data }: { data: Case }) {
         ? 'md:ml-[calc(-1*clamp(20px,5.71vw,80px))]'
         : '';
 
+  // wideMedia scales the mockup up on desktop, anchored to the card side it
+  // bleeds toward (so it grows into the column gap, not over the copy). md-only
+  // via Tailwind utilities — a raw transform would also scale on mobile, where
+  // the single-column media is full width and would overflow into a scrollbar.
+  const scaleClass = data.wideMedia
+    ? data.media.bleed === 'right'
+      ? 'md:origin-right md:scale-[1.06]'
+      : 'md:origin-left md:scale-[1.06]'
+    : '';
+
   const MediaBlock = (
     <div className={`relative z-10 flex items-center justify-center ${bleedClass}`}>
-      <div className="w-full">
+      <div className={`w-full ${scaleClass}`}>
         <MediaSlot media={data.media} />
       </div>
     </div>
   );
 
   // Columns are not 50/50 — the Figma gives the text 512 and the media 650,
-  // with a 78 gap. Mirrored for the text-right cards.
-  const gridCols = textFirst ? 'md:grid-cols-[512fr_650fr]' : 'md:grid-cols-[650fr_512fr]';
+  // with a 78 gap. Mirrored for the text-right cards. wideMedia trades a little
+  // text width (kept above the title's ~465px minimum) for a bigger mockup.
+  const gridCols = data.wideMedia
+    ? textFirst
+      ? 'md:grid-cols-[minmax(0,480fr)_minmax(0,682fr)]'
+      : 'md:grid-cols-[minmax(0,682fr)_minmax(0,480fr)]'
+    : textFirst
+      ? 'md:grid-cols-[512fr_650fr]'
+      : 'md:grid-cols-[650fr_512fr]';
 
   return (
     <div
