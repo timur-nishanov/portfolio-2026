@@ -157,14 +157,14 @@ export const cases: Case[] = [
       { label: 'CASE STUDY', href: null /* TODO */ },
       { label: 'PLATFORM', href: null /* TODO */ },
     ],
-    // Ready-made MacBook mockup (frame baked in): the source PNG's transparent
-    // margin was cropped off (to 1651×1194) so the art *is* the laptop, then it
-    // bleeds out to the card's left edge and is scaled up via wideMedia so it
-    // reads large without stealing width from the copy.
+    // Ready-made MacBook mockup (frame baked in). The source PNG's transparent
+    // margin AND most of its left drop-shadow were cropped off (→ 1496×1194) so
+    // the laptop body sits hard against the card's left edge instead of floating
+    // ~11% in behind the shadow. It bleeds left and is scaled up via wideMedia.
     media: {
       type: 'image',
       src: assets.lendlyMacbook,
-      aspect: '1651/1194',
+      aspect: '1496/1194',
       fit: 'contain',
       bleed: 'left',
       alt: 'Lendly Invest secondary market, on a MacBook',
