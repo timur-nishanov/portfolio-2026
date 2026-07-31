@@ -33,9 +33,10 @@ export const assets = {
   aliceVideo: '/mockups/alice-video.webm', // alice-vid.webm, audio track stripped
   // Meama's twin-phone slot was replaced by a single ready-made iPad mockup.
   meamaIpad: '/mockups/meama-ipad.png',
-  // Rally placeholder screens (pre-composited phones) — stand in until Timur
-  // supplies the real case video.
-  rallyStatic1: '/mockups/rally-static-1.png',
+  // Rally: bare screen recording (drawn inside our iPhone frame, same as Chums;
+  // HEVC source transcoded to muted VP9 webm) + a pre-composited second phone.
+  rallyVideo: '/mockups/rally-video.webm',
+  rallyPoster: '/mockups/rally-poster.jpg',
   rallyStatic2: '/mockups/rally-static-2.png',
   // Lendly: ready-made MacBook mockup (frame baked in).
   lendlyMacbook: '/mockups/lendly-macbook.png',

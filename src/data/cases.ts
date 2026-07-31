@@ -71,9 +71,9 @@ export type Case = {
 // Twin-phone slot proportion — near-square once two phones sit side by side.
 const PHONES_ASPECT = '1/1';
 
-// Order set by Timur: Chums, Design Battle, Meama, Yandex Go (Beri Zaryad),
-// Rally last. Layout alternates by position (text-left first); each logo sits
-// over that row's media column.
+// Order set by Timur: Chums, Design Battle, Rally, Lendly, Meama, Yandex Go
+// (Beri Zaryad) last. Layout still alternates left/right down the column, so
+// this order needs no per-card layout flips.
 export const cases: Case[] = [
   {
     id: 'case-chums',
@@ -123,6 +123,55 @@ export const cases: Case[] = [
     },
     logo: { src: assets.logoAlice, x: -4, y: -13, w: 21, drift: { x: 26, y: 60, rot: 6 } },
     layout: 'text-right',
+  },
+  {
+    id: 'case-rally',
+    titleLine1: 'Rally app.',
+    titleLine2: 'English through your files',
+    // TODO(copy): real description from Timur.
+    description:
+      'Learn English from the things you already read: drop in your own files and Rally turns them into drills, decks and spaced review. Designed the onboarding and the study loop so the app feels like a tutor that read your documents, not a generic course.',
+    links: [{ label: 'TESTFLIGHT SOON', href: null }], // inactive by design (TZ §9.2)
+    media: {
+      type: 'video',
+      src: null,
+      aspect: PHONES_ASPECT,
+      alt: 'Rally app screens',
+      phones: [
+        // Bare screen recording drawn inside our own iPhone frame (same as
+        // Chums); a pre-composited second phone beside it.
+        { framed: true, type: 'video', src: assets.rallyVideo, poster: assets.rallyPoster, alt: 'Rally study session' },
+        { framed: false, type: 'image', src: assets.rallyStatic2, alt: 'Rally categories screen' },
+      ],
+    },
+    logo: null, // no Rally logo in the repo
+    layout: 'text-left',
+  },
+  {
+    id: 'case-lendly',
+    titleLine1: 'Lendly Invest.',
+    titleLine2: 'Crowdlanding platform',
+    description:
+      "On a crowdlending platform the investment flow is the revenue path: every extra step before a deal closes is a deal that doesn't. Interviews and usability tests with the platform's B2B investors showed the flow ran as one long undifferentiated stretch, so we broke it into discrete steps and rebuilt the site around it. Time to complete the core scenario dropped by roughly half, and follow-up research confirmed the flow felt materially easier",
+    links: [
+      { label: 'CASE STUDY', href: null /* TODO */ },
+      { label: 'PLATFORM', href: null /* TODO */ },
+    ],
+    // Ready-made MacBook mockup (frame baked in): the source PNG's transparent
+    // margin was cropped off (to 1651×1194) so the art *is* the laptop, then it
+    // bleeds out to the card's left edge and is scaled up via wideMedia so it
+    // reads large without stealing width from the copy.
+    media: {
+      type: 'image',
+      src: assets.lendlyMacbook,
+      aspect: '1651/1194',
+      fit: 'contain',
+      bleed: 'left',
+      alt: 'Lendly Invest secondary market, on a MacBook',
+    },
+    logo: null, // no Lendly logo in the repo
+    layout: 'text-right',
+    wideMedia: true,
   },
   {
     id: 'case-meama',
@@ -179,58 +228,5 @@ export const cases: Case[] = [
     },
     logo: { src: assets.logoGo, x: -4, y: -7, w: 22, drift: { x: -18, y: 70, rot: 8 } },
     layout: 'text-right',
-  },
-  {
-    id: 'case-rally',
-    titleLine1: 'Rally app.',
-    titleLine2: 'English through your files',
-    // TODO(copy): real description from Timur.
-    description:
-      'Learn English from the things you already read: drop in your own files and Rally turns them into drills, decks and spaced review. Designed the onboarding and the study loop so the app feels like a tutor that read your documents, not a generic course.',
-    links: [{ label: 'TESTFLIGHT SOON', href: null }], // inactive by design (TZ §9.2)
-    media: {
-      type: 'image',
-      src: null,
-      aspect: PHONES_ASPECT,
-      alt: 'Rally app screens',
-      phones: [
-        // Pre-composited phones (frame baked in) — placeholders until the video.
-        { framed: false, type: 'image', src: assets.rallyStatic1, alt: 'Rally home — pick up where you left off' },
-        { framed: false, type: 'image', src: assets.rallyStatic2, alt: 'Rally study screen' },
-      ],
-    },
-    logo: null, // no Rally logo in the repo
-    layout: 'text-left',
-  },
-  {
-    id: 'case-lendly',
-    titleLine1: 'Lendly Invest.',
-    titleLine2: 'Crowdlanding platform',
-    description:
-      "On a crowdlending platform the investment flow is the revenue path: every extra step before a deal closes is a deal that doesn't. Interviews and usability tests with the platform's B2B investors showed the flow ran as one long undifferentiated stretch, so we broke it into discrete steps and rebuilt the site around it. Time to complete the core scenario dropped by roughly half, and follow-up research confirmed the flow felt materially easier",
-    links: [
-      { label: 'CASE STUDY', href: null /* TODO */ },
-      { label: 'PLATFORM', href: null /* TODO */ },
-    ],
-    // Ready-made MacBook mockup (frame baked in), mirrored from Meama: it runs
-    // out to the card's left edge so the laptop reads large. The source PNG's
-    // transparent margin was cropped off (to 1651×1194) so the art *is* the
-    // laptop — otherwise the padding shrank it inside the slot. Box matches
-    // that ratio, so contain fills it exactly and nothing is cut.
-    // Cropped MacBook mockup, run out to the card's left edge (bleed) so it
-    // reads large without stealing width from the copy. Default column split —
-    // the wider bigMedia version squeezed the text to a narrow strip, which
-    // wrapped the title to three lines and forced the two buttons to stack.
-    media: {
-      type: 'image',
-      src: assets.lendlyMacbook,
-      aspect: '1651/1194',
-      fit: 'contain',
-      bleed: 'left',
-      alt: 'Lendly Invest secondary market, on a MacBook',
-    },
-    logo: null, // no Lendly logo in the repo
-    layout: 'text-right',
-    wideMedia: true,
   },
 ];
