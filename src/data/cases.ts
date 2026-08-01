@@ -158,13 +158,13 @@ export const cases: Case[] = [
       { label: 'PLATFORM', href: null /* TODO */ },
     ],
     // Ready-made MacBook mockup (frame baked in). The source PNG's transparent
-    // margin AND most of its left drop-shadow were cropped off (→ 1496×1194) so
-    // the laptop body sits hard against the card's left edge instead of floating
-    // ~11% in behind the shadow. It bleeds left and is scaled up via wideMedia.
+    // margin AND its left drop-shadow were cropped off entirely (→ 1470×1194)
+    // so the laptop body sits flush against the card's left edge. It bleeds
+    // left and is scaled up via wideMedia.
     media: {
       type: 'image',
       src: assets.lendlyMacbook,
-      aspect: '1496/1194',
+      aspect: '1470/1194',
       fit: 'contain',
       bleed: 'left',
       alt: 'Lendly Invest secondary market, on a MacBook',

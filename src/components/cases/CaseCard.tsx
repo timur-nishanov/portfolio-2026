@@ -21,10 +21,11 @@ export function CaseCard({ data }: { data: Case }) {
         <span className="block">{data.titleLine1}</span>
         <span className="block">{data.titleLine2}</span>
       </h3>
-      <p className="t-body mt-[clamp(16px,2vw,29px)] max-w-[512px] text-ink-muted">
+      {/* Fixed rhythm per Timur: 16px title→copy, 52px copy→buttons. */}
+      <p className="t-body mt-[16px] max-w-[512px] text-ink-muted">
         {data.description}
       </p>
-      <div className="mt-[clamp(20px,3vw,44px)] flex flex-wrap gap-[clamp(8px,1.1vw,16px)]">
+      <div className="mt-[52px] flex flex-wrap gap-[clamp(8px,1.1vw,16px)]">
         {data.links.map((link) => {
           const isSoon = link.label === 'TESTFLIGHT SOON';
           return (
