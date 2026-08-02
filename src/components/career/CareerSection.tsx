@@ -17,7 +17,8 @@ export function CareerSection() {
           <div key={entry.id} className="flex w-full flex-col items-center">
             <div className="flex flex-col items-center gap-[clamp(20px,2.78vw,40px)] py-[clamp(40px,6.94vw,100px)]">
               <p className="t-hero max-w-[24ch] text-ink">
-                {entry.title}{' '}
+                {entry.title}
+                <br />
                 <span className="text-[rgba(17,17,17,0.5)]">{entry.period}</span>
               </p>
               <ul className="flex max-w-[760px] flex-wrap items-center justify-center gap-[clamp(8px,0.83vw,12px)]">

@@ -28,7 +28,7 @@ function LifeMedia({ media }: { media: LifeEntry['media'] }) {
   }, []);
 
   return (
-    <div className="relative h-full shrink-0 overflow-hidden bg-white" style={{ aspectRatio: '386 / 512' }}>
+    <div className="relative h-full shrink-0 overflow-hidden bg-surface" style={{ aspectRatio: '386 / 512' }}>
       {media.type === 'video' ? (
         <video
           ref={videoRef}
