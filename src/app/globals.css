@@ -36,14 +36,14 @@
      ~57% tall, so the plane runs large on purpose. */
   --head-size: clamp(300px, 50vw, 750px);
 
-  /* LIFE cards. Figma at 1440: 100 from the card edge to the media, 72 above
-     and below it (so the card is media+144 tall), and the text column sits
-     153 from the top and bottom with the gap between title-block and date
-     left to `auto`. Expressed as vw so the whole card scales, not just the box. */
+  /* LIFE cards (Figma). At 1440: card 656 tall, media 386×512 with 72 above/
+     below it (512+144=656), 100 from the card edge to the media and 100 from
+     the media to the copy, and the copy sits 153 from the top and bottom with
+     the gap between title-block and date left to `auto`. vw so it all scales. */
   --life-pad-x: clamp(20px, 6.944vw, 100px);
   --life-pad-y: clamp(16px, 5vw, 72px);
   --life-text-y: clamp(28px, 10.625vw, 153px);
-  --life-card-h: clamp(380px, 38.889vw, 560px);
+  --life-card-h: clamp(460px, 45.56vw, 656px);
 }
 
 * {

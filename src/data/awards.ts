@@ -1,15 +1,13 @@
 export type Award = {
   id: string;
   title: string;
-  /** Small caption under the title — where the award came from. */
+  /** Small caption under the title — the awarding platform. */
   source: string;
-  tier: 'gold' | 'teal'; // laurel colour is data, not index-derived (TZ §10)
+  tier: 'gold' | 'teal'; // laurel colour
   href: string | null;
 };
 
-// TODO(copy): `source` currently names the platform that gave the award. In the
-// reference layout this line is the *awarded site's* domain instead — swap these
-// for the project URLs if that's the intent.
+// Titles verbatim from the reference. Order is reading order (row by row).
 export const awards: Award[] = [
   {
     id: 'awwwards-sotd',
@@ -26,11 +24,11 @@ export const awards: Award[] = [
     href: 'https://www.cssdesignawards.com/',
   },
   {
-    id: 'find-design-2025',
-    title: '1st place on design-shots platform find.design 2025',
-    source: 'FIND.DESIGN',
+    id: 'fwa-sotd',
+    title: 'FWA Site of the Day',
+    source: 'THEFWA.COM',
     tier: 'gold',
-    href: 'https://find.design/',
+    href: 'https://thefwa.com/',
   },
   {
     id: 'muzli-picks',
@@ -40,15 +38,15 @@ export const awards: Award[] = [
     href: 'https://muz.li/',
   },
   {
-    id: 'awwwards-portfolio-hero',
-    title: 'Awwwards Portfolio Hero nominee',
-    source: 'AWWWARDS.COM',
+    id: 'minimal-gallery',
+    title: 'Minimal Gallery picks',
+    source: 'MINIMAL.GALLERY',
     tier: 'teal',
-    href: 'https://www.awwwards.com/',
+    href: 'https://minimal.gallery/',
   },
   {
-    id: 'awwwards-honorable',
-    title: 'Awwwards Honorable\nMention',
+    id: 'awwwards-portfolio-hero',
+    title: 'Awwwards Portfolio Hero nominee',
     source: 'AWWWARDS.COM',
     tier: 'teal',
     href: 'https://www.awwwards.com/',

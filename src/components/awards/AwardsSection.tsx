@@ -3,7 +3,11 @@ import { AwardCard } from './AwardCard';
 
 export function AwardsSection() {
   return (
-    <section id="awards" aria-labelledby="awards-heading" className="py-[clamp(64px,8vw,120px)]">
+    <section
+      id="awards"
+      aria-labelledby="awards-heading"
+      className="pt-[clamp(64px,8vw,120px)] pb-[clamp(110px,15vw,220px)]"
+    >
       <h2 id="awards-heading" className="sr-only">
         Awards
       </h2>

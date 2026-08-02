@@ -5,44 +5,22 @@ import { site } from '@/data/site';
 import { clamp, q } from '@/lib/lerp';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 
-type Ball = {
-  label: string;
-  href: string;
-  /** Flat platform tint laid over the frosted glass — no gradient, just a
-   *  colour so each ball reads as its own brand while staying liquid glass. */
-  tint: string;
-  ink: string;
-};
+type Ball = { label: string; href: string };
 
 const BALLS: Ball[] = [
-  {
-    label: 'X.COM',
-    href: 'https://x.com/nem_etis',
-    tint: 'rgba(17,17,20,0.72)',
-    ink: '#ffffff',
-  },
-  {
-    label: 'INST',
-    href: 'https://instagram.com/nishanovtim',
-    tint: 'rgba(221,64,138,0.42)',
-    ink: '#ffffff',
-  },
-  {
-    label: 'TG',
-    href: site.telegram,
-    tint: 'rgba(42,158,224,0.44)',
-    ink: '#ffffff',
-  },
+  { label: 'X.COM', href: 'https://x.com/nem_etis' },
+  { label: 'INST', href: 'https://instagram.com/nishanovtim' },
+  { label: 'TG', href: site.telegram },
 ];
 
-// --- physics ---------------------------------------------------------------
-const GRAVITY = 2100; // px/s²
-const WALL_BOUNCE = 0.42; // floor/side restitution — soft, not rubbery
-const BALL_BOUNCE = 0.3; // between balls: they knock, they don't ping apart
+// --- physics (same spirit as the hero head: grab-while-held, throw, bounce) --
+const GRAVITY = 2200; // px/s²
+const WALL_BOUNCE = 0.6; // visible rebound off floor/walls
+const BALL_BOUNCE = 0.4; // knock between balls
 const AIR = 0.999;
-const GROUND_FRICTION = 0.86; // horizontal bleed once resting
-const REST_SPEED = 26; // below this on the floor, stop jittering
-const MAX_THROW = 2200;
+const GROUND_FRICTION = 0.9;
+const REST_SPEED = 24;
+const MAX_THROW = 2600;
 
 type Body = { x: number; y: number; vx: number; vy: number; r: number };
 
@@ -67,9 +45,9 @@ export function Footer() {
       els.forEach((el, i) => {
         const r = el.offsetWidth / 2;
         if (initial) {
-          // Spread across the stage and dropped from above the top edge at
-          // staggered heights, so they arrive one after another.
-          bodies[i] = { x: W * (0.26 + i * 0.24), y: -r - i * 240 - 140, vx: 0, vy: 0, r };
+          // Spread across the whole width, dropped from above at staggered
+          // heights so they arrive one after another and scatter.
+          bodies[i] = { x: W * (0.2 + i * 0.3), y: -r - i * 260 - 120, vx: 0, vy: 0, r };
         } else if (bodies[i]) {
           bodies[i].r = r;
           bodies[i].x = clamp(bodies[i].x, r, Math.max(r, W - r));
@@ -82,14 +60,13 @@ export function Footer() {
     const ro = new ResizeObserver(() => layout(false));
     ro.observe(stage);
 
-    // Hold the drop until the footer is actually on screen.
     let running = false;
     const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) running = true; }, {
-      threshold: 0.15,
+      threshold: 0.1,
     });
     io.observe(stage);
 
-    // --- drag / throw -------------------------------------------------------
+    // --- grab / throw (only while the pointer is held down on a ball) --------
     let dragging = -1;
     let lastPX = 0;
     let lastPY = 0;
@@ -144,10 +121,9 @@ export function Footer() {
         b.vx = (b.vx / s) * MAX_THROW;
         b.vy = (b.vy / s) * MAX_THROW;
       }
-      dragging = -1;
+      dragging = -1; // released — it flies off on its own from here, not glued
     };
 
-    // A drag must not also open the link.
     const onClick = (e: MouseEvent) => {
       if (moved) {
         e.preventDefault();
@@ -193,8 +169,6 @@ export function Footer() {
           }
         }
 
-        // Ball vs ball: separate, then swap the normal component. Equal mass,
-        // low restitution — a knock rather than a ricochet.
         for (let i = 0; i < bodies.length; i++) {
           for (let j = i + 1; j < bodies.length; j++) {
             const a = bodies[i];
@@ -222,7 +196,7 @@ export function Footer() {
               a.y -= ny * overlap;
             }
             const sep = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
-            if (sep > 0) continue; // already parting
+            if (sep > 0) continue;
             const imp = -(1 + BALL_BOUNCE) * sep * 0.5;
             if (!aFixed) {
               a.vx -= imp * nx;
@@ -256,55 +230,32 @@ export function Footer() {
   }, [reduced]);
 
   return (
-    <footer className="pb-10 pt-[clamp(40px,6vw,90px)]">
-      <div className="container-cases">
-        {/* Stage: the balls drop in here and settle on its floor. Under reduced
-            motion they're laid out as a static row instead. */}
-        {/* Narrower than the content band on purpose: three balls this size
-            can't sit side by side in it, so they pile into a cluster the way
-            the mockup shows instead of lining up along the floor. */}
-        <div
-          ref={stageRef}
-          className={`relative mx-auto h-[clamp(380px,45vw,650px)] w-full max-w-[clamp(320px,52vw,760px)] touch-none overflow-hidden ${
-            reduced ? 'flex items-end justify-center gap-6' : ''
-          }`}
-        >
-          {BALLS.map((b, i) => (
-            <a
-              key={b.label}
-              ref={(n) => {
-                elsRef.current[i] = n;
-              }}
-              href={b.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`glass grid size-[clamp(150px,24vw,350px)] cursor-grab select-none place-items-center rounded-full active:cursor-grabbing ${
-                reduced ? 'relative' : 'absolute left-0 top-0 will-change-transform'
-              }`}
-              // Flat tint over the frosted glass — inline backgroundColor
-              // overrides .glass's white so the liquid effect keeps its blur
-              // and highlights but takes on the brand colour.
-              style={{ backgroundColor: b.tint }}
-            >
-              <span
-                className="pixel text-[clamp(18px,5.55vw,80px)] leading-none"
-                style={{ color: b.ink }}
-              >
-                {b.label}
-              </span>
-            </a>
-          ))}
-        </div>
-
-        <div className="mt-6 flex flex-col items-center justify-between gap-4 border-t border-black/5 pt-8 sm:flex-row">
-          <span className="pixel text-[11px] text-ink-muted">TIMUR © 2026</span>
+    <footer className="pb-[clamp(24px,3vw,48px)] pt-[clamp(40px,6vw,90px)]">
+      {/* Full-viewport stage — the balls drop and bounce across the whole width. */}
+      <div
+        ref={stageRef}
+        className={`relative h-[clamp(360px,42vw,620px)] w-full touch-none overflow-hidden ${
+          reduced ? 'flex items-end justify-center gap-6' : ''
+        }`}
+      >
+        {BALLS.map((b, i) => (
           <a
-            href={`mailto:${site.email}`}
-            className="pixel text-[11px] text-ink-muted transition-colors hover:text-ink"
+            key={b.label}
+            ref={(n) => {
+              elsRef.current[i] = n;
+            }}
+            href={b.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`glass grid size-[clamp(140px,17vw,300px)] cursor-grab select-none place-items-center rounded-full active:cursor-grabbing ${
+              reduced ? 'relative' : 'absolute left-0 top-0 will-change-transform'
+            }`}
           >
-            {site.email}
+            <span className="pixel text-[clamp(20px,5.55vw,80px)] leading-none text-ink">
+              {b.label}
+            </span>
           </a>
-        </div>
+        ))}
       </div>
     </footer>
   );

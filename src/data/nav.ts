@@ -12,4 +12,5 @@ export const nav: NavItem[] = [
   { label: 'AWARDS', id: 'awards' },
   { label: 'RANDOM', id: 'random' },
   { label: 'LIFE', id: 'life' },
+  { label: 'CAREER', id: 'career' },
 ];
