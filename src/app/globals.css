@@ -35,6 +35,15 @@
   /* Head plane edge length. The visible silhouette is ~84% of this wide and
      ~57% tall, so the plane runs large on purpose. */
   --head-size: clamp(300px, 50vw, 750px);
+
+  /* LIFE cards. Figma at 1440: 100 from the card edge to the media, 72 above
+     and below it (so the card is media+144 tall), and the text column sits
+     153 from the top and bottom with the gap between title-block and date
+     left to `auto`. Expressed as vw so the whole card scales, not just the box. */
+  --life-pad-x: clamp(20px, 6.944vw, 100px);
+  --life-pad-y: clamp(16px, 5vw, 72px);
+  --life-text-y: clamp(28px, 10.625vw, 153px);
+  --life-card-h: clamp(380px, 38.889vw, 560px);
 }
 
 * {
@@ -120,6 +129,20 @@ html.lenis body {
     font-weight: 400;
     line-height: 1.3;
     letter-spacing: 0.2px;
+  }
+  /* Career rows — the title uses the statement face (same as the About line),
+     one step down from .t-hero so a long role still holds one line. */
+  .t-career-title {
+    font-family: var(--font-hoves), sans-serif;
+    font-size: clamp(26px, 3.33vw, 48px);
+    font-weight: 400;
+    line-height: 1.2;
+  }
+  .t-career-period {
+    font-family: var(--font-hoves), sans-serif;
+    font-size: clamp(15px, 1.389vw, 20px);
+    font-weight: 400;
+    line-height: 1.3;
   }
   /* 5by7 — menu items and every button label. 20px / 18px / 1px at 1440. */
   .pixel {

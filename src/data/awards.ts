@@ -1,33 +1,56 @@
 export type Award = {
   id: string;
   title: string;
-  description: string;
+  /** Small caption under the title — where the award came from. */
+  source: string;
   tier: 'gold' | 'teal'; // laurel colour is data, not index-derived (TZ §10)
   href: string | null;
 };
 
-// All six descriptions are the same filler in the mockup — keep it as one
-// constant so it swaps in a single place (TZ §10). TODO(copy).
-export const AWARD_PLACEHOLDER =
-  'It took only 7 days to hit the top. My work received the highest engagement and making me the #1 ranked designer on platform. after one year platform was closed';
-
+// TODO(copy): `source` currently names the platform that gave the award. In the
+// reference layout this line is the *awarded site's* domain instead — swap these
+// for the project URLs if that's the intent.
 export const awards: Award[] = [
-  { id: 'awwwards-sotd', title: 'Awwwards Site of the Day', description: AWARD_PLACEHOLDER, tier: 'gold', href: null },
-  { id: 'cssda-sotd', title: 'CSSDA Site of the Day', description: AWARD_PLACEHOLDER, tier: 'gold', href: null },
+  {
+    id: 'awwwards-sotd',
+    title: 'Awwwards Site of the Day',
+    source: 'AWWWARDS.COM',
+    tier: 'gold',
+    href: 'https://www.awwwards.com/',
+  },
+  {
+    id: 'cssda-sotd',
+    title: 'CSSDA Site of the Day',
+    source: 'CSSDESIGNAWARDS.COM',
+    tier: 'gold',
+    href: 'https://www.cssdesignawards.com/',
+  },
   {
     id: 'find-design-2025',
     title: '1st place on design-shots platform find.design 2025',
-    description: AWARD_PLACEHOLDER,
+    source: 'FIND.DESIGN',
     tier: 'gold',
-    href: null,
+    href: 'https://find.design/',
   },
-  { id: 'muzli-picks', title: 'Muzli Picks', description: AWARD_PLACEHOLDER, tier: 'teal', href: null },
+  {
+    id: 'muzli-picks',
+    title: 'Muzli Picks',
+    source: 'MUZ.LI',
+    tier: 'teal',
+    href: 'https://muz.li/',
+  },
   {
     id: 'awwwards-portfolio-hero',
     title: 'Awwwards Portfolio Hero nominee',
-    description: AWARD_PLACEHOLDER,
+    source: 'AWWWARDS.COM',
     tier: 'teal',
-    href: null,
+    href: 'https://www.awwwards.com/',
   },
-  { id: 'awwwards-honorable', title: 'Awwwards Honorable\nMention', description: AWARD_PLACEHOLDER, tier: 'teal', href: null },
+  {
+    id: 'awwwards-honorable',
+    title: 'Awwwards Honorable\nMention',
+    source: 'AWWWARDS.COM',
+    tier: 'teal',
+    href: 'https://www.awwwards.com/',
+  },
 ];

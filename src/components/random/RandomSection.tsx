@@ -61,16 +61,35 @@ const IMAC_SCREEN = { left: 4.64, top: 5.49, width: 90.69, height: 63.39 };
 function ImacScreen({ alt, video, screenBg }: { alt: string; video?: string; screenBg?: string }) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  // Play only while the frame is on screen (two ~16s clips looping otherwise).
+  // Two observers, because "decode it" and "play it" want different margins.
+  // The wide one warms the clip up a screen and a half early — that decode is
+  // what used to land exactly as the tile scrolled in and hitch the frame. The
+  // tight one starts/stops playback so the clips aren't looping off-screen.
   useEffect(() => {
     const v = videoRef.current;
     if (!v) return;
-    const io = new IntersectionObserver(
-      ([e]) => (e.isIntersecting ? v.play().catch(() => {}) : v.pause()),
-      { threshold: 0.1 },
+
+    const warm = new IntersectionObserver(
+      ([e]) => {
+        if (!e.isIntersecting) return;
+        v.preload = 'auto';
+        v.load();
+        warm.disconnect();
+      },
+      { rootMargin: '150% 0px 150% 0px', threshold: 0 },
     );
-    io.observe(v);
-    return () => io.disconnect();
+    warm.observe(v);
+
+    const play = new IntersectionObserver(
+      ([e]) => (e.isIntersecting ? v.play().catch(() => {}) : v.pause()),
+      { rootMargin: '25% 0px 25% 0px', threshold: 0 },
+    );
+    play.observe(v);
+
+    return () => {
+      warm.disconnect();
+      play.disconnect();
+    };
   }, []);
 
   const screenStyle: React.CSSProperties = {

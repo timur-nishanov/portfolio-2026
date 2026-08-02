@@ -5,7 +5,8 @@ import { CasesSection } from '@/components/cases/CasesSection';
 import { AwardsSection } from '@/components/awards/AwardsSection';
 import { RandomSection } from '@/components/random/RandomSection';
 import { AboutBlock } from '@/components/random/AboutBlock';
-import { Placeholder } from '@/components/ui/Placeholder';
+import { LifeSection } from '@/components/life/LifeSection';
+import { CareerSection } from '@/components/career/CareerSection';
 import { Footer } from '@/components/ui/Footer';
 
 export default function Home() {
@@ -18,9 +19,10 @@ export default function Home() {
         {/* Awards after the cases; Random then sits after Awards. */}
         <AwardsSection />
         <RandomSection />
-        {/* Statement block right after Random (LIFE still pending). */}
+        {/* Statement block right after Random, then LIFE and CAREER. */}
         <AboutBlock />
-        <Placeholder id="life" label="LIFE — COMING SOON" />
+        <LifeSection />
+        <CareerSection />
       </main>
       <Footer />
     </SmoothScrollProvider>
