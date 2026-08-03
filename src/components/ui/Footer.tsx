@@ -87,6 +87,13 @@ export function Footer() {
           lastPY = p.y;
           lastT = performance.now();
           b.vx = b.vy = 0;
+          // Capture the pointer so the matching up/cancel is guaranteed to land
+          // here even if the gesture ends over another element.
+          try {
+            stage.setPointerCapture(e.pointerId);
+          } catch {
+            /* capture is best-effort */
+          }
           break;
         }
       }
@@ -126,6 +133,21 @@ export function Footer() {
       dragging = -1; // released — it flies off and bounces on its own from here
     };
 
+    // Clicking a ball opens its link in a new tab, and the page can lose the
+    // pointer before `pointerup` ever arrives — which left the ball glued to
+    // the cursor. Any of these means the gesture is over: drop the grab and
+    // kill the stale velocity so it doesn't fling itself on the way out.
+    const release = () => {
+      if (dragging < 0) return;
+      const b = bodies[dragging];
+      b.vx = 0;
+      b.vy = 0;
+      dragging = -1;
+    };
+    const onVisibility = () => {
+      if (document.visibilityState !== 'visible') release();
+    };
+
     // A drag must not also open the link.
     const onClick = (e: MouseEvent) => {
       if (moved) {
@@ -137,6 +159,9 @@ export function Footer() {
     stage.addEventListener('pointerdown', onDown);
     window.addEventListener('pointermove', onMove, { passive: false });
     window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', release);
+    window.addEventListener('blur', release);
+    document.addEventListener('visibilitychange', onVisibility);
     els.forEach((el) => el.addEventListener('click', onClick));
 
     // --- loop ---------------------------------------------------------------
@@ -221,6 +246,16 @@ export function Footer() {
         }
       }
 
+      // Separating an overlap can shove a ball back through a wall, so the
+      // stage bounds are enforced once more after the collision pass —
+      // otherwise a resting cluster slowly squeezes itself off both edges.
+      for (let i = 0; i < bodies.length; i++) {
+        if (i === dragging) continue;
+        const b = bodies[i];
+        b.x = clamp(b.x, b.r, Math.max(b.r, W - b.r));
+        b.y = clamp(b.y, b.r, Math.max(b.r, H - b.r));
+      }
+
       for (let i = 0; i < bodies.length; i++) {
         const b = bodies[i];
         els[i].style.transform = `translate3d(${q(b.x - b.r)}px, ${q(b.y - b.r)}px, 0)`;
@@ -235,6 +270,9 @@ export function Footer() {
       stage.removeEventListener('pointerdown', onDown);
       window.removeEventListener('pointermove', onMove);
       window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('pointercancel', release);
+      window.removeEventListener('blur', release);
+      document.removeEventListener('visibilitychange', onVisibility);
       els.forEach((el) => el.removeEventListener('click', onClick));
     };
   }, [reduced]);
@@ -262,11 +300,11 @@ export function Footer() {
             href={b.href}
             target="_blank"
             rel="noopener noreferrer"
-            className={`glass grid size-[32vw] min-h-[104px] min-w-[104px] cursor-grab select-none place-items-center rounded-full active:cursor-grabbing ${
+            className={`glass-ball grid size-[36vw] min-h-[118px] min-w-[118px] cursor-grab select-none place-items-center rounded-full active:cursor-grabbing ${
               reduced ? 'relative' : 'absolute left-0 top-0 will-change-transform'
             }`}
           >
-            <span className="pixel text-[max(15px,6vw)] leading-none text-ink">
+            <span className="pixel relative z-10 text-[max(16px,6.6vw)] leading-none text-ink">
               {b.label}
             </span>
           </a>
