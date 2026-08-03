@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { assets } from '@/data/assets';
 import { site } from '@/data/site';
 import { clamp, lerp, q } from '@/lib/lerp';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
@@ -24,18 +23,14 @@ type Ball = {
 // Heights are deliberately short and restitution modest: the stage clips, so a
 // ball that overshoots the top edge gets sliced flat against it. These land and
 // settle without ever reaching the ceiling again.
+// `lift` is how far above the clip line the ball is parked, in multiples of its
+// own radius — a small number, because the clip line already sits a screen
+// above the visible footer (see CLIP_LIFT below).
 const DROPS = [
-  { delay: 0.0, slot: 0.0, height: 0.42, drift: 55, bounce: 0.46 },
-  { delay: 0.34, slot: 0.5, height: 0.78, drift: -85, bounce: 0.38 },
-  { delay: 0.15, slot: 1.0, height: 0.58, drift: 35, bounce: 0.5 },
-  // The head, last body in the array and last to arrive. It rides *under* the
-  // spheres, which is the point: it gives their glass something to refract.
-  { delay: 0.62, slot: 0.68, height: 1.0, drift: -40, bounce: 0.42 },
+  { delay: 0.0, slot: 0.0, lift: 0.4, drift: 55, bounce: 0.46 },
+  { delay: 0.34, slot: 0.5, lift: 2.6, drift: -85, bounce: 0.38 },
+  { delay: 0.15, slot: 1.0, lift: 1.3, drift: 35, bounce: 0.5 },
 ];
-
-/** The PNG carries wide transparent margins; the silhouette is ~54% of the box,
- *  so the collision circle is pulled in to match what you actually see. */
-const HEAD_R_FRAC = 0.27;
 
 // Flat tints, and much fainter than they look: the backing plate is only 8%
 // white now, so nothing dilutes them the way a solid white disc used to.
@@ -71,19 +66,13 @@ type Body = {
 export function Footer() {
   const stageRef = useRef<HTMLDivElement>(null);
   const elsRef = useRef<(HTMLAnchorElement | null)[]>([]);
-  const headRef = useRef<HTMLDivElement>(null);
   const reduced = useReducedMotion();
 
   useEffect(() => {
     const stage = stageRef.current;
     if (!stage || reduced) return;
-    const balls = elsRef.current.filter(Boolean) as HTMLElement[];
-    const head = headRef.current;
-    if (balls.length !== BALLS.length || !head) return;
-    // The head is the last body, so it draws under the spheres and loses the
-    // hit test to them where they overlap.
-    const els: HTMLElement[] = [...balls, head];
-    const HEAD = balls.length;
+    const els = elsRef.current.filter(Boolean) as HTMLElement[];
+    if (els.length !== BALLS.length) return;
 
     let W = stage.clientWidth;
     let H = stage.clientHeight;
@@ -93,14 +82,15 @@ export function Footer() {
       W = stage.clientWidth;
       H = stage.clientHeight;
       els.forEach((el, i) => {
-        const r = el.offsetWidth * (i === HEAD ? HEAD_R_FRAC : 0.5);
+        const r = el.offsetWidth / 2;
         if (initial) {
           const d = DROPS[i] ?? DROPS[0];
-          // Parked above the stage (clipped out of sight) until its delay runs
-          // out, and aimed so it lands on its own slot across the width.
+          // Parked just above the clip line — which is itself a screen higher
+          // than the visible footer — so they enter from off the top of the
+          // window, not from behind an invisible shelf partway down it.
           bodies[i] = {
             x: r + (W - 2 * r) * d.slot - d.drift * 0.5,
-            y: -r - H * d.height,
+            y: -r * (1 + d.lift),
             vx: d.drift,
             vy: 0,
             r,
@@ -120,15 +110,18 @@ export function Footer() {
     ro.observe(stage);
 
     // Hold them above the stage until the footer is actually scrolled to, so
-    // the drop plays for the reader instead of happening off-screen.
+    // the drop plays for the reader instead of happening off-screen. This
+    // watches the <footer>, not the stage: the stage now reaches a screen
+    // higher than the footer, and would report itself visible while the reader
+    // is still a whole viewport short of it.
     let running = false;
     const io = new IntersectionObserver(
       ([e]) => {
         if (e.isIntersecting) running = true;
       },
-      { threshold: 0.2 },
+      { threshold: 0.25 },
     );
-    io.observe(stage);
+    io.observe(stage.closest('footer') ?? stage);
 
     // --- grab / throw (only while the pointer is held down on a ball) --------
     let dragging = -1;
@@ -351,29 +344,23 @@ export function Footer() {
 
   return (
     <footer className="pb-[clamp(24px,3vw,48px)] pt-[clamp(40px,6vw,90px)]">
-      {/* Full-viewport stage — the balls rest spread across the whole width and
-          can be flung right up to either edge. Reduced motion → static row. */}
+      {/* The stage has to clip — the balls are parked above it before they drop
+          — but a clip line partway down the window is exactly the invisible
+          shelf they appeared to vanish behind. So the box is grown a full
+          screen upwards (padding-top) and pulled back by the same amount
+          (negative margin): it sits where it always did, while its top edge
+          now lies above the window. Balls fall in from off-screen.
+
+          It is pointer-transparent for the same reason: that extra screen of
+          box overlaps the section above, and must not swallow its clicks. The
+          balls opt back in, and their events still bubble here. */}
       <div
         ref={stageRef}
-        className={`relative h-[min(88vh,52vw)] min-h-[340px] w-full touch-none overflow-hidden ${
-          reduced ? 'flex items-center justify-center gap-2' : ''
+        className={`pointer-events-none relative -mt-[100vh] h-[calc(100vh+min(88vh,52vw))] min-h-[calc(100vh+340px)] w-full overflow-hidden pt-[100vh] ${
+          reduced ? 'flex items-end justify-center gap-2' : ''
         }`}
       >
-        {/* The head drops in with them and lives underneath: it is what the
-            spheres' glass has to refract, so the lens actually shows. Inert —
-            no link, and it never intercepts a click meant for a sphere. */}
-        {!reduced ? (
-          <div
-            ref={headRef}
-            aria-hidden="true"
-            className="pointer-events-none absolute left-0 top-0 z-0 w-[46vw] min-w-[190px] will-change-transform"
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={assets.headColor} alt="" draggable={false} className="block w-full" />
-          </div>
-        ) : null}
-
-        {/* Pure vw with no max cap: three balls of 30vw span ~90vw, so they
+        {/* Pure vw with no max cap: three balls of 34vw span ~102vw, so they
             reach both screen edges at every breakpoint instead of shrinking
             into the middle on a wide monitor. The label is sized in vw too, so
             its ratio to the ball stays constant as the viewport grows. */}
@@ -390,14 +377,14 @@ export function Footer() {
             // pull a ball, trailing a ghost of the URL across the page.
             draggable={false}
             onDragStart={(e) => e.preventDefault()}
-            className={`glass-ball z-10 grid size-[30vw] min-h-[112px] min-w-[112px] cursor-grab select-none place-items-center rounded-full active:cursor-grabbing ${
+            className={`glass-ball pointer-events-auto z-10 grid size-[34vw] min-h-[118px] min-w-[118px] cursor-grab touch-none select-none place-items-center rounded-full active:cursor-grabbing ${
               reduced ? 'relative' : 'absolute left-0 top-0 will-change-transform'
             }`}
             // Flat tint, no gradient — the glass rule paints it as an even
             // plate over the backing colour.
             style={{ '--lg-tint': b.tint } as React.CSSProperties}
           >
-            <span className="pixel relative z-10 text-[max(15px,5.4vw)] leading-none text-ink">
+            <span className="pixel relative z-10 text-[max(16px,6.1vw)] leading-none text-ink">
               {b.label}
             </span>
           </a>
