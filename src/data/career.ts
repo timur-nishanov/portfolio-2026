@@ -5,8 +5,8 @@ export type CareerEntry = {
   tags: string[];
 };
 
-// Verbatim from Figma (node 246:1411) — spellings kept as designed ("reserch",
-// "meida sphere", "ABC").
+// Verbatim from Figma (node 246:1411) — the design's own spellings are kept
+// ("reserch", "ABC"); "meida sphere" was a typo and reads "media sphere" here.
 export const career: CareerEntry[] = [
   {
     id: 'career-fintech',
@@ -79,7 +79,7 @@ export const career: CareerEntry[] = [
       'blogers',
       'tourism sphere',
       'it sphere',
-      'meida sphere',
+      'media sphere',
     ],
   },
 ];

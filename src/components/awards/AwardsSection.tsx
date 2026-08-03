@@ -13,7 +13,7 @@ export function AwardsSection() {
       </h2>
       {/* 2 columns of 684 at 1440. Row gap pulled in from the old 178 now the
           cards are just laurel + title + source (no blurb or MORE button). */}
-      <div className="container-awards grid grid-cols-1 gap-x-0 gap-y-[clamp(48px,8.5vw,122px)] sm:grid-cols-2">
+      <div className="container-awards grid grid-cols-1 gap-x-0 gap-y-[clamp(80px,13vw,190px)] sm:grid-cols-2">
         {awards.map((a) => (
           <AwardCard key={a.id} award={a} />
         ))}

@@ -172,54 +172,21 @@ html.lenis body {
       inset 0 -1px 0 rgba(255, 255, 255, 0.35);
   }
 
-  /* Liquid glass for the footer spheres. `.glass` alone reads as a flat white
-     disc here: it is translucent white over a white footer, so the blur has
-     nothing to refract. This adds the things that sell glass on a plain
-     background — a bright rim, a specular hot-spot up top, a shaded underside
-     and a cast shadow — while keeping the real backdrop blur underneath. */
+  /* Footer spheres — a direct port of the Figma button background
+     (button-bg-glass.svg): white at 65% with a #DDDDDD color-burn and a
+     #F7F7F7 darken pass over it, which lands on a flat, very light disc, plus
+     that file's single wide drop shadow (dy 61.6, blur 154, black at 8%).
+     The backdrop blur stays so the glass still refracts whatever it is over.
+     Sizes are in em so one rule scales with the ball's own font size. */
   .glass-ball {
-    position: relative;
-    isolation: isolate;
-    /* The body stays largely see-through — the sphere is drawn by its thick
-       refracting rim, not by a white fill. Where two balls touch you get the
-       real thing: the blur picks up the neighbour through the glass. */
-    background:
-      radial-gradient(
-        closest-side circle at 50% 50%,
-        rgba(203, 213, 225, 0.1) 0%,
-        rgba(203, 213, 225, 0.22) 55%,
-        rgba(148, 163, 184, 0.36) 76%,
-        rgba(255, 255, 255, 0.55) 88%,
-        rgba(255, 255, 255, 0.98) 96%,
-        rgba(226, 232, 240, 0.5) 100%
-      ),
-      linear-gradient(
-        152deg,
-        rgba(255, 255, 255, 0.7) 0%,
-        rgba(241, 245, 249, 0.15) 40%,
-        rgba(148, 163, 184, 0.28) 100%
-      );
-    backdrop-filter: blur(16px) saturate(185%) brightness(1.03);
-    -webkit-backdrop-filter: blur(16px) saturate(185%) brightness(1.03);
+    background: rgba(247, 247, 247, 0.72);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
     border: 1px solid rgba(255, 255, 255, 0.75);
     box-shadow:
-      0 40px 90px -40px rgba(15, 23, 42, 0.45),
-      0 14px 40px -18px rgba(15, 23, 42, 0.22),
-      inset 0 2px 3px rgba(255, 255, 255, 0.95),
-      inset 0 -26px 56px -30px rgba(148, 163, 184, 0.55),
-      inset 12px 16px 40px -26px rgba(255, 255, 255, 0.9);
-  }
-  /* Specular highlights: a big soft one at the top-left and a faint bounce
-     light near the bottom-right, the way a glass sphere catches a room. */
-  .glass-ball::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    pointer-events: none;
-    background:
-      radial-gradient(58% 40% at 32% 17%, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0) 70%),
-      radial-gradient(42% 28% at 72% 86%, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0) 72%);
+      0 0.55em 1.4em rgba(0, 0, 0, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.9),
+      inset 0 -1px 0 rgba(255, 255, 255, 0.35);
   }
 
   .glass-solid {

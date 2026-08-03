@@ -18,10 +18,12 @@ const BALLS: Ball[] = [
 // grabbed, follows the pointer only while the button is held, then keeps the
 // momentum of the flick: it flies off, bounces off the viewport edges and eases
 // back to a stop. It never falls or drifts on its own.
-const WALL_BOUNCE = 0.72; // keeps most of its energy on a bounce
-const BALL_BOUNCE = 0.4; // between balls: a knock, not a ricochet
-const DAMP = 0.85; // velocity retained per second after release (eases to rest)
-const REST_SPEED = 22; // below this a free ball stops
+// Matched to the hero head's feel: lively restitution and a slow decay, so a
+// throw keeps ricocheting for a while instead of dying on the first contact.
+const WALL_BOUNCE = 0.86;
+const BALL_BOUNCE = 0.92; // balls spring off each other, they don't just knock
+const DAMP = 0.62; // velocity retained per second — glides a long time
+const REST_SPEED = 14; // below this a free ball finally stops
 const MAX_THROW = 2600;
 
 type Body = { x: number; y: number; vx: number; vy: number; r: number };
@@ -48,7 +50,8 @@ export function Footer() {
         const r = el.offsetWidth / 2;
         if (initial) {
           // Spread across the full width so the outer two rest right against
-          // the left and right edges, still until grabbed.
+          // the left and right edges. They rest just clear of each other, not
+          // touching — a cluster packed solid has nowhere to spring to.
           const slots = [r, W / 2, W - r];
           bodies[i] = { x: slots[i] ?? W / 2, y: H * 0.5, vx: 0, vy: 0, r };
         } else if (bodies[i]) {
@@ -300,11 +303,15 @@ export function Footer() {
             href={b.href}
             target="_blank"
             rel="noopener noreferrer"
-            className={`glass-ball grid size-[36vw] min-h-[118px] min-w-[118px] cursor-grab select-none place-items-center rounded-full active:cursor-grabbing ${
+            // Without this the browser starts its own link-drag as soon as you
+            // pull a ball, trailing a ghost of the URL across the page.
+            draggable={false}
+            onDragStart={(e) => e.preventDefault()}
+            className={`glass-ball grid size-[30vw] min-h-[112px] min-w-[112px] cursor-grab select-none place-items-center rounded-full active:cursor-grabbing ${
               reduced ? 'relative' : 'absolute left-0 top-0 will-change-transform'
             }`}
           >
-            <span className="pixel relative z-10 text-[max(16px,6.6vw)] leading-none text-ink">
+            <span className="pixel relative z-10 text-[max(15px,5.4vw)] leading-none text-ink">
               {b.label}
             </span>
           </a>
