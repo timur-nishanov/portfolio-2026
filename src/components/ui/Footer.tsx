@@ -14,6 +14,18 @@ type Ball = {
   tint: string;
 };
 
+/**
+ * Entry choreography. The balls drop in when the footer is first scrolled to,
+ * and they must not arrive as one rehearsed row — each gets its own delay,
+ * drop height, sideways drift and bounciness, so the three land out of step.
+ * `slot` is where it comes to rest across the width (0 = left edge, 1 = right).
+ */
+const DROPS = [
+  { delay: 0.0, slot: 0.0, height: 1.35, drift: 60, bounce: 0.52 },
+  { delay: 0.36, slot: 0.5, height: 2.1, drift: -95, bounce: 0.44 },
+  { delay: 0.16, slot: 1.0, height: 1.7, drift: 40, bounce: 0.58 },
+];
+
 const BALLS: Ball[] = [
   { label: 'X.COM', href: 'https://x.com/nem_etis', tint: 'rgba(17,17,20,0.10)' },
   { label: 'INST', href: 'https://instagram.com/nishanovtim', tint: 'rgba(221,64,138,0.16)' },
@@ -21,19 +33,27 @@ const BALLS: Ball[] = [
 ];
 
 // --- physics ---------------------------------------------------------------
-// Same model as the hero head — no gravity. A ball sits still until it's
-// grabbed, follows the pointer only while the button is held, then keeps the
-// momentum of the flick: it flies off, bounces off the viewport edges and eases
-// back to a stop. It never falls or drifts on its own.
-// Matched to the hero head's feel: lively restitution and a slow decay, so a
-// throw keeps ricocheting for a while instead of dying on the first contact.
-const WALL_BOUNCE = 0.86;
-const BALL_BOUNCE = 0.92; // balls spring off each other, they don't just knock
-const DAMP = 0.62; // velocity retained per second — glides a long time
-const REST_SPEED = 14; // below this a free ball finally stops
+// The balls fall in and live on the floor, so gravity is always on. Holding
+// one still suspends it — it moves only while the button is down — and letting
+// go hands its momentum back to the sim, which is where the bounce comes from.
+const GRAVITY = 2000; // px/s²
+const WALL_BOUNCE = 0.5; // sides and floor
+const BALL_BOUNCE = 0.72; // balls spring off each other, they don't just knock
+const AIR = 0.995;
+const GROUND_FRICTION = 0.9; // horizontal bleed while rolling along the floor
+const REST_SPEED = 26; // below this on the floor, stop jittering
 const MAX_THROW = 2600;
 
-type Body = { x: number; y: number; vx: number; vy: number; r: number };
+type Body = {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  r: number;
+  /** Seconds until this one is released from above; <= 0 means it is falling. */
+  wait: number;
+  bounce: number;
+};
 
 export function Footer() {
   const stageRef = useRef<HTMLDivElement>(null);
@@ -56,15 +76,22 @@ export function Footer() {
       els.forEach((el, i) => {
         const r = el.offsetWidth / 2;
         if (initial) {
-          // Spread across the full width so the outer two rest right against
-          // the left and right edges. They rest just clear of each other, not
-          // touching — a cluster packed solid has nowhere to spring to.
-          const slots = [r, W / 2, W - r];
-          bodies[i] = { x: slots[i] ?? W / 2, y: H * 0.5, vx: 0, vy: 0, r };
+          const d = DROPS[i] ?? DROPS[0];
+          // Parked above the stage (clipped out of sight) until its delay runs
+          // out, and aimed so it lands on its own slot across the width.
+          bodies[i] = {
+            x: r + (W - 2 * r) * d.slot - d.drift * 0.5,
+            y: -r - H * d.height,
+            vx: d.drift,
+            vy: 0,
+            r,
+            wait: d.delay,
+            bounce: d.bounce,
+          };
         } else if (bodies[i]) {
           bodies[i].r = r;
           bodies[i].x = clamp(bodies[i].x, r, Math.max(r, W - r));
-          bodies[i].y = clamp(bodies[i].y, r, Math.max(r, H - r));
+          bodies[i].y = Math.min(bodies[i].y, H - r);
         }
       });
     };
@@ -72,6 +99,17 @@ export function Footer() {
 
     const ro = new ResizeObserver(() => layout(false));
     ro.observe(stage);
+
+    // Hold them above the stage until the footer is actually scrolled to, so
+    // the drop plays for the reader instead of happening off-screen.
+    let running = false;
+    const io = new IntersectionObserver(
+      ([e]) => {
+        if (e.isIntersecting) running = true;
+      },
+      { threshold: 0.2 },
+    );
+    io.observe(stage);
 
     // --- grab / throw (only while the pointer is held down on a ball) --------
     let dragging = -1;
@@ -182,17 +220,24 @@ export function Footer() {
       const dt = Math.min((now - last) / 1000, 1 / 30);
       last = now;
 
-      const decay = Math.pow(DAMP, dt);
-
       for (let i = 0; i < bodies.length; i++) {
         if (i === dragging) continue;
         const b = bodies[i];
-        b.vx *= decay;
-        b.vy *= decay;
+        // Held above the stage until the footer is in view and its own delay
+        // has run out, so the three arrive out of step rather than together.
+        if (!running || b.wait > 0) {
+          if (running) b.wait -= dt;
+          continue;
+        }
+
+        b.vy += GRAVITY * dt;
+        b.vx *= AIR;
+        b.vy *= AIR;
         b.x += b.vx * dt;
         b.y += b.vy * dt;
 
-        // Bounce off all four edges — no floor, no gravity.
+        // Sides and floor. The ceiling is deliberately open — a ball is still
+        // falling in through it, and a throw is allowed to leave the top.
         if (b.x < b.r) {
           b.x = b.r;
           b.vx = Math.abs(b.vx) * WALL_BOUNCE;
@@ -200,18 +245,12 @@ export function Footer() {
           b.x = W - b.r;
           b.vx = -Math.abs(b.vx) * WALL_BOUNCE;
         }
-        if (b.y < b.r) {
-          b.y = b.r;
-          b.vy = Math.abs(b.vy) * WALL_BOUNCE;
-        } else if (b.y > H - b.r) {
+        if (b.y > H - b.r) {
           b.y = H - b.r;
-          b.vy = -Math.abs(b.vy) * WALL_BOUNCE;
-        }
-
-        // Once it has bled its momentum, let it rest where it stopped.
-        if (Math.hypot(b.vx, b.vy) < REST_SPEED) {
-          b.vx = 0;
-          b.vy = 0;
+          // Each ball keeps its own restitution, so they stop tossing in sync.
+          b.vy = -Math.abs(b.vy) * b.bounce;
+          b.vx *= GROUND_FRICTION;
+          if (Math.abs(b.vy) < REST_SPEED) b.vy = 0;
         }
       }
 
@@ -257,13 +296,14 @@ export function Footer() {
       }
 
       // Separating an overlap can shove a ball back through a wall, so the
-      // stage bounds are enforced once more after the collision pass —
-      // otherwise a resting cluster slowly squeezes itself off both edges.
+      // sides and the floor are enforced once more after the collision pass —
+      // otherwise a resting cluster slowly squeezes itself off both edges. The
+      // top is left open on purpose: balls arrive through it.
       for (let i = 0; i < bodies.length; i++) {
         if (i === dragging) continue;
         const b = bodies[i];
         b.x = clamp(b.x, b.r, Math.max(b.r, W - b.r));
-        b.y = clamp(b.y, b.r, Math.max(b.r, H - b.r));
+        b.y = Math.min(b.y, H - b.r);
       }
 
       for (let i = 0; i < bodies.length; i++) {
@@ -277,6 +317,7 @@ export function Footer() {
     return () => {
       cancelAnimationFrame(raf);
       ro.disconnect();
+      io.disconnect();
       stage.removeEventListener('pointerdown', onDown);
       window.removeEventListener('pointermove', onMove);
       window.removeEventListener('pointerup', onUp);

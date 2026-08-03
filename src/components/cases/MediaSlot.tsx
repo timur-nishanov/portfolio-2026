@@ -96,6 +96,19 @@ export function MediaSlot({ media }: { media: CaseMedia }) {
           <source src={media.src} type={media.src.endsWith('.webm') ? 'video/webm' : 'video/mp4'} />
         </video>
       )}
+
+      {/* Last word on the dark seam. Overshooting the frame was not enough on
+          its own, so the outer 3px are painted over in the clip's own backdrop
+          colour — invisible against it, and it cannot leave a fringe whatever
+          the decoder does at the texture edge. Only for clips that declare a
+          backdrop; anything else would show a ring. */}
+      {media.type === 'video' && media.src !== null && media.bg ? (
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 rounded-card"
+          style={{ boxShadow: `inset 0 0 0 3px ${media.bg}` }}
+        />
+      ) : null}
     </div>
   );
 }

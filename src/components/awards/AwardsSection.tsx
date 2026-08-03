@@ -13,11 +13,9 @@ export function AwardsSection() {
       </h2>
       {/* 2 columns of 684 at 1440. Row gap pulled in from the old 178 now the
           cards are just laurel + title + source (no blurb or MORE button). */}
-      {/* Row gap has to beat the gap *within* a row, or the grid reads as
-          columns instead of pairs. The columns are wide and the copy is
-          centred, so side-by-side awards already sit ~350px apart at 1440 —
-          the rows are spaced past that. */}
-      <div className="container-awards grid grid-cols-1 gap-x-0 gap-y-[clamp(130px,26vw,375px)] sm:grid-cols-2">
+      {/* Rows sit the same distance apart as two awards within a row (~250px
+          of clear space at 1440), so the grid reads as an even field. */}
+      <div className="container-awards grid grid-cols-1 gap-x-0 gap-y-[clamp(60px,12vw,173px)] sm:grid-cols-2">
         {awards.map((a) => (
           <AwardCard key={a.id} award={a} />
         ))}
