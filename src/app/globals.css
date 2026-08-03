@@ -56,6 +56,10 @@
   --lg-bg: rgba(255, 255, 255, 0.08);
   /* Flat colour laid over the plate — no gradient. Per-surface override. */
   --lg-tint: transparent;
+  /* How much sphere shading the footer balls carry: 0 is a flat plate, 1 the
+     full glass orb. Scales the highlight, the rim light and the underside
+     shadow together. */
+  --lg-volume: 1;
 }
 
 * {
@@ -192,15 +196,69 @@ html.lenis body {
      read as a sticker lying on the page — and a flat colour tint per link,
      handed in as --lg-tint. */
   .glass-ball {
+    position: relative;
     background-color: var(--lg-bg);
     background-image: linear-gradient(var(--lg-tint), var(--lg-tint));
     backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-saturate));
     -webkit-backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-saturate));
     border: 1px solid rgba(255, 255, 255, 0.55);
+    /* Sphere shading, not a disc: a lit rim along the top-left, a bright
+       gathered rim opposite it where the light wraps round the back, and the
+       glass body thickening into shadow at the bottom. --lg-volume scales the
+       whole thing; drop it to 0 for a flat plate. */
     box-shadow:
-      inset 0 1px 1px rgba(255, 255, 255, 0.85),
-      inset 0 -1px 1px rgba(255, 255, 255, 0.35),
-      inset 0 0 12px rgba(255, 255, 255, 0.25);
+      /* A hard bright line right on the edge — this is what makes it read as
+         a rim rather than a soft blob. */
+      inset 0 0 0 0.025em rgba(255, 255, 255, calc(0.9 * var(--lg-volume))),
+      /* Light wrapping round the underside, gathered tight to the edge. */
+      inset 0 -0.1em 0.16em -0.05em rgba(255, 255, 255, calc(1 * var(--lg-volume))),
+      inset -0.09em -0.05em 0.2em -0.06em rgba(255, 255, 255, calc(0.8 * var(--lg-volume))),
+      /* The body thickening into shadow, just inside that rim. */
+      inset 0 -0.42em 0.5em -0.3em rgba(74, 92, 124, calc(0.62 * var(--lg-volume))),
+      inset 0.12em 0.34em 0.6em -0.3em rgba(74, 92, 124, calc(0.4 * var(--lg-volume))),
+      inset 0 0 0.9em 0 rgba(255, 255, 255, 0.2);
+  }
+
+  /* Body shading + the specular. Both ride under the label, which sits at
+     z-10, and neither takes a pointer event. */
+  .glass-ball::before,
+  .glass-ball::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+  }
+  /* Curvature: light pooling in the upper-left, the underside falling away. */
+  .glass-ball::before {
+    background:
+      radial-gradient(
+        70% 70% at 32% 26%,
+        rgba(255, 255, 255, calc(0.6 * var(--lg-volume))) 0%,
+        rgba(255, 255, 255, 0) 62%
+      ),
+      radial-gradient(
+        90% 78% at 50% 112%,
+        rgba(74, 92, 124, calc(0.5 * var(--lg-volume))) 0%,
+        rgba(74, 92, 124, 0) 66%
+      ),
+      radial-gradient(
+        70% 60% at 84% 16%,
+        rgba(74, 92, 124, calc(0.22 * var(--lg-volume))) 0%,
+        rgba(74, 92, 124, 0) 60%
+      );
+  }
+  /* The catchlight — small and tight, not a wash. A big soft one just made the
+     ball look milky; the refs get their glassiness from a compact highlight
+     against a shaded body. */
+  .glass-ball::after {
+    background: radial-gradient(
+      19% 13% at 30% 20%,
+      rgba(255, 255, 255, calc(1 * var(--lg-volume))) 0%,
+      rgba(255, 255, 255, calc(0.5 * var(--lg-volume))) 45%,
+      rgba(255, 255, 255, 0) 72%
+    );
+    transform: rotate(-20deg);
   }
 
   /* Enhancement layer — Chromium only. The filter carries its own blur, since
