@@ -78,12 +78,10 @@ export function MediaSlot({ media }: { media: CaseMedia }) {
           style={{
             objectPosition: media.objectPosition,
             backgroundColor: media.bg,
-            // Overshoot the box by ~1% a side. 1.004 was not enough: the source
-            // clips carry a dark row of compression fringe on their own outer
-            // pixels, so the seam survived any amount of sub-pixel rounding
-            // work. The parent clips, so the extra just crops that fringe off.
-            transform: media.fit === 'cover' ? 'scale(1.022)' : undefined,
-            transformOrigin: 'center',
+            // Back to a hair over 100%, just enough that sub-pixel rounding
+            // can't expose the box edge. The dark seam is handled by the ring
+            // below instead, so the frame no longer has to be cropped for it.
+            transform: media.fit === 'cover' ? 'scale(1.004)' : undefined,
           }}
           autoPlay
           muted

@@ -44,6 +44,18 @@
   --life-pad-y: clamp(16px, 5vw, 72px);
   --life-text-y: clamp(28px, 10.625vw, 153px);
   --life-card-h: clamp(460px, 45.56vw, 656px);
+
+  /* --- liquid glass knobs -------------------------------------------------
+     Turn these and every glass surface follows. --lg-filter picks the
+     displacement strength (see LiquidGlassFilter: #lg-soft / #lg / #lg-strong);
+     --lg-blur is the plain-blur fallback used everywhere url() filters are not
+     supported; --lg-bg is the translucent backing plate. */
+  --lg-filter: url(#lg);
+  --lg-blur: 8px;
+  --lg-saturate: 180%;
+  --lg-bg: rgba(255, 255, 255, 0.08);
+  /* Flat colour laid over the plate — no gradient. Per-surface override. */
+  --lg-tint: transparent;
 }
 
 * {
@@ -159,36 +171,63 @@ html.lenis body {
      Liquid glass — CSS only, single definition (TZ §6). No `position` here so
      `absolute inset-0` on magnetic-button surfaces wins.
   ------------------------------------------------------------------------- */
+  /* Base layer — plain frost. This is what Safari and Firefox get, and it has
+     to stand on its own: they ignore url() inside backdrop-filter, so anything
+     that depended on the displacement would render as a bare transparent
+     patch. The volume is carried by the shadows, not the blur. */
   .glass {
-    background: rgba(255, 255, 255, 0.55);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border: 1px solid rgba(255, 255, 255, 0.7);
+    background-color: var(--lg-bg);
+    background-image: linear-gradient(var(--lg-tint), var(--lg-tint));
+    backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-saturate));
+    -webkit-backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-saturate));
+    border: 1px solid rgba(255, 255, 255, 0.55);
     box-shadow:
-      0 1px 2px rgba(0, 0, 0, 0.03),
-      0 4px 10px rgba(0, 0, 0, 0.04),
-      0 12px 28px rgba(0, 0, 0, 0.05),
-      inset 0 1px 0 rgba(255, 255, 255, 0.9),
-      inset 0 -1px 0 rgba(255, 255, 255, 0.35);
+      inset 0 1px 1px rgba(255, 255, 255, 0.85),
+      inset 0 -1px 1px rgba(255, 255, 255, 0.35),
+      inset 0 0 12px rgba(255, 255, 255, 0.25),
+      0 10px 30px rgba(0, 0, 0, 0.14);
   }
 
-  /* Footer spheres — a direct port of the Figma button background
-     (button-bg-glass.svg): white at 65% with a #DDDDDD color-burn and a
-     #F7F7F7 darken pass over it, which lands on a flat, very light disc, plus
-     that file's single wide drop shadow (dy 61.6, blur 154, black at 8%).
-     The backdrop blur stays so the glass still refracts whatever it is over.
-     Sizes are in em so one rule scales with the ball's own font size. */
+  /* Footer spheres. Same glass, no cast shadow — on the empty white footer it
+     read as a sticker lying on the page — and a flat colour tint per link,
+     handed in as --lg-tint. */
   .glass-ball {
-    background-color: rgba(247, 247, 247, 0.72);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border: 1px solid rgba(255, 255, 255, 0.75);
-    /* No cast shadow — it read as a sticker lying on the page. The volume
-       comes from the rim alone, and each ball carries its own faint colour
-       wash (set inline per link) so the row isn't three identical grey discs. */
+    background-color: var(--lg-bg);
+    background-image: linear-gradient(var(--lg-tint), var(--lg-tint));
+    backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-saturate));
+    -webkit-backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-saturate));
+    border: 1px solid rgba(255, 255, 255, 0.55);
     box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.9),
-      inset 0 -1px 0 rgba(255, 255, 255, 0.35);
+      inset 0 1px 1px rgba(255, 255, 255, 0.85),
+      inset 0 -1px 1px rgba(255, 255, 255, 0.35),
+      inset 0 0 12px rgba(255, 255, 255, 0.25);
+  }
+
+  /* Enhancement layer — Chromium only. The filter carries its own blur, since
+     backdrop-filter takes a single value and url() would otherwise drop the
+     frost along with it. */
+  /* The `and (not …)` half rules Safari out. Safari answers true for
+     `backdrop-filter: url()` — the value parses — and then renders nothing,
+     which is exactly the bare-transparent-patch failure the base layer exists
+     to avoid, so it is excluded by an Apple-only property instead. */
+  @supports (backdrop-filter: url('#lg')) and
+    (not (background: -webkit-named-image(apple-pay-logo-black))) {
+    .glass,
+    .glass-ball {
+      backdrop-filter: var(--lg-filter);
+      -webkit-backdrop-filter: var(--lg-filter);
+    }
+  }
+
+  /* Reduced transparency: no refraction, no see-through — a solid plate. */
+  @media (prefers-reduced-transparency: reduce) {
+    .glass,
+    .glass-ball {
+      background-color: #f4f4f5;
+      background-image: none;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+    }
   }
 
   .glass-solid {

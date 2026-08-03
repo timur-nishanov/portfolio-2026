@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { assets } from '@/data/assets';
 import { site } from '@/data/site';
 import { clamp, lerp, q } from '@/lib/lerp';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
@@ -20,16 +21,28 @@ type Ball = {
  * drop height, sideways drift and bounciness, so the three land out of step.
  * `slot` is where it comes to rest across the width (0 = left edge, 1 = right).
  */
+// Heights are deliberately short and restitution modest: the stage clips, so a
+// ball that overshoots the top edge gets sliced flat against it. These land and
+// settle without ever reaching the ceiling again.
 const DROPS = [
-  { delay: 0.0, slot: 0.0, height: 1.35, drift: 60, bounce: 0.52 },
-  { delay: 0.36, slot: 0.5, height: 2.1, drift: -95, bounce: 0.44 },
-  { delay: 0.16, slot: 1.0, height: 1.7, drift: 40, bounce: 0.58 },
+  { delay: 0.0, slot: 0.0, height: 0.42, drift: 55, bounce: 0.46 },
+  { delay: 0.34, slot: 0.5, height: 0.78, drift: -85, bounce: 0.38 },
+  { delay: 0.15, slot: 1.0, height: 0.58, drift: 35, bounce: 0.5 },
+  // The head, last body in the array and last to arrive. It rides *under* the
+  // spheres, which is the point: it gives their glass something to refract.
+  { delay: 0.62, slot: 0.68, height: 1.0, drift: -40, bounce: 0.42 },
 ];
 
+/** The PNG carries wide transparent margins; the silhouette is ~54% of the box,
+ *  so the collision circle is pulled in to match what you actually see. */
+const HEAD_R_FRAC = 0.27;
+
+// Flat tints, and much fainter than they look: the backing plate is only 8%
+// white now, so nothing dilutes them the way a solid white disc used to.
 const BALLS: Ball[] = [
-  { label: 'X.COM', href: 'https://x.com/nem_etis', tint: 'rgba(17,17,20,0.10)' },
-  { label: 'INST', href: 'https://instagram.com/nishanovtim', tint: 'rgba(221,64,138,0.16)' },
-  { label: 'TG', href: site.telegram, tint: 'rgba(42,158,224,0.18)' },
+  { label: 'X.COM', href: 'https://x.com/nem_etis', tint: 'rgba(17,17,20,0.035)' },
+  { label: 'INST', href: 'https://instagram.com/nishanovtim', tint: 'rgba(221,64,138,0.055)' },
+  { label: 'TG', href: site.telegram, tint: 'rgba(42,158,224,0.06)' },
 ];
 
 // --- physics ---------------------------------------------------------------
@@ -58,13 +71,19 @@ type Body = {
 export function Footer() {
   const stageRef = useRef<HTMLDivElement>(null);
   const elsRef = useRef<(HTMLAnchorElement | null)[]>([]);
+  const headRef = useRef<HTMLDivElement>(null);
   const reduced = useReducedMotion();
 
   useEffect(() => {
     const stage = stageRef.current;
     if (!stage || reduced) return;
-    const els = elsRef.current.filter(Boolean) as HTMLAnchorElement[];
-    if (els.length !== BALLS.length) return;
+    const balls = elsRef.current.filter(Boolean) as HTMLElement[];
+    const head = headRef.current;
+    if (balls.length !== BALLS.length || !head) return;
+    // The head is the last body, so it draws under the spheres and loses the
+    // hit test to them where they overlap.
+    const els: HTMLElement[] = [...balls, head];
+    const HEAD = balls.length;
 
     let W = stage.clientWidth;
     let H = stage.clientHeight;
@@ -74,7 +93,7 @@ export function Footer() {
       W = stage.clientWidth;
       H = stage.clientHeight;
       els.forEach((el, i) => {
-        const r = el.offsetWidth / 2;
+        const r = el.offsetWidth * (i === HEAD ? HEAD_R_FRAC : 0.5);
         if (initial) {
           const d = DROPS[i] ?? DROPS[0];
           // Parked above the stage (clipped out of sight) until its delay runs
@@ -125,8 +144,13 @@ export function Footer() {
 
     const onDown = (e: PointerEvent) => {
       const p = local(e);
-      // Topmost ball under the cursor wins; a miss is left alone.
-      for (let i = bodies.length - 1; i >= 0; i--) {
+      // Spheres first, head last — the same order they are painted in, so a
+      // grab where they overlap takes the one you can actually see.
+      // Deliberately no setPointerCapture: capturing retargets the follow-up
+      // mouse events to the stage, so the `click` never reached the <a> and
+      // tapping a sphere stopped opening its link. The blur / pointercancel /
+      // visibilitychange handlers below cover the lost-pointer case instead.
+      for (let i = 0; i < bodies.length; i++) {
         const b = bodies[i];
         if (Math.hypot(p.x - b.x, p.y - b.y) <= b.r) {
           dragging = i;
@@ -135,13 +159,6 @@ export function Footer() {
           lastPY = p.y;
           lastT = performance.now();
           b.vx = b.vy = 0;
-          // Capture the pointer so the matching up/cancel is guaranteed to land
-          // here even if the gesture ends over another element.
-          try {
-            stage.setPointerCapture(e.pointerId);
-          } catch {
-            /* capture is best-effort */
-          }
           break;
         }
       }
@@ -308,7 +325,11 @@ export function Footer() {
 
       for (let i = 0; i < bodies.length; i++) {
         const b = bodies[i];
-        els[i].style.transform = `translate3d(${q(b.x - b.r)}px, ${q(b.y - b.r)}px, 0)`;
+        // Positioned from the element's own half-size, not the collision
+        // radius — the head's circle is smaller than its box.
+        const hw = els[i].offsetWidth / 2;
+        const hh = els[i].offsetHeight / 2;
+        els[i].style.transform = `translate3d(${q(b.x - hw)}px, ${q(b.y - hh)}px, 0)`;
       }
       raf = requestAnimationFrame(step);
     };
@@ -338,7 +359,21 @@ export function Footer() {
           reduced ? 'flex items-center justify-center gap-2' : ''
         }`}
       >
-        {/* Pure vw with no max cap: three balls of 32vw span ~96vw, so they
+        {/* The head drops in with them and lives underneath: it is what the
+            spheres' glass has to refract, so the lens actually shows. Inert —
+            no link, and it never intercepts a click meant for a sphere. */}
+        {!reduced ? (
+          <div
+            ref={headRef}
+            aria-hidden="true"
+            className="pointer-events-none absolute left-0 top-0 z-0 w-[46vw] min-w-[190px] will-change-transform"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={assets.headColor} alt="" draggable={false} className="block w-full" />
+          </div>
+        ) : null}
+
+        {/* Pure vw with no max cap: three balls of 30vw span ~90vw, so they
             reach both screen edges at every breakpoint instead of shrinking
             into the middle on a wide monitor. The label is sized in vw too, so
             its ratio to the ball stays constant as the viewport grows. */}
@@ -355,14 +390,12 @@ export function Footer() {
             // pull a ball, trailing a ghost of the URL across the page.
             draggable={false}
             onDragStart={(e) => e.preventDefault()}
-            className={`glass-ball grid size-[30vw] min-h-[112px] min-w-[112px] cursor-grab select-none place-items-center rounded-full active:cursor-grabbing ${
+            className={`glass-ball z-10 grid size-[30vw] min-h-[112px] min-w-[112px] cursor-grab select-none place-items-center rounded-full active:cursor-grabbing ${
               reduced ? 'relative' : 'absolute left-0 top-0 will-change-transform'
             }`}
-            // Off-centre so the wash reads as light falling on a sphere, and
-            // faded out by 78% so the rim stays clean and uncoloured.
-            style={{
-              backgroundImage: `radial-gradient(72% 72% at 32% 26%, ${b.tint} 0%, rgba(255,255,255,0) 78%)`,
-            }}
+            // Flat tint, no gradient — the glass rule paints it as an even
+            // plate over the backing colour.
+            style={{ '--lg-tint': b.tint } as React.CSSProperties}
           >
             <span className="pixel relative z-10 text-[max(15px,5.4vw)] leading-none text-ink">
               {b.label}

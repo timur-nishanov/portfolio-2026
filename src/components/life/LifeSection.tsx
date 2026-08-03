@@ -119,7 +119,8 @@ function LifeCard({
             <h3 className="t-case-title max-w-[18ch] text-ink">{entry.title}</h3>
             <p className="t-body mt-[16px] max-w-[46ch] text-ink-muted">{entry.description}</p>
           </div>
-          <span className="pixel mt-5 block text-left text-[clamp(10px,0.9vw,13px)] tracking-pixel text-laurel-teal md:mt-auto">
+          {/* No size override — takes `.pixel`'s own scale, same as the buttons. */}
+          <span className="pixel mt-5 block text-left tracking-pixel text-laurel-teal md:mt-auto">
             {entry.date}
           </span>
         </div>
