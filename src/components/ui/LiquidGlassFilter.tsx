@@ -16,10 +16,17 @@
  */
 const MAP = '/glass/lens-map.png';
 
+// The map now falls back to zero displacement at the very rim, so these can run
+// much harder than before without the edge sampling past the element.
+//
+// No blur pass: profiling the drop showed the displacement alone at this
+// strength costs about a third of the frame budget, and the brief's remedy —
+// drop the blur, ease the scale — bought most of it back. The frost is no loss
+// either; the refraction is doing the work now.
 const STRENGTHS = [
-  { id: 'lg-soft', scale: 18, blur: 2 },
-  { id: 'lg', scale: 32, blur: 3 },
-  { id: 'lg-strong', scale: 56, blur: 4 },
+  { id: 'lg-soft', scale: 34 },
+  { id: 'lg', scale: 62 },
+  { id: 'lg-strong', scale: 96 },
 ];
 
 export function LiquidGlassFilter() {
@@ -32,7 +39,7 @@ export function LiquidGlassFilter() {
       style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden' }}
     >
       <defs>
-        {STRENGTHS.map(({ id, scale, blur }) => (
+        {STRENGTHS.map(({ id, scale }) => (
           <filter
             key={id}
             id={id}
@@ -64,11 +71,7 @@ export function LiquidGlassFilter() {
               scale={scale}
               xChannelSelector="R"
               yChannelSelector="G"
-              result="displaced"
             />
-            {/* The blur lives inside the filter: `backdrop-filter` takes one
-                value, so a url() would otherwise drop the frost entirely. */}
-            <feGaussianBlur in="displaced" stdDeviation={blur} />
           </filter>
         ))}
       </defs>

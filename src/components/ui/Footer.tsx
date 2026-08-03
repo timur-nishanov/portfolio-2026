@@ -35,9 +35,9 @@ const DROPS = [
 // Flat tints, and much fainter than they look: the backing plate is only 8%
 // white now, so nothing dilutes them the way a solid white disc used to.
 const BALLS: Ball[] = [
-  { label: 'X.COM', href: 'https://x.com/nem_etis', tint: 'rgba(17,17,20,0.07)' },
-  { label: 'INST', href: 'https://instagram.com/nishanovtim', tint: 'rgba(221,64,138,0.11)' },
-  { label: 'TG', href: site.telegram, tint: 'rgba(42,158,224,0.13)' },
+  { label: 'X.COM', href: 'https://x.com/nem_etis', tint: 'rgba(17,17,20,0.06)' },
+  { label: 'INST', href: 'https://instagram.com/nishanovtim', tint: 'rgba(221,64,138,0.1)' },
+  { label: 'TG', href: site.telegram, tint: 'rgba(42,158,224,0.12)' },
 ];
 
 // --- physics ---------------------------------------------------------------
