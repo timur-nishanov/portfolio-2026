@@ -13,7 +13,7 @@ export function CareerSection() {
         Career
       </h2>
       <div className="container-cases flex flex-col items-center">
-        {career.map((entry, i) => (
+        {career.map((entry) => (
           <div key={entry.id} className="flex w-full flex-col items-center">
             <div className="flex flex-col items-center gap-[clamp(20px,2.78vw,40px)] py-[clamp(40px,6.94vw,100px)]">
               <p className="t-hero max-w-[24ch] text-ink">
@@ -32,7 +32,6 @@ export function CareerSection() {
                 ))}
               </ul>
             </div>
-            {i < career.length - 1 ? <span className="h-px w-full bg-[#e2e2e2]" /> : null}
           </div>
         ))}
       </div>

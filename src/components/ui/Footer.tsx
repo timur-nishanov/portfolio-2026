@@ -245,10 +245,14 @@ export function Footer() {
           can be flung right up to either edge. Reduced motion → static row. */}
       <div
         ref={stageRef}
-        className={`relative h-[clamp(360px,42vw,620px)] w-full touch-none overflow-hidden ${
-          reduced ? 'flex items-center justify-center gap-6' : ''
+        className={`relative h-[min(88vh,52vw)] min-h-[340px] w-full touch-none overflow-hidden ${
+          reduced ? 'flex items-center justify-center gap-2' : ''
         }`}
       >
+        {/* Pure vw with no max cap: three balls of 32vw span ~96vw, so they
+            reach both screen edges at every breakpoint instead of shrinking
+            into the middle on a wide monitor. The label is sized in vw too, so
+            its ratio to the ball stays constant as the viewport grows. */}
         {BALLS.map((b, i) => (
           <a
             key={b.label}
@@ -258,11 +262,11 @@ export function Footer() {
             href={b.href}
             target="_blank"
             rel="noopener noreferrer"
-            className={`glass grid size-[clamp(120px,22vw,340px)] cursor-grab select-none place-items-center rounded-full active:cursor-grabbing ${
+            className={`glass grid size-[32vw] min-h-[104px] min-w-[104px] cursor-grab select-none place-items-center rounded-full active:cursor-grabbing ${
               reduced ? 'relative' : 'absolute left-0 top-0 will-change-transform'
             }`}
           >
-            <span className="pixel text-[clamp(18px,4vw,64px)] leading-none text-ink">
+            <span className="pixel text-[max(15px,6vw)] leading-none text-ink">
               {b.label}
             </span>
           </a>

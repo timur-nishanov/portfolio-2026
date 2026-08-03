@@ -50,11 +50,13 @@ export function CaseCard({ data }: { data: Case }) {
   // A bleeding mockup eats the card's side padding so it reaches the card edge
   // and is clipped there (MediaSlot already clips), reading bigger and half-off
   // the card. The negative margin mirrors the card's own px clamp.
+  // The left-bleeding mockup (the Lendly laptop) is pushed a further step past
+  // the card edge so the body sits well outside it, not just flush.
   const bleedClass =
     data.media.bleed === 'right'
       ? 'md:mr-[calc(-1*clamp(20px,5.71vw,80px))]'
       : data.media.bleed === 'left'
-        ? 'md:ml-[calc(-1*clamp(20px,5.71vw,80px))]'
+        ? 'md:ml-[calc(-1*clamp(20px,5.71vw,80px)-clamp(16px,4vw,60px))]'
         : '';
 
   // wideMedia scales the mockup up on desktop, anchored to the card side it

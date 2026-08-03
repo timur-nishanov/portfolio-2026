@@ -48,7 +48,7 @@ export function AwardCard({ award }: { award: Award }) {
         <span className="t-case-title mt-[clamp(20px,3.3vw,48px)] block max-w-[22ch] whitespace-pre-line text-ink">
           {award.title}
         </span>
-        <span className="pixel mt-[clamp(10px,1.1vw,16px)] block text-[clamp(10px,0.9vw,13px)] tracking-pixel text-laurel-teal">
+        <span className="pixel mt-[clamp(10px,1.1vw,16px)] block text-[clamp(10px,0.9vw,13px)] tracking-pixel text-ink-muted">
           {award.source}
         </span>
       </span>

@@ -8,9 +8,10 @@ import { useSmoothScroll } from '@/components/providers/SmoothScrollProvider';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 
-// How far a covered card recedes as the next slides over it — depth, not flight.
-const SCALE_DROP = 0.06;
-const FADE_DROP = 0.34;
+// A covered card only dims as the next one slides over it. It deliberately does
+// NOT scale down: shrinking from the top left every covered card's top edge
+// showing at a different height, which read as a staircase rather than a stack.
+const FADE_DROP = 0.28;
 
 /** Fixed 386×512 media slot (Figma). Poster fills it, no rounding. */
 function LifeMedia({ media }: { media: LifeEntry['media'] }) {
@@ -80,13 +81,11 @@ function LifeCard({
       const r = self.getBoundingClientRect();
       const n = next.getBoundingClientRect();
       const covered = clamp((r.bottom - n.top) / Math.max(r.height, 1), 0, 1);
-      el.style.transform = `scale(${q(1 - SCALE_DROP * covered)})`;
       veil.style.opacity = String(q(FADE_DROP * covered));
     };
     const off = register(onFrame);
     return () => {
       off();
-      el.style.transform = '';
       veil.style.opacity = '0';
     };
   }, [register, index, isLast, isMobile, reduced, cardsRef]);
@@ -104,7 +103,7 @@ function LifeCard({
       {/* All cards share the case-grey surface. No shadow. */}
       <div
         ref={innerRef}
-        className={`relative flex h-full origin-top flex-col gap-[clamp(24px,6.944vw,100px)] overflow-hidden rounded-card bg-surface px-[var(--life-pad-x)] py-[var(--life-pad-y)] will-change-transform md:flex-row md:items-center md:py-0 ${
+        className={`relative flex h-full flex-col gap-[clamp(24px,6.944vw,100px)] overflow-hidden rounded-card bg-surface px-[var(--life-pad-x)] py-[var(--life-pad-y)] md:flex-row md:items-center md:py-0 ${
           mediaFirst ? '' : 'md:flex-row-reverse'
         }`}
       >
@@ -143,7 +142,10 @@ export function LifeSection() {
       <h2 id="life-heading" className="sr-only">
         Life
       </h2>
-      <div className="container-cases flex flex-col gap-[clamp(20px,2.8vw,40px)]">
+      {/* No gap: every card pins to the same offset and is exactly one card
+          tall, so the next one slides up and covers the previous one flush
+          instead of leaving a stepped strip of it showing. */}
+      <div className="container-cases flex flex-col">
         {life.map((entry, i) => (
           <LifeCard
             key={entry.id}
