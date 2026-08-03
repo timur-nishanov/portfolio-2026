@@ -179,12 +179,14 @@ html.lenis body {
      The backdrop blur stays so the glass still refracts whatever it is over.
      Sizes are in em so one rule scales with the ball's own font size. */
   .glass-ball {
-    background: rgba(247, 247, 247, 0.72);
+    background-color: rgba(247, 247, 247, 0.72);
     backdrop-filter: blur(20px) saturate(180%);
     -webkit-backdrop-filter: blur(20px) saturate(180%);
     border: 1px solid rgba(255, 255, 255, 0.75);
+    /* No cast shadow — it read as a sticker lying on the page. The volume
+       comes from the rim alone, and each ball carries its own faint colour
+       wash (set inline per link) so the row isn't three identical grey discs. */
     box-shadow:
-      0 0.55em 1.4em rgba(0, 0, 0, 0.08),
       inset 0 1px 0 rgba(255, 255, 255, 0.9),
       inset 0 -1px 0 rgba(255, 255, 255, 0.35);
   }

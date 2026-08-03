@@ -5,12 +5,19 @@ import { site } from '@/data/site';
 import { clamp, lerp, q } from '@/lib/lerp';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 
-type Ball = { label: string; href: string };
+type Ball = {
+  label: string;
+  href: string;
+  /** A faint wash of the platform's own colour, laid over the light disc and
+   *  falling off before the rim. Kept low enough that the label stays black
+   *  and the ball still reads as glass rather than a coloured button. */
+  tint: string;
+};
 
 const BALLS: Ball[] = [
-  { label: 'X.COM', href: 'https://x.com/nem_etis' },
-  { label: 'INST', href: 'https://instagram.com/nishanovtim' },
-  { label: 'TG', href: site.telegram },
+  { label: 'X.COM', href: 'https://x.com/nem_etis', tint: 'rgba(17,17,20,0.10)' },
+  { label: 'INST', href: 'https://instagram.com/nishanovtim', tint: 'rgba(221,64,138,0.16)' },
+  { label: 'TG', href: site.telegram, tint: 'rgba(42,158,224,0.18)' },
 ];
 
 // --- physics ---------------------------------------------------------------
@@ -310,6 +317,11 @@ export function Footer() {
             className={`glass-ball grid size-[30vw] min-h-[112px] min-w-[112px] cursor-grab select-none place-items-center rounded-full active:cursor-grabbing ${
               reduced ? 'relative' : 'absolute left-0 top-0 will-change-transform'
             }`}
+            // Off-centre so the wash reads as light falling on a sphere, and
+            // faded out by 78% so the rim stays clean and uncoloured.
+            style={{
+              backgroundImage: `radial-gradient(72% 72% at 32% 26%, ${b.tint} 0%, rgba(255,255,255,0) 78%)`,
+            }}
           >
             <span className="pixel relative z-10 text-[max(15px,5.4vw)] leading-none text-ink">
               {b.label}
