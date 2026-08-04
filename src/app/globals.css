@@ -188,19 +188,39 @@ html.lenis body {
       0 10px 30px rgba(0, 0, 0, 0.14);
   }
 
-  /* Footer spheres. Same glass, no cast shadow — on the empty white footer it
-     read as a sticker lying on the page — and a flat colour tint per link,
-     handed in as --lg-tint. */
+  /* Footer spheres. Colourless: over the photograph the refraction is the
+     effect, and a tint only fogged it. Lighter than `.glass` too — no
+     saturate pass, no inner glow — because three of these are the size of
+     tabloid pages and every one of them filters live pixels. */
   .glass-ball {
-    background-color: var(--lg-bg);
-    background-image: linear-gradient(var(--lg-tint), var(--lg-tint));
-    backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-saturate));
-    -webkit-backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-saturate));
-    border: 1px solid rgba(255, 255, 255, 0.55);
+    background-color: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(var(--lg-blur));
+    -webkit-backdrop-filter: blur(var(--lg-blur));
+    border: 1px solid rgba(255, 255, 255, 0.5);
     box-shadow:
-      inset 0 1px 1px rgba(255, 255, 255, 0.85),
-      inset 0 -1px 1px rgba(255, 255, 255, 0.35),
-      inset 0 0 12px rgba(255, 255, 255, 0.25);
+      inset 0 1px 1px rgba(255, 255, 255, 0.7),
+      inset 0 -1px 1px rgba(255, 255, 255, 0.3);
+  }
+
+  /* --- the curtain -------------------------------------------------------
+     The footer is pinned to the viewport and sits behind the page; `main`
+     carries the page background and a bottom margin exactly one screen tall.
+     Scrolling the last section away therefore slides it up off the photo like
+     a curtain, with nothing animating and nothing to keep in sync. */
+  .footer-reveal {
+    position: fixed;
+    inset: auto 0 0 0;
+    height: 100vh;
+    height: 100svh;
+    z-index: 0;
+    overflow: hidden;
+  }
+  .page-curtain {
+    position: relative;
+    z-index: 1;
+    background: var(--bg);
+    margin-bottom: 100vh;
+    margin-bottom: 100svh;
   }
 
   /* Enhancement layer — Chromium only. The filter carries its own blur, since

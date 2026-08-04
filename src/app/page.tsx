@@ -13,7 +13,8 @@ export default function Home() {
   return (
     <SmoothScrollProvider>
       <Header />
-      <main>
+      {/* page-curtain: the background plate that slides up off the footer. */}
+      <main className="page-curtain">
         <Hero />
         <CasesSection />
         {/* Awards after the cases; Random then sits after Awards. */}

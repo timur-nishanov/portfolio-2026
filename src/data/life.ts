@@ -21,7 +21,7 @@ export const life: LifeEntry[] = [
     description:
       'A site for Artem Shcherbakov, designed and delivered to dev by me and Roma Rodionov from Cedro, won SOTD on Awwwards. First SOTD for studio btw',
     date: 'JULY 2026',
-    media: { type: 'image', src: '/life/awwwards-poster.jpg', alt: 'Awwwards Site of the Day' },
+    media: { type: 'image', src: '/life/awwwards-poster.webp', alt: 'Awwwards Site of the Day' },
   },
   {
     id: 'life-postcards',
@@ -32,7 +32,7 @@ export const life: LifeEntry[] = [
     media: {
       type: 'video',
       src: '/life/postcards.webm',
-      poster: '/life/postcards-poster.jpg',
+      poster: '/life/postcards-poster.webp',
       alt: 'Postcard series prints',
     },
   },
@@ -50,7 +50,7 @@ export const life: LifeEntry[] = [
     description:
       'Started posting shots and quickly landed several Shot of the Day picks. Climbed to #1 on the rankings in about a week',
     date: 'DECEMBER 2025',
-    media: { type: 'image', src: '/life/top-rank.png', alt: 'Find.Design top ranked designers' },
+    media: { type: 'image', src: '/life/top-rank.webp', alt: 'Find.Design top ranked designers' },
   },
   {
     id: 'life-film-app',
@@ -58,7 +58,7 @@ export const life: LifeEntry[] = [
     description:
       "Because a photo archive that stays buried under folders isn't an archive. Building something to hold and sort what I actually watch",
     date: 'FEBRUARY 2026',
-    media: { type: 'image', src: '/life/chimera-poster.jpg', alt: 'La chimera — film app concept' },
+    media: { type: 'image', src: '/life/chimera-poster.webp', alt: 'La chimera — film app concept' },
   },
   {
     id: 'life-figma-motion',
@@ -66,7 +66,7 @@ export const life: LifeEntry[] = [
     description:
       'I use it for handoff and quick prototypes now, so a spec no longer needs a separate deck. Fast, everyday practice',
     date: 'JANUARY 2026',
-    media: { type: 'image', src: '/life/figmotion-poster.png', alt: 'Figma Motion timeline' },
+    media: { type: 'image', src: '/life/figmotion-poster.webp', alt: 'Figma Motion timeline' },
   },
   {
     id: 'life-growth-form',
@@ -74,6 +74,6 @@ export const life: LifeEntry[] = [
     description:
       'On how form follows the forces acting on it. Changed the way I look at proportion and structure in what I design',
     date: 'NOVEMBER 2025',
-    media: { type: 'image', src: '/life/growth-poster.jpg', alt: 'On Growth and Form' },
+    media: { type: 'image', src: '/life/growth-poster.webp', alt: 'On Growth and Form' },
   },
 ];
