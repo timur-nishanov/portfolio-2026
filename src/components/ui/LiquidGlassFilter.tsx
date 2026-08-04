@@ -65,6 +65,11 @@ export function LiquidGlassFilter() {
               preserveAspectRatio="none"
               result="map"
             />
+            {/* One displacement pass, deliberately. Chromatic aberration — the
+                signature move in the WebGL glass libraries — was tried here as
+                three passes recombined per channel: it cost three times the
+                frame budget and, against a pixel font, read as red/blue ghosting
+                rather than dispersion. Not worth either price. */}
             <feDisplacementMap
               in="SourceGraphic"
               in2="map"

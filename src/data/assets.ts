@@ -8,6 +8,10 @@ export const assets = {
   // Head textures — pre-processed, 1996×1996, pixel-aligned (TZ §1.3).
   headColor: '/head/head.png', // was head.png.png
   headDepth: '/head/head-depth.png', // head-depth.png
+  // 128px alpha-only silhouette used purely for the hit test. Loading the full
+  // 1.8MB colour texture a second time just to read its alpha was doubling the
+  // heaviest asset on the page.
+  headAlpha: '/head/head-alpha.png',
 
   // Case logos (all 590×590 png).
   logoGo: '/logos/go.png', // go-logo.png — Yandex Go
@@ -38,6 +42,7 @@ export const assets = {
   rallyVideo: '/mockups/rally-video.webm',
   rallyPoster: '/mockups/rally-poster.jpg',
   rallyStatic2: '/mockups/rally-static-2.png',
+  rallyVideo2: '/mockups/rally-video-2.mp4',
   // Lendly: ready-made MacBook mockup (frame baked in).
   lendlyMacbook: '/mockups/lendly-macbook.png',
   // Desktop mockup recordings that play inside the Random iMac frames.
@@ -54,7 +59,7 @@ export const assets = {
   randomPoorThings: '/random/poorthings-random.png',
   randomRides: '/random/rides-random.png',
   randomSmartbot: '/random/smartbot-random.png',
-  randomSoyun: '/random/soyun-poster.png',
+  randomSoyun: '/random/soyun-poster.jpg',
   randomStepicon: '/random/stepicon-random.png', // composited iMac — stepicon2026 mockup
   randomWallet: '/random/wallet-concept-random.png',
 } as const;

@@ -6,6 +6,7 @@ import { assets } from '@/data/assets';
 import { clamp, easeInOut, q } from '@/lib/lerp';
 import { useSmoothScroll } from '@/components/providers/SmoothScrollProvider';
 import { useIsMobile } from '@/hooks/useMediaQuery';
+import { useLazyVideo } from '@/hooks/useLazyVideo';
 
 // Absolute collage transcribed from the Figma (frame 1:277). The four desktop
 // mockups span the full content band (≈30px side margins at the 1440 reference);
@@ -59,38 +60,10 @@ const IMAC_SCREEN = { left: 4.64, top: 5.49, width: 90.69, height: 63.39 };
 /** iMac frame with either a recording playing in its screen cutout, or — when
  *  no video is supplied yet — a labelled grey placeholder. */
 function ImacScreen({ alt, video, screenBg }: { alt: string; video?: string; screenBg?: string }) {
-  const videoRef = useRef<HTMLVideoElement>(null);
-
-  // Two observers, because "decode it" and "play it" want different margins.
-  // The wide one warms the clip up a screen and a half early — that decode is
-  // what used to land exactly as the tile scrolled in and hitch the frame. The
-  // tight one starts/stops playback so the clips aren't looping off-screen.
-  useEffect(() => {
-    const v = videoRef.current;
-    if (!v) return;
-
-    const warm = new IntersectionObserver(
-      ([e]) => {
-        if (!e.isIntersecting) return;
-        v.preload = 'auto';
-        v.load();
-        warm.disconnect();
-      },
-      { rootMargin: '150% 0px 150% 0px', threshold: 0 },
-    );
-    warm.observe(v);
-
-    const play = new IntersectionObserver(
-      ([e]) => (e.isIntersecting ? v.play().catch(() => {}) : v.pause()),
-      { rootMargin: '25% 0px 25% 0px', threshold: 0 },
-    );
-    play.observe(v);
-
-    return () => {
-      warm.disconnect();
-      play.disconnect();
-    };
-  }, []);
+  // Warm-on-approach then play-when-visible, same as every other clip. The
+  // source used to sit in the markup, and the browser fetched both desk
+  // recordings (2.5MB) during the very first paint regardless of the observers.
+  const videoRef = useLazyVideo(video ?? '');
 
   const screenStyle: React.CSSProperties = {
     left: `${IMAC_SCREEN.left}%`,
@@ -126,11 +99,9 @@ function ImacScreen({ alt, video, screenBg }: { alt: string; video?: string; scr
             muted
             loop
             playsInline
-            preload="metadata"
+            preload="none"
             aria-label={alt}
-          >
-            <source src={video} type="video/mp4" />
-          </video>
+          />
         </div>
       ) : (
         <div className="absolute grid place-items-center bg-[#e7e7e7]" style={screenStyle}>

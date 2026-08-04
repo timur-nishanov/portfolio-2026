@@ -21,7 +21,7 @@ export const life: LifeEntry[] = [
     description:
       'A site for Artem Shcherbakov, designed and delivered to dev by me and Roma Rodionov from Cedro, won SOTD on Awwwards. First SOTD for studio btw',
     date: 'JULY 2026',
-    media: { type: 'image', src: '/life/awwwards-poster.png', alt: 'Awwwards Site of the Day' },
+    media: { type: 'image', src: '/life/awwwards-poster.jpg', alt: 'Awwwards Site of the Day' },
   },
   {
     id: 'life-postcards',
@@ -58,7 +58,7 @@ export const life: LifeEntry[] = [
     description:
       "Because a photo archive that stays buried under folders isn't an archive. Building something to hold and sort what I actually watch",
     date: 'FEBRUARY 2026',
-    media: { type: 'image', src: '/life/chimera-poster.png', alt: 'La chimera — film app concept' },
+    media: { type: 'image', src: '/life/chimera-poster.jpg', alt: 'La chimera — film app concept' },
   },
   {
     id: 'life-figma-motion',
@@ -74,6 +74,6 @@ export const life: LifeEntry[] = [
     description:
       'On how form follows the forces acting on it. Changed the way I look at proportion and structure in what I design',
     date: 'NOVEMBER 2025',
-    media: { type: 'image', src: '/life/growth-poster.png', alt: 'On Growth and Form' },
+    media: { type: 'image', src: '/life/growth-poster.jpg', alt: 'On Growth and Form' },
   },
 ];

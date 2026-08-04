@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { useEffect, useRef } from 'react';
 import { life, type LifeEntry } from '@/data/life';
+import { useLazyVideo } from '@/hooks/useLazyVideo';
 import { clamp, q } from '@/lib/lerp';
 import { useSmoothScroll } from '@/components/providers/SmoothScrollProvider';
 import { useIsMobile } from '@/hooks/useMediaQuery';
@@ -15,18 +16,7 @@ const FADE_DROP = 0.28;
 
 /** Fixed 386×512 media slot (Figma). Poster fills it, no rounding. */
 function LifeMedia({ media }: { media: LifeEntry['media'] }) {
-  const videoRef = useRef<HTMLVideoElement>(null);
-
-  useEffect(() => {
-    const v = videoRef.current;
-    if (!v) return;
-    const io = new IntersectionObserver(
-      ([e]) => (e.isIntersecting ? v.play().catch(() => {}) : v.pause()),
-      { rootMargin: '200% 0px 200% 0px', threshold: 0 },
-    );
-    io.observe(v);
-    return () => io.disconnect();
-  }, []);
+  const videoRef = useLazyVideo(media.src);
 
   return (
     <div className="relative h-full shrink-0 overflow-hidden bg-surface" style={{ aspectRatio: '386 / 512' }}>
@@ -39,12 +29,10 @@ function LifeMedia({ media }: { media: LifeEntry['media'] }) {
           muted
           loop
           playsInline
-          preload="auto"
+          preload="none"
           poster={media.poster}
           aria-label={media.alt}
-        >
-          <source src={media.src} type="video/webm" />
-        </video>
+        />
       ) : (
         <Image src={media.src} alt={media.alt} fill sizes="(max-width: 767px) 90vw, 400px" className="object-cover" />
       )}

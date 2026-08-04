@@ -141,7 +141,9 @@ export const cases: Case[] = [
         // Bare screen recording drawn inside our own iPhone frame (same as
         // Chums); a pre-composited second phone beside it.
         { framed: true, type: 'video', src: assets.rallyVideo, poster: assets.rallyPoster, alt: 'Rally study session' },
-        { framed: false, type: 'image', src: assets.rallyStatic2, alt: 'Rally categories screen' },
+        // Second phone is a screen recording too now, drawn inside our own
+        // frame like the first — the pair used to be video + still.
+        { framed: true, type: 'video', src: assets.rallyVideo2, alt: 'Rally categories screen' },
       ],
     },
     logo: null, // no Rally logo in the repo

@@ -1,9 +1,9 @@
 'use client';
 
 import Image from 'next/image';
-import { useEffect, useRef } from 'react';
 import type { PhoneScreen } from '@/data/cases';
 import { assets } from '@/data/assets';
+import { useLazyVideo } from '@/hooks/useLazyVideo';
 
 // Screen cutout inside the frame PNG, measured from iphone-frame.png (a
 // 1310×2710 canvas with a fully transparent screen — the frame sits ON TOP of
@@ -19,19 +19,8 @@ const PHONE_AR = '1310 / 2710';
 /** One phone in the media strip — either a live frame with content, or a
  *  pre-composited render drawn as-is. */
 export function PhoneMockup({ phone }: { phone: PhoneScreen }) {
-  const videoRef = useRef<HTMLVideoElement>(null);
-
-  // Play the framed video only while it's on screen (battery).
-  useEffect(() => {
-    const v = videoRef.current;
-    if (!v) return;
-    const io = new IntersectionObserver(
-      ([e]) => (e.isIntersecting ? v.play().catch(() => {}) : v.pause()),
-      { threshold: 0.1 },
-    );
-    io.observe(v);
-    return () => io.disconnect();
-  }, []);
+  // Source is attached on approach, not in the markup — see useLazyVideo.
+  const videoRef = useLazyVideo(phone.src);
 
   // Already-a-mockup render: draw as-is, no iPhone frame layered on top.
   if (!phone.framed) {
@@ -46,12 +35,10 @@ export function PhoneMockup({ phone }: { phone: PhoneScreen }) {
             muted
             loop
             playsInline
-            preload="metadata"
+            preload="none"
             poster={phone.poster}
             aria-label={phone.alt}
-          >
-            <source src={phone.src} type={phone.src.endsWith('.webm') ? 'video/webm' : 'video/mp4'} />
-          </video>
+          />
         ) : (
           <Image
             src={phone.src}
@@ -86,12 +73,10 @@ export function PhoneMockup({ phone }: { phone: PhoneScreen }) {
           muted
           loop
           playsInline
-          preload="metadata"
+          preload="none"
           poster={phone.poster}
           aria-label={phone.alt}
-        >
-          <source src={phone.src} type={phone.src.endsWith('.webm') ? 'video/webm' : 'video/mp4'} />
-        </video>
+        />
       ) : (
         <div className="absolute overflow-hidden" style={screenStyle}>
           <Image src={phone.src} alt={phone.alt} fill sizes="340px" className="object-cover" />

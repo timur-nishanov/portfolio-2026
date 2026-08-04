@@ -1,9 +1,9 @@
 'use client';
 
 import Image from 'next/image';
-import { useEffect, useRef } from 'react';
 import type { CaseMedia } from '@/data/cases';
 import { PhoneStrip } from './PhoneMockup';
+import { useLazyVideo } from '@/hooks/useLazyVideo';
 
 /**
  * Fixed-proportion media slot (TZ §12). The aspect-ratio is set from data and
@@ -12,23 +12,9 @@ import { PhoneStrip } from './PhoneMockup';
  * When `media.phones` is set, renders the twin-phone strip instead.
  */
 export function MediaSlot({ media }: { media: CaseMedia }) {
-  const videoRef = useRef<HTMLVideoElement>(null);
-
-  // Play single-file videos only while in view — five autoplaying clips would
-  // drain battery. (The phone strip handles its own in-view playback.)
-  useEffect(() => {
-    const v = videoRef.current;
-    if (!v) return;
-    const io = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) v.play().catch(() => {});
-        else v.pause();
-      },
-      { threshold: 0.15 },
-    );
-    io.observe(v);
-    return () => io.disconnect();
-  }, []);
+  // Fetched and played on approach only. The Yandex Go clip alone is ~5MB and
+  // used to download in full before the first screen had finished painting.
+  const videoRef = useLazyVideo(media.src ?? '');
 
   // Twin phones don't need the card clip/skeleton bg — they fill the slot.
   if (media.phones && media.phones.length > 0) {
@@ -87,12 +73,10 @@ export function MediaSlot({ media }: { media: CaseMedia }) {
           muted
           loop
           playsInline
-          preload="auto"
+          preload="none"
           poster={media.poster}
           aria-label={media.alt}
-        >
-          <source src={media.src} type={media.src.endsWith('.webm') ? 'video/webm' : 'video/mp4'} />
-        </video>
+        />
       )}
 
       {/* Last word on the dark seam. Overshooting the frame was not enough on

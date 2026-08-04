@@ -158,7 +158,7 @@ export function Head3D() {
       hitCtx.drawImage(hitImg, 0, 0, 128, 128);
       alphaData = hitCtx.getImageData(0, 0, 128, 128).data;
     };
-    hitImg.src = assets.headColor;
+    hitImg.src = assets.headAlpha;
 
     const isOnHead = (u: number, v: number) => {
       if (u < 0 || u > 1 || v < 0 || v > 1) return false;
