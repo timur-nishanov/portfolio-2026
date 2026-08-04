@@ -412,9 +412,8 @@ export function Footer() {
               reduced ? 'relative' : 'absolute left-0 top-0 will-change-transform'
             }`}
           >
-            {/* The mark on its own, in the platform's colour. Thin shapes over
-                a photograph, so the soft light halo stays. */}
-            <b.Glyph className="relative z-10 w-[11vw] min-w-[38px] [filter:drop-shadow(0_0_14px_rgba(255,255,255,0.6))_drop-shadow(0_0_3px_rgba(255,255,255,0.5))]" />
+            {/* The mark on its own, white — no plate, no shadow. */}
+            <b.Glyph className="relative z-10 w-[11vw] min-w-[38px] text-white" />
             <span className="sr-only">{b.label}</span>
           </a>
         ))}

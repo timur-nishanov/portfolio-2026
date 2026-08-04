@@ -1,16 +1,15 @@
 /**
- * Brand glyphs for the footer spheres — the mark alone, no badge behind it,
- * each in its own colour.
+ * Brand glyphs for the footer spheres — the mark alone, no badge behind it.
  *
- * Inline SVG rather than files: no extra request, and Instagram's gradient can
- * live right here. Each is drawn on a 24×24 box so one size prop governs all
- * three.
+ * Inline SVG rather than files: no extra request, and they take `currentColor`,
+ * so the colour is set once where they are used. Each is drawn on a 24×24 box
+ * so one size prop governs all three.
  */
 type Props = { className?: string };
 
 export function XGlyph({ className = '' }: Props) {
   return (
-    <svg viewBox="0 0 24 24" fill="#000000" aria-hidden="true" className={className}>
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className={className}>
       <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231 5.45-6.231Zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77Z" />
     </svg>
   );
@@ -18,17 +17,7 @@ export function XGlyph({ className = '' }: Props) {
 
 export function InstagramGlyph({ className = '' }: Props) {
   return (
-    <svg viewBox="0 0 24 24" fill="url(#ig-mark)" aria-hidden="true" className={className}>
-      <defs>
-        {/* Warm burst low-left, cooler pass into the top-left corner — the
-            brand gradient, mapped across the mark itself. */}
-        <linearGradient id="ig-mark" x1="3" y1="21" x2="21" y2="3" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor="#FFDD55" />
-          <stop offset="0.25" stopColor="#FF543E" />
-          <stop offset="0.6" stopColor="#C837AB" />
-          <stop offset="1" stopColor="#3771C8" />
-        </linearGradient>
-      </defs>
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className={className}>
       <path d="M12 2.163c3.204 0 3.584.012 4.85.07 1.17.053 1.805.249 2.227.415.56.217.96.477 1.38.896.42.42.68.82.896 1.38.166.422.362 1.058.415 2.228.058 1.265.07 1.645.07 4.849 0 3.204-.012 3.584-.07 4.85-.053 1.17-.249 1.805-.415 2.227a3.72 3.72 0 0 1-.896 1.38 3.72 3.72 0 0 1-1.38.896c-.422.166-1.058.362-2.228.415-1.265.058-1.645.07-4.849.07-3.204 0-3.584-.012-4.85-.07-1.17-.053-1.805-.249-2.227-.415a3.72 3.72 0 0 1-1.38-.896 3.72 3.72 0 0 1-.896-1.38c-.166-.422-.362-1.058-.415-2.228-.058-1.265-.07-1.645-.07-4.849 0-3.204.012-3.584.07-4.85.053-1.17.249-1.805.415-2.227.217-.56.477-.96.896-1.38a3.72 3.72 0 0 1 1.38-.896c.422-.166 1.058-.362 2.228-.415 1.265-.058 1.645-.07 4.849-.07M12 0C8.741 0 8.332.014 7.052.072 5.775.13 4.904.333 4.14.63a5.88 5.88 0 0 0-2.126 1.384A5.88 5.88 0 0 0 .63 4.14C.333 4.904.13 5.775.072 7.052.014 8.332 0 8.741 0 12s.014 3.668.072 4.948c.058 1.277.261 2.148.558 2.912a5.88 5.88 0 0 0 1.384 2.126A5.88 5.88 0 0 0 4.14 23.37c.764.297 1.635.5 2.912.558C8.332 23.986 8.741 24 12 24s3.668-.014 4.948-.072c1.277-.058 2.148-.261 2.912-.558a5.88 5.88 0 0 0 2.126-1.384 5.88 5.88 0 0 0 1.384-2.126c.297-.764.5-1.635.558-2.912.058-1.28.072-1.689.072-4.948s-.014-3.668-.072-4.948c-.058-1.277-.261-2.148-.558-2.912a5.88 5.88 0 0 0-1.384-2.126A5.88 5.88 0 0 0 19.86.63c-.764-.297-1.635-.5-2.912-.558C15.668.014 15.259 0 12 0Z" />
       <path d="M12 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324ZM12 16a4 4 0 1 1 0-8 4 4 0 0 1 0 8Z" />
       <circle cx="18.406" cy="5.594" r="1.44" />
@@ -38,7 +27,7 @@ export function InstagramGlyph({ className = '' }: Props) {
 
 export function TelegramGlyph({ className = '' }: Props) {
   return (
-    <svg viewBox="0 0 24 24" fill="#2AABEE" aria-hidden="true" className={className}>
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className={className}>
       <path d="M23.91 3.79 20.3 20.84c-.25 1.21-.98 1.5-1.99.94l-5.5-4.07-2.66 2.57c-.3.3-.55.55-1.13.55l.4-5.63 10.26-9.26c.45-.4-.1-.62-.69-.23L6.24 12.5.63 10.74C-.6 10.36-.62 9.5.9 8.9l21.5-8.28c1.01-.37 1.9.24 1.51 3.17Z" />
     </svg>
   );
