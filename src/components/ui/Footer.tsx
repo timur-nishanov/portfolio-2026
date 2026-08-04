@@ -412,10 +412,10 @@ export function Footer() {
               reduced ? 'relative' : 'absolute left-0 top-0 will-change-transform'
             }`}
           >
-            {/* Black, as the labels were — but the photograph behind runs dark
-                in places, so the glyph carries a soft light halo to stay legible
-                without changing colour. */}
-            <b.Glyph className="relative z-10 w-[11vw] min-w-[38px] text-ink [filter:drop-shadow(0_0_14px_rgba(255,255,255,0.6))_drop-shadow(0_0_3px_rgba(255,255,255,0.5))]" />
+            {/* Full-colour badges. They carry their own contrast, so the white
+                halo the black labels needed is replaced by a soft cast shadow
+                that lifts them off the photograph. */}
+            <b.Glyph className="relative z-10 w-[11vw] min-w-[38px] [filter:drop-shadow(0_2px_10px_rgba(0,0,0,0.28))]" />
             <span className="sr-only">{b.label}</span>
           </a>
         ))}
