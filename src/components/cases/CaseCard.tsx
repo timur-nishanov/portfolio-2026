@@ -2,7 +2,7 @@
 
 import { useRef } from 'react';
 import type { Case } from '@/data/cases';
-import { MagneticButton } from '@/components/header/MagneticButton';
+import { CaseLinks } from './CaseLinks';
 import { MediaSlot } from './MediaSlot';
 import { FloatingLogo } from './FloatingLogo';
 
@@ -21,28 +21,18 @@ export function CaseCard({ data }: { data: Case }) {
         <span className="block">{data.titleLine1}</span>
         <span className="block">{data.titleLine2}</span>
       </h3>
-      {/* Fixed rhythm per Timur: 16px title→copy, 52px copy→buttons. */}
-      <p className="t-body mt-[16px] max-w-[512px] text-ink-muted">
-        {data.description}
-      </p>
-      <div className="mt-[52px] flex flex-wrap gap-[clamp(8px,1.1vw,16px)]">
-        {data.links.map((link) => {
-          const isSoon = link.label === 'TESTFLIGHT SOON';
-          return (
-            <MagneticButton
-              key={link.label}
-              as="a"
-              href={link.href}
-              magnetic={!isSoon}
-              disabled={isSoon}
-              className="glass rounded-full"
-              labelClassName={`pixel ${isSoon ? 'text-ink-muted' : 'text-ink'}`}
-              style={{ width: 'var(--btn-w)', height: 'var(--btn-h)' }}
-            >
-              {link.label}
-            </MagneticButton>
-          );
-        })}
+      {/* Fixed rhythm per Timur: 32 title→sections, 20 between sections,
+          4 label→body inside one, 56 sections→links. */}
+      <div className="mt-[32px] flex max-w-[512px] flex-col gap-[20px]">
+        {data.sections.map((section) => (
+          <div key={section.label}>
+            <p className="t-case-label">{section.label}</p>
+            <p className="t-case-copy mt-[4px]">{section.body}</p>
+          </div>
+        ))}
+      </div>
+      <div className="mt-[56px]">
+        <CaseLinks links={data.links} />
       </div>
     </div>
   );

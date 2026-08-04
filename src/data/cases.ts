@@ -40,7 +40,13 @@ export type CaseMedia = {
 
 export type CaseLink = {
   label: string;
-  href: string | null; // null = inactive button
+  href: string | null; // null = inactive link
+};
+
+/** One labelled paragraph in a case's copy — PROBLEMS / ROLE / RESULTS. */
+export type CaseSection = {
+  label: string;
+  body: string;
 };
 
 export type CaseLogo = {
@@ -55,7 +61,7 @@ export type Case = {
   id: string;
   titleLine1: string;
   titleLine2: string;
-  description: string;
+  sections: CaseSection[];
   links: CaseLink[];
   media: CaseMedia;
   logo: CaseLogo | null;
@@ -79,8 +85,11 @@ export const cases: Case[] = [
     id: 'case-chums',
     titleLine1: 'Chums Messenger.',
     titleLine2: 'crypto chatting',
-    description:
-      'A Matrix messenger with tokens, NFTs and dApps inside the chat — but the Web3 layer stayed invisible: wallet-linked quest rewards nobody could find or price, and a desktop client that broke on resize. Designed a new product concept, got it signed off by the founders, and led discovery and design on both workstreams.',
+    sections: [
+      { label: 'PROBLEMS', body: 'A Matrix messenger with tokens, NFTs and dApps inside the chat — but the Web3 layer stayed invisible: wallet-linked quest rewards nobody could find or price, and a desktop client that broke on resize. Designed a new product concept, got it signed off by the founders, and led discovery and design on both workstreams.' },
+      { label: 'ROLE', body: 'Filler — role, scope and who you worked with goes here. Replace with the real copy.' },
+      { label: 'PRODUCT RESULTS', body: 'Filler — what shipped and what moved: the numbers, the before and after. Replace with the real copy.' },
+    ],
     links: [
       { label: 'CASE STUDY', href: null /* TODO */ },
       { label: 'APPSTORE', href: null /* TODO */ },
@@ -102,8 +111,11 @@ export const cases: Case[] = [
     id: 'case-battle',
     titleLine1: 'Yandex Design Battle.',
     titleLine2: 'Kaiference Conference',
-    description:
-      'The AI race is a technology race nobody wins for long, so the brief was to design the product, not the model. Our answer: take Alice out of the chat and put her on the lock screen — proactive cards that appear when context earns them, plus a Studio mode for when you already know what you want. 2nd place, one point off first, ahead of every in-house product team.',
+    sections: [
+      { label: 'PROBLEMS', body: 'The AI race is a technology race nobody wins for long, so the brief was to design the product, not the model. Our answer: take Alice out of the chat and put her on the lock screen — proactive cards that appear when context earns them, plus a Studio mode for when you already know what you want. 2nd place, one point off first, ahead of every in-house product team.' },
+      { label: 'ROLE', body: 'Filler — role, scope and who you worked with goes here. Replace with the real copy.' },
+      { label: 'PRODUCT RESULTS', body: 'Filler — what shipped and what moved: the numbers, the before and after. Replace with the real copy.' },
+    ],
     links: [
       { label: 'CASE STUDY', href: null /* TODO */ },
       { label: 'PITCHDECK', href: null /* TODO */ },
@@ -128,9 +140,11 @@ export const cases: Case[] = [
     id: 'case-rally',
     titleLine1: 'Rally app.',
     titleLine2: 'English through your files',
-    // TODO(copy): real description from Timur.
-    description:
-      'Learn English from the things you already read: drop in your own files and Rally turns them into drills, decks and spaced review. Designed the onboarding and the study loop so the app feels like a tutor that read your documents, not a generic course.',
+    sections: [
+      { label: 'PROBLEMS', body: 'Learn English from the things you already read: drop in your own files and Rally turns them into drills, decks and spaced review. Designed the onboarding and the study loop so the app feels like a tutor that read your documents, not a generic course.' },
+      { label: 'ROLE', body: 'Filler — role, scope and who you worked with goes here. Replace with the real copy.' },
+      { label: 'PRODUCT RESULTS', body: 'Filler — what shipped and what moved: the numbers, the before and after. Replace with the real copy.' },
+    ],
     links: [{ label: 'TESTFLIGHT SOON', href: null }], // inactive by design (TZ §9.2)
     media: {
       type: 'video',
@@ -153,8 +167,11 @@ export const cases: Case[] = [
     id: 'case-lendly',
     titleLine1: 'Lendly Invest.',
     titleLine2: 'Crowdlanding platform',
-    description:
-      "On a crowdlending platform the investment flow is the revenue path: every extra step before a deal closes is a deal that doesn't. Interviews and usability tests with the platform's B2B investors showed the flow ran as one long undifferentiated stretch, so we broke it into discrete steps and rebuilt the site around it. Time to complete the core scenario dropped by roughly half, and follow-up research confirmed the flow felt materially easier",
+    sections: [
+      { label: 'PROBLEMS', body: "On a crowdlending platform the investment flow is the revenue path: every extra step before a deal closes is a deal that doesn't. Interviews and usability tests with the platform's B2B investors showed the flow ran as one long undifferentiated stretch, so we broke it into discrete steps and rebuilt the site around it. Time to complete the core scenario dropped by roughly half, and follow-up research confirmed the flow felt materially easier" },
+      { label: 'ROLE', body: 'Filler — role, scope and who you worked with goes here. Replace with the real copy.' },
+      { label: 'PRODUCT RESULTS', body: 'Filler — what shipped and what moved: the numbers, the before and after. Replace with the real copy.' },
+    ],
     links: [
       { label: 'CASE STUDY', href: null /* TODO */ },
       { label: 'PLATFORM', href: null /* TODO */ },
@@ -179,8 +196,11 @@ export const cases: Case[] = [
     id: 'case-meama',
     titleLine1: 'Meama coffee.',
     titleLine2: 'Europe and Georgian taste',
-    description:
-      'An international coffee brand headquartered in Berlin and Vienna, part of a large European ecosystem and expanding fast across the continent. I owned the product side of the site: reworked the overall UX, ran the discovery that validated a stack of hypotheses, concepts and design decisions, and reshaped the subscription flow so more people actually finished it.',
+    sections: [
+      { label: 'PROBLEMS', body: 'An international coffee brand headquartered in Berlin and Vienna, part of a large European ecosystem and expanding fast across the continent. I owned the product side of the site: reworked the overall UX, ran the discovery that validated a stack of hypotheses, concepts and design decisions, and reshaped the subscription flow so more people actually finished it.' },
+      { label: 'ROLE', body: 'Filler — role, scope and who you worked with goes here. Replace with the real copy.' },
+      { label: 'PRODUCT RESULTS', body: 'Filler — what shipped and what moved: the numbers, the before and after. Replace with the real copy.' },
+    ],
     links: [
       { label: 'CASE STUDY', href: null /* TODO */ },
       { label: 'MEAMA.DE', href: null /* TODO */ },
@@ -207,8 +227,11 @@ export const cases: Case[] = [
     id: 'case-go',
     titleLine1: 'Yandex Go Superapp.',
     titleLine2: 'Beri Zaryad',
-    description:
-      "Some stations ran empty at peak hours, others sat overloaded — courier rebalancing ate the margin. Field tests in two cities showed the blocker wasn't unwillingness but uncertainty: where to go, will it fit, will the discount apply. Answer: bonus stations with routing, one-line rules and instant reward confirmation.",
+    sections: [
+      { label: 'PROBLEMS', body: "Some stations ran empty at peak hours, others sat overloaded — courier rebalancing ate the margin. Field tests in two cities showed the blocker wasn't unwillingness but uncertainty: where to go, will it fit, will the discount apply. Answer: bonus stations with routing, one-line rules and instant reward confirmation." },
+      { label: 'ROLE', body: 'Filler — role, scope and who you worked with goes here. Replace with the real copy.' },
+      { label: 'PRODUCT RESULTS', body: 'Filler — what shipped and what moved: the numbers, the before and after. Replace with the real copy.' },
+    ],
     links: [{ label: 'CASE STUDY', href: null /* TODO */ }],
     // Self-contained scene video: 3840×2160 with three phones side by side —
     // lock screen (~336–1306px), the green "main" screen (~1402–2429px) and the
