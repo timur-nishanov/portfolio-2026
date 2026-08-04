@@ -6,8 +6,14 @@ import { assets } from '@/data/assets';
 import { site } from '@/data/site';
 import { clamp, lerp, q } from '@/lib/lerp';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { XGlyph, InstagramGlyph, TelegramGlyph } from './SocialGlyphs';
 
-type Ball = { label: string; href: string };
+type Ball = {
+  /** Still the accessible name — the glyph itself is decorative. */
+  label: string;
+  href: string;
+  Glyph: (props: { className?: string }) => React.JSX.Element;
+};
 
 /**
  * Entry choreography. The balls drop in when the footer is first scrolled to,
@@ -27,9 +33,9 @@ const DROPS = [
 // No tint any more — over the photograph the glass has something real to
 // refract, and a colour wash only muddied it.
 const BALLS: Ball[] = [
-  { label: 'X.COM', href: 'https://x.com/nem_etis' },
-  { label: 'INST', href: 'https://instagram.com/nishanovtim' },
-  { label: 'TG', href: site.telegram },
+  { label: 'X.COM', href: 'https://x.com/nem_etis', Glyph: XGlyph },
+  { label: 'Instagram', href: 'https://instagram.com/nishanovtim', Glyph: InstagramGlyph },
+  { label: 'Telegram', href: site.telegram, Glyph: TelegramGlyph },
 ];
 
 // --- physics ---------------------------------------------------------------
@@ -406,15 +412,11 @@ export function Footer() {
               reduced ? 'relative' : 'absolute left-0 top-0 will-change-transform'
             }`}
           >
-            {/* Black, as designed — but the photograph behind runs dark in
-                places, so the glyphs carry a soft light halo to stay legible
+            {/* Black, as the labels were — but the photograph behind runs dark
+                in places, so the glyph carries a soft light halo to stay legible
                 without changing colour. */}
-            <span
-              className="pixel relative z-10 text-[max(16px,6.1vw)] leading-none text-ink"
-              style={{ textShadow: '0 0 14px rgba(255,255,255,0.65), 0 0 3px rgba(255,255,255,0.5)' }}
-            >
-              {b.label}
-            </span>
+            <b.Glyph className="relative z-10 w-[11vw] min-w-[38px] text-ink [filter:drop-shadow(0_0_14px_rgba(255,255,255,0.6))_drop-shadow(0_0_3px_rgba(255,255,255,0.5))]" />
+            <span className="sr-only">{b.label}</span>
           </a>
         ))}
       </div>

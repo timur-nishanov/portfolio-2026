@@ -172,20 +172,28 @@ export const cases: Case[] = [
   },
   {
     id: 'case-lendly',
-    titleLine1: 'Lendly Invest.',
-    titleLine2: 'Crowdlanding platform',
+    titleLine1: 'Lendly Invest',
+    titleLine2: 'Crowdlending platform',
     sections: [
-      { label: 'PROBLEMS', body: "On a crowdlending platform the investment flow is the revenue path: every extra step before a deal closes is a deal that doesn't. Interviews and usability tests with the platform's B2B investors showed the flow ran as one long undifferentiated stretch, so we broke it into discrete steps and rebuilt the site around it. Time to complete the core scenario dropped by roughly half, and follow-up research confirmed the flow felt materially easier" },
-      { label: 'ROLE', body: 'Filler — role, scope and who you worked with goes here. Replace with the real copy.' },
-      { label: 'PRODUCT RESULTS', body: 'Filler — what shipped and what moved: the numbers, the before and after. Replace with the real copy.' },
+      {
+        label: 'PROBLEMS',
+        body: 'A crowdinvesting platform for real-estate-backed loans and developer project financing. The old platform was dated and the investment flow ran as one long undifferentiated stretch — hard to navigate even for people who know the domain well',
+      },
+      {
+        label: 'ROLE',
+        body: 'Middle designer, 2023. Worked under a design lead across calls with owners, product and the business analyst.',
+      },
+      {
+        label: 'PRODUCT RESULTS',
+        body: 'Broke the core flow into discrete and clear steps. Time to complete the core scenario dropped by roughly half, and follow-up research confirmed the flow felt materially easier',
+      },
     ],
     links: [
       { label: 'CASE STUDY', href: null /* TODO */ },
       { label: 'PLATFORM', href: null /* TODO */ },
     ],
-    // Ready-made MacBook mockup (frame baked in). It sits inside the card now
-    // rather than bleeding off its left edge, and is eased down a step so it
-    // stops dominating the card.
+    // Ready-made MacBook mockup (frame baked in). Sits inside the card at the
+    // media column's own width — no bleed, no scale-down.
     media: {
       type: 'image',
       src: assets.lendlyMacbook,
@@ -196,7 +204,6 @@ export const cases: Case[] = [
     logo: null, // no Lendly logo in the repo
     layout: 'text-right',
     wideMedia: true,
-    mediaScale: 0.9,
   },
   {
     id: 'case-meama',
