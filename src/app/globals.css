@@ -134,6 +134,18 @@ html.lenis body {
     font-size: clamp(24px, 2.778vw, 40px);
     font-weight: 400;
     line-height: 1.2;
+    /* The two lines are authored, but a long one can still wrap on a narrow
+       column — balance it rather than leaving one word stranded. */
+    text-wrap: balance;
+  }
+
+  /* Media scale is per-case data, applied only from md up: on mobile the media
+     column is full width and a scale-up would push a scrollbar. */
+  @media (min-width: 768px) {
+    .media-scale {
+      transform: scale(var(--media-scale, 1));
+      transform-origin: var(--media-origin, center);
+    }
   }
   .t-body {
     font-family: var(--font-hoves), sans-serif;
@@ -162,6 +174,14 @@ html.lenis body {
     line-height: 1.24;
     letter-spacing: 0;
     color: rgba(17, 17, 17, 0.8);
+    /* Measure is set in characters, not pixels, so the line length holds as the
+       type scales. 44ch measures out at ~58 characters a line in this face — inside the
+       comfortable band; the column's own 512px was letting it run to 65. */
+    max-width: 44ch;
+    /* Evens out the rag and, more importantly, stops a paragraph ending on a
+       single orphaned word. Ignored where unsupported — nothing depends on it. */
+    text-wrap: pretty;
+    hyphens: none;
   }
 
   /* Career rows — the title uses the statement face (same as the About line),

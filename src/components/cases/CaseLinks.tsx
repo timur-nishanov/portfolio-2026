@@ -61,7 +61,7 @@ export function CaseLinks({ links }: { links: CaseLink[] }) {
       {links.map((link, i) => (
         <span key={link.label} className="inline-flex items-center gap-x-[clamp(8px,0.83vw,12px)]">
           {i > 0 ? (
-            <span aria-hidden="true" className="pixel text-ink-muted">
+            <span aria-hidden="true" className="pixel text-laurel-teal">
               ·
             </span>
           ) : null}

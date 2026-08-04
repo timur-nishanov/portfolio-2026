@@ -67,11 +67,12 @@ export type Case = {
   logo: CaseLogo | null;
   layout: 'text-left' | 'text-right';
   /**
-   * Hand the media column a bit more width and scale the mockup up (desktop
-   * only) so it reads larger, without shrinking the copy enough to wrap the
-   * title or stack the buttons. Used for the Lendly laptop.
+   * Hand the media column a bit more width so the mockup reads larger, without
+   * shrinking the copy enough to wrap the title or stack the links.
    */
   wideMedia?: boolean;
+  /** Desktop-only scale for the mockup. 1 = as laid out. */
+  mediaScale?: number;
 };
 
 // Twin-phone slot proportion — near-square once two phones sit side by side.
@@ -176,21 +177,20 @@ export const cases: Case[] = [
       { label: 'CASE STUDY', href: null /* TODO */ },
       { label: 'PLATFORM', href: null /* TODO */ },
     ],
-    // Ready-made MacBook mockup (frame baked in). The source PNG's transparent
-    // margin AND its left drop-shadow were cropped off entirely (→ 1470×1194)
-    // so the laptop body sits flush against the card's left edge. It bleeds
-    // left and is scaled up via wideMedia.
+    // Ready-made MacBook mockup (frame baked in). It sits inside the card now
+    // rather than bleeding off its left edge, and is eased down a step so it
+    // stops dominating the card.
     media: {
       type: 'image',
       src: assets.lendlyMacbook,
       aspect: '1470/1194',
       fit: 'contain',
-      bleed: 'left',
       alt: 'Lendly Invest secondary market, on a MacBook',
     },
     logo: null, // no Lendly logo in the repo
     layout: 'text-right',
     wideMedia: true,
+    mediaScale: 0.9,
   },
   {
     id: 'case-meama',

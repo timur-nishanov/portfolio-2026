@@ -22,12 +22,12 @@ export function CaseCard({ data }: { data: Case }) {
         <span className="block">{data.titleLine2}</span>
       </h3>
       {/* Fixed rhythm per Timur: 32 title→sections, 20 between sections,
-          4 label→body inside one, 56 sections→links. */}
+          8 label→body inside one, 56 sections→links. */}
       <div className="mt-[32px] flex max-w-[512px] flex-col gap-[20px]">
         {data.sections.map((section) => (
           <div key={section.label}>
             <p className="t-case-label">{section.label}</p>
-            <p className="t-case-copy mt-[4px]">{section.body}</p>
+            <p className="t-case-copy mt-[8px]">{section.body}</p>
           </div>
         ))}
       </div>
@@ -49,19 +49,20 @@ export function CaseCard({ data }: { data: Case }) {
         ? 'md:ml-[calc(-1*clamp(20px,5.71vw,80px)-clamp(16px,4vw,60px))]'
         : '';
 
-  // wideMedia scales the mockup up on desktop, anchored to the card side it
-  // bleeds toward (so it grows into the column gap, not over the copy). md-only
-  // via Tailwind utilities — a raw transform would also scale on mobile, where
-  // the single-column media is full width and would overflow into a scrollbar.
-  const scaleClass = data.wideMedia
-    ? data.media.bleed === 'right'
-      ? 'md:origin-right md:scale-[1.06]'
-      : 'md:origin-left md:scale-[1.06]'
-    : '';
+  // Scale is per-case data now. A bleeding mockup is anchored to the edge it
+  // bleeds toward so it grows into the column gap rather than over the copy;
+  // one that sits inside the card scales about its own centre.
+  const mediaScale = data.mediaScale ?? (data.wideMedia && data.media.bleed ? 1.06 : 1);
+  const mediaOrigin = data.media.bleed === 'right' ? 'right' : data.media.bleed === 'left' ? 'left' : 'center';
 
   const MediaBlock = (
     <div className={`relative z-10 flex items-center justify-center ${bleedClass}`}>
-      <div className={`w-full ${scaleClass}`}>
+      <div
+        className="media-scale w-full"
+        style={
+          { '--media-scale': mediaScale, '--media-origin': mediaOrigin } as React.CSSProperties
+        }
+      >
         <MediaSlot media={data.media} />
       </div>
     </div>
