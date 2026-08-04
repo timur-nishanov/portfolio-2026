@@ -86,7 +86,7 @@ function LifeCard({
       ref={(n) => {
         cardsRef.current[index] = n;
       }}
-      className="sticky top-[max(12px,calc(var(--header-top)+var(--nav-item-h)+24px))] md:h-[var(--life-card-h)]"
+      className="sticky top-[max(12px,calc(var(--header-top)+var(--nav-item-h)+24px))] md:top-[max(24px,calc((100svh-var(--life-card-h))/2))] md:h-[var(--life-card-h)]"
     >
       {/* All cards share the case-grey surface. No shadow. */}
       <div
@@ -131,10 +131,11 @@ export function LifeSection() {
       <h2 id="life-heading" className="sr-only">
         Life
       </h2>
-      {/* No gap: every card pins to the same offset and is exactly one card
-          tall, so the next one slides up and covers the previous one flush
-          instead of leaving a stepped strip of it showing. */}
-      <div className="container-cases flex flex-col">
+      {/* Cards pin centred in the viewport rather than up under the header, so
+          the stack settles mid-screen instead of hard against the bottom edge.
+          The gap is what you see between one card and the next on the way in —
+          without it they read as one continuous slab. */}
+      <div className="container-cases flex flex-col gap-[clamp(16px,2.2vw,32px)]">
         {life.map((entry, i) => (
           <LifeCard
             key={entry.id}

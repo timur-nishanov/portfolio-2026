@@ -87,14 +87,20 @@ export const cases: Case[] = [
     titleLine1: 'Chums Messenger.',
     titleLine2: 'crypto chatting',
     sections: [
-      { label: 'PROBLEMS', body: 'A Matrix messenger with tokens, NFTs and dApps inside the chat — but the Web3 layer stayed invisible: wallet-linked quest rewards nobody could find or price, and a desktop client that broke on resize. Designed a new product concept, got it signed off by the founders, and led discovery and design on both workstreams.' },
-      { label: 'ROLE', body: 'Filler — role, scope and who you worked with goes here. Replace with the real copy.' },
-      { label: 'PRODUCT RESULTS', body: 'Filler — what shipped and what moved: the numbers, the before and after. Replace with the real copy.' },
+      {
+        label: 'PROBLEMS',
+        body: 'A Matrix messenger with tokens, NFTs and dApps inside the chat — but the Web3 layer stayed invisible. Quest rewards nobody could find or price, and a desktop client that reused mobile components and broke on resize.',
+      },
+      {
+        label: 'ROLE',
+        body: 'Senior Product Designer. Led design processes and mentored one junior designer. Also I created new visual concept (see on mockups) which was approved by CEO',
+      },
+      {
+        label: 'PRODUCT RESULTS',
+        body: 'Reworked how the client behaves on desktop — drag-and-drop, native context menus, no full-screen pages. File attach: 6 steps → 1. It stopped feeling like a stretched mobile app, which increased Retention Rate ~x1.5.',
+      },
     ],
-    links: [
-      { label: 'CASE STUDY', href: null /* TODO */ },
-      { label: 'APPSTORE', href: null /* TODO */ },
-    ],
+    links: [{ label: 'CASE STUDY', href: null /* TODO */ }],
     media: {
       type: 'video',
       src: null,

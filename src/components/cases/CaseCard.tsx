@@ -14,24 +14,31 @@ export function CaseCard({ data }: { data: Case }) {
 
   const textFirst = data.layout === 'text-left';
 
+  // Rhythm per Timur: the column keeps 100px from the card's top and bottom
+  // edges (it pads the difference over the card's own inset), the title sits
+  // 28 above the copy, sections are 20 apart with 8 between label and body,
+  // and the space down to the links is whatever is left over.
   const TextBlock = (
-    <div className="flex flex-col justify-center">
-      {/* Regular weight per Figma — 40px / 120%, no medium. */}
-      <h3 className="t-case-title text-ink">
-        <span className="block">{data.titleLine1}</span>
-        <span className="block">{data.titleLine2}</span>
-      </h3>
-      {/* Fixed rhythm per Timur: 32 title→sections, 20 between sections,
-          8 label→body inside one, 56 sections→links. */}
-      <div className="mt-[32px] flex max-w-[512px] flex-col gap-[20px]">
-        {data.sections.map((section) => (
-          <div key={section.label}>
-            <p className="t-case-label">{section.label}</p>
-            <p className="t-case-copy mt-[8px]">{section.body}</p>
-          </div>
-        ))}
+    <div
+      className="flex flex-col justify-between md:h-full"
+      style={{ paddingBlock: 'max(0px, calc(var(--case-text-y) - var(--case-pad-y)))' }}
+    >
+      <div>
+        {/* Regular weight per Figma — 40px / 120%, no medium. */}
+        <h3 className="t-case-title text-ink">
+          <span className="block">{data.titleLine1}</span>
+          <span className="block">{data.titleLine2}</span>
+        </h3>
+        <div className="mt-[28px] flex flex-col gap-[20px]">
+          {data.sections.map((section) => (
+            <div key={section.label}>
+              <p className="t-case-label">{section.label}</p>
+              <p className="t-case-copy mt-[8px]">{section.body}</p>
+            </div>
+          ))}
+        </div>
       </div>
-      <div className="mt-[56px]">
+      <div className="mt-[56px] md:mt-0">
         <CaseLinks links={data.links} />
       </div>
     </div>
@@ -82,7 +89,7 @@ export function CaseCard({ data }: { data: Case }) {
   return (
     <div
       ref={cardRef}
-      className={`relative grid grid-cols-1 items-center gap-[clamp(24px,5.57vw,78px)] rounded-card bg-surface px-[clamp(20px,5.71vw,80px)] py-[clamp(28px,4vw,54px)] md:aspect-[1400/763] ${gridCols}`}
+      className={`relative grid grid-cols-1 items-center gap-[clamp(24px,5.57vw,78px)] md:items-stretch rounded-card bg-surface px-[clamp(20px,5.71vw,80px)] py-[var(--case-pad-y)] md:aspect-[1400/763] ${gridCols}`}
     >
       {/* Logo is positioned against the card box — its %s come from the Figma,
           including the deliberate bleed past the top edge. */}
@@ -92,13 +99,13 @@ export function CaseCard({ data }: { data: Case }) {
           and the column sizes always line up with their content. */}
       {textFirst ? (
         <>
-          <div className="relative z-10">{TextBlock}</div>
+          <div className="relative z-10 md:h-full">{TextBlock}</div>
           {MediaBlock}
         </>
       ) : (
         <>
           {MediaBlock}
-          <div className="relative z-10">{TextBlock}</div>
+          <div className="relative z-10 md:h-full">{TextBlock}</div>
         </>
       )}
     </div>

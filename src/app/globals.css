@@ -45,6 +45,12 @@
   --life-text-y: clamp(28px, 10.625vw, 153px);
   --life-card-h: clamp(460px, 45.56vw, 656px);
 
+  /* Case cards: the card's own padding, and the taller inset the copy column
+     keeps from the card's top and bottom edges (100px at 1440). The column
+     pads the difference itself so the media keeps the smaller inset. */
+  --case-pad-y: clamp(28px, 4vw, 54px);
+  --case-text-y: clamp(32px, 6.944vw, 100px);
+
   /* --- liquid glass knobs -------------------------------------------------
      Turn these and every glass surface follows. --lg-filter picks the
      displacement strength (see LiquidGlassFilter: #lg-soft / #lg / #lg-strong);
@@ -175,9 +181,9 @@ html.lenis body {
     letter-spacing: 0;
     color: rgba(17, 17, 17, 0.8);
     /* Measure is set in characters, not pixels, so the line length holds as the
-       type scales. 44ch measures out at ~58 characters a line in this face — inside the
-       comfortable band; the column's own 512px was letting it run to 65. */
-    max-width: 44ch;
+       type scales. 39ch measures out at ~52 characters a line in this face — short enough
+       that a break never strands an odd word or two on its own line. */
+    max-width: 39ch;
     /* Evens out the rag and, more importantly, stops a paragraph ending on a
        single orphaned word. Ignored where unsupported — nothing depends on it. */
     text-wrap: pretty;

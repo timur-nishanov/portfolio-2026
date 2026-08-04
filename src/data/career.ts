@@ -27,6 +27,23 @@ export const career: CareerEntry[] = [
     ],
   },
   {
+    id: 'career-chums',
+    title: 'Chums messenger',
+    period: '2024 — 2025',
+    tags: [
+      'senior',
+      'lead',
+      'concepts',
+      'kick-off',
+      'benchmarking',
+      'mind map',
+      'prototyping',
+      'usability-test',
+      'research',
+      'mentoring',
+    ],
+  },
+  {
     id: 'career-cedro',
     title: 'Cedro Agency',
     period: '2022 — 2026',
