@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { assets } from '@/data/assets';
 import { site } from '@/data/site';
@@ -59,6 +59,27 @@ export function Footer() {
   const stageRef = useRef<HTMLDivElement>(null);
   const elsRef = useRef<(HTMLAnchorElement | null)[]>([]);
   const reduced = useReducedMotion();
+  const [photo, setPhoto] = useState(false);
+
+  // Start the download a section early — by the time the curtain lifts it has
+  // arrived, and it costs nothing to anyone who never scrolls that far.
+  useEffect(() => {
+    const last = document.querySelector('#career');
+    if (!last) {
+      setPhoto(true);
+      return;
+    }
+    const io = new IntersectionObserver(
+      ([e]) => {
+        if (!e.isIntersecting) return;
+        setPhoto(true);
+        io.disconnect();
+      },
+      { rootMargin: '100% 0px 100% 0px' },
+    );
+    io.observe(last);
+    return () => io.disconnect();
+  }, []);
 
   useEffect(() => {
     const stage = stageRef.current;
@@ -339,15 +360,21 @@ export function Footer() {
     // main carries the background and a matching bottom margin). The last
     // section slides up over it like a curtain and this is what is underneath.
     <footer className="footer-reveal">
-      <Image
-        src={assets.lastPhoto}
-        alt=""
-        aria-hidden="true"
-        fill
-        priority={false}
-        sizes="100vw"
-        className="object-cover"
-      />
+      {/* Fetched only once the reader reaches the last section. The footer is
+          pinned, so it counts as on-screen from the start and native lazy
+          loading would pull the full photograph during the first paint —
+          nearly a megabyte nobody has scrolled to yet. */}
+      {photo ? (
+        <Image
+          src={assets.lastPhoto}
+          alt=""
+          aria-hidden="true"
+          fill
+          priority={false}
+          sizes="100vw"
+          className="object-cover"
+        />
+      ) : null}
 
       {/* The stage is exactly the viewport now, so its top edge *is* the top of
           the screen — the balls drop in from off-screen with nothing to clip
