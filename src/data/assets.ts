@@ -20,7 +20,6 @@ export const assets = {
   logoGo: '/logos/go.png', // go-logo.png — Yandex Go
   logoChums: '/logos/chums.webp', // chums-logo.png
   logoAlice: '/logos/alice.png', // alice-logo.png — Yandex Design Battle / Alice
-  logoMeama: '/logos/meama.png', // meama-logo.png
 
   // Laurels also exist as flat SVGs, but the Laurels component inlines the
   // path with currentColor. Kept here for reference / OG use.
@@ -38,16 +37,14 @@ export const assets = {
   // treatment as Chums) + a pre-composited second phone.
   aliceStatic1: '/mockups/alice-static-1.webp',
   aliceVideo: '/mockups/alice-video.webm', // alice-vid.webm, audio track stripped
-  // Meama's twin-phone slot was replaced by a single ready-made iPad mockup.
-  meamaIpad: '/mockups/meama-ipad.webp',
+  // Ready-made iMac mockups (frame baked in) for the two desktop cases.
+  urbanImac: '/mockups/urban-imac.webp',
+  lendlyImac: '/mockups/lendly-imac.webp',
   // Rally: bare screen recording (drawn inside our iPhone frame, same as Chums;
   // HEVC source transcoded to muted VP9 webm) + a pre-composited second phone.
   rallyVideo: '/mockups/rally-video.webm',
   rallyPoster: '/mockups/rally-poster.jpg',
-  rallyStatic2: '/mockups/rally-static-2.webp',
   rallyVideo2: '/mockups/rally-video-2.mp4',
-  // Lendly: ready-made MacBook mockup (frame baked in).
-  lendlyMacbook: '/mockups/lendly-macbook.webp',
   // Desktop mockup recordings that play inside the Random iMac frames.
   // desk-artem had the browser DevTools panel docked right, so it was cropped
   // (2336×1440) before re-encoding; moneta was already clean. Both 1600w H.264.

@@ -78,9 +78,10 @@ export type Case = {
 // Twin-phone slot proportion — near-square once two phones sit side by side.
 const PHONES_ASPECT = '1/1';
 
-// Order set by Timur: Chums, Design Battle, Rally, Lendly, Meama, Yandex Go
-// (Beri Zaryad) last. Layout still alternates left/right down the column, so
-// this order needs no per-card layout flips.
+// Order and layout per Timur's deck: Chums, UrbanTiger, Design Battle, Lendly,
+// Rally, Yandex Go last. Meama is out. The alternation is not left/right down
+// the column any more — the phone cases put their mockups on the left, the
+// desktop ones put the copy there — so `layout` is set per case.
 export const cases: Case[] = [
   {
     id: 'case-chums',
@@ -107,36 +108,74 @@ export const cases: Case[] = [
       aspect: PHONES_ASPECT,
       alt: 'Chums Messenger app screens',
       phones: [
-        { framed: true, type: 'video', src: assets.chumsChatVideo, alt: 'Chums chat animation' },
         { framed: false, type: 'image', src: assets.chumsPreview, alt: 'Chums — choose your server screen' },
+        { framed: true, type: 'video', src: assets.chumsChatVideo, alt: 'Chums chat animation' },
       ],
     },
     logo: { src: assets.logoChums, x: 83, y: -12, w: 17.5, drift: { x: 22, y: -85, rot: -10 } },
+    layout: 'text-right',
+  },
+  {
+    id: 'case-urbantiger',
+    titleLine1: 'UrbanTiger.',
+    titleLine2: 'E-commerce',
+    sections: [
+      {
+        label: 'PROBLEMS',
+        body: "A fashion ecommerce store live for four years, where the UX had accumulated friction and the visuals no longer matched the brand's updated identity. There was also nothing pulling people back — no loyalty layer, no reason to return beyond the products themselves. The client chose a full rebuild over a facelift",
+      },
+      {
+        label: 'ROLE',
+        body: 'Senior designer, 2025. Ran discovery, owned the core purchase, search and account flows, built the loyalty layer, and directed the designers and illustrator on the project.',
+      },
+      {
+        label: 'PRODUCT RESULTS',
+        body: 'Per the client, the MVP converts at 2× the old site — while incoming traffic dropped 30–40% over the same period.',
+      },
+    ],
+    links: [
+      { label: 'CASE STUDY', href: null /* TODO */ },
+      { label: 'SITE', href: null /* TODO */ },
+    ],
+    media: {
+      type: 'image',
+      src: assets.urbanImac,
+      aspect: '762/655',
+      fit: 'cover',
+      objectPosition: 'left center',
+      bleed: 'right',
+      alt: 'UrbanTiger — choose design, on an iMac',
+    },
+    logo: null,
     layout: 'text-left',
+    wideMedia: true,
   },
   {
     id: 'case-battle',
     titleLine1: 'Yandex Design Battle.',
     titleLine2: 'Kaiference Conference',
     sections: [
-      { label: 'PROBLEMS', body: 'The AI race is a technology race nobody wins for long, so the brief was to design the product, not the model. Our answer: take Alice out of the chat and put her on the lock screen — proactive cards that appear when context earns them, plus a Studio mode for when you already know what you want. 2nd place, one point off first, ahead of every in-house product team.' },
-      { label: 'ROLE', body: 'Filler — role, scope and who you worked with goes here. Replace with the real copy.' },
-      { label: 'PRODUCT RESULTS', body: 'Filler — what shipped and what moved: the numbers, the before and after. Replace with the real copy.' },
+      {
+        label: 'PROBLEMS',
+        body: "Chat is a request queue. It only works if you already know what to ask and remember to open the app — which nobody does when they're under-slept or six minutes from a call.",
+      },
+      {
+        label: 'ROLE',
+        body: "Product designer, 2025. Design battle at Kaiference, studio team of 5–6. The final concept merged mine with the art director's; I took it through scenario and screen design.",
+      },
+      {
+        label: 'RESULTS',
+        body: '2nd place, one point behind first — ahead of every in-house product team. We moved Alice off the chat and onto the lock screen: cards that appear when context earns them.',
+      },
     ],
-    links: [
-      { label: 'CASE STUDY', href: null /* TODO */ },
-      { label: 'PITCHDECK', href: null /* TODO */ },
-    ],
+    links: [{ label: 'CASE STUDY', href: null /* TODO */ }],
     media: {
       type: 'image',
       src: null,
       aspect: PHONES_ASPECT,
       alt: 'Yandex Design Battle Alice app screens',
       phones: [
-        // Pre-composited phone (frame baked in).
         { framed: false, type: 'image', src: assets.aliceStatic1, alt: 'Alice lock-screen suggestions' },
-        // Bare screen capture — same treatment as Chums: drawn inside our own
-        // iPhone frame. Audio track was stripped (muted anyway via the tag).
         { framed: true, type: 'video', src: assets.aliceVideo, alt: 'Alice avatar and character picker' },
       ],
     },
@@ -144,13 +183,57 @@ export const cases: Case[] = [
     layout: 'text-right',
   },
   {
+    id: 'case-lendly',
+    titleLine1: 'Lendly invest.',
+    titleLine2: 'Crowdlending platform',
+    sections: [
+      {
+        label: 'PROBLEMS',
+        body: "A crowdlending platform for real-estate-backed loans, where the investment flow ran as one long undifferentiated stretch. Every extra step before a deal closes is a deal that doesn't.",
+      },
+      {
+        label: 'ROLE',
+        body: "Middle designer, 2023-2024. Ran interviews and usability tests with the platform's B2B investors, drew the scenarios, built the UI kit.",
+      },
+      {
+        label: 'PRODUCT RESULTS',
+        body: 'Broke the core flow into discrete steps. Time to complete it dropped by roughly half.',
+      },
+    ],
+    links: [
+      { label: 'CASE STUDY', href: null /* TODO */ },
+      { label: 'PLATFORM', href: null /* TODO */ },
+    ],
+    media: {
+      type: 'image',
+      src: assets.lendlyImac,
+      aspect: '762/655',
+      fit: 'cover',
+      objectPosition: 'left center',
+      bleed: 'right',
+      alt: 'Lendly Invest offer detail, on an iMac',
+    },
+    logo: null,
+    layout: 'text-left',
+    wideMedia: true,
+  },
+  {
     id: 'case-rally',
     titleLine1: 'Rally app.',
     titleLine2: 'English through your files',
     sections: [
-      { label: 'PROBLEMS', body: 'Learn English from the things you already read: drop in your own files and Rally turns them into drills, decks and spaced review. Designed the onboarding and the study loop so the app feels like a tutor that read your documents, not a generic course.' },
-      { label: 'ROLE', body: 'Filler — role, scope and who you worked with goes here. Replace with the real copy.' },
-      { label: 'PRODUCT RESULTS', body: 'Filler — what shipped and what moved: the numbers, the before and after. Replace with the real copy.' },
+      {
+        label: 'PROBLEMS',
+        body: 'Past B2 the English you need is your own — your field, your documents, whatever your tutor gave you last week — and no general course can guess it. The material is already sitting in your files; nothing turns it into practice.',
+      },
+      {
+        label: 'ROLE',
+        body: 'Designed and built solo, end to end — concept, product design, and code.',
+      },
+      {
+        label: 'RESULT',
+        body: 'Flashcards and drills generated from your own uploads, with weak spots tracked across sessions so you review what you actually miss. TestFlight soon',
+      },
     ],
     links: [{ label: 'TESTFLIGHT SOON', href: null }], // inactive by design (TZ §9.2)
     media: {
@@ -159,99 +242,32 @@ export const cases: Case[] = [
       aspect: PHONES_ASPECT,
       alt: 'Rally app screens',
       phones: [
-        // Bare screen recording drawn inside our own iPhone frame (same as
-        // Chums); a pre-composited second phone beside it.
         { framed: true, type: 'video', src: assets.rallyVideo, poster: assets.rallyPoster, alt: 'Rally study session' },
-        // Second phone is a screen recording too now, drawn inside our own
-        // frame like the first — the pair used to be video + still.
         { framed: true, type: 'video', src: assets.rallyVideo2, alt: 'Rally categories screen' },
       ],
     },
-    logo: null, // no Rally logo in the repo
-    layout: 'text-left',
-  },
-  {
-    id: 'case-lendly',
-    titleLine1: 'Lendly Invest',
-    titleLine2: 'Crowdlending platform',
-    sections: [
-      {
-        label: 'PROBLEMS',
-        body: 'A crowdinvesting platform for real-estate-backed loans and developer project financing. The old platform was dated and the investment flow ran as one long undifferentiated stretch — hard to navigate even for people who know the domain well',
-      },
-      {
-        label: 'ROLE',
-        body: 'Middle designer, 2023. Worked under a design lead across calls with owners, product and the business analyst.',
-      },
-      {
-        label: 'PRODUCT RESULTS',
-        body: 'Broke the core flow into discrete and clear steps. Time to complete the core scenario dropped by roughly half, and follow-up research confirmed the flow felt materially easier',
-      },
-    ],
-    links: [
-      { label: 'CASE STUDY', href: null /* TODO */ },
-      { label: 'PLATFORM', href: null /* TODO */ },
-    ],
-    // Ready-made MacBook mockup (frame baked in). Sits inside the card at the
-    // media column's own width — no bleed, no scale-down.
-    media: {
-      type: 'image',
-      src: assets.lendlyMacbook,
-      aspect: '1470/1194',
-      fit: 'contain',
-      alt: 'Lendly Invest secondary market, on a MacBook',
-    },
-    logo: null, // no Lendly logo in the repo
+    logo: null,
     layout: 'text-right',
-    wideMedia: true,
-  },
-  {
-    id: 'case-meama',
-    titleLine1: 'Meama coffee.',
-    titleLine2: 'Europe and Georgian taste',
-    sections: [
-      { label: 'PROBLEMS', body: 'An international coffee brand headquartered in Berlin and Vienna, part of a large European ecosystem and expanding fast across the continent. I owned the product side of the site: reworked the overall UX, ran the discovery that validated a stack of hypotheses, concepts and design decisions, and reshaped the subscription flow so more people actually finished it.' },
-      { label: 'ROLE', body: 'Filler — role, scope and who you worked with goes here. Replace with the real copy.' },
-      { label: 'PRODUCT RESULTS', body: 'Filler — what shipped and what moved: the numbers, the before and after. Replace with the real copy.' },
-    ],
-    links: [
-      { label: 'CASE STUDY', href: null /* TODO */ },
-      { label: 'MEAMA.DE', href: null /* TODO */ },
-    ],
-    // Single ready-made iPad mockup (frame baked in) — replaced the twin-phone
-    // slot entirely. Runs to the card's right edge and is clipped there, so the
-    // tablet reads large and half-off the card (Figma). The box is 730×605 at
-    // the 1440 reference (650 column + the 80 card padding it eats); cover +
-    // left anchoring scales the 1794×1279 art to 849 wide, so ~119px of the
-    // tablet's right side is cropped by the card edge.
-    media: {
-      type: 'image',
-      src: assets.meamaIpad,
-      aspect: '730/605',
-      fit: 'cover',
-      objectPosition: 'left center',
-      bleed: 'right',
-      alt: 'Meama capsule shop, on an iPad',
-    },
-    logo: { src: assets.logoMeama, x: 83, y: -7, w: 17, drift: { x: -20, y: -72, rot: -7 } },
-    layout: 'text-left',
   },
   {
     id: 'case-go',
     titleLine1: 'Yandex Go Superapp.',
     titleLine2: 'Beri Zaryad',
     sections: [
-      { label: 'PROBLEMS', body: "Some stations ran empty at peak hours, others sat overloaded — courier rebalancing ate the margin. Field tests in two cities showed the blocker wasn't unwillingness but uncertainty: where to go, will it fit, will the discount apply. Answer: bonus stations with routing, one-line rules and instant reward confirmation." },
-      { label: 'ROLE', body: 'Filler — role, scope and who you worked with goes here. Replace with the real copy.' },
-      { label: 'PRODUCT RESULTS', body: 'Filler — what shipped and what moved: the numbers, the before and after. Replace with the real copy.' },
+      {
+        label: 'PROBLEMS',
+        body: "Users return power banks to the same station they took them from, so stations run empty at peak hours while others sit overloaded — and couriers have to rebalance the network by hand. Field tests showed the blocker wasn't unwillingness but uncertainty: where to go, will the station take it, will the discount actually apply.",
+      },
+      {
+        label: 'ROLE',
+        body: 'Product designer, February 2025. Test assignment for Yandex Go. Ran the research, remote field tests in two Russian cities, segmentation and RICE prioritization, then designed the full flow end to end.',
+      },
+      {
+        label: 'SOLUTION',
+        body: 'Bonus stations on the map, routing to them, one-line rules and instant reward confirmation on return — scoped as an MVP against target-station returns, peak-hour balance and retention.',
+      },
     ],
     links: [{ label: 'CASE STUDY', href: null /* TODO */ }],
-    // Self-contained scene video: 3840×2160 with three phones side by side —
-    // lock screen (~336–1306px), the green "main" screen (~1402–2429px) and the
-    // blue banner (~2477–3514px). The 1:1 object-cover box shows a 2160px-wide
-    // window; positioning it at 18% (left edge ≈300px) frames the first two
-    // phones whole and leaves the blue banner outside the crop. Measured from a
-    // decoded frame, not guessed.
     media: {
       type: 'video',
       src: assets.goVideo,
@@ -259,12 +275,10 @@ export const cases: Case[] = [
       aspect: '1/1',
       fit: 'cover',
       objectPosition: '18% 50%',
-      // The clip's own backdrop. Painted under the video so the undecoded /
-      // between-loop frames can never show through as black bars.
       bg: '#eeeeee',
       alt: 'Yandex Go Beri Zaryad app scene',
     },
     logo: { src: assets.logoGo, x: -4, y: -7, w: 22, drift: { x: -18, y: 70, rot: 8 } },
-    layout: 'text-right',
+    layout: 'text-left',
   },
 ];
