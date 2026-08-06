@@ -7,13 +7,13 @@ export const site = {
     // Line breaks come from the layout width, not manual <br> — the blend over
     // the head produces the blue accent words seen in the mockup.
     text:
-      "Hey! I'm Timur. I design apps, concepts and interfaces, build them in code and watch the results. Collaborated with Yandex, Stepik, HSE, Meama, Sber, Moneta and etc.",
+      "Hey, I'm Timur, a Senior Product Designer. I turn ambiguous problems into strong concepts, tested product decisions, and working prototypes. I research, design, test, and build some ideas in code.",
   },
   // Statement block after the random section (Figma text node 1:282).
   about:
-    'Experienced mostly in B2C, Fintech and Web3. Focused on visuals and complex user flows. I build hypotheses, run user tests and measure if a design worked. Skilled in research, vibecode and AI-generations',
+    'Most of my experience is in B2C, fintech, and Web3. I work across research, complex user flows, and visual design. I shape hypotheses, test them with users, and check whether the design worked. I also use AI tools and build prototypes in code.',
   meta: {
-    title: 'Timur — Designer',
-    description: 'Designer of apps, concepts and interfaces. Worked with Yandex, Stepik, HSE, Meama, Sber, Moneta.',
+    title: 'Timur — Senior Product Designer',
+    description: 'Senior Product Designer. Worked with Yandex, Stepik, HSE, Meama, Sber, and Moneta.',
   },
 } as const;
