@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { site } from '@/data/site';
 import { MagneticButton } from './MagneticButton';
 
-/** COPY MAIL → copies the address, label flips to COPIED for 1.6s (TZ §5). */
+/** COPY EMAIL → copies the address, label flips to COPIED for 1.6s (TZ §5). */
 export function CopyMailButton() {
   const [copied, setCopied] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -41,7 +41,7 @@ export function CopyMailButton() {
       labelClassName="pixel text-ink"
       style={{ width: 'var(--btn-w)', height: 'var(--btn-h)' }}
     >
-      {copied ? 'COPIED' : 'COPY MAIL'}
+      {copied ? 'COPIED' : 'COPY EMAIL'}
     </MagneticButton>
   );
 }
