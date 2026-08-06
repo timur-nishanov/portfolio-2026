@@ -86,19 +86,19 @@ export const cases: Case[] = [
   {
     id: 'case-chums',
     titleLine1: 'Chums Messenger.',
-    titleLine2: 'crypto chatting',
+    titleLine2: 'Crypto messaging',
     sections: [
       {
         label: 'PROBLEMS',
-        body: 'A Matrix messenger with tokens, NFTs and dApps inside the chat — but the Web3 layer stayed invisible. Quest rewards nobody could find or price, and a desktop client that reused mobile components and broke on resize.',
+        body: 'A Matrix messenger put tokens, NFTs, and dApps inside chat, but its Web3 features were hard to find. Users could not easily locate or value quest rewards. The desktop client reused mobile components and broke when resized.',
       },
       {
         label: 'ROLE',
-        body: 'Senior Product Designer. Led design processes and mentored one junior designer. Also I created new visual concept (see on mockups) which was approved by CEO',
+        body: 'Senior Product Designer. I led the design process and mentored one junior designer. I also created the visual concept shown in the mockups, which the CEO approved.',
       },
       {
         label: 'PRODUCT RESULTS',
-        body: 'Reworked how the client behaves on desktop — drag-and-drop, native context menus, no full-screen pages. File attach: 6 steps → 1. It stopped feeling like a stretched mobile app, which increased Retention Rate ~x1.5.',
+        body: 'We reworked the desktop experience with drag-and-drop, native context menus, and no full-screen pages. Attaching a file went from 6 steps to 1. Retention increased by roughly 1.5×.',
       },
     ],
     links: [{ label: 'CASE STUDY', href: null /* TODO */ }],
@@ -122,15 +122,15 @@ export const cases: Case[] = [
     sections: [
       {
         label: 'PROBLEMS',
-        body: "A fashion ecommerce store live for four years, where the UX had accumulated friction and the visuals no longer matched the brand's updated identity. There was also nothing pulling people back — no loyalty layer, no reason to return beyond the products themselves. The client chose a full rebuild over a facelift",
+        body: "After four years, the fashion e-commerce store had accumulated UX friction, and its visuals no longer matched the updated brand. It had no loyalty layer or reason to return beyond the products. The client chose a full rebuild rather than a facelift.",
       },
       {
         label: 'ROLE',
-        body: 'Senior designer, 2025. Ran discovery, owned the core purchase, search and account flows, built the loyalty layer, and directed the designers and illustrator on the project.',
+        body: 'Senior Product Designer, 2025. I ran discovery and designed the core purchase, search, account, and loyalty flows. I directed the project designers and illustrator.',
       },
       {
         label: 'PRODUCT RESULTS',
-        body: 'Per the client, the MVP converts at 2× the old site — while incoming traffic dropped 30–40% over the same period.',
+        body: 'According to the client, the MVP converts at 2× the rate of the old site, even though incoming traffic fell by 30–40% over the same period.',
       },
     ],
     links: [
@@ -157,15 +157,15 @@ export const cases: Case[] = [
     sections: [
       {
         label: 'PROBLEMS',
-        body: "Chat is a request queue. It only works if you already know what to ask and remember to open the app — which nobody does when they're under-slept or six minutes from a call.",
+        body: "Chat works like a request queue: you need to know what to ask and remember to open the app. That falls apart when you are short on sleep or six minutes away from a call.",
       },
       {
         label: 'ROLE',
-        body: "Product designer, 2025. Design battle at Kaiference, studio team of 5–6. The final concept merged mine with the art director's; I took it through scenario and screen design.",
+        body: "Product Designer, 2025. I joined a 5–6-person studio team for the design battle at Kaiference. The final concept combined my idea with the art director's. I developed the scenario and designed the screens.",
       },
       {
         label: 'RESULTS',
-        body: '2nd place, one point behind first — ahead of every in-house product team. We moved Alice off the chat and onto the lock screen: cards that appear when context earns them.',
+        body: 'We took 2nd place, one point behind the winner and ahead of every in-house product team. Our concept moved Alice from chat to the lock screen, using cards that appear when the context calls for them.',
       },
     ],
     links: [{ label: 'CASE STUDY', href: null /* TODO */ }],
@@ -184,20 +184,20 @@ export const cases: Case[] = [
   },
   {
     id: 'case-lendly',
-    titleLine1: 'Lendly invest.',
+    titleLine1: 'Lendly Invest.',
     titleLine2: 'Crowdlending platform',
     sections: [
       {
         label: 'PROBLEMS',
-        body: "A crowdlending platform for real-estate-backed loans, where the investment flow ran as one long undifferentiated stretch. Every extra step before a deal closes is a deal that doesn't.",
+        body: 'The investment flow on this real-estate-backed crowdlending platform was one long, unstructured process. Every extra step added another chance for investors to drop out before closing a deal.',
       },
       {
         label: 'ROLE',
-        body: "Middle designer, 2023-2024. Ran interviews and usability tests with the platform's B2B investors, drew the scenarios, built the UI kit.",
+        body: "Mid-level Product Designer, 2023–2024. I interviewed the platform's B2B investors, ran usability tests, mapped the scenarios, and built the UI kit.",
       },
       {
         label: 'PRODUCT RESULTS',
-        body: 'Broke the core flow into discrete steps. Time to complete it dropped by roughly half.',
+        body: 'I split the core flow into clear steps. Completion time dropped by roughly half.',
       },
     ],
     links: [
@@ -224,15 +224,15 @@ export const cases: Case[] = [
     sections: [
       {
         label: 'PROBLEMS',
-        body: 'Past B2 the English you need is your own — your field, your documents, whatever your tutor gave you last week — and no general course can guess it. The material is already sitting in your files; nothing turns it into practice.',
+        body: 'Beyond B2, the English you need depends on your field, your documents, and what your tutor gave you last week. General courses cannot predict that. The material is already in your files, but nothing turns it into practice.',
       },
       {
         label: 'ROLE',
-        body: 'Designed and built solo, end to end — concept, product design, and code.',
+        body: 'I designed and built it solo, from the initial concept and product design through to the code.',
       },
       {
         label: 'RESULT',
-        body: 'Flashcards and drills generated from your own uploads, with weak spots tracked across sessions so you review what you actually miss. TestFlight soon',
+        body: 'The concept generates flashcards and drills from your uploads, then tracks weak spots across sessions so you review what you actually miss. TestFlight soon.',
       },
     ],
     links: [{ label: 'TESTFLIGHT SOON', href: null }], // inactive by design (TZ §9.2)
@@ -256,15 +256,15 @@ export const cases: Case[] = [
     sections: [
       {
         label: 'PROBLEMS',
-        body: "Users return power banks to the same station they took them from, so stations run empty at peak hours while others sit overloaded — and couriers have to rebalance the network by hand. Field tests showed the blocker wasn't unwillingness but uncertainty: where to go, will the station take it, will the discount actually apply.",
+        body: 'Power banks pile up at some stations and run out at others during peak hours, so couriers rebalance them by hand. Field tests showed why users avoid other return points: they are unsure where to go, whether a station has space, and whether the discount will apply.',
       },
       {
         label: 'ROLE',
-        body: 'Product designer, February 2025. Test assignment for Yandex Go. Ran the research, remote field tests in two Russian cities, segmentation and RICE prioritization, then designed the full flow end to end.',
+        body: 'Product Designer, February 2025. Test assignment for Yandex Go. I ran research and remote field tests in two Russian cities, segmented the findings, prioritized ideas with RICE, and designed the full flow.',
       },
       {
         label: 'SOLUTION',
-        body: 'Bonus stations on the map, routing to them, one-line rules and instant reward confirmation on return — scoped as an MVP against target-station returns, peak-hour balance and retention.',
+        body: 'The concept marks bonus stations on the map, routes users there, explains the rules, and confirms the reward on return. I scoped the MVP around target-station returns, peak-hour balance, and retention.',
       },
     ],
     links: [{ label: 'CASE STUDY', href: null /* TODO */ }],

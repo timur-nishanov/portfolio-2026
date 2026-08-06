@@ -19,7 +19,7 @@ export const life: LifeEntry[] = [
     id: 'life-awwwards',
     title: 'Awwwards Site of the Day',
     description:
-      'A site for Artem Shcherbakov, designed and delivered to dev by me and Roma Rodionov from Cedro, won SOTD on Awwwards. First SOTD for studio btw',
+      'A site for Artem Shcherbakov, designed and handed off by Roma Rodionov and me at Cedro, won Awwwards Site of the Day. It was the studio’s first SOTD, by the way.',
     date: 'JULY 2026',
     media: { type: 'image', src: '/life/awwwards-poster.webp', alt: 'Awwwards Site of the Day' },
   },
@@ -27,7 +27,7 @@ export const life: LifeEntry[] = [
     id: 'life-postcards',
     title: "Postcard series for my girlfriend's photo project",
     description:
-      'I designed a set around her photos of Thailand, turning locations into art prints. We printed at a local typography, ended up as souvenirs',
+      'I designed a series around her photos from Thailand, turning the locations into art prints. We had them made at a local print shop and kept them as souvenirs.',
     date: 'FEBRUARY 2026',
     media: {
       type: 'video',
@@ -40,7 +40,7 @@ export const life: LifeEntry[] = [
     id: 'life-talk',
     title: 'Talk on AI in the design process',
     description:
-      "Presented at our team sync on how I've folded AI into my design workflow and daily life — people from other streams joined the call to watch",
+      'I gave a team talk on how I use AI in my design workflow and daily life. People from other teams joined the call too.',
     date: 'MARCH 2026',
     media: { type: 'image', src: '/life/claude-poster.png', alt: 'Talk on AI in the design process' },
   },
@@ -48,31 +48,31 @@ export const life: LifeEntry[] = [
     id: 'life-find-design',
     title: 'Top Ranked Designer on Find.Design',
     description:
-      'Started posting shots and quickly landed several Shot of the Day picks. Climbed to #1 on the rankings in about a week',
+      'I started posting shots and soon earned several Shot of the Day picks. I reached #1 in the rankings in about a week.',
     date: 'DECEMBER 2025',
     media: { type: 'image', src: '/life/top-rank.webp', alt: 'Find.Design top ranked designers' },
   },
   {
     id: 'life-film-app',
-    title: 'Building a film app',
+    title: 'Started a cinema club',
     description:
-      "Because a photo archive that stays buried under folders isn't an archive. Building something to hold and sort what I actually watch",
-    date: 'FEBRUARY 2026',
+      'There are only two of us for now: my girlfriend and me. We make presentations about films, directors, and movements in cinema. We are happy to welcome new members.',
+    date: 'NOVEMBER 2025',
     media: { type: 'image', src: '/life/chimera-poster.webp', alt: 'La chimera — film app concept' },
   },
   {
     id: 'life-figma-motion',
-    title: 'Implement Figma Motion in some workflows',
+    title: 'Adding Figma Motion to my workflow',
     description:
-      'I use it for handoff and quick prototypes now, so a spec no longer needs a separate deck. Fast, everyday practice',
+      'I now use it for handoff and quick prototypes, so a spec no longer needs a separate deck. It is fast enough for everyday work.',
     date: 'JANUARY 2026',
     media: { type: 'image', src: '/life/figmotion-poster.webp', alt: 'Figma Motion timeline' },
   },
   {
     id: 'life-growth-form',
-    title: 'Finished to read On Growth And Form by D’Arcy Thompson',
+    title: 'Finished reading On Growth and Form by D’Arcy Thompson',
     description:
-      'On how form follows the forces acting on it. Changed the way I look at proportion and structure in what I design',
+      'It explores how form follows the forces acting on it. The book changed how I look at proportion and structure in my work.',
     date: 'NOVEMBER 2025',
     media: { type: 'image', src: '/life/growth-poster.webp', alt: 'On Growth and Form' },
   },
