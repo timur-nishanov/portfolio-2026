@@ -12,7 +12,7 @@ export const career: CareerEntry[] = [
     title: 'Fintech Billing Team (NDA)',
     period: '2026 — ...',
     tags: [
-      'Senior Product Designer',
+      'Senior',
       'Metrics',
       'UX/UI',
       'Motion Design',
@@ -30,7 +30,7 @@ export const career: CareerEntry[] = [
     title: 'Chums Messenger',
     period: '2024 — 2025',
     tags: [
-      'Senior Product Designer',
+      'Senior',
       'Design Lead',
       'Concepts',
       'Kickoffs',
@@ -45,11 +45,11 @@ export const career: CareerEntry[] = [
   {
     id: 'career-cedro',
     title: 'Cedro Agency',
-    period: '2022 — 2026',
+    period: '2023 — 2026',
     tags: [
-      'Junior Product Designer',
-      'Mid-level Product Designer',
-      'Senior Product Designer',
+      'Junior',
+      'Middle',
+      'Senior',
       'Concepts',
       'UX/UI',
       'Kickoffs',
@@ -65,7 +65,7 @@ export const career: CareerEntry[] = [
   {
     id: 'career-freelance',
     title: 'Freelance Graphic Designer',
-    period: '2022 — 2023',
+    period: '2022 — 2024',
     tags: [
       'Presentations',
       'Posters',
