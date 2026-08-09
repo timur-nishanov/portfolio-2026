@@ -256,15 +256,15 @@ export const cases: Case[] = [
     sections: [
       {
         label: 'PROBLEMS',
-        body: "Users tend to return power banks to the station they used, leaving some stations empty at peak hours and others overloaded. Couriers then rebalance the network by hand. Field tests showed that the main blocker was uncertainty: where to go, whether a station would accept the return, and whether the discount would apply.",
+        body: 'Power banks pile up at some stations and run out at others during peak hours, so couriers rebalance them by hand. Field tests showed why users avoid other return points: they are unsure where to go, whether a station has space, and whether the discount will apply.',
       },
       {
         label: 'ROLE',
-        body: 'Product Designer, February 2025. This was a test assignment for Yandex Go. I ran the research and remote field tests in two Russian cities, segmented the findings, used RICE to prioritize ideas, and designed the full flow.',
+        body: 'Product Designer, February 2025. Test assignment for Yandex Go. I ran research and remote field tests in two Russian cities, segmented the findings, prioritized ideas with RICE, and designed the full flow.',
       },
       {
         label: 'SOLUTION',
-        body: 'The concept highlights bonus stations on the map, routes users to them, explains the rules in one line, and confirms the reward as soon as a power bank is returned. I scoped the MVP around returns to target stations, peak-hour balance, and retention.',
+        body: 'The concept marks bonus stations on the map, routes users there, explains the rules, and confirms the reward on return. I scoped the MVP around target-station returns, peak-hour balance, and retention.',
       },
     ],
     links: [{ label: 'CASE STUDY', href: null /* TODO */ }],

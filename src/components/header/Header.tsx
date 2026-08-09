@@ -45,7 +45,7 @@ export function Header() {
       onMouseLeave={() => {
         hoveredRef.current = false;
       }}
-      className="fixed inset-x-0 z-50 flex justify-center px-4"
+      className="header-glass fixed inset-x-0 z-50 flex justify-center px-4"
       style={{
         top: 'var(--header-top)',
         // Hide by lifting the whole thing (its own height + the top offset +
@@ -68,14 +68,14 @@ export function Header() {
         <CopyMailButton />
         <MagneticButton
           as="a"
-          href={site.telegram}
+          href={site.linkedin}
           target="_blank"
           rel="noopener noreferrer"
           className="glass-solid rounded-full"
           labelClassName="pixel text-white"
           style={{ width: 'var(--btn-w)', height: 'var(--btn-h)' }}
         >
-          TELEGRAM
+          LINKEDIN
         </MagneticButton>
       </nav>
     </header>
