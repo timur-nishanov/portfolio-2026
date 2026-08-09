@@ -6,7 +6,7 @@ import { assets } from '@/data/assets';
 import { site } from '@/data/site';
 import { clamp, lerp, q } from '@/lib/lerp';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
-import { XGlyph, InstagramGlyph, TelegramGlyph } from './SocialGlyphs';
+import { XGlyph, LinkedInGlyph, TelegramGlyph } from './SocialGlyphs';
 
 type Ball = {
   /** Still the accessible name — the glyph itself is decorative. */
@@ -34,7 +34,11 @@ const DROPS = [
 // refract, and a colour wash only muddied it.
 const BALLS: Ball[] = [
   { label: 'X.COM', href: 'https://x.com/nem_etis', Glyph: XGlyph },
-  { label: 'Instagram', href: 'https://instagram.com/nishanovtim', Glyph: InstagramGlyph },
+  {
+    label: 'LinkedIn',
+    href: 'https://www.linkedin.com/in/timur-nishanov-3a7510428/',
+    Glyph: LinkedInGlyph,
+  },
   { label: 'Telegram', href: site.telegram, Glyph: TelegramGlyph },
 ];
 
