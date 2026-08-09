@@ -3,11 +3,9 @@ export const site = {
   email: 'timanemetis@gmail.com',
   telegram: 'https://t.me/Nemetis',
   hero: {
-    // One paragraph, rendered white with mix-blend-difference (Figma node 1:281).
-    // Line breaks come from the layout width, not manual <br> — the blend over
-    // the head produces the blue accent words seen in the mockup.
+    // Authored as four lines to preserve the hero's intended rhythm.
     text:
-      "Hey, I'm Timur, a Senior Product Designer. I turn fuzzy problems into strong concepts, tested solutions, and working prototypes — from research and UI to code",
+      "Hey! I'm Timur.\nI design apps, concepts\nand interfaces, build them\nin code and watch the results.",
   },
   // Statement block after the random section (Figma text node 1:282).
   about:
