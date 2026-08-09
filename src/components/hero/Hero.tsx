@@ -12,7 +12,7 @@ export function Hero() {
       className="relative flex min-h-[100svh] items-center pt-[clamp(60px,8.3vw,120px)]"
     >
       <FloatingHead />
-      <div className="container-hero relative w-full">
+      <div className="container-hero relative w-full -translate-y-[clamp(24px,4vw,58px)]">
         {/* Plain dark text — the head floats over it, so no blend mode. */}
         {/* Non-selectable — dragging/clicking the head over it kept grabbing a
             text selection, which was distracting. */}

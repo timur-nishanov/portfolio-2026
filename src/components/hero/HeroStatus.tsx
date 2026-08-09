@@ -20,7 +20,7 @@ export function HeroStatus() {
   }, []);
 
   return (
-    <p className="pixel absolute inset-x-4 bottom-[clamp(24px,5vw,72px)] text-center text-[clamp(10px,0.9vw,13px)] text-muted">
+    <p className="pixel absolute inset-x-4 bottom-[clamp(24px,5vw,72px)] text-center text-ink-muted">
       BANGKOK{time ? ` · ${time}` : ''} / AVAILABLE FOR REMOTE WORK
     </p>
   );
