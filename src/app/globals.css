@@ -238,6 +238,13 @@ html.lenis body {
       0 10px 30px rgba(0, 0, 0, 0.14);
   }
 
+  /* The compact header reads more naturally with a gentler lens than the
+     larger glass surfaces: soften the edge displacement and frost transition. */
+  .header-glass {
+    --lg-filter: url(#lg-soft);
+    --lg-blur: 10px;
+  }
+
   /* Footer spheres. Colourless: over the photograph the refraction is the
      effect, and a tint only fogged it. Lighter than `.glass` too — no
      saturate pass, no inner glow — because three of these are the size of
