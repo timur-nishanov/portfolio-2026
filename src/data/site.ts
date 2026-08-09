@@ -2,10 +2,11 @@ export const site = {
   // TODO: confirm the real contact address with Timur.
   email: 'timanemetis@gmail.com',
   telegram: 'https://t.me/Nemetis',
+  linkedin: 'https://www.linkedin.com/in/timur-nishanov-3a7510428/',
   hero: {
-    // Authored as four lines to preserve the hero's intended rhythm.
+    // Authored as three lines to preserve the wide hero composition.
     text:
-      "Hey! I'm Timur.\nI design apps, concepts\nand interfaces, build them\nin code and watch the results.",
+      "Hey! I'm Timur. I design apps,\nconcepts and interfaces, build them\nin code and watch the results.",
   },
   // Statement block after the random section (Figma text node 1:282).
   about:

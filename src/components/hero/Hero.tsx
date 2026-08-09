@@ -1,5 +1,6 @@
 import { site } from '@/data/site';
 import { FloatingHead } from './FloatingHead';
+import { HeroStatus } from './HeroStatus';
 
 export function Hero() {
   return (
@@ -19,6 +20,7 @@ export function Hero() {
           {site.hero.text}
         </h1>
       </div>
+      <HeroStatus />
     </section>
   );
 }

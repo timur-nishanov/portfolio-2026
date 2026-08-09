@@ -68,14 +68,14 @@ export function Header() {
         <CopyMailButton />
         <MagneticButton
           as="a"
-          href={site.telegram}
+          href={site.linkedin}
           target="_blank"
           rel="noopener noreferrer"
           className="glass-solid rounded-full"
           labelClassName="pixel text-white"
           style={{ width: 'var(--btn-w)', height: 'var(--btn-h)' }}
         >
-          TELEGRAM
+          LINKEDIN
         </MagneticButton>
       </nav>
     </header>
