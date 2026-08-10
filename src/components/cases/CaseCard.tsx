@@ -12,7 +12,7 @@ export function CaseCard({ data }: { data: Case }) {
   // itself no longer tilts/glares on hover (that read as too much; only the
   // buttons keep their magnet).
   const cardRef = useRef<HTMLDivElement>(null);
-  const [modalOrigin, setModalOrigin] = useState<{ x: number; y: number } | null>(null);
+  const [caseOpen, setCaseOpen] = useState(false);
 
   const textFirst = data.layout === 'text-left';
 
@@ -43,10 +43,7 @@ export function CaseCard({ data }: { data: Case }) {
       <div className="mt-[56px] md:mt-0">
         <CaseLinks
           links={data.links}
-          onCaseStudy={(trigger) => {
-            const rect = trigger.getBoundingClientRect();
-            setModalOrigin({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
-          }}
+          onCaseStudy={data.id === 'case-chums' ? () => setCaseOpen(true) : undefined}
         />
       </div>
     </div>
@@ -118,7 +115,9 @@ export function CaseCard({ data }: { data: Case }) {
         </>
       )}
       </div>
-      <CaseStudyModal data={data} origin={modalOrigin} onClose={() => setModalOrigin(null)} />
+      {data.id === 'case-chums' ? (
+        <CaseStudyModal data={data} open={caseOpen} onClose={() => setCaseOpen(false)} />
+      ) : null}
     </>
   );
 }

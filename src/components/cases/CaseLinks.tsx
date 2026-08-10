@@ -25,7 +25,7 @@ function LinkItem({ link, onCaseStudy }: { link: CaseLink; onCaseStudy?: (trigge
   // not the signal — the real URLs are still to come and every one of these
   // would have rendered dead grey instead of the accent.
   const inactive = /\bSOON\b/.test(link.label);
-  const opensCase = link.label === 'CASE STUDY' && !link.href;
+  const opensCase = link.label === 'CASE STUDY' && !link.href && !!onCaseStudy;
 
   return (
     <a
