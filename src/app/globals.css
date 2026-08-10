@@ -119,10 +119,10 @@ html.lenis body {
     margin-inline: auto;
     padding-inline: clamp(16px, 2.5vw, 36px);
   }
-  /* Hero paragraph: 1184 wide — this width is what makes it break to 5 lines. */
+  /* Wide hero measure; line breaks are authored in the copy. */
   .container-hero {
     width: 100%;
-    max-width: 1232px;
+    max-width: 1392px;
     margin-inline: auto;
     padding-inline: 24px;
   }
@@ -238,6 +238,13 @@ html.lenis body {
       0 10px 30px rgba(0, 0, 0, 0.14);
   }
 
+  /* The compact header reads more naturally with a gentler lens than the
+     larger glass surfaces: soften the edge displacement and frost transition. */
+  .header-glass {
+    --lg-filter: url(#lg-soft);
+    --lg-blur: 10px;
+  }
+
   /* Footer spheres. Colourless: over the photograph the refraction is the
      effect, and a tint only fogged it. Lighter than `.glass` too — no
      saturate pass, no inner glow — because three of these are the size of
@@ -315,6 +322,202 @@ html.lenis body {
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .glass {
     background: rgba(255, 255, 255, 0.9);
+  }
+}
+
+/* Case study — 12 columns, 20px page margin and 8px gutters at the 1440
+   reference. One backdrop blur keeps the effect calm and GPU cost bounded. */
+.case-study-modal {
+  opacity: 0;
+  transition:
+    opacity 360ms ease,
+    overlay 360ms allow-discrete,
+    display 360ms allow-discrete;
+}
+.case-study-modal[open] {
+  opacity: 1;
+}
+.case-study-modal.is-closing {
+  opacity: 0;
+  pointer-events: none;
+}
+.case-study-modal::backdrop {
+  background: rgba(17, 17, 17, 0.28);
+  backdrop-filter: blur(18px) saturate(72%);
+  -webkit-backdrop-filter: blur(18px) saturate(72%);
+  opacity: 0;
+  transition:
+    opacity 360ms ease,
+    overlay 360ms allow-discrete,
+    display 360ms allow-discrete;
+}
+.case-study-modal[open]::backdrop {
+  opacity: 1;
+}
+.case-study-modal.is-closing::backdrop {
+  opacity: 0;
+}
+.case-study-sheet {
+  background: rgba(64, 64, 64, 0.66);
+  transform: translate3d(0, 18px, 0);
+  transition: transform 480ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.case-study-modal[open] .case-study-sheet {
+  transform: translate3d(0, 0, 0);
+}
+.case-study-modal.is-closing .case-study-sheet {
+  transform: translate3d(0, 12px, 0);
+}
+.case-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: 8px;
+  margin-inline: clamp(12px, 1.389vw, 20px);
+  padding-bottom: clamp(100px, 12vw, 172px);
+}
+.case-title {
+  font-family: var(--font-hoves), sans-serif;
+  font-size: clamp(46px, 5.556vw, 80px);
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: -0.01em;
+}
+.case-lead {
+  font-family: var(--font-hoves), sans-serif;
+  font-size: clamp(22px, 2.5vw, 36px);
+  font-weight: 400;
+  line-height: 1.4;
+}
+.case-subtitle {
+  font-family: var(--font-hoves), sans-serif;
+  font-size: clamp(30px, 3.333vw, 48px);
+  font-weight: 400;
+  line-height: 1.12;
+}
+.case-copy {
+  font-family: var(--font-hoves), sans-serif;
+  font-size: clamp(16px, 1.389vw, 20px);
+  font-weight: 400;
+  line-height: 1.4;
+}
+.case-kicker {
+  color: rgba(255, 255, 255, 0.4);
+  font-family: var(--font-pixel), monospace;
+  font-size: clamp(12px, 0.972vw, 14px);
+  font-weight: 400;
+  line-height: 24px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.case-caption {
+  margin-top: 14px;
+  color: rgba(255, 255, 255, 0.5);
+  font-family: var(--font-hoves), sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.4;
+  text-align: center;
+}
+.case-detail-row {
+  display: grid;
+  grid-template-columns: minmax(110px, 1fr) 2fr;
+  gap: 24px;
+  padding-block: clamp(28px, 3.33vw, 48px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+.case-section {
+  margin-top: clamp(112px, 15vw, 216px);
+}
+.case-media-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: clamp(14px, 1.667vw, 24px);
+  background:
+    linear-gradient(135deg, transparent 49.85%, rgba(255, 255, 255, 0.09) 50%, transparent 50.15%),
+    rgba(255, 255, 255, 0.08);
+}
+.case-close {
+  position: fixed;
+  z-index: 10;
+  top: clamp(20px, 2.5vw, 36px);
+  right: clamp(20px, 2.5vw, 36px);
+  display: grid;
+  width: clamp(58px, 5.556vw, 80px);
+  aspect-ratio: 1;
+  place-items: center;
+  border-radius: 999px;
+  color: #1a1a1a;
+  font-family: var(--font-pixel), monospace;
+  font-size: clamp(24px, 2.5vw, 36px);
+  line-height: 1;
+}
+.case-points {
+  position: relative;
+  min-height: clamp(700px, 84vw, 1210px);
+}
+.case-point-anchor {
+  position: absolute;
+  width: min(44vw, 560px);
+  aspect-ratio: 1;
+}
+.case-point {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background-color: rgba(255, 255, 255, 0.58);
+  color: #000;
+}
+.case-point-a { left: 0; top: 0; }
+.case-point-b { right: 0; top: 0; }
+.case-point-c { left: 50%; bottom: 0; transform: translateX(-50%); }
+.case-point-title {
+  color: #1a1a1a;
+  text-align: center;
+  font-family: var(--font-pixel), monospace;
+  font-size: clamp(24px, 3.333vw, 48px);
+  font-weight: 400;
+  line-height: normal;
+  text-transform: uppercase;
+}
+.case-point-copy {
+  max-width: 72%;
+  margin-top: 10px;
+  color: #000;
+  text-align: center;
+  font-family: var(--font-hoves), sans-serif;
+  font-size: clamp(14px, 1.389vw, 20px);
+  font-weight: 400;
+  line-height: 1.4;
+}
+@starting-style {
+  .case-study-modal[open],
+  .case-study-modal[open]::backdrop {
+    opacity: 0;
+  }
+  .case-study-modal[open] .case-study-sheet {
+    transform: translate3d(0, 18px, 0);
+  }
+}
+@media (max-width: 639px) {
+  .case-grid { column-gap: 4px; }
+  .case-title { padding-right: 72px; }
+  .case-detail-row { grid-template-columns: 1fr; gap: 8px; }
+  .case-point-anchor { position: relative; inset: auto; width: 100%; transform: none; }
+  .case-points { display: grid; min-height: 0; gap: 18px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .case-study-modal,
+  .case-study-modal::backdrop,
+  .case-study-sheet {
+    transition-duration: 0.01ms;
   }
 }
 

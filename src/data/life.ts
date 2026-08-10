@@ -54,10 +54,10 @@ export const life: LifeEntry[] = [
   },
   {
     id: 'life-film-app',
-    title: 'Building a film app',
+    title: 'Started a cinema club',
     description:
-      "A photo archive buried in folders is not much of an archive. I'm building a place to keep and sort what I actually watch.",
-    date: 'FEBRUARY 2026',
+      'There are only two of us for now: my girlfriend and me. We make presentations about films, directors, and movements in cinema. We are happy to welcome new members.',
+    date: 'NOVEMBER 2025',
     media: { type: 'image', src: '/life/chimera-poster.webp', alt: 'La chimera — film app concept' },
   },
   {

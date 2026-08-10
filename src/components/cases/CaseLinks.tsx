@@ -12,7 +12,7 @@ import { useReducedMotion } from '@/hooks/useReducedMotion';
 const PULL = 0.11;
 const MAX = 6;
 
-function LinkItem({ link }: { link: CaseLink }) {
+function LinkItem({ link, onCaseStudy }: { link: CaseLink; onCaseStudy?: (trigger: HTMLElement) => void }) {
   const rootRef = useRef<HTMLAnchorElement>(null);
   const labelRef = useRef<HTMLSpanElement>(null);
   const scrambleRef = useRef<ScrambleHandle>(null);
@@ -25,13 +25,26 @@ function LinkItem({ link }: { link: CaseLink }) {
   // not the signal — the real URLs are still to come and every one of these
   // would have rendered dead grey instead of the accent.
   const inactive = /\bSOON\b/.test(link.label);
+  const opensCase = link.label === 'CASE STUDY' && !link.href && !!onCaseStudy;
 
   return (
     <a
       ref={rootRef}
       href={link.href ?? undefined}
-      target={inactive ? undefined : '_blank'}
-      rel={inactive ? undefined : 'noopener noreferrer'}
+      target={inactive || opensCase ? undefined : '_blank'}
+      rel={inactive || opensCase ? undefined : 'noopener noreferrer'}
+      role={opensCase ? 'button' : undefined}
+      tabIndex={opensCase ? 0 : undefined}
+      onClick={(event) => {
+        if (!opensCase) return;
+        event.preventDefault();
+        onCaseStudy?.(event.currentTarget);
+      }}
+      onKeyDown={(event) => {
+        if (!opensCase || (event.key !== 'Enter' && event.key !== ' ')) return;
+        event.preventDefault();
+        onCaseStudy?.(event.currentTarget);
+      }}
       onPointerEnter={() => scrambleRef.current?.play()}
       onFocus={() => scrambleRef.current?.play()}
       aria-disabled={inactive || undefined}
@@ -55,7 +68,7 @@ function LinkItem({ link }: { link: CaseLink }) {
  * digits scramble on hover, the label takes the magnet — but set as plain text
  * in the accent colour, separated by middots, rather than pills.
  */
-export function CaseLinks({ links }: { links: CaseLink[] }) {
+export function CaseLinks({ links, onCaseStudy }: { links: CaseLink[]; onCaseStudy?: (trigger: HTMLElement) => void }) {
   return (
     <div className="flex flex-wrap items-center gap-x-[clamp(8px,0.83vw,12px)] gap-y-2">
       {links.map((link, i) => (
@@ -65,7 +78,7 @@ export function CaseLinks({ links }: { links: CaseLink[] }) {
               ·
             </span>
           ) : null}
-          <LinkItem link={link} />
+          <LinkItem link={link} onCaseStudy={onCaseStudy} />
         </span>
       ))}
     </div>

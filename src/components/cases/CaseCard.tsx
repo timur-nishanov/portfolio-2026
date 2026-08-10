@@ -1,16 +1,18 @@
 'use client';
 
-import { useRef } from 'react';
+import { useState, useRef } from 'react';
 import type { Case } from '@/data/cases';
 import { CaseLinks } from './CaseLinks';
 import { MediaSlot } from './MediaSlot';
 import { FloatingLogo } from './FloatingLogo';
+import { CaseStudyModal } from './CaseStudyModal';
 
 export function CaseCard({ data }: { data: Case }) {
   // Kept only as the scroll-parallax track for the floating logo — the card
   // itself no longer tilts/glares on hover (that read as too much; only the
   // buttons keep their magnet).
   const cardRef = useRef<HTMLDivElement>(null);
+  const [caseOpen, setCaseOpen] = useState(false);
 
   const textFirst = data.layout === 'text-left';
 
@@ -39,7 +41,10 @@ export function CaseCard({ data }: { data: Case }) {
         </div>
       </div>
       <div className="mt-[56px] md:mt-0">
-        <CaseLinks links={data.links} />
+        <CaseLinks
+          links={data.links}
+          onCaseStudy={data.id === 'case-chums' ? () => setCaseOpen(true) : undefined}
+        />
       </div>
     </div>
   );
@@ -87,10 +92,11 @@ export function CaseCard({ data }: { data: Case }) {
       : 'md:grid-cols-[650fr_512fr]';
 
   return (
-    <div
-      ref={cardRef}
-      className={`relative grid grid-cols-1 items-center gap-[clamp(24px,5.57vw,78px)] md:items-stretch rounded-card bg-surface px-[clamp(20px,5.71vw,80px)] py-[var(--case-pad-y)] md:aspect-[1400/763] ${gridCols}`}
-    >
+    <>
+      <div
+        ref={cardRef}
+        className={`relative grid grid-cols-1 items-center gap-[clamp(24px,5.57vw,78px)] md:items-stretch rounded-card bg-surface px-[clamp(20px,5.71vw,80px)] py-[var(--case-pad-y)] md:aspect-[1400/763] ${gridCols}`}
+      >
       {/* Logo is positioned against the card box — its %s come from the Figma,
           including the deliberate bleed past the top edge. */}
       {data.logo ? <FloatingLogo logo={data.logo} trackRef={cardRef} /> : null}
@@ -108,6 +114,10 @@ export function CaseCard({ data }: { data: Case }) {
           <div className="relative z-10 md:h-full">{TextBlock}</div>
         </>
       )}
-    </div>
+      </div>
+      {data.id === 'case-chums' ? (
+        <CaseStudyModal data={data} open={caseOpen} onClose={() => setCaseOpen(false)} />
+      ) : null}
+    </>
   );
 }
