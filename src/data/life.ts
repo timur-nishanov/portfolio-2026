@@ -24,6 +24,14 @@ export const life: LifeEntry[] = [
     media: { type: 'image', src: '/life/awwwards-poster.webp', alt: 'Awwwards Site of the Day' },
   },
   {
+    id: 'life-talk',
+    title: 'Talk on AI in the design process',
+    description:
+      'I gave a team talk on how I use AI in my design workflow and daily life. People from other teams joined the call too.',
+    date: 'MARCH 2026',
+    media: { type: 'image', src: '/life/claude-poster.png', alt: 'Talk on AI in the design process' },
+  },
+  {
     id: 'life-postcards',
     title: "Postcard series for my girlfriend's photo project",
     description:
@@ -37,12 +45,12 @@ export const life: LifeEntry[] = [
     },
   },
   {
-    id: 'life-talk',
-    title: 'Talk on AI in the design process',
+    id: 'life-figma-motion',
+    title: 'Adding Figma Motion to my workflow',
     description:
-      'I gave a team talk on how I use AI in my design workflow and daily life. People from other teams joined the call too.',
-    date: 'MARCH 2026',
-    media: { type: 'image', src: '/life/claude-poster.png', alt: 'Talk on AI in the design process' },
+      'I now use it for handoff and quick prototypes, so a spec no longer needs a separate deck. It is fast enough for everyday work.',
+    date: 'JANUARY 2026',
+    media: { type: 'image', src: '/life/figmotion-poster.webp', alt: 'Figma Motion timeline' },
   },
   {
     id: 'life-find-design',
@@ -59,14 +67,6 @@ export const life: LifeEntry[] = [
       'There are only two of us for now: my girlfriend and me. We make presentations about films, directors, and movements in cinema. We are happy to welcome new members.',
     date: 'NOVEMBER 2025',
     media: { type: 'image', src: '/life/chimera-poster.webp', alt: 'La chimera — film app concept' },
-  },
-  {
-    id: 'life-figma-motion',
-    title: 'Adding Figma Motion to my workflow',
-    description:
-      'I now use it for handoff and quick prototypes, so a spec no longer needs a separate deck. It is fast enough for everyday work.',
-    date: 'JANUARY 2026',
-    media: { type: 'image', src: '/life/figmotion-poster.webp', alt: 'Figma Motion timeline' },
   },
   {
     id: 'life-growth-form',

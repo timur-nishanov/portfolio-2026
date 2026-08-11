@@ -20,7 +20,7 @@ export const career: CareerEntry[] = [
       'Research',
       'AI Tools',
       'Code Prototyping',
-      'ABC',
+      'A/B TESTING',
       'Concepts',
       'Prototyping',
     ],

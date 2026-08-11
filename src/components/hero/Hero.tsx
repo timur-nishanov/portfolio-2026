@@ -9,7 +9,7 @@ export function Hero() {
       aria-labelledby="hero-heading"
       // The head's stage is this box: it plays inside the hero and scrolls away
       // with it, rather than trailing the reader down the page.
-      className="relative flex min-h-[100svh] items-center pt-[clamp(60px,8.3vw,120px)]"
+      className="relative flex min-h-[calc(100svh/var(--site-zoom))] items-center pt-[clamp(60px,8.3vw,120px)]"
     >
       <FloatingHead />
       <div className="container-hero relative w-full -translate-y-[clamp(24px,4vw,58px)]">
