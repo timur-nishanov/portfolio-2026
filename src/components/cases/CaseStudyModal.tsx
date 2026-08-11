@@ -27,11 +27,25 @@ function MediaPlaceholder({ label, caption, ratio = '4/3', className = '' }: Pla
   );
 }
 
+/** A desktop before/after row: two halves on the 8px gutter, one caption. */
+function MediaPair({ caption, labels }: { caption: string; labels: [string, string] }) {
+  return (
+    <figure>
+      <div className="case-pair">
+        <MediaPlaceholder label={labels[0]} ratio="695/624" />
+        <MediaPlaceholder label={labels[1]} ratio="695/624" />
+      </div>
+      <figcaption className="case-caption">{caption}</figcaption>
+    </figure>
+  );
+}
+
 function MagneticPoint({ title, children, className = '' }: { title: string; children: React.ReactNode; className?: string }) {
   const rootRef = useRef<HTMLDivElement>(null);
   const ballRef = useRef<HTMLDivElement>(null);
   const canHover = useCanHover();
   const reduced = useReducedMotion();
+  // Deliberately faint pull — the balls should lean toward the cursor, not chase it.
   useMagnetic(rootRef, [{ ref: ballRef, factor: 0.045, max: 12 }], canHover && !reduced);
 
   return (
@@ -45,8 +59,8 @@ function MagneticPoint({ title, children, className = '' }: { title: string; chi
 }
 
 const details = [
-  ['PROBLEMS', 'Chums combines private messaging with a built-in crypto wallet. Users can chat, send assets and interact with Web3 services without switching to a separate wallet app.\n\nThe technology was there, but two important parts of the experience were getting in its way. The desktop client reused mobile patterns that did not adapt to a larger, resizable window. At the same time, the reward system was difficult to find and did not communicate its value clearly.'],
-  ['PRODUCT', 'Messenger + Web3 wallet · desktop and mobile clients / 10k downloads across platforms · 32k+ wallets · $200k+ held in user balances'],
+  ['PROBLEMS', 'Chums combines private messaging with a built-in crypto wallet. Users can chat, send assets and interact with Web3 services without switching to a separate wallet app. The technology was there, but two important parts of the experience were getting in its way. The desktop client reused mobile patterns that did not adapt to a larger, resizable window. At the same time, the reward system designed to encourage wallet activity was difficult to find and did not communicate its value clearly.'],
+  ['PRODUCT', 'Messenger + Web3 wallet + desktop and mobile clients / 10k downloads across platforms · 32k+ wallets · $200k+ held in user balances'],
   ['GOAL 2025', 'Create a stronger visual direction, rebuild the desktop experience and make the Web3 reward layer easier to discover and understand.'],
   ['TEAM', 'Founders · Product Manager · Art Director · Me — Senior Product Designer, with a junior designer I mentored day to day · 2 Devs'],
 ];
@@ -81,81 +95,91 @@ export function CaseStudyModal({ data, open, onClose }: Props) {
   return (
     <dialog
       ref={dialogRef}
-      className="case-study-modal m-0 h-dvh max-h-none w-screen max-w-none overflow-y-auto bg-transparent p-0 text-white"
+      // data-lenis-prevent: Lenis grabs wheel events at the window and feeds
+      // them to the (locked) page scroll — this hands them back to the dialog,
+      // which is the actual scroller while the case is open.
+      data-lenis-prevent
+      className="case-study-modal m-0 h-dvh max-h-none w-screen max-w-none overflow-y-auto overscroll-contain bg-transparent p-0 text-white"
       onCancel={(event) => { event.preventDefault(); requestClose(); }}
       aria-labelledby={`${data.id}-case-title`}
     >
       <article className="case-study-sheet min-h-dvh">
         <button type="button" className="case-close glass-ball outline-none focus-visible:ring-1 focus-visible:ring-white/60" onClick={requestClose} aria-label="Close case study">×</button>
 
-        <div className="case-grid pt-[clamp(28px,2.5vw,36px)]">
-          <header className="col-span-12">
+        <div className="case-wrap">
+          <header>
             <h2 id={`${data.id}-case-title`} className="case-title">Chums Messenger</h2>
-            <p className="case-lead mt-[clamp(28px,3.2vw,46px)] max-w-[1030px]">
-              I led the redesign of the desktop client and the Web3 reward experience for Chums — a Matrix-based messenger with tokens, NFTs, domains and dApps built directly into chat.<br />
-              The product already had 32k+ wallets and more than $200k held in user balances. My job was not to add more capability, but to make the existing product easier to reach, understand and use.
+            <p className="case-lead mt-[calc(32*var(--cu))] max-w-[77.5%] max-md:max-w-none">
+              I led the redesign of the desktop client and the Web3 reward experience for Chums — a Matrix-based messenger with tokens, NFTs, domains and dApps built directly into chat. The product already had 32k+ wallets and more than $200k held in user balances. My job was not to add more capability, but to make the existing product easier to reach, understand and use.
             </p>
           </header>
 
-          <div className="col-span-12 mt-[clamp(96px,13vw,188px)] md:col-start-4 md:col-end-10">
+          <div className="case-details">
             {details.map(([label, copy]) => (
               <div key={label} className="case-detail-row">
                 <p className="case-kicker">{label}</p>
-                <p className="case-copy whitespace-pre-line">{copy}</p>
+                <p className="case-copy">{copy}</p>
               </div>
             ))}
           </div>
 
-          <section className="case-section col-span-12">
-            <h3 className="case-subtitle">Define a new visual direction</h3>
-            <p className="case-copy mt-4 max-w-[1220px]">I developed a new visual concept for Chums across its key mobile screens and Web3 entry points. I led the concept end to end, and the final direction shown in this case was approved by the CEO.</p>
-            <div className="mt-[clamp(44px,6vw,86px)] grid grid-cols-1 gap-5 sm:grid-cols-3">
-              {['ONBOARDING', 'MESSENGER', 'PROFILE'].map((x) => <MediaPlaceholder key={x} label={x} ratio="9/16" />)}
+          <section className="case-section">
+            <h3 className="case-heading">Define a new visual direction</h3>
+            <p className="case-lead mt-[calc(32*var(--cu))]">I developed a new visual concept for Chums across its key mobile screens and Web3 entry points. Led the concept end to end, and the final direction shown in this case was approved by the CEO.</p>
+            <div className="case-phones mt-[calc(96*var(--cu))]">
+              {['ONBOARDING', 'MESSENGER', 'PROFILE', 'VOICE MESSAGE', 'SERVER PICKER', 'ATTACHMENTS'].map((x) => (
+                <MediaPlaceholder key={x} label={x} ratio="390/844" />
+              ))}
             </div>
           </section>
 
-          <section className="case-section col-span-12">
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
-              {['VOICE MESSAGE', 'SERVER PICKER', 'ATTACHMENTS'].map((x) => <MediaPlaceholder key={x} label={x} ratio="9/16" />)}
+          <section className="case-section">
+            <h3 className="case-heading max-w-[64%] max-md:max-w-none">Treat the desktop client as one product problem</h3>
+            <p className="case-lead mt-[calc(32*var(--cu))] max-w-[96.5%]">By May 2025, the desktop client still behaved like a mobile app stretched across a larger window. Layouts broke when resized, pointer states were missing, and simple actions often replaced the entire conversation. Take a look on some of them:</p>
+            <div className="mt-[calc(64*var(--cu))] flex flex-col gap-[calc(40*var(--cu))]">
+              <MediaPair labels={['BEFORE · CONTACTS', 'AFTER · CONTACTS']} caption="Replaced a full-screen contact picker with a compact modal that keeps the chat in context." />
+              <MediaPair labels={['BEFORE · RECOVERY KEY', 'AFTER · RECOVERY KEY']} caption="Turned an unexplained recovery-key form into a guided onboarding step with clear context and action." />
+              <MediaPair labels={['BEFORE · MESSAGES', 'AFTER · MESSAGES']} caption="Softened outgoing message bubbles to improve readability and reduce visual noise." />
+              <MediaPair labels={['BEFORE · EMOJI', 'AFTER · EMOJI']} caption="Replaced the full-width emoji panel with a compact popover that keeps the conversation visible." />
+              <MediaPlaceholder label="RESPONSIVE DESKTOP" ratio="1397/624" caption="Defined responsive rules for how panels resize, collapse and adapt across different window sizes." />
             </div>
-            <h3 className="case-subtitle mt-[clamp(64px,9vw,128px)] max-w-[760px]">Treat the desktop client as one product problem</h3>
-            <p className="case-copy mt-5 max-w-[1220px]">By May 2025, the desktop client still behaved like a mobile app stretched across a larger window. Layouts broke when resized, pointer states were missing, and simple actions often replaced the entire conversation.</p>
+            <p className="case-lead mt-[calc(64*var(--cu))] max-w-[96.5%]">I packaged the findings into a single proposal, which the founders and Product Manager approved within a week. Over the six months, we rebuilt the client around responsive rules, desktop-native interactions and reusable patterns added back to the design system. The new version shipped to beta and went through several rounds of iteration.</p>
           </section>
 
-          <section className="col-span-12 mt-[clamp(56px,8vw,112px)] grid grid-cols-1 gap-x-2 gap-y-[clamp(40px,5vw,72px)] sm:grid-cols-2">
-            <MediaPlaceholder label="BEFORE / AFTER · CONTACT PICKER" caption="Replaced a full-screen contact picker with a compact modal that keeps the chat in context." ratio="16/10" />
-            <MediaPlaceholder label="BEFORE / AFTER · RECOVERY KEY" caption="Turned an unexplained recovery-key form into a guided onboarding step." ratio="16/10" />
-            <MediaPlaceholder label="BEFORE / AFTER · MESSAGES" caption="Softened outgoing message bubbles to improve readability and reduce visual noise." ratio="16/10" />
-            <MediaPlaceholder label="BEFORE / AFTER · EMOJI" caption="Replaced the full-width emoji panel with a compact popover." ratio="16/10" />
-            <MediaPlaceholder label="RESPONSIVE DESKTOP" caption="Defined responsive rules for how panels resize, collapse and adapt." ratio="16/9" className="sm:col-span-2" />
-          </section>
-
-          <p className="case-lead col-span-12 mt-[clamp(72px,10vw,144px)] max-w-[1260px]">I packaged the findings into a single proposal, which the founders and Product Manager approved within a week. Over six months, we rebuilt the client around responsive rules, desktop-native interactions and reusable patterns added back to the design system.</p>
-
-          <section className="case-section col-span-12">
-            <h3 className="case-subtitle max-w-[900px]">Make Web3 rewards easier to find and understand</h3>
-            <p className="case-copy mt-5 max-w-[1220px]">Chums already had quests and wallet rewards, but users struggled to find the feature, understand the tasks and see the payout before starting. I led the benchmark study, defined the product direction and guided a junior designer through the execution.</p>
-            <div className="mt-[clamp(48px,7vw,100px)] grid grid-cols-1 gap-5 sm:grid-cols-3">
-              {['QUEST DISCOVERY', 'QUEST DETAILS', 'REWARD HISTORY'].map((x) => <MediaPlaceholder key={x} label={x} ratio="9/16" />)}
+          <section className="case-section">
+            <h3 className="case-heading max-w-[72.5%] max-md:max-w-none">Make Web3 rewards easier to find and understand</h3>
+            <p className="case-lead mt-[calc(32*var(--cu))] max-w-[96.5%]">Chums already had quests and wallet rewards, but users struggled to find the feature, understand the tasks and see the payout before starting. I led the benchmark study, defined the product direction and guided a junior designer through the execution.</p>
+            <div className="case-phones mt-[calc(96*var(--cu))]" style={{ '--phone-gap': 140 } as React.CSSProperties}>
+              {['CHAT LIST', 'QUESTS', 'STATS', 'ERROR STATE', 'WALLET ONBOARDING', 'QUESTS COMPLETE'].map((x) => (
+                <MediaPlaceholder key={x} label={x} ratio="360/812" />
+              ))}
             </div>
-          </section>
-
-          <section className="col-span-12 mt-[clamp(88px,12vw,172px)]">
-            <div className="case-points">
+            <p className="case-lead mt-[calc(52*var(--cu))] max-w-[96.5%]">We built the experience around a clear entry point, upfront reward amounts, visible progress and rules explained directly inside the flow. I reviewed the scenarios and key design decisions throughout the process. The final concept was approved and moved into development.</p>
+            <p className="case-lead mt-[calc(40*var(--cu))] max-w-[96.5%]">Instead of comparing feature lists, we mapped how each product handled the three moments where the experience either worked or fell apart:</p>
+            <div className="case-points mt-[calc(64*var(--cu))]">
               <MagneticPoint title="DISCOVERY" className="case-point-a">can users find the feature without being taught where it is?</MagneticPoint>
               <MagneticPoint title="COMPREHENSION" className="case-point-b">can they understand the rules inside the flow?</MagneticPoint>
               <MagneticPoint title="PAYOUT VISIBILITY" className="case-point-c">do they know what they will receive before committing?</MagneticPoint>
             </div>
-            <p className="case-copy mt-10">The third moment became our main design constraint.</p>
+            <p className="case-lead mt-[calc(64*var(--cu))] max-w-[96.5%]">The third moment became our main design constraint.</p>
+            <p className="case-lead mt-[calc(40*var(--cu))] max-w-[96.5%]">A task could be simple and the reward could be valuable, but neither mattered if users had to begin before understanding the payoff.</p>
           </section>
 
-          <section className="case-section col-span-12">
-            <h3 className="case-subtitle">What shipped</h3>
-            <p className="case-copy mt-5 max-w-[1260px]">The new visual direction was approved by the CEO. The desktop redesign was scoped and approved in one week, then shipped to beta three months later. We added responsive layouts, clearer desktop interactions and reusable patterns to the design system. The new reward experience was approved and moved into development.</p>
-            <div className="mt-[clamp(48px,7vw,100px)] grid grid-cols-1 gap-5 sm:grid-cols-3">
-              {['FINAL MOBILE 01', 'FINAL MOBILE 02', 'FINAL MOBILE 03'].map((x) => <MediaPlaceholder key={x} label={x} ratio="9/16" />)}
+          <section className="case-section">
+            <h3 className="case-heading">What shipped</h3>
+            <p className="case-lead mt-[calc(32*var(--cu))] max-w-[96.5%]">The new visual direction was approved by the CEO. The desktop redesign was scoped and approved in one week, then shipped to beta three months later. We added responsive layouts, clearer desktop interactions and reusable patterns to the design system. The new reward experience was approved and moved into development. For context, Chums had 32k+ wallets, ~10k downloads and more than $200k in user balances at the time.</p>
+            <div className="case-phones mt-[calc(64*var(--cu))]" style={{ '--phone-gap': 136 } as React.CSSProperties}>
+              {['GROUP CHAT', 'MESSAGES', 'MARKDOWN'].map((x) => (
+                <MediaPlaceholder key={x} label={x} ratio="375/812" />
+              ))}
             </div>
-            <MediaPlaceholder label="FINAL DESKTOP EXPERIENCE" ratio="16/9" className="mx-auto mt-[clamp(48px,7vw,100px)] max-w-[900px]" />
+            <MediaPlaceholder label="GROUP CALL" ratio="900/700" className="mx-auto mt-[calc(136*var(--cu))] w-[64.3%] max-md:w-full" />
+            <div className="case-phones mt-[calc(136*var(--cu))]" style={{ '--phone-gap': 136 } as React.CSSProperties}>
+              {['CHAT INFO', 'REACTIONS', 'DONATIONS'].map((x) => (
+                <MediaPlaceholder key={x} label={x} ratio="375/812" />
+              ))}
+            </div>
+            <MediaPlaceholder label="BROWSER" ratio="900/716" className="mx-auto mt-[calc(136*var(--cu))] w-[64.3%] max-md:w-full" />
           </section>
         </div>
       </article>
