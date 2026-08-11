@@ -70,6 +70,25 @@
 
 html {
   -webkit-text-size-adjust: 100%;
+  /* The scroll indicator is a hairline pill, barely there — the platform
+     default read as a piece of chrome bolted to the page. Same treatment in
+     the case study, in its own palette (see .case-study-modal). */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(17, 17, 17, 0.14) transparent;
+}
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(17, 17, 17, 0.14);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(17, 17, 17, 0.26);
 }
 
 body {
@@ -220,12 +239,18 @@ html.lenis body {
   /* -------------------------------------------------------------------------
      Liquid glass — CSS only, single definition (TZ §6). No `position` here so
      `absolute inset-0` on magnetic-button surfaces wins.
+
+     One recipe, no variants: the header pills, every button, the footer
+     spheres, the case-study balls and the close button all render this class,
+     so the glass is identical wherever it appears. A surface may only retint
+     its plate (--lg-bg); the frost, the lens and the edge light are shared.
   ------------------------------------------------------------------------- */
   /* Base layer — plain frost. This is what Safari and Firefox get, and it has
      to stand on its own: they ignore url() inside backdrop-filter, so anything
      that depended on the displacement would render as a bare transparent
      patch. The volume is carried by the shadows, not the blur. */
-  .glass {
+  .glass,
+  .glass-ball {
     background-color: var(--lg-bg);
     background-image: linear-gradient(var(--lg-tint), var(--lg-tint));
     backdrop-filter: blur(var(--lg-blur)) saturate(var(--lg-saturate));
@@ -236,29 +261,6 @@ html.lenis body {
       inset 0 -1px 1px rgba(255, 255, 255, 0.35),
       inset 0 0 12px rgba(255, 255, 255, 0.25),
       0 10px 30px rgba(0, 0, 0, 0.14);
-  }
-
-  /* Header pills use the pill map, not the sphere map — the circular lens
-     stretched over a 9:1 pill is what made the refraction look broken. The
-     pill filter carries its own frost, so the fallback blur stays for the
-     engines that ignore url() filters. */
-  .header-glass {
-    --lg-filter: url(#lg-pill);
-    --lg-blur: 10px;
-  }
-
-  /* Footer spheres. Colourless: over the photograph the refraction is the
-     effect, and a tint only fogged it. Lighter than `.glass` too — no
-     saturate pass, no inner glow — because three of these are the size of
-     tabloid pages and every one of them filters live pixels. */
-  .glass-ball {
-    background-color: rgba(255, 255, 255, 0.06);
-    backdrop-filter: blur(var(--lg-blur));
-    -webkit-backdrop-filter: blur(var(--lg-blur));
-    border: 1px solid rgba(255, 255, 255, 0.5);
-    box-shadow:
-      inset 0 1px 1px rgba(255, 255, 255, 0.7),
-      inset 0 -1px 1px rgba(255, 255, 255, 0.3);
   }
 
   /* --- the curtain -------------------------------------------------------
@@ -338,9 +340,25 @@ html.lenis body {
   --cu: calc(100vw / 1440);
   opacity: 0;
   transition:
-    opacity 360ms ease,
-    overlay 360ms allow-discrete,
-    display 360ms allow-discrete;
+    opacity 420ms ease,
+    overlay 420ms allow-discrete,
+    display 420ms allow-discrete;
+  /* A thin, dim pill instead of the platform scrollbar. */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.16) transparent;
+}
+.case-study-modal::-webkit-scrollbar {
+  width: 6px;
+}
+.case-study-modal::-webkit-scrollbar-track {
+  background: transparent;
+}
+.case-study-modal::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+}
+.case-study-modal::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.28);
 }
 .case-study-modal[open] {
   opacity: 1;
@@ -355,9 +373,9 @@ html.lenis body {
   -webkit-backdrop-filter: blur(18px) saturate(72%);
   opacity: 0;
   transition:
-    opacity 360ms ease,
-    overlay 360ms allow-discrete,
-    display 360ms allow-discrete;
+    opacity 420ms ease,
+    overlay 420ms allow-discrete,
+    display 420ms allow-discrete;
 }
 .case-study-modal[open]::backdrop {
   opacity: 1;
@@ -365,16 +383,50 @@ html.lenis body {
 .case-study-modal.is-closing::backdrop {
   opacity: 0;
 }
+/* The sheet rises and settles out of a slight scale — the lift is what makes
+   it read as opening rather than cutting in. */
 .case-study-sheet {
   background: rgba(64, 64, 64, 0.66);
-  transform: translate3d(0, 18px, 0);
-  transition: transform 480ms cubic-bezier(0.22, 1, 0.36, 1);
+  transform: translate3d(0, 40px, 0) scale(0.985);
+  transform-origin: 50% 0;
+  transition: transform 620ms cubic-bezier(0.22, 1, 0.36, 1);
+  /* No will-change here on purpose: the sheet is ~15000px tall and promoting
+     it permanently costs more in layer memory than the one opening transition
+     saves. */
 }
 .case-study-modal[open] .case-study-sheet {
-  transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0) scale(1);
 }
 .case-study-modal.is-closing .case-study-sheet {
-  transform: translate3d(0, 12px, 0);
+  transform: translate3d(0, 24px, 0) scale(0.99);
+}
+
+/* --- content reveal -------------------------------------------------------
+   Blocks resolve out of a blur as they arrive: the copy defocuses in rather
+   than sliding, which suits a case study that is mostly text. The blur is
+   dropped entirely at rest (`filter: none`, not blur(0)) so nothing keeps a
+   compositing layer once it has played, and the whole thing is transform +
+   opacity + a brief filter — no layout. */
+.case-reveal {
+  opacity: 0;
+  transform: translate3d(0, 26px, 0);
+  filter: blur(14px);
+  transition:
+    opacity 760ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 760ms cubic-bezier(0.22, 1, 0.36, 1),
+    filter 760ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+.case-reveal.is-in {
+  opacity: 1;
+  transform: none;
+  filter: none;
+}
+/* Media resolves from a heavier defocus and barely moves — the image should
+   come into focus, not fly. */
+.case-reveal-media {
+  transform: translate3d(0, 14px, 0) scale(0.994);
+  filter: blur(20px);
 }
 /* Page margin: 20 at 1440 (the Figma grid's margin), floored for phones. */
 .case-wrap {
@@ -455,13 +507,6 @@ html.lenis body {
 .case-section {
   margin-top: calc(160 * var(--cu));
 }
-/* Rendering work for a section starts only as it approaches the viewport —
-   the sheet is ~17k px tall, painting it all up front is what made the modal
-   heavy. The estimate only feeds the scrollbar, so rough is fine. */
-.case-section {
-  content-visibility: auto;
-  contain-intrinsic-size: auto 200vh;
-}
 
 /* Media rows: three phones per row. Gutters straight from the frame. */
 .case-phones {
@@ -488,20 +533,15 @@ html.lenis body {
     rgba(255, 255, 255, 0.08);
   contain: content;
 }
+/* Close button — same 80px box as the header's own round button, same glass,
+   same magnet. Only the glyph is white here, because it sits on the dark sheet. */
 .case-close {
   position: fixed;
   z-index: 10;
   top: calc(78 * var(--cu));
   right: max(16px, calc(20 * var(--cu)));
-  display: grid;
   width: max(52px, calc(80 * var(--cu)));
-  aspect-ratio: 1;
-  place-items: center;
-  border-radius: 999px;
-  color: #1a1a1a;
-  font-family: var(--font-pixel), monospace;
-  font-size: max(22px, calc(32 * var(--cu)));
-  line-height: 1;
+  height: max(52px, calc(80 * var(--cu)));
 }
 
 /* The three liquid-glass balls — 616 wide on the 1400 content (44%), left and
@@ -518,7 +558,10 @@ html.lenis body {
 .case-point-a { left: 0; top: 0; }
 .case-point-b { right: 0; top: 0; }
 .case-point-c { left: 28%; top: 50%; }
+/* Same glass as the header — only the plate is milkier, so the near-black
+   pixel heading holds its contrast against the sheet behind it. */
 .case-point {
+  --lg-bg: rgba(255, 255, 255, 0.58);
   display: flex;
   width: 100%;
   height: 100%;
@@ -526,7 +569,6 @@ html.lenis body {
   align-items: center;
   justify-content: center;
   border-radius: 999px;
-  background-color: rgba(255, 255, 255, 0.58);
   color: #000;
 }
 /* Робо-заг inside the balls — 48, near-black, uppercase. */
@@ -576,6 +618,16 @@ html.lenis body {
   .case-study-modal::backdrop,
   .case-study-sheet {
     transition-duration: 0.01ms;
+  }
+  .case-study-sheet {
+    transform: none;
+  }
+  /* No defocus, no rise — the content is simply there. */
+  .case-reveal {
+    opacity: 1;
+    transform: none;
+    filter: none;
+    transition: none;
   }
 }
 
