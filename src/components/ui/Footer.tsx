@@ -61,17 +61,13 @@ const BALLS: Ball[] = [
 // one still suspends it — it moves only while the button is down — and letting
 // go hands its momentum back to the sim, which is where the bounce comes from.
 const GRAVITY = 2000; // px/s²
-// The collision body is a core at 65% of the visible sphere. Five spheres of
-// 30vw are half again as wide as the screen; colliding on their full size
-// forced them into a pyramid, and a pyramid of glass reads as spheres glued
-// together — every attempt to damp it either looked stuck or never settled.
-// On the cores, the row fits the floor (5 × 30vw × 0.65 = 97.5vw), so they
-// rest side by side, overlapping like bubbles, and nothing ever needs to
-// stand on anything. The floor still uses the full radius so a sphere sits on
-// the screen edge rather than sinking through it, and so does the grab.
-const BODY_R = 0.65;
 const WALL_BOUNCE = 0.58; // sides and floor
 const BALL_BOUNCE = 0.82; // balls spring off each other, they don't just knock
+// Below this closing speed a contact stops instead of bouncing. Gravity pumps
+// a resting sphere into its neighbour every frame and 0.82 of that came back
+// out, so the crown of a pile vibrated at a few px/s for ever — classic
+// restitution-threshold fix, and real impacts are far above it.
+const BOUNCE_MIN_SPEED = 150;
 // Friction where two spheres touch. It exists to stop a resting heap creeping
 // for ever, and a flat value did that at the cost of the liveliness — a real
 // collision was being damped as hard as a slow slide. So it is applied by how
@@ -91,10 +87,11 @@ const REST_SPEED = 22; // below this, a supported sphere is simply parked
 // feel magnetic.
 const CREEP_SPEED = REST_SPEED * 3;
 const CREEP_DAMP = 0.9;
-// Overlaps are resolved in full and immediately. An earlier build left a pixel
-// of slop and resolved 80% of the rest per tick, hoping a wedged heap would
-// stop shoving itself about — what it actually bought was spheres visibly
-// sunk into one another, which is most of what read as them being glued.
+// Overlaps resolve in full past a 1.5px allowance, immediately — partial
+// correction was tried against the gravity/separation saw and only meant an
+// impact could bury one sphere deep in another for whole seconds. The saw is
+// the sleep state's problem (below), not the resolver's.
+const CONTACT_SLOP = 1.5;
 const SEPARATION = 1;
 // Contact is detected a hair before the surfaces actually meet. Resolving an
 // overlap in full leaves the pair exactly touching, and an exact touch reads as
@@ -109,10 +106,10 @@ type Body = {
   y: number;
   vx: number;
   vy: number;
-  /** Collision-core radius (BODY_R of the visible sphere). */
+  /** Radius — the visible sphere IS the collision body, edge to edge. A 65%
+      core was tried so a row could fit without stacking; it read as spheres
+      sunk a third into one another, which was worse than resting. */
   r: number;
-  /** Visible radius — the floor, the grab and the drop heights use this. */
-  rv: number;
   /** Seconds until this one is released from above; <= 0 means it is falling. */
   wait: number;
   bounce: number;
@@ -120,6 +117,12 @@ type Body = {
   contact: boolean;
   /** Standing on the floor this tick — the root of the support chain. */
   onFloor: boolean;
+  /** Asleep: integration skips it entirely. Woken by a real hit or a grab. */
+  sleep: boolean;
+  /** Seconds this sphere has moved less than a pixel a frame — see sleeping. */
+  quietT: number;
+  px: number;
+  py: number;
 };
 
 export function Footer() {
@@ -168,8 +171,7 @@ export function Footer() {
       H = stage.clientHeight;
       zi = 1 / zoomOf(stage);
       els.forEach((el, i) => {
-        const rv = el.offsetWidth / 2;
-        const r = rv * BODY_R;
+        const r = el.offsetWidth / 2;
         if (initial) {
           const d = DROPS[i] ?? DROPS[0];
           // Parked just above the clip line — which is itself a screen higher
@@ -177,21 +179,23 @@ export function Footer() {
           // window, not from behind an invisible shelf partway down it.
           bodies[i] = {
             x: r + (W - 2 * r) * d.slot - d.drift * 0.5,
-            y: -rv * (1 + d.lift),
+            y: -r * (1 + d.lift),
             vx: d.drift * zi,
             vy: 0,
             r,
-            rv,
             wait: d.delay,
             bounce: d.bounce,
             contact: false,
             onFloor: false,
+            sleep: false,
+            quietT: 0,
+            px: 0,
+            py: 0,
           };
         } else if (bodies[i]) {
           bodies[i].r = r;
-          bodies[i].rv = rv;
           bodies[i].x = clamp(bodies[i].x, r, Math.max(r, W - r));
-          bodies[i].y = Math.min(bodies[i].y, H - rv);
+          bodies[i].y = Math.min(bodies[i].y, H - r);
         }
       });
     };
@@ -207,6 +211,10 @@ export function Footer() {
     const ro = new ResizeObserver(() => {
       layout(false);
       quiet = 0;
+      for (const o of bodies) {
+        o.sleep = false;
+        o.quietT = 0;
+      }
       wake();
     });
     ro.observe(stage);
@@ -249,13 +257,17 @@ export function Footer() {
       // visibilitychange handlers below cover the lost-pointer case instead.
       for (let i = 0; i < bodies.length; i++) {
         const b = bodies[i];
-        if (Math.hypot(p.x - b.x, p.y - b.y) <= b.rv) {
+        if (Math.hypot(p.x - b.x, p.y - b.y) <= b.r) {
           dragging = i;
           moved = false;
           lastPX = p.x;
           lastPY = p.y;
           lastT = performance.now();
           b.vx = b.vy = 0;
+          for (const o of bodies) {
+            o.sleep = false;
+            o.quietT = 0;
+          }
           wake();
           break;
         }
@@ -273,7 +285,7 @@ export function Footer() {
       if (Math.hypot(dx, dy) > 3) moved = true;
       // Follow the pointer exactly while held, clamped inside the stage.
       b.x = clamp(p.x, b.r, Math.max(b.r, W - b.r));
-      b.y = clamp(p.y, b.r, Math.max(b.r, H - b.rv));
+      b.y = clamp(p.y, b.r, Math.max(b.r, H - b.r));
       // Smoothed velocity, but responsive to a flick so the release has real
       // momentum for the bounce.
       b.vx = lerp(b.vx, dx / dt, 0.6);
@@ -346,6 +358,12 @@ export function Footer() {
           if (running) b.wait -= dt;
           continue;
         }
+        // Asleep: no gravity, no motion. Without a real sleep state the pile
+        // never truly stopped — gravity pressed the crown a pixel into its
+        // seat, the separation pushed it back out, and the pair sawed at one
+        // or two pixels sixty times a second for ever. Telemetry showed zero
+        // net drift over seconds; all of the "movement" was this saw.
+        if (b.sleep) continue;
 
         b.vy += GRAVITY * zi * dt;
         b.vx *= AIR;
@@ -367,12 +385,12 @@ export function Footer() {
           b.vx = -Math.abs(b.vx) * WALL_BOUNCE;
           b.contact = true;
         }
-        if (b.y > H - b.rv - CONTACT_SKIN) {
+        if (b.y > H - b.r - CONTACT_SKIN) {
           b.contact = true;
           b.onFloor = true;
         }
-        if (b.y > H - b.rv) {
-          b.y = H - b.rv;
+        if (b.y > H - b.r) {
+          b.y = H - b.r;
           // Each ball keeps its own restitution, so they stop tossing in sync.
           b.vy = -Math.abs(b.vy) * b.bounce;
           b.vx *= GROUND_FRICTION;
@@ -394,10 +412,45 @@ export function Footer() {
           a.contact = true;
           b.contact = true;
           touching.push([i, j]);
-          if (d >= min) continue; // touching, not overlapping — nothing to push
+          // Two sleepers lean on each other without renegotiating it every
+          // frame. A sphere striking a sleeper at real speed wakes it; a slow
+          // one is pushed back out one-sidedly — the sleeper is a wall, never a
+          // door. An early version skipped the whole resolution for such pairs
+          // and a slow sphere could sink most of the way into a sleeping one.
+          if (a.sleep && b.sleep) continue;
           const nx = dx / d;
           const ny = dy / d;
-          const overlap = (min - d) * SEPARATION;
+          if (a.sleep || b.sleep) {
+            const hit = Math.hypot(a.vx - b.vx, a.vy - b.vy);
+            if (hit > REST_SPEED * 3 * zi) {
+              a.sleep = b.sleep = false;
+              a.quietT = b.quietT = 0;
+            } else {
+              const overlap1 = Math.max(0, min - d - CONTACT_SLOP);
+              const mover = a.sleep ? b : a;
+              const sign = a.sleep ? 1 : -1;
+              mover.x += sign * nx * overlap1;
+              mover.y += sign * ny * overlap1;
+              // Kill the closing component so it does not keep pressing in.
+              const closing = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
+              if (closing < 0) {
+                mover.vx -= sign * closing * nx;
+                mover.vy -= sign * closing * ny;
+              }
+              // Static friction against the sleeper. Without it the flank of a
+              // sleeping sphere is ice: gravity slides a slow neighbour along
+              // it at a steady few px/s that never ends and never sleeps. A
+              // slow slider is simply held; a fast one passes untouched and
+              // will either wake the sleeper next frame or fly on.
+              if (Math.hypot(mover.vx, mover.vy) < CREEP_SPEED * 2 * zi) {
+                mover.vx = 0;
+                mover.vy = 0;
+              }
+              continue;
+            }
+          }
+          if (d >= min) continue; // touching, not overlapping — nothing to push
+          const overlap = Math.max(0, min - d - CONTACT_SLOP) * SEPARATION;
           const aFixed = i === dragging;
           const bFixed = j === dragging;
           if (!aFixed && !bFixed) {
@@ -414,7 +467,8 @@ export function Footer() {
           }
           const sep = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
           if (sep > 0) continue; // already parting
-          const imp = -(1 + BALL_BOUNCE) * sep * 0.5;
+          const e = -sep > BOUNCE_MIN_SPEED * zi ? BALL_BOUNCE : 0;
+          const imp = -(1 + e) * sep * 0.5;
           if (!aFixed) {
             a.vx -= imp * nx;
             a.vy -= imp * ny;
@@ -450,7 +504,7 @@ export function Footer() {
         if (i === dragging) continue;
         const b = bodies[i];
         b.x = clamp(b.x, b.r, Math.max(b.r, W - b.r));
-        b.y = Math.min(b.y, H - b.rv);
+        b.y = Math.min(b.y, H - b.r);
       }
 
       for (let i = 0; i < bodies.length; i++) {
@@ -477,7 +531,11 @@ export function Footer() {
       // or by leaning on a supported sphere below its own centre. Anything
       // unsupported keeps the loop alive for gravity, no matter how slowly it
       // happens to be moving.
-      const supported = bodies.map((b) => b.onFloor);
+      // A sleeper skips integration entirely, so its onFloor flag never sets —
+      // but a sleeping sphere is at rest by definition, i.e. support. Without
+      // this, a sphere landing on two sleepers could never be certified and
+      // sawed in its pocket for ever.
+      const supported = bodies.map((b) => b.onFloor || b.sleep);
       if (dragging >= 0 && bodies[dragging]) supported[dragging] = true;
       // Two passes cover a stack two deep — as tall as five spheres can pile.
       for (let pass = 0; pass < 2; pass++) {
@@ -506,6 +564,31 @@ export function Footer() {
       for (let i = 0; i < bodies.length; i++) {
         const b = bodies[i];
         if (b.wait > 0) { awake = true; continue; }
+        // A sphere that has stayed within a few pixels of one spot for most of
+        // a second is at rest, whatever its instantaneous velocity says — the
+        // gravity/separation saw pumps velocity and position by a pixel or two
+        // sixty times a second, so both lie frame-to-frame. Distance from an
+        // anchor tells the saw (stays inside the radius for ever) apart from a
+        // slow roll (leaves it within milliseconds).
+        if (i !== dragging && !b.sleep) {
+          if (Math.hypot(b.x - b.px, b.y - b.py) > 4 * zi) {
+            b.px = b.x;
+            b.py = b.y;
+            b.quietT = 0;
+          } else {
+            b.quietT += dt;
+          }
+          if (b.quietT > 0.7 && supported[i]) {
+            b.sleep = true;
+            b.vx = 0;
+            b.vy = 0;
+          }
+        }
+        if (b.sleep) {
+          b.contact = false;
+          b.onFloor = false;
+          continue;
+        }
         const speed = Math.hypot(b.vx, b.vy);
         if (supported[i] && speed < REST_SPEED * zi) {
           b.vx = 0;
@@ -513,11 +596,8 @@ export function Footer() {
         } else if (supported[i] && speed < CREEP_SPEED * zi) {
           b.vx *= CREEP_DAMP;
           b.vy *= CREEP_DAMP;
-          awake = true;
-        } else if (quiet < 1.5) {
-          // Moving, airborne, or too soon to call it: keep simulating.
-          awake = true;
         }
+        awake = true;
         b.contact = false;
         b.onFloor = false;
       }
@@ -601,12 +681,12 @@ export function Footer() {
             draggable={false}
             onDragStart={(e) => e.preventDefault()}
             style={{ '--lg-tint': b.tint } as React.CSSProperties}
-            className={`glass-ball pointer-events-auto z-10 grid size-[calc(30vw/var(--site-zoom,1))] min-h-[112px] min-w-[112px] cursor-grab touch-none select-none place-items-center rounded-full active:cursor-grabbing ${
+            className={`glass-ball pointer-events-auto z-10 grid size-[calc(min(30vw,56vh)/var(--site-zoom,1))] min-h-[112px] min-w-[112px] cursor-grab touch-none select-none place-items-center rounded-full active:cursor-grabbing ${
               reduced ? 'relative' : 'absolute left-0 top-0 will-change-transform'
             }`}
           >
             {/* The mark on its own, white — no plate, no shadow. */}
-            <b.Glyph className="relative z-10 w-[calc(9.5vw/var(--site-zoom,1))] min-w-[36px] text-white" />
+            <b.Glyph className="relative z-10 w-[calc(min(9.5vw,17.7vh)/var(--site-zoom,1))] min-w-[36px] text-white" />
             <span className="sr-only">{b.label}</span>
           </a>
         ))}
