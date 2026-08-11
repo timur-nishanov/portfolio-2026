@@ -238,10 +238,12 @@ html.lenis body {
       0 10px 30px rgba(0, 0, 0, 0.14);
   }
 
-  /* The compact header reads more naturally with a gentler lens than the
-     larger glass surfaces: soften the edge displacement and frost transition. */
+  /* Header pills use the pill map, not the sphere map — the circular lens
+     stretched over a 9:1 pill is what made the refraction look broken. The
+     pill filter carries its own frost, so the fallback blur stays for the
+     engines that ignore url() filters. */
   .header-glass {
-    --lg-filter: url(#lg-soft);
+    --lg-filter: url(#lg-pill);
     --lg-blur: 10px;
   }
 
@@ -325,9 +327,15 @@ html.lenis body {
   }
 }
 
-/* Case study — 12 columns, 20px page margin and 8px gutters at the 1440
-   reference. One backdrop blur keeps the effect calm and GPU cost bounded. */
+/* ---------------------------------------------------------------------------
+   Case study. The Figma frame is 1440 wide with a 20px page margin and 8px
+   gutters; --cu is "one Figma pixel" (100vw / 1440), so every size below is
+   authored as the raw 1440 value and keeps scaling above the reference too.
+   Type keeps px floors so phones stay readable; layout switches live in the
+   max-width queries at the bottom of this block.
+--------------------------------------------------------------------------- */
 .case-study-modal {
+  --cu: calc(100vw / 1440);
   opacity: 0;
   transition:
     opacity 360ms ease,
@@ -368,65 +376,104 @@ html.lenis body {
 .case-study-modal.is-closing .case-study-sheet {
   transform: translate3d(0, 12px, 0);
 }
-.case-grid {
-  display: grid;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
-  column-gap: 8px;
-  margin-inline: clamp(12px, 1.389vw, 20px);
-  padding-bottom: clamp(100px, 12vw, 172px);
+/* Page margin: 20 at 1440 (the Figma grid's margin), floored for phones. */
+.case-wrap {
+  margin-inline: max(16px, calc(20 * var(--cu)));
+  padding-top: calc(78 * var(--cu));
+  padding-bottom: calc(140 * var(--cu));
 }
-.case-title {
+/* Заг — 80 / 100% / -0.8px at 1440, white. Section headings share it. */
+.case-title,
+.case-heading {
+  color: #fff;
   font-family: var(--font-hoves), sans-serif;
-  font-size: clamp(46px, 5.556vw, 80px);
+  font-size: max(40px, calc(80 * var(--cu)));
   font-weight: 400;
   line-height: 1;
   letter-spacing: -0.01em;
 }
+/* Подзаг — 36 / 140%. Carries all the running commentary between media. */
 .case-lead {
+  color: #fff;
   font-family: var(--font-hoves), sans-serif;
-  font-size: clamp(22px, 2.5vw, 36px);
+  font-size: max(19px, calc(36 * var(--cu)));
   font-weight: 400;
   line-height: 1.4;
 }
-.case-subtitle {
-  font-family: var(--font-hoves), sans-serif;
-  font-size: clamp(30px, 3.333vw, 48px);
-  font-weight: 400;
-  line-height: 1.12;
-}
+/* Описание — 20 / 140%. The details table and the glass-ball copy. */
 .case-copy {
+  color: #fff;
   font-family: var(--font-hoves), sans-serif;
-  font-size: clamp(16px, 1.389vw, 20px);
+  font-size: max(15px, calc(20 * var(--cu)));
   font-weight: 400;
   line-height: 1.4;
 }
+/* Робо-подзаг — 5by7, 14 / 24px / 1px, uppercase at 40% white. */
 .case-kicker {
   color: rgba(255, 255, 255, 0.4);
   font-family: var(--font-pixel), monospace;
-  font-size: clamp(12px, 0.972vw, 14px);
+  font-size: max(11px, calc(14 * var(--cu)));
   font-weight: 400;
-  line-height: 24px;
+  line-height: 1.714;
   letter-spacing: 1px;
   text-transform: uppercase;
 }
+/* Подпись под картинками — 14 / 140% centered at 50% white, 16 below. */
 .case-caption {
-  margin-top: 14px;
+  margin-top: calc(16 * var(--cu));
   color: rgba(255, 255, 255, 0.5);
   font-family: var(--font-hoves), sans-serif;
-  font-size: 14px;
+  font-size: max(12px, calc(14 * var(--cu)));
   font-weight: 400;
   line-height: 1.4;
   text-align: center;
 }
+
+/* Details table. In the Figma it spans x 440→1040 of the 1440 frame: 30% in
+   from the content edge, 600 wide, label column 200 / copy 400. */
+.case-details {
+  margin-top: calc(170 * var(--cu));
+  margin-left: 30%;
+  width: calc(600 / 1400 * 100%);
+}
 .case-detail-row {
   display: grid;
-  grid-template-columns: minmax(110px, 1fr) 2fr;
-  gap: 24px;
-  padding-block: clamp(28px, 3.33vw, 48px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  grid-template-columns: 1fr 2fr;
+  gap: calc(24 * var(--cu));
+  padding-block: calc(48 * var(--cu));
+  border-bottom: 1px solid rgba(255, 255, 255, 0.16);
 }
+.case-detail-row:first-child {
+  padding-top: 0;
+}
+.case-detail-row:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+/* Sections keep a steady 160 beat; media rows breathe at 64–136. */
 .case-section {
-  margin-top: clamp(112px, 15vw, 216px);
+  margin-top: calc(160 * var(--cu));
+}
+/* Rendering work for a section starts only as it approaches the viewport —
+   the sheet is ~17k px tall, painting it all up front is what made the modal
+   heavy. The estimate only feeds the scrollbar, so rough is fine. */
+.case-section {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 200vh;
+}
+
+/* Media rows: three phones per row. Gutters straight from the frame. */
+.case-phones {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: calc(var(--phone-gap, 113) * var(--cu));
+}
+/* A desktop before/after pair: two halves on the 8px grid gutter. */
+.case-pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: calc(8 * var(--cu));
 }
 .case-media-placeholder {
   display: flex;
@@ -435,35 +482,42 @@ html.lenis body {
   width: 100%;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: clamp(14px, 1.667vw, 24px);
+  border-radius: calc(24 * var(--cu));
   background:
     linear-gradient(135deg, transparent 49.85%, rgba(255, 255, 255, 0.09) 50%, transparent 50.15%),
     rgba(255, 255, 255, 0.08);
+  contain: content;
 }
 .case-close {
   position: fixed;
   z-index: 10;
-  top: clamp(20px, 2.5vw, 36px);
-  right: clamp(20px, 2.5vw, 36px);
+  top: calc(78 * var(--cu));
+  right: max(16px, calc(20 * var(--cu)));
   display: grid;
-  width: clamp(58px, 5.556vw, 80px);
+  width: max(52px, calc(80 * var(--cu)));
   aspect-ratio: 1;
   place-items: center;
   border-radius: 999px;
   color: #1a1a1a;
   font-family: var(--font-pixel), monospace;
-  font-size: clamp(24px, 2.5vw, 36px);
+  font-size: max(22px, calc(32 * var(--cu)));
   line-height: 1;
 }
+
+/* The three liquid-glass balls — 616 wide on the 1400 content (44%), left and
+   right on the first row, the third centered directly beneath, touching. */
 .case-points {
   position: relative;
-  min-height: clamp(700px, 84vw, 1210px);
+  aspect-ratio: 1400 / 1232;
 }
 .case-point-anchor {
   position: absolute;
-  width: min(44vw, 560px);
+  width: 44%;
   aspect-ratio: 1;
 }
+.case-point-a { left: 0; top: 0; }
+.case-point-b { right: 0; top: 0; }
+.case-point-c { left: 28%; top: 50%; }
 .case-point {
   display: flex;
   width: 100%;
@@ -475,25 +529,23 @@ html.lenis body {
   background-color: rgba(255, 255, 255, 0.58);
   color: #000;
 }
-.case-point-a { left: 0; top: 0; }
-.case-point-b { right: 0; top: 0; }
-.case-point-c { left: 50%; bottom: 0; transform: translateX(-50%); }
+/* Робо-заг inside the balls — 48, near-black, uppercase. */
 .case-point-title {
   color: #1a1a1a;
   text-align: center;
   font-family: var(--font-pixel), monospace;
-  font-size: clamp(24px, 3.333vw, 48px);
+  font-size: max(20px, calc(48 * var(--cu)));
   font-weight: 400;
   line-height: normal;
   text-transform: uppercase;
 }
 .case-point-copy {
-  max-width: 72%;
-  margin-top: 10px;
+  max-width: 60%;
+  margin-top: calc(24 * var(--cu));
   color: #000;
   text-align: center;
   font-family: var(--font-hoves), sans-serif;
-  font-size: clamp(14px, 1.389vw, 20px);
+  font-size: max(13px, calc(20 * var(--cu)));
   font-weight: 400;
   line-height: 1.4;
 }
@@ -506,12 +558,18 @@ html.lenis body {
     transform: translate3d(0, 18px, 0);
   }
 }
+@media (max-width: 767px) {
+  .case-details { margin-left: 0; width: 100%; }
+}
 @media (max-width: 639px) {
-  .case-grid { column-gap: 4px; }
-  .case-title { padding-right: 72px; }
+  .case-title { padding-right: 68px; }
   .case-detail-row { grid-template-columns: 1fr; gap: 8px; }
-  .case-point-anchor { position: relative; inset: auto; width: 100%; transform: none; }
-  .case-points { display: grid; min-height: 0; gap: 18px; }
+  .case-phones { grid-template-columns: 1fr; gap: 20px; }
+  .case-pair { grid-template-columns: 1fr; gap: 8px; }
+  .case-point-anchor { position: relative; inset: auto; width: 100%; }
+  .case-points { display: grid; aspect-ratio: auto; gap: 18px; }
+  .case-point { aspect-ratio: 1; }
+  .case-point-copy { max-width: 72%; }
 }
 @media (prefers-reduced-motion: reduce) {
   .case-study-modal,

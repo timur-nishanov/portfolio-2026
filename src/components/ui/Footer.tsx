@@ -93,7 +93,7 @@ export function Footer() {
 
   useEffect(() => {
     const stage = stageRef.current;
-    if (!stage || reduced) return;
+    if (!stage || reduced || !photo) return;
     const els = elsRef.current.filter(Boolean) as HTMLElement[];
     if (els.length !== BALLS.length) return;
 
@@ -363,7 +363,7 @@ export function Footer() {
       document.removeEventListener('visibilitychange', onVisibility);
       els.forEach((el) => el.removeEventListener('click', onClick));
     };
-  }, [reduced]);
+  }, [reduced, photo]);
 
   return (
     // Pinned to the viewport and sitting *behind* the page (see globals.css:
@@ -399,7 +399,10 @@ export function Footer() {
             reach both screen edges at every breakpoint instead of shrinking
             into the middle on a wide monitor. The label is sized in vw too, so
             its ratio to the ball stays constant as the viewport grows. */}
-        {BALLS.map((b, i) => (
+        {/* Mounted together with the photo, a section early. Each ball is a
+            viewport-scale backdrop-filter surface — keeping three of them
+            alive behind the whole page was pure GPU cost the reader never saw. */}
+        {photo && BALLS.map((b, i) => (
           <a
             key={b.label}
             ref={(n) => {

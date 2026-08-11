@@ -481,12 +481,31 @@ export function Head3D() {
 
       blood.step(dt);
       renderer.render(scene, camera);
-      raf = requestAnimationFrame(loop);
+      raf = onScreen ? requestAnimationFrame(loop) : 0;
     };
+
+    // The hero scrolls away and stays away, but this loop used to keep
+    // rendering the head at full rate underneath the rest of the page — a
+    // permanent GPU tax on every scroll. Pause while the stage is off screen;
+    // dt is already clamped, so picking back up is seamless.
+    let onScreen = true;
+    const io = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting === onScreen) return;
+      onScreen = entry.isIntersecting;
+      if (onScreen && !raf) {
+        last = performance.now();
+        raf = requestAnimationFrame(loop);
+      } else if (!onScreen && raf) {
+        cancelAnimationFrame(raf);
+        raf = 0;
+      }
+    });
+    io.observe(wrap);
     raf = requestAnimationFrame(loop);
 
     return () => {
       cancelAnimationFrame(raf);
+      io.disconnect();
       ro.disconnect();
       document.body.style.userSelect = '';
       window.removeEventListener('pointermove', onPointerMove);
