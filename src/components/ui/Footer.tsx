@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { assets } from '@/data/assets';
 import { site } from '@/data/site';
 import { clamp, lerp, q } from '@/lib/lerp';
+import { zoomOf } from '@/lib/zoom';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { XGlyph, LinkedInGlyph, TelegramGlyph, GitHubGlyph, SpotifyGlyph } from './SocialGlyphs';
 
@@ -185,9 +186,12 @@ export function Footer() {
     let lastT = 0;
     let moved = false;
 
+    // Pointer events are visual px, the sim runs in the stage's local px —
+    // under the desktop zoom the two differ by --site-zoom.
     const local = (e: PointerEvent) => {
       const rect = stage.getBoundingClientRect();
-      return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+      const z = zoomOf(stage);
+      return { x: (e.clientX - rect.left) / z, y: (e.clientY - rect.top) / z };
     };
 
     const onDown = (e: PointerEvent) => {

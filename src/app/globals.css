@@ -72,6 +72,26 @@
   box-sizing: border-box;
 }
 
+/* ---------------------------------------------------------------------------
+   Desktop scale. The 1440 design read ~20% too large on real screens, so from
+   1024 up the whole body renders at 0.8 — the equivalent of the browser's own
+   80% zoom, which is where the layout was judged right. One knob; JS that
+   mixes pointer (visual) with layout (local) pixels divides it back out via
+   lib/zoom.ts, and the few full-viewport lengths below compensate, because
+   this engine scales vh/vw along with everything else.
+--------------------------------------------------------------------------- */
+:root {
+  --site-zoom: 1;
+}
+@media (min-width: 1024px) {
+  :root {
+    --site-zoom: 0.8;
+  }
+}
+body {
+  zoom: var(--site-zoom);
+}
+
 html {
   -webkit-text-size-adjust: 100%;
   /* The scroll indicator is a hairline pill, barely there — the platform
@@ -284,11 +304,13 @@ html.lenis body {
      carries the page background and a bottom margin exactly one screen tall.
      Scrolling the last section away therefore slides it up off the photo like
      a curtain, with nothing animating and nothing to keep in sync. */
+  /* Both heights mean "one real screen" — divided by the zoom so they still
+     cover the actual viewport, not 80% of it. */
   .footer-reveal {
     position: fixed;
     inset: auto 0 0 0;
-    height: 100vh;
-    height: 100svh;
+    height: calc(100vh / var(--site-zoom));
+    height: calc(100svh / var(--site-zoom));
     z-index: 0;
     overflow: hidden;
   }
@@ -296,8 +318,8 @@ html.lenis body {
     position: relative;
     z-index: 1;
     background: var(--bg);
-    margin-bottom: 100vh;
-    margin-bottom: 100svh;
+    margin-bottom: calc(100vh / var(--site-zoom));
+    margin-bottom: calc(100svh / var(--site-zoom));
   }
 
   /* Enhancement layer — Chromium only. The filter carries its own blur, since
@@ -353,7 +375,11 @@ html.lenis body {
    max-width queries at the bottom of this block.
 --------------------------------------------------------------------------- */
 .case-study-modal {
-  --cu: calc(100vw / 1440);
+  /* The dialog spans the real viewport (w-screen/h-dvh in vw-family units,
+     which this engine scales with zoom), so the body zoom is cancelled here
+     and the case takes the same 0.8 through its own unit instead. */
+  zoom: calc(1 / var(--site-zoom));
+  --cu: calc(100vw / 1440 * var(--site-zoom));
   opacity: 0;
   transition:
     opacity 420ms ease,

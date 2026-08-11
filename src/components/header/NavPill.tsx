@@ -8,6 +8,7 @@ import { ScrambleText, type ScrambleHandle } from './ScrambleText';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useCanHover } from '@/hooks/useMediaQuery';
 import { useMagnetic } from '@/hooks/useMagnetic';
+import { zoomOf } from '@/lib/zoom';
 
 const PILL_SPRING = { type: 'spring' as const, stiffness: 380, damping: 32, mass: 1 };
 
@@ -105,8 +106,12 @@ export function NavPill({ activeId, onSelect }: Props) {
     if (!container || !item) return;
     const cRect = container.getBoundingClientRect();
     const iRect = item.getBoundingClientRect();
-    const targetX = iRect.left - cRect.left;
-    const targetW = iRect.width;
+    // Rects are visual px; the puck's transform/width are written in local px,
+    // which the desktop zoom then scales — divide it out or the puck lands
+    // short and 80% wide.
+    const z = zoomOf(container);
+    const targetX = (iRect.left - cRect.left) / z;
+    const targetW = iRect.width / z;
 
     if (!ready.current || reduced) {
       x.set(targetX);

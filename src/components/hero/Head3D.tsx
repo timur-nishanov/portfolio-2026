@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { assets } from '@/data/assets';
 import { clamp, lerp } from '@/lib/lerp';
+import { zoomOf } from '@/lib/zoom';
 import { stepSpring, type SpringState } from '@/lib/spring';
 import { createBloodField } from './blood';
 import fragmentShader from './head.frag';
@@ -186,7 +187,8 @@ export function Head3D() {
       camera.right = aspect;
       camera.updateProjectionMatrix();
 
-      sizePx = probe.getBoundingClientRect().width || Math.min(W, H) * 0.5;
+      // gBCR is visual px; W/H and the mesh math are local — one zoom apart.
+      sizePx = probe.getBoundingClientRect().width / zoomOf(wrap) || Math.min(W, H) * 0.5;
       mesh.scale.setScalar(sizePx / H);
       half = sizePx / H;
 
@@ -244,11 +246,14 @@ export function Head3D() {
 
     const headUV = (clientX: number, clientY: number) => {
       const r = rect();
-      const cx = r.left + toStageX(posX);
-      const cy = r.top + toStageY(posY);
+      // Client coords are visual px; the stage runs in local px — convert
+      // first, or the desktop zoom shifts every hit test toward the corner.
+      const z = zoomOf(wrap);
+      const lx = (clientX - r.left) / z;
+      const ly = (clientY - r.top) / z;
       return {
-        u: (clientX - (cx - sizePx / 2)) / sizePx,
-        v: (clientY - (cy - sizePx / 2)) / sizePx,
+        u: (lx - (toStageX(posX) - sizePx / 2)) / sizePx,
+        v: (ly - (toStageY(posY) - sizePx / 2)) / sizePx,
       };
     };
 
@@ -259,7 +264,7 @@ export function Head3D() {
         // doesn't inflate the velocity into a bullet on release.
         const mdt = Math.min(Math.max((now - lastMoveT) / 1000, 1 / 240), 1 / 30);
         lastMoveT = now;
-        const k = 2 / H; // px → world units
+        const k = 2 / (H * zoomOf(wrap)); // visual px → world units
         const dx = (e.clientX - lastPX) * k;
         const dy = -(e.clientY - lastPY) * k;
         posX += dx;

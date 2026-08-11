@@ -197,7 +197,7 @@ export const cases: Case[] = [
       },
       {
         label: 'PRODUCT RESULTS',
-        body: 'I split the core flow into clear steps. Completion time dropped by roughly half.',
+        body: 'I split the core flow into clear steps. In usability tests, completion time dropped by roughly half.',
       },
     ],
     links: [
@@ -231,8 +231,8 @@ export const cases: Case[] = [
         body: 'I designed and built it solo, from the initial concept and product design through to the code.',
       },
       {
-        label: 'RESULT',
-        body: 'The concept generates flashcards and drills from your uploads, then tracks weak spots across sessions so you review what you actually miss. TestFlight soon.',
+        label: 'RESULTS',
+        body: 'The concept generates flashcards and drills from your uploads, then tracks weak spots across sessions so you review what you actually miss.',
       },
     ],
     links: [{ label: 'TESTFLIGHT SOON', href: null }], // inactive by design (TZ §9.2)

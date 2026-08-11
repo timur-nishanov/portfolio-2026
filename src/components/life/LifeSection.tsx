@@ -86,7 +86,7 @@ function LifeCard({
       ref={(n) => {
         cardsRef.current[index] = n;
       }}
-      className="sticky top-[max(12px,calc(var(--header-top)+var(--nav-item-h)+24px))] md:top-[max(24px,calc((100svh-var(--life-card-h))/2))] md:h-[var(--life-card-h)]"
+      className="sticky top-[max(12px,calc(var(--header-top)+var(--nav-item-h)+24px))] md:top-[max(24px,calc((100svh/var(--site-zoom)-var(--life-card-h))/2))] md:h-[var(--life-card-h)]"
     >
       {/* All cards share the case-grey surface. No shadow. */}
       <div
