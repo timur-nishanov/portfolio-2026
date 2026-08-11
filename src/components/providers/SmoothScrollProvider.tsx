@@ -11,10 +11,12 @@ type ScrollApi = {
   register: (cb: FrameCb) => () => void;
   /** Smoothly scroll to an element id or offset. Falls back to native when reduced. */
   scrollTo: (target: string | number, opts?: { offset?: number; duration?: number }) => void;
+  /** Park the page scroller while something else owns the scroll (the case study). */
+  setPaused: (paused: boolean) => void;
 };
 
 const noop = () => {};
-const ScrollContext = createContext<ScrollApi>({ register: () => noop, scrollTo: noop });
+const ScrollContext = createContext<ScrollApi>({ register: () => noop, scrollTo: noop, setPaused: noop });
 
 export const useSmoothScroll = () => useContext(ScrollContext);
 
@@ -75,7 +77,17 @@ export function SmoothScrollProvider({ children }: { children: React.ReactNode }
     }
   }, []);
 
-  const api = useMemo<ScrollApi>(() => ({ register, scrollTo }), [register, scrollTo]);
+  // The case study runs its own Lenis on the dialog; the page's instance has
+  // nothing to do meanwhile and should not be integrating a scroll it cannot
+  // apply.
+  const setPaused = useCallback((paused: boolean) => {
+    const lenis = lenisRef.current;
+    if (!lenis) return;
+    if (paused) lenis.stop();
+    else lenis.start();
+  }, []);
+
+  const api = useMemo<ScrollApi>(() => ({ register, scrollTo, setPaused }), [register, scrollTo, setPaused]);
 
   return <ScrollContext.Provider value={api}>{children}</ScrollContext.Provider>;
 }

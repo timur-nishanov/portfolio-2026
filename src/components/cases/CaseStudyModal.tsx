@@ -3,6 +3,7 @@
 import Lenis from 'lenis';
 import { useCallback, useEffect, useRef } from 'react';
 import type { Case } from '@/data/cases';
+import { useSmoothScroll } from '@/components/providers/SmoothScrollProvider';
 import { useMagnetic } from '@/hooks/useMagnetic';
 import { useCanHover } from '@/hooks/useMediaQuery';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
@@ -90,7 +91,7 @@ function MagneticPoint({ title, children, className = '', index }: { title: stri
 
   return (
     <div ref={rootRef} className={`case-point-anchor ${className}`}>
-      <div ref={ballRef} {...reveal('', index)}>
+      <div ref={ballRef} {...reveal('size-full', index)}>
         <div className="case-point glass will-change-transform">
           <p className="case-point-title">{title}</p>
           <p className="case-point-copy">{children}</p>
@@ -112,6 +113,7 @@ export function CaseStudyModal({ data, open, onClose }: Props) {
   const sheetRef = useRef<HTMLElement>(null);
   const closeTimer = useRef<number | undefined>(undefined);
   const reduced = useReducedMotion();
+  const { setPaused } = useSmoothScroll();
 
   const requestClose = useCallback(() => {
     const dialog = dialogRef.current;
@@ -133,13 +135,15 @@ export function CaseStudyModal({ data, open, onClose }: Props) {
     // Read by useMagnetic: every magnetic surface outside the dialog stands
     // down while the case is open.
     document.documentElement.setAttribute('data-modal-open', '');
+    setPaused(true);
     return () => {
       document.documentElement.style.overflow = '';
       document.documentElement.removeAttribute('data-modal-open');
+      setPaused(false);
       window.clearTimeout(closeTimer.current);
       if (dialog.open) dialog.close();
     };
-  }, [open]);
+  }, [open, setPaused]);
 
   // Scrolling and the reveal share one rAF loop.
   //

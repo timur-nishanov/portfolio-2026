@@ -6,7 +6,7 @@ import { assets } from '@/data/assets';
 import { site } from '@/data/site';
 import { clamp, lerp, q } from '@/lib/lerp';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
-import { XGlyph, LinkedInGlyph, TelegramGlyph } from './SocialGlyphs';
+import { XGlyph, LinkedInGlyph, TelegramGlyph, GitHubGlyph, SpotifyGlyph } from './SocialGlyphs';
 
 type Ball = {
   /** Still the accessible name — the glyph itself is decorative. */
@@ -26,7 +26,9 @@ type Ball = {
 // off-screen and drops in cleanly.
 const DROPS = [
   { delay: 0.0, slot: 0.0, lift: 0.4, drift: 55, bounce: 0.46 },
+  { delay: 0.46, slot: 0.25, lift: 3.4, drift: 40, bounce: 0.44 },
   { delay: 0.34, slot: 0.5, lift: 2.6, drift: -85, bounce: 0.38 },
+  { delay: 0.62, slot: 0.75, lift: 1.9, drift: -50, bounce: 0.52 },
   { delay: 0.15, slot: 1.0, lift: 1.3, drift: 35, bounce: 0.5 },
 ];
 
@@ -34,10 +36,16 @@ const DROPS = [
 // refract, and a colour wash only muddied it.
 const BALLS: Ball[] = [
   { label: 'X.COM', href: 'https://x.com/nem_etis', Glyph: XGlyph },
+  { label: 'GitHub', href: 'https://github.com/timur-nishanov', Glyph: GitHubGlyph },
   {
     label: 'LinkedIn',
     href: 'https://www.linkedin.com/in/timur-nishanov-3a7510428/',
     Glyph: LinkedInGlyph,
+  },
+  {
+    label: 'Spotify',
+    href: 'https://open.spotify.com/user/31lvoci4gojqvzj2jydxepb7raje?si=56510e97cfbf42d7',
+    Glyph: SpotifyGlyph,
   },
   { label: 'Telegram', href: site.telegram, Glyph: TelegramGlyph },
 ];
@@ -392,10 +400,10 @@ export function Footer() {
       <div
         ref={stageRef}
         className={`pointer-events-none absolute inset-0 overflow-hidden ${
-          reduced ? 'flex items-end justify-center gap-2 pb-12' : ''
+          reduced ? 'flex flex-wrap items-end justify-center gap-2 pb-12' : ''
         }`}
       >
-        {/* Pure vw with no max cap: three balls of 34vw span ~102vw, so they
+        {/* Pure vw with no max cap: five balls of 20vw span ~100vw, so they
             reach both screen edges at every breakpoint instead of shrinking
             into the middle on a wide monitor. The label is sized in vw too, so
             its ratio to the ball stays constant as the viewport grows. */}
@@ -415,12 +423,12 @@ export function Footer() {
             // pull a ball, trailing a ghost of the URL across the page.
             draggable={false}
             onDragStart={(e) => e.preventDefault()}
-            className={`glass-ball pointer-events-auto z-10 grid size-[34vw] min-h-[118px] min-w-[118px] cursor-grab touch-none select-none place-items-center rounded-full active:cursor-grabbing ${
+            className={`glass-ball pointer-events-auto z-10 grid size-[20vw] min-h-[76px] min-w-[76px] cursor-grab touch-none select-none place-items-center rounded-full active:cursor-grabbing ${
               reduced ? 'relative' : 'absolute left-0 top-0 will-change-transform'
             }`}
           >
             {/* The mark on its own, white — no plate, no shadow. */}
-            <b.Glyph className="relative z-10 w-[11vw] min-w-[38px] text-white" />
+            <b.Glyph className="relative z-10 w-[6.5vw] min-w-[26px] text-white" />
             <span className="sr-only">{b.label}</span>
           </a>
         ))}
