@@ -59,13 +59,20 @@ function Shot({ shot, caption, className = '', style, radius = DESKTOP_RADIUS }:
   );
 }
 
-/** A desktop before/after row: two halves on the 8px gutter, one caption. */
+/**
+ * A desktop before/after row. Each half is a card of its own — 694.5×624 in the
+ * frame, with the screenshot centred inside it — so the two sit level however
+ * differently the two windows are shaped. The 8px gutter is the grid's.
+ */
 function ShotPair({ before, after, caption }: { before: ShotProps['shot']; after: ShotProps['shot']; caption: string }) {
   return (
     <figure {...reveal('', 0, true)}>
       <div className="case-pair">
-        <Shot shot={before} />
-        <Shot shot={after} />
+        {[before, after].map((s) => (
+          <div key={s.src} className="case-card">
+            <Shot shot={s} />
+          </div>
+        ))}
       </div>
       <figcaption className="case-caption">{caption}</figcaption>
     </figure>
@@ -291,14 +298,16 @@ export function CaseStudyModal({ data, open, onClose }: Props) {
               <ShotPair before={shot.beforeRecoveryKey} after={shot.afterRecoveryKey} caption="Turned an unexplained recovery-key form into a guided onboarding step with clear context and action." />
               <ShotPair before={shot.beforeMessages} after={shot.afterMessages} caption="Softened outgoing message bubbles to improve readability and reduce visual noise." />
               <ShotPair before={shot.beforeEmoji} after={shot.afterEmoji} caption="Replaced the full-width emoji panel with a compact popover that keeps the conversation visible." />
-              {/* Three window widths, one row. The columns are weighted by the
-                  shots' own widths — they share a source height, so weighting
-                  keeps their bottoms level without cropping any of them. */}
+              {/* Three window widths share one card here, not three — that is
+                  how the frame draws it. They also share a source height, so
+                  weighting each column by its own width keeps them level. */}
               <figure {...reveal('', 0, true)}>
-                <div className="case-widths">
-                  {[shot.responsiveDesktop1, shot.responsiveDesktop2, shot.responsiveDesktop3].map((s) => (
-                    <Shot key={s.src} shot={s} style={{ flex: `${s.w} 1 0` }} />
-                  ))}
+                <div className="case-card case-card-wide">
+                  <div className="case-widths">
+                    {[shot.responsiveDesktop1, shot.responsiveDesktop2, shot.responsiveDesktop3].map((s) => (
+                      <Shot key={s.src} shot={s} style={{ flex: `${s.w} 1 0` }} />
+                    ))}
+                  </div>
                 </div>
                 <figcaption className="case-caption">Defined responsive rules for how panels resize, collapse and adapt across different window sizes.</figcaption>
               </figure>

@@ -545,14 +545,56 @@ html.lenis body {
   align-items: center;
   gap: calc(var(--phone-gap, 113) * var(--cu));
 }
-/* A desktop before/after pair: two halves on the 8px grid gutter. The two
-   shots are rarely the same height — centring them keeps the pair balanced
-   rather than hanging off a shared top edge. */
+/* A desktop before/after pair: two cards on the 8px grid gutter. */
 .case-pair {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  align-items: center;
   gap: calc(8 * var(--cu));
+}
+
+/* The card a desktop screenshot sits on. 694.5×624 per half in the frame, the
+   shot centred inside with 55 of side padding — which is what keeps a pair
+   level however differently the two windows are shaped, and what stops a wide
+   screenshot from reading as a loose rectangle on the sheet. Phones have no
+   card in the frame: they stand on the sheet with their own shadow. */
+.case-card {
+  display: grid;
+  aspect-ratio: var(--card-ratio, 694.5 / 624);
+  padding: calc(28 * var(--cu)) calc(55 * var(--cu));
+  border-radius: calc(24 * var(--cu));
+  background: rgba(255, 255, 255, 0.05);
+  place-items: center;
+}
+/* The responsive row is one card holding all three windows: 1397×628, 32 of
+   padding, 16 between the windows. */
+.case-card-wide {
+  --card-ratio: 1397 / 628;
+  padding: calc(32 * var(--cu));
+}
+.case-card figure,
+.case-card .case-widths {
+  display: flex;
+  max-width: 100%;
+  max-height: 100%;
+}
+.case-card .case-widths {
+  width: 100%;
+  height: 100%;
+  gap: calc(16 * var(--cu));
+  align-items: center;
+}
+/* Inside a card the frame is the card's; the shot keeps only its own corner
+   and shadow. */
+.case-card .case-plate {
+  max-width: 100%;
+  max-height: 100%;
+  border: none;
+  background: none;
+}
+.case-card .case-shot {
+  width: auto;
+  max-width: 100%;
+  max-height: 100%;
 }
 /* The plate under a screen. It gives the shot an edge against the sheet —
    without one the screens read as floating — and it fills the slot while the
@@ -578,8 +620,8 @@ html.lenis body {
    weighted by its own pixel width (see the responsive-desktop row). */
 .case-widths {
   display: flex;
-  align-items: flex-start;
-  gap: calc(8 * var(--cu));
+  align-items: center;
+  gap: calc(16 * var(--cu));
 }
 /* Close button — same 80px box as the header's own round button, same glass,
    same magnet, and level with the title at 32 from the top. Only the glyph is
@@ -697,6 +739,10 @@ html.lenis body {
   .case-pair { grid-template-columns: 1fr; gap: 8px; }
   .case-widths { flex-direction: column; gap: 12px; }
   .case-widths > * { flex: none !important; width: 100%; }
+  /* A card cropped to a 16:9-ish box would leave the phone-sized windows
+     unreadable on a narrow screen — let it grow to whatever the stack needs. */
+  .case-card { aspect-ratio: auto; padding: 16px; }
+  .case-card .case-shot { max-height: none; width: 100%; }
   .case-point-anchor { position: relative; inset: auto; width: 100%; }
   .case-points { display: grid; aspect-ratio: auto; gap: 18px; }
   .case-point { aspect-ratio: 1; }
