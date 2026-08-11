@@ -129,11 +129,17 @@ export function Footer() {
 
     let W = stage.clientWidth;
     let H = stage.clientHeight;
+    // Local px per visual px. The sim's constants (gravity, speed thresholds,
+    // drifts) are tuned in visual px; under the desktop zoom the stage's local
+    // world is 1/zoom larger, so they all scale by this or the fall reads
+    // floaty and the throw caps early.
+    let zi = 1;
     const bodies: Body[] = [];
 
     const layout = (initial: boolean) => {
       W = stage.clientWidth;
       H = stage.clientHeight;
+      zi = 1 / zoomOf(stage);
       els.forEach((el, i) => {
         const r = el.offsetWidth / 2;
         if (initial) {
@@ -144,7 +150,7 @@ export function Footer() {
           bodies[i] = {
             x: r + (W - 2 * r) * d.slot - d.drift * 0.5,
             y: -r * (1 + d.lift),
-            vx: d.drift,
+            vx: d.drift * zi,
             vy: 0,
             r,
             wait: d.delay,
@@ -244,9 +250,9 @@ export function Footer() {
       const b = bodies[dragging];
       // Cap the flick so it can't be launched like a bullet — direction kept.
       const s = Math.hypot(b.vx, b.vy);
-      if (s > MAX_THROW) {
-        b.vx = (b.vx / s) * MAX_THROW;
-        b.vy = (b.vy / s) * MAX_THROW;
+      if (s > MAX_THROW * zi) {
+        b.vx = (b.vx / s) * MAX_THROW * zi;
+        b.vy = (b.vy / s) * MAX_THROW * zi;
       }
       dragging = -1; // released — it flies off and bounces on its own from here
     };
@@ -302,7 +308,7 @@ export function Footer() {
           continue;
         }
 
-        b.vy += GRAVITY * dt;
+        b.vy += GRAVITY * zi * dt;
         b.vx *= AIR;
         b.vy *= AIR;
         b.x += b.vx * dt;
@@ -325,7 +331,7 @@ export function Footer() {
           // Each ball keeps its own restitution, so they stop tossing in sync.
           b.vy = -Math.abs(b.vy) * b.bounce;
           b.vx *= GROUND_FRICTION;
-          if (Math.abs(b.vy) < REST_SPEED) b.vy = 0;
+          if (Math.abs(b.vy) < REST_SPEED * zi) b.vy = 0;
         }
       }
 
@@ -375,7 +381,7 @@ export function Footer() {
           // to stack, and a frictionless stack is a perpetual-motion machine.
           const tx = -ny;
           const ty = nx;
-          const grip = -sep > FRICTION_HIT_SPEED ? BALL_FRICTION_HIT : BALL_FRICTION;
+          const grip = -sep > FRICTION_HIT_SPEED * zi ? BALL_FRICTION_HIT : BALL_FRICTION;
           const slide = ((b.vx - a.vx) * tx + (b.vy - a.vy) * ty) * grip * 0.5;
           if (!aFixed) {
             a.vx += slide * tx;
@@ -420,11 +426,11 @@ export function Footer() {
       for (const b of bodies) {
         if (b.wait > 0) { awake = true; continue; }
         const speed = Math.hypot(b.vx, b.vy);
-        if (b.contact && speed < REST_SPEED) {
+        if (b.contact && speed < REST_SPEED * zi) {
           b.vx = 0;
           b.vy = 0;
         } else {
-          if (b.contact && speed < CREEP_SPEED) {
+          if (b.contact && speed < CREEP_SPEED * zi) {
             b.vx *= CONTACT_DAMP;
             b.vy *= CONTACT_DAMP;
           }
@@ -486,10 +492,12 @@ export function Footer() {
           reduced ? 'flex flex-wrap items-end justify-center gap-2 pb-12' : ''
         }`}
       >
-        {/* Pure vw with no max cap: five balls of 27vw span ~135vw, more than
-            the floor is wide, so they settle into a heap two deep rather than
-            a tidy row — which is the point. The glyph is sized in vw too, so
-            its ratio to the ball stays constant as the viewport grows. */}
+        {/* 30vw of the *visual* viewport — the desktop zoom scales vw along
+            with everything else, so the raw unit is divided by --site-zoom or
+            the spheres shrink 20% and, worse, stop being wider together than
+            the floor, which is what makes them heap two deep instead of lining
+            up. The glyph is sized the same way, so its ratio to the ball holds
+            at any scale. */}
         {/* Mounted together with the photo, a section early. Each ball is a
             viewport-scale backdrop-filter surface — keeping three of them
             alive behind the whole page was pure GPU cost the reader never saw. */}
@@ -506,12 +514,12 @@ export function Footer() {
             // pull a ball, trailing a ghost of the URL across the page.
             draggable={false}
             onDragStart={(e) => e.preventDefault()}
-            className={`glass-ball pointer-events-auto z-10 grid size-[27vw] min-h-[104px] min-w-[104px] cursor-grab touch-none select-none place-items-center rounded-full active:cursor-grabbing ${
+            className={`glass-ball pointer-events-auto z-10 grid size-[calc(30vw/var(--site-zoom,1))] min-h-[112px] min-w-[112px] cursor-grab touch-none select-none place-items-center rounded-full active:cursor-grabbing ${
               reduced ? 'relative' : 'absolute left-0 top-0 will-change-transform'
             }`}
           >
             {/* The mark on its own, white — no plate, no shadow. */}
-            <b.Glyph className="relative z-10 w-[8.5vw] min-w-[34px] text-white" />
+            <b.Glyph className="relative z-10 w-[calc(9.5vw/var(--site-zoom,1))] min-w-[36px] text-white" />
             <span className="sr-only">{b.label}</span>
           </a>
         ))}
