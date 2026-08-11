@@ -14,6 +14,8 @@ type Ball = {
   label: string;
   href: string;
   Glyph: (props: { className?: string }) => React.JSX.Element;
+  /** Brand wash laid into the glass (--lg-tint). The glyph itself stays white. */
+  tint: string;
 };
 
 /**
@@ -33,22 +35,25 @@ const DROPS = [
   { delay: 0.15, slot: 1.0, lift: 1.3, drift: 35, bounce: 0.6 },
 ];
 
-// No tint any more — over the photograph the glass has something real to
-// refract, and a colour wash only muddied it.
+// Each sphere carries a wash of its brand colour in the glass — the glyphs
+// stay white on top. The two dark brands read as smoked glass rather than a
+// hue, which keeps the row from being five candy drops.
 const BALLS: Ball[] = [
-  { label: 'X.COM', href: 'https://x.com/nem_etis', Glyph: XGlyph },
-  { label: 'GitHub', href: 'https://github.com/timur-nishanov', Glyph: GitHubGlyph },
+  { label: 'X.COM', href: 'https://x.com/nem_etis', Glyph: XGlyph, tint: 'rgba(12, 12, 14, 0.34)' },
+  { label: 'GitHub', href: 'https://github.com/timur-nishanov', Glyph: GitHubGlyph, tint: 'rgba(36, 41, 47, 0.34)' },
   {
     label: 'LinkedIn',
     href: 'https://www.linkedin.com/in/timur-nishanov-3a7510428/',
     Glyph: LinkedInGlyph,
+    tint: 'rgba(10, 102, 194, 0.35)',
   },
   {
     label: 'Spotify',
     href: 'https://open.spotify.com/user/31lvoci4gojqvzj2jydxepb7raje?si=56510e97cfbf42d7',
     Glyph: SpotifyGlyph,
+    tint: 'rgba(29, 185, 84, 0.32)',
   },
-  { label: 'Telegram', href: site.telegram, Glyph: TelegramGlyph },
+  { label: 'Telegram', href: site.telegram, Glyph: TelegramGlyph, tint: 'rgba(34, 158, 217, 0.35)' },
 ];
 
 // --- physics ---------------------------------------------------------------
@@ -595,6 +600,7 @@ export function Footer() {
             // pull a ball, trailing a ghost of the URL across the page.
             draggable={false}
             onDragStart={(e) => e.preventDefault()}
+            style={{ '--lg-tint': b.tint } as React.CSSProperties}
             className={`glass-ball pointer-events-auto z-10 grid size-[calc(30vw/var(--site-zoom,1))] min-h-[112px] min-w-[112px] cursor-grab touch-none select-none place-items-center rounded-full active:cursor-grabbing ${
               reduced ? 'relative' : 'absolute left-0 top-0 will-change-transform'
             }`}
