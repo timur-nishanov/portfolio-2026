@@ -15,7 +15,15 @@ type ShotProps = {
   caption?: string;
   className?: string;
   style?: React.CSSProperties;
+  /** Corner radius at the 1440 reference, in Figma pixels. */
+  radius?: number;
 };
+
+// Corner radii, at the 1440 reference: the concept phones are drawn at 48, the
+// reward and What-shipped mobiles at 32, every desktop window at 8.
+const CONCEPT_RADIUS = 48;
+const MOBILE_RADIUS = 32;
+const DESKTOP_RADIUS = 8;
 
 /** Marks a block for the blur-in reveal. `i` staggers siblings within a row. */
 const reveal = (classes = '', i = 0, media = false) => ({
@@ -24,22 +32,28 @@ const reveal = (classes = '', i = 0, media = false) => ({
 });
 
 /**
- * One screen. width/height are the file's own, so the slot is reserved before
- * the bytes arrive; `loading="lazy"` keeps everything below the fold off the
- * critical path, which matters when the sheet carries thirty-one of these.
+ * One screen on its plate. The plate is what gives a screenshot an edge against
+ * the sheet — without it the shots read as floating in mid-air — and it also
+ * fills the slot while the file is still on the wire.
+ *
+ * width/height are the file's own, so the slot is reserved before the bytes
+ * arrive; `loading="lazy"` keeps everything below the fold off the critical
+ * path, which matters when the sheet carries thirty-one of these.
  */
-function Shot({ shot, caption, className = '', style }: ShotProps) {
+function Shot({ shot, caption, className = '', style, radius = DESKTOP_RADIUS }: ShotProps) {
   return (
     <figure className={className} style={style}>
-      <img
-        src={shot.src}
-        alt={shot.alt}
-        width={shot.w}
-        height={shot.h}
-        loading="lazy"
-        decoding="async"
-        className="case-shot"
-      />
+      <div className="case-plate" style={{ '--shot-radius': `calc(${radius} * var(--cu))` } as React.CSSProperties}>
+        <img
+          src={shot.src}
+          alt={shot.alt}
+          width={shot.w}
+          height={shot.h}
+          loading="lazy"
+          decoding="async"
+          className="case-shot"
+        />
+      </div>
       {caption ? <figcaption className="case-caption">{caption}</figcaption> : null}
     </figure>
   );
@@ -93,12 +107,19 @@ function MagneticPoint({ title, children, className = '', index }: { title: stri
   // Deliberately faint pull — the balls should lean toward the cursor, not chase it.
   useMagnetic(rootRef, [{ ref: ballRef, factor: 0.045, max: 12 }], canHover && !reduced);
 
+  // Three nested boxes, one job each: the anchor positions and is measured, the
+  // middle one plays the reveal, the inner one carries the magnet. They used to
+  // be two, and the magnet wrote its transform onto the element the reveal was
+  // transitioning — so every nudge was eased over the reveal's 760ms and the
+  // pull simply never showed.
   return (
     <div ref={rootRef} className={`case-point-anchor ${className}`}>
-      <div ref={ballRef} {...reveal('size-full', index)}>
-        <div className="case-point glass will-change-transform">
-          <p className="case-point-title">{title}</p>
-          <p className="case-point-copy">{children}</p>
+      <div {...reveal('size-full', index)}>
+        <div ref={ballRef} className="size-full will-change-transform">
+          <div className="case-point glass">
+            <p className="case-point-title">{title}</p>
+            <p className="case-point-copy">{children}</p>
+          </div>
         </div>
       </div>
     </div>
@@ -257,7 +278,7 @@ export function CaseStudyModal({ data, open, onClose }: Props) {
             <p {...reveal('case-lead mt-[calc(32*var(--cu))]', 1)}>I developed a new visual concept for Chums across its key mobile screens and Web3 entry points. Led the concept end to end, and the final direction shown in this case was approved by the CEO.</p>
             <div className="case-phones mt-[calc(96*var(--cu))]">
               {[shot.onboarding, shot.messenger, shot.profile, shot.voiceMessage, shot.serverPicker, shot.attachments].map((s, i) => (
-                <Shot key={s.src} shot={s} {...reveal('', i % 3, true)} />
+                <Shot key={s.src} shot={s} radius={CONCEPT_RADIUS} {...reveal('', i % 3, true)} />
               ))}
             </div>
           </section>
@@ -290,7 +311,7 @@ export function CaseStudyModal({ data, open, onClose }: Props) {
             <p {...reveal('case-lead mt-[calc(32*var(--cu))] max-w-[96.5%]', 1)}>Chums already had quests and wallet rewards, but users struggled to find the feature, understand the tasks and see the payout before starting. I led the benchmark study, defined the product direction and guided a junior designer through the execution.</p>
             <div className="case-phones mt-[calc(96*var(--cu))]" style={{ '--phone-gap': 140 } as React.CSSProperties}>
               {[shot.chatList, shot.quests, shot.stats, shot.errorState, shot.walletOnboarding, shot.questsComplete].map((s, i) => (
-                <Shot key={s.src} shot={s} {...reveal('', i % 3, true)} />
+                <Shot key={s.src} shot={s} radius={MOBILE_RADIUS} {...reveal('', i % 3, true)} />
               ))}
             </div>
             <p {...reveal('case-lead mt-[calc(52*var(--cu))] max-w-[96.5%]', 0)}>We built the experience around a clear entry point, upfront reward amounts, visible progress and rules explained directly inside the flow. I reviewed the scenarios and key design decisions throughout the process. The final concept was approved and moved into development.</p>
@@ -309,13 +330,13 @@ export function CaseStudyModal({ data, open, onClose }: Props) {
             <p {...reveal('case-lead mt-[calc(32*var(--cu))] max-w-[96.5%]', 1)}>The new visual direction was approved by the CEO. The desktop redesign was scoped and approved in one week, then shipped to beta three months later. We added responsive layouts, clearer desktop interactions and reusable patterns to the design system. The new reward experience was approved and moved into development. For context, Chums had 32k+ wallets, ~10k downloads and more than $200k in user balances at the time.</p>
             <div className="case-phones mt-[calc(64*var(--cu))]" style={{ '--phone-gap': 136 } as React.CSSProperties}>
               {[shot.groupChat, shot.messages, shot.markdown].map((s, i) => (
-                <Shot key={s.src} shot={s} {...reveal('', i, true)} />
+                <Shot key={s.src} shot={s} radius={MOBILE_RADIUS} {...reveal('', i, true)} />
               ))}
             </div>
             <Shot shot={shot.groupCall} {...reveal('mx-auto mt-[calc(136*var(--cu))] w-[64.3%] max-md:w-full', 0, true)} />
             <div className="case-phones mt-[calc(136*var(--cu))]" style={{ '--phone-gap': 136 } as React.CSSProperties}>
               {[shot.chatInfo, shot.reactions, shot.donations].map((s, i) => (
-                <Shot key={s.src} shot={s} {...reveal('', i, true)} />
+                <Shot key={s.src} shot={s} radius={MOBILE_RADIUS} {...reveal('', i, true)} />
               ))}
             </div>
             <Shot shot={shot.browser} {...reveal('mx-auto mt-[calc(136*var(--cu))] w-[64.3%] max-md:w-full', 0, true)} />

@@ -25,11 +25,11 @@ type Ball = {
 // its own radius. The stage is the viewport now, so anything above 0 is simply
 // off-screen and drops in cleanly.
 const DROPS = [
-  { delay: 0.0, slot: 0.0, lift: 0.4, drift: 55, bounce: 0.46 },
-  { delay: 0.46, slot: 0.25, lift: 3.4, drift: 40, bounce: 0.44 },
-  { delay: 0.34, slot: 0.5, lift: 2.6, drift: -85, bounce: 0.38 },
-  { delay: 0.62, slot: 0.75, lift: 1.9, drift: -50, bounce: 0.52 },
-  { delay: 0.15, slot: 1.0, lift: 1.3, drift: 35, bounce: 0.5 },
+  { delay: 0.0, slot: 0.0, lift: 0.4, drift: 55, bounce: 0.56 },
+  { delay: 0.46, slot: 0.25, lift: 3.4, drift: 40, bounce: 0.52 },
+  { delay: 0.34, slot: 0.5, lift: 2.6, drift: -85, bounce: 0.46 },
+  { delay: 0.62, slot: 0.75, lift: 1.9, drift: -50, bounce: 0.62 },
+  { delay: 0.15, slot: 1.0, lift: 1.3, drift: 35, bounce: 0.6 },
 ];
 
 // No tint any more — over the photograph the glass has something real to
@@ -55,12 +55,30 @@ const BALLS: Ball[] = [
 // one still suspends it — it moves only while the button is down — and letting
 // go hands its momentum back to the sim, which is where the bounce comes from.
 const GRAVITY = 2000; // px/s²
-const WALL_BOUNCE = 0.5; // sides and floor
-const BALL_BOUNCE = 0.72; // balls spring off each other, they don't just knock
-const BALL_FRICTION = 0.6; // sliding bleed where two spheres touch
+const WALL_BOUNCE = 0.58; // sides and floor
+const BALL_BOUNCE = 0.82; // balls spring off each other, they don't just knock
+// Friction where two spheres touch. It exists to stop a resting heap creeping
+// for ever, and a flat value did that at the cost of the liveliness — a real
+// collision was being damped as hard as a slow slide. So it is applied by how
+// fast the contact is: barely at all on an impact, in full once they are just
+// leaning on each other.
+const BALL_FRICTION = 0.6;
+const BALL_FRICTION_HIT = 0.08;
+const FRICTION_HIT_SPEED = 190; // px/s of closing speed that counts as an impact
 const AIR = 0.995;
 const GROUND_FRICTION = 0.9; // horizontal bleed while rolling along the floor
 const REST_SPEED = 26; // below this on the floor, stop jittering
+// A heap that is touching but barely moving is creep, not motion: bleed it hard
+// so the pile converges. A real bounce arrives far above CREEP_SPEED and passes
+// through untouched, which is what keeps the spheres lively.
+const CREEP_SPEED = 300;
+const CONTACT_DAMP = 0.86;
+// Allowed overlap before the spheres are pushed apart. Separation moves them by
+// position, not velocity, so a heap wedged against the walls kept being shoved
+// out and clamped back every frame — motion no amount of velocity damping could
+// see, let alone stop. A pixel of slop lets a settled pile simply stay put.
+const CONTACT_SLOP = 1.2;
+const SEPARATION = 0.8; // fraction of the remaining overlap resolved per tick
 const MAX_THROW = 2600;
 
 type Body = {
@@ -321,7 +339,7 @@ export function Footer() {
           b.contact = true;
           const nx = dx / d;
           const ny = dy / d;
-          const overlap = min - d;
+          const overlap = Math.max(0, min - d - CONTACT_SLOP) * SEPARATION;
           const aFixed = i === dragging;
           const bFixed = j === dragging;
           if (!aFixed && !bFixed) {
@@ -353,7 +371,8 @@ export function Footer() {
           // to stack, and a frictionless stack is a perpetual-motion machine.
           const tx = -ny;
           const ty = nx;
-          const slide = ((b.vx - a.vx) * tx + (b.vy - a.vy) * ty) * BALL_FRICTION * 0.5;
+          const grip = -sep > FRICTION_HIT_SPEED ? BALL_FRICTION_HIT : BALL_FRICTION;
+          const slide = ((b.vx - a.vx) * tx + (b.vy - a.vy) * ty) * grip * 0.5;
           if (!aFixed) {
             a.vx += slide * tx;
             a.vy += slide * ty;
@@ -400,8 +419,12 @@ export function Footer() {
         if (b.contact && speed < REST_SPEED) {
           b.vx = 0;
           b.vy = 0;
-        } else if (speed > 1) {
-          awake = true;
+        } else {
+          if (b.contact && speed < CREEP_SPEED) {
+            b.vx *= CONTACT_DAMP;
+            b.vy *= CONTACT_DAMP;
+          }
+          if (speed > 1) awake = true;
         }
         b.contact = false;
       }

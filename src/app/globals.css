@@ -554,8 +554,21 @@ html.lenis body {
   align-items: center;
   gap: calc(8 * var(--cu));
 }
-/* The shots carry their own rounded corners and shadows, so the slot is just
-   the box: full width, intrinsic ratio held by the width/height attributes. */
+/* The plate under a screen. It gives the shot an edge against the sheet —
+   without one the screens read as floating — and it fills the slot while the
+   file is still on the wire. --shot-radius comes from the family the shot
+   belongs to: 48 for the concept phones, 32 for the mobiles, 8 for desktop
+   windows, all at the 1440 reference. */
+.case-plate {
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: var(--shot-radius, calc(8 * var(--cu)));
+  background: rgba(255, 255, 255, 0.08);
+  /* The exports each carried their own baked drop shadow, which is why the
+     screens sat in so much empty space; they are cropped to the screen now and
+     this is the single shadow they all share. */
+  box-shadow: 0 calc(18 * var(--cu)) calc(48 * var(--cu)) rgba(0, 0, 0, 0.28);
+}
 .case-shot {
   display: block;
   width: 100%;
@@ -584,6 +597,9 @@ html.lenis body {
   height: max(48px, calc(64 * var(--cu)));
 }
 .case-close {
+  /* Its own tint, and only that: over a white screenshot a white plate left the
+     glyph reading as white-on-white. Everything else about the glass is shared. */
+  --lg-bg: rgba(20, 20, 20, 0.34);
   display: grid;
   width: 100%;
   height: 100%;
@@ -611,10 +627,13 @@ html.lenis body {
 .case-point-a { left: 0; top: 0; }
 .case-point-b { right: 0; top: 0; }
 .case-point-c { left: 28%; top: 50%; }
-/* Same glass as the header — only the plate is milkier, so the near-black
-   pixel heading holds its contrast against the sheet behind it. */
+/* Same glass as everywhere — same filter, same frost, same rim light. Two
+   things are its own: a thinner plate, because at 58% white the paint buried
+   the refraction and the ball read as a flat disc, and the specular sweep a
+   sphere carries and a pill does not. The near-black pixel heading still holds
+   against the sheet at this weight. */
 .case-point {
-  --lg-bg: rgba(255, 255, 255, 0.58);
+  --lg-bg: rgba(255, 255, 255, 0.34);
   display: flex;
   width: 100%;
   height: 100%;
@@ -623,6 +642,17 @@ html.lenis body {
   justify-content: center;
   border-radius: 999px;
   color: #000;
+  /* Overrides the flat tint plate `.glass` paints: a light source up and to the
+     left, falling off by the middle, plus a faint lift along the bottom rim
+     where a sphere catches its own surroundings. */
+  background-image:
+    radial-gradient(120% 96% at 28% 10%, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0) 58%),
+    radial-gradient(80% 60% at 50% 108%, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0) 70%);
+  box-shadow:
+    inset 0 2px 2px rgba(255, 255, 255, 0.9),
+    inset 0 -14px 30px rgba(255, 255, 255, 0.3),
+    inset 0 0 40px rgba(255, 255, 255, 0.16),
+    0 24px 60px rgba(0, 0, 0, 0.22);
 }
 /* Робо-заг inside the balls — 48, near-black, uppercase. */
 .case-point-title {
