@@ -63,23 +63,31 @@ const BALL_BOUNCE = 0.82; // balls spring off each other, they don't just knock
 // collision was being damped as hard as a slow slide. So it is applied by how
 // fast the contact is: barely at all on an impact, in full once they are just
 // leaning on each other.
-const BALL_FRICTION = 0.6;
-const BALL_FRICTION_HIT = 0.08;
+const BALL_FRICTION = 0.55;
+const BALL_FRICTION_HIT = 0.06;
 const FRICTION_HIT_SPEED = 190; // px/s of closing speed that counts as an impact
 const AIR = 0.995;
 const GROUND_FRICTION = 0.9; // horizontal bleed while rolling along the floor
-const REST_SPEED = 26; // below this on the floor, stop jittering
-// A heap that is touching but barely moving is creep, not motion: bleed it hard
-// so the pile converges. A real bounce arrives far above CREEP_SPEED and passes
-// through untouched, which is what keeps the spheres lively.
-const CREEP_SPEED = 300;
-const CONTACT_DAMP = 0.86;
-// Allowed overlap before the spheres are pushed apart. Separation moves them by
-// position, not velocity, so a heap wedged against the walls kept being shoved
-// out and clamped back every frame — motion no amount of velocity damping could
-// see, let alone stop. A pixel of slop lets a settled pile simply stay put.
-const CONTACT_SLOP = 1.2;
-const SEPARATION = 0.8; // fraction of the remaining overlap resolved per tick
+const REST_SPEED = 22; // below this, a supported sphere is simply parked
+// Static friction, in effect: a sphere already resting on something and moving
+// slower than this is creeping, not rolling, and gets bled toward a stop. The
+// window is deliberately narrow — 66px/s is under a pixel a frame, invisible —
+// because the previous build applied the same bleed up to 300px/s, which
+// covers most of a real roll, and dragging on that is what made the whole heap
+// feel magnetic.
+const CREEP_SPEED = REST_SPEED * 3;
+const CREEP_DAMP = 0.9;
+// Overlaps are resolved in full and immediately. An earlier build left a pixel
+// of slop and resolved 80% of the rest per tick, hoping a wedged heap would
+// stop shoving itself about — what it actually bought was spheres visibly
+// sunk into one another, which is most of what read as them being glued.
+const SEPARATION = 1;
+// Contact is detected a hair before the surfaces actually meet. Resolving an
+// overlap in full leaves the pair exactly touching, and an exact touch reads as
+// "not overlapping" on the very next frame — so support flickered off, nothing
+// damped the sphere, and it crept. The skin only widens detection; separation
+// still fires on real overlap alone.
+const CONTACT_SKIN = 2;
 const MAX_THROW = 2600;
 
 type Body = {
@@ -95,8 +103,6 @@ type Body = {
   contact: boolean;
   /** Standing on the floor this tick — the root of the support chain. */
   onFloor: boolean;
-  /** Has been fully inside the stage at least once — see the ceiling. */
-  entered: boolean;
 };
 
 export function Footer() {
@@ -161,7 +167,6 @@ export function Footer() {
             bounce: d.bounce,
             contact: false,
             onFloor: false,
-            entered: false,
           };
         } else if (bodies[i]) {
           bodies[i].r = r;
@@ -328,17 +333,11 @@ export function Footer() {
         b.x += b.vx * dt;
         b.y += b.vy * dt;
 
-        // The ceiling is open only until a sphere has dropped through it. After
-        // that it is a wall like any other: a crowded heap used to push its top
-        // sphere back out of the stage, where nothing could reach it again.
-        if (!b.entered && b.y >= b.r) b.entered = true;
-        if (b.entered && b.y < b.r) {
-          b.y = b.r;
-          b.vy = Math.abs(b.vy) * WALL_BOUNCE;
-          b.contact = true;
-        }
-
-        // Sides and floor.
+        // Sides and floor. The ceiling stays open on purpose — spheres drop in
+        // through it and a good throw is allowed to leave that way and come
+        // back down. It was briefly a wall, to stop a heap too big for its
+        // window from squeezing its top member out for good; the size cap fixed
+        // that properly, and the wall only took the throws away.
         if (b.x < b.r) {
           b.x = b.r;
           b.vx = Math.abs(b.vx) * WALL_BOUNCE;
@@ -348,10 +347,12 @@ export function Footer() {
           b.vx = -Math.abs(b.vx) * WALL_BOUNCE;
           b.contact = true;
         }
-        if (b.y > H - b.r) {
-          b.y = H - b.r;
+        if (b.y > H - b.r - CONTACT_SKIN) {
           b.contact = true;
           b.onFloor = true;
+        }
+        if (b.y > H - b.r) {
+          b.y = H - b.r;
           // Each ball keeps its own restitution, so they stop tossing in sync.
           b.vy = -Math.abs(b.vy) * b.bounce;
           b.vx *= GROUND_FRICTION;
@@ -369,13 +370,14 @@ export function Footer() {
           const dy = b.y - a.y;
           const d = Math.hypot(dx, dy);
           const min = a.r + b.r;
-          if (d === 0 || d >= min) continue;
+          if (d === 0 || d >= min + CONTACT_SKIN) continue;
           a.contact = true;
           b.contact = true;
           touching.push([i, j]);
+          if (d >= min) continue; // touching, not overlapping — nothing to push
           const nx = dx / d;
           const ny = dy / d;
-          const overlap = Math.max(0, min - d - CONTACT_SLOP) * SEPARATION;
+          const overlap = (min - d) * SEPARATION;
           const aFixed = i === dragging;
           const bFixed = j === dragging;
           if (!aFixed && !bFixed) {
@@ -428,7 +430,7 @@ export function Footer() {
         if (i === dragging) continue;
         const b = bodies[i];
         b.x = clamp(b.x, b.r, Math.max(b.r, W - b.r));
-        b.y = b.entered ? clamp(b.y, b.r, Math.max(b.r, H - b.r)) : Math.min(b.y, H - b.r);
+        b.y = Math.min(b.y, H - b.r);
       }
 
       for (let i = 0; i < bodies.length; i++) {
@@ -474,25 +476,27 @@ export function Footer() {
       }
       quiet = moved < 0.5 ? quiet + dt : 0;
 
+      // Nothing is braked here. The only thing this does is park a sphere that
+      // has already come to rest on something solid — the previous build also
+      // bled 14% of the speed per frame off anything supported and slower than
+      // 300px/s, which covers most of a real roll, and that drag is what made
+      // the heap feel magnetic. Friction at the contacts does the slowing now,
+      // as it should.
       let awake = dragging >= 0 || !running;
       for (let i = 0; i < bodies.length; i++) {
         const b = bodies[i];
         if (b.wait > 0) { awake = true; continue; }
         const speed = Math.hypot(b.vx, b.vy);
-        if (i !== dragging && !supported[i]) {
-          // Airborne: gravity's problem, never the settler's — unless the whole
-          // heap has been motionless for a couple of seconds, in which case
-          // there is nothing left to simulate.
-          if (quiet < 2) awake = true;
-        } else if (supported[i] && speed < REST_SPEED * zi) {
+        if (supported[i] && speed < REST_SPEED * zi) {
           b.vx = 0;
           b.vy = 0;
-        } else {
-          if (supported[i] && speed < CREEP_SPEED * zi) {
-            b.vx *= CONTACT_DAMP;
-            b.vy *= CONTACT_DAMP;
-          }
-          if (speed > 1) awake = true;
+        } else if (supported[i] && speed < CREEP_SPEED * zi) {
+          b.vx *= CREEP_DAMP;
+          b.vy *= CREEP_DAMP;
+          awake = true;
+        } else if (quiet < 1.5) {
+          // Moving, airborne, or too soon to call it: keep simulating.
+          awake = true;
         }
         b.contact = false;
         b.onFloor = false;
@@ -576,12 +580,12 @@ export function Footer() {
             // pull a ball, trailing a ghost of the URL across the page.
             draggable={false}
             onDragStart={(e) => e.preventDefault()}
-            className={`glass-ball pointer-events-auto z-10 grid size-[calc(min(30vw,50vh)/var(--site-zoom,1))] min-h-[112px] min-w-[112px] cursor-grab touch-none select-none place-items-center rounded-full active:cursor-grabbing ${
+            className={`glass-ball pointer-events-auto z-10 grid size-[calc(min(30vw,44vh)/var(--site-zoom,1))] min-h-[112px] min-w-[112px] cursor-grab touch-none select-none place-items-center rounded-full active:cursor-grabbing ${
               reduced ? 'relative' : 'absolute left-0 top-0 will-change-transform'
             }`}
           >
             {/* The mark on its own, white — no plate, no shadow. */}
-            <b.Glyph className="relative z-10 w-[calc(min(9.5vw,15.8vh)/var(--site-zoom,1))] min-w-[36px] text-white" />
+            <b.Glyph className="relative z-10 w-[calc(min(9.5vw,13.9vh)/var(--site-zoom,1))] min-w-[36px] text-white" />
             <span className="sr-only">{b.label}</span>
           </a>
         ))}
