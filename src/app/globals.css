@@ -536,30 +536,37 @@ html.lenis body {
   margin-top: calc(160 * var(--cu));
 }
 
-/* Media rows: three phones per row. Gutters straight from the frame. */
+/* Media rows: three phones per row. Gutters straight from the frame. The
+   screenshots in a row are not all the exact same height — centring them keeps
+   a row balanced instead of ragged along the bottom. */
 .case-phones {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: center;
   gap: calc(var(--phone-gap, 113) * var(--cu));
 }
-/* A desktop before/after pair: two halves on the 8px grid gutter. */
+/* A desktop before/after pair: two halves on the 8px grid gutter. The two
+   shots are rarely the same height — centring them keeps the pair balanced
+   rather than hanging off a shared top edge. */
 .case-pair {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: center;
   gap: calc(8 * var(--cu));
 }
-.case-media-placeholder {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+/* The shots carry their own rounded corners and shadows, so the slot is just
+   the box: full width, intrinsic ratio held by the width/height attributes. */
+.case-shot {
+  display: block;
   width: 100%;
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: calc(24 * var(--cu));
-  background:
-    linear-gradient(135deg, transparent 49.85%, rgba(255, 255, 255, 0.09) 50%, transparent 50.15%),
-    rgba(255, 255, 255, 0.08);
-  contain: content;
+  height: auto;
+}
+/* Row of windows at different widths but a common height — each child is
+   weighted by its own pixel width (see the responsive-desktop row). */
+.case-widths {
+  display: flex;
+  align-items: flex-start;
+  gap: calc(8 * var(--cu));
 }
 /* Close button — same 80px box as the header's own round button, same glass,
    same magnet, and level with the title at 32 from the top. Only the glyph is
@@ -658,6 +665,8 @@ html.lenis body {
   .case-detail-row { grid-template-columns: 1fr; gap: 8px; }
   .case-phones { grid-template-columns: 1fr; gap: 20px; }
   .case-pair { grid-template-columns: 1fr; gap: 8px; }
+  .case-widths { flex-direction: column; gap: 12px; }
+  .case-widths > * { flex: none !important; width: 100%; }
   .case-point-anchor { position: relative; inset: auto; width: 100%; }
   .case-points { display: grid; aspect-ratio: auto; gap: 18px; }
   .case-point { aspect-ratio: 1; }

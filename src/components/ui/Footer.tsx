@@ -57,6 +57,7 @@ const BALLS: Ball[] = [
 const GRAVITY = 2000; // px/s²
 const WALL_BOUNCE = 0.5; // sides and floor
 const BALL_BOUNCE = 0.72; // balls spring off each other, they don't just knock
+const BALL_FRICTION = 0.6; // sliding bleed where two spheres touch
 const AIR = 0.995;
 const GROUND_FRICTION = 0.9; // horizontal bleed while rolling along the floor
 const REST_SPEED = 26; // below this on the floor, stop jittering
@@ -71,6 +72,8 @@ type Body = {
   /** Seconds until this one is released from above; <= 0 means it is falling. */
   wait: number;
   bounce: number;
+  /** Touched the floor, a wall or another sphere on this tick — see settling. */
+  contact: boolean;
 };
 
 export function Footer() {
@@ -127,6 +130,7 @@ export function Footer() {
             r,
             wait: d.delay,
             bounce: d.bounce,
+            contact: false,
           };
         } else if (bodies[i]) {
           bodies[i].r = r;
@@ -137,7 +141,10 @@ export function Footer() {
     };
     layout(true);
 
-    const ro = new ResizeObserver(() => layout(false));
+    const ro = new ResizeObserver(() => {
+      layout(false);
+      wake();
+    });
     ro.observe(stage);
 
     // The footer is pinned behind the page, so it is technically on screen the
@@ -182,6 +189,7 @@ export function Footer() {
           lastPY = p.y;
           lastT = performance.now();
           b.vx = b.vy = 0;
+          wake();
           break;
         }
       }
@@ -283,12 +291,15 @@ export function Footer() {
         if (b.x < b.r) {
           b.x = b.r;
           b.vx = Math.abs(b.vx) * WALL_BOUNCE;
+          b.contact = true;
         } else if (b.x > W - b.r) {
           b.x = W - b.r;
           b.vx = -Math.abs(b.vx) * WALL_BOUNCE;
+          b.contact = true;
         }
         if (b.y > H - b.r) {
           b.y = H - b.r;
+          b.contact = true;
           // Each ball keeps its own restitution, so they stop tossing in sync.
           b.vy = -Math.abs(b.vy) * b.bounce;
           b.vx *= GROUND_FRICTION;
@@ -306,6 +317,8 @@ export function Footer() {
           const d = Math.hypot(dx, dy);
           const min = a.r + b.r;
           if (d === 0 || d >= min) continue;
+          a.contact = true;
+          b.contact = true;
           const nx = dx / d;
           const ny = dy / d;
           const overlap = min - d;
@@ -334,6 +347,21 @@ export function Footer() {
             b.vx += imp * nx;
             b.vy += imp * ny;
           }
+          // Friction along the contact. Without it a sphere resting on two
+          // others slides down between them under gravity and never stops —
+          // five of these are wider together than the floor, so the heap has
+          // to stack, and a frictionless stack is a perpetual-motion machine.
+          const tx = -ny;
+          const ty = nx;
+          const slide = ((b.vx - a.vx) * tx + (b.vy - a.vy) * ty) * BALL_FRICTION * 0.5;
+          if (!aFixed) {
+            a.vx += slide * tx;
+            a.vy += slide * ty;
+          }
+          if (!bFixed) {
+            b.vx -= slide * tx;
+            b.vy -= slide * ty;
+          }
         }
       }
 
@@ -356,6 +384,34 @@ export function Footer() {
         const hh = els[i].offsetHeight / 2;
         els[i].style.transform = `translate3d(${q(b.x - hw)}px, ${q(b.y - hh)}px, 0)`;
       }
+
+      // --- settling ---------------------------------------------------------
+      // Five spheres are wider together than the floor they land on, so the
+      // heap is permanently a little wedged and the separation impulses keep
+      // nudging it about long after it looks still. Anything slow and in
+      // contact with the floor or another sphere is brought to a stop, and once
+      // nothing is moving the loop parks itself rather than burning a frame a
+      // tick behind a page nobody is looking at. A grab, a resize or a fresh
+      // reveal wakes it again.
+      let awake = dragging >= 0 || !running;
+      for (const b of bodies) {
+        if (b.wait > 0) { awake = true; continue; }
+        const speed = Math.hypot(b.vx, b.vy);
+        if (b.contact && speed < REST_SPEED) {
+          b.vx = 0;
+          b.vy = 0;
+        } else if (speed > 1) {
+          awake = true;
+        }
+        b.contact = false;
+      }
+      raf = awake ? requestAnimationFrame(step) : 0;
+    };
+
+    // Restarts the loop after it has parked itself.
+    const wake = () => {
+      if (raf) return;
+      last = performance.now();
       raf = requestAnimationFrame(step);
     };
     raf = requestAnimationFrame(step);
@@ -403,9 +459,9 @@ export function Footer() {
           reduced ? 'flex flex-wrap items-end justify-center gap-2 pb-12' : ''
         }`}
       >
-        {/* Pure vw with no max cap: five balls of 20vw span ~100vw, so they
-            reach both screen edges at every breakpoint instead of shrinking
-            into the middle on a wide monitor. The label is sized in vw too, so
+        {/* Pure vw with no max cap: five balls of 27vw span ~135vw, more than
+            the floor is wide, so they settle into a heap two deep rather than
+            a tidy row — which is the point. The glyph is sized in vw too, so
             its ratio to the ball stays constant as the viewport grows. */}
         {/* Mounted together with the photo, a section early. Each ball is a
             viewport-scale backdrop-filter surface — keeping three of them
@@ -423,12 +479,12 @@ export function Footer() {
             // pull a ball, trailing a ghost of the URL across the page.
             draggable={false}
             onDragStart={(e) => e.preventDefault()}
-            className={`glass-ball pointer-events-auto z-10 grid size-[20vw] min-h-[76px] min-w-[76px] cursor-grab touch-none select-none place-items-center rounded-full active:cursor-grabbing ${
+            className={`glass-ball pointer-events-auto z-10 grid size-[27vw] min-h-[104px] min-w-[104px] cursor-grab touch-none select-none place-items-center rounded-full active:cursor-grabbing ${
               reduced ? 'relative' : 'absolute left-0 top-0 will-change-transform'
             }`}
           >
             {/* The mark on its own, white — no plate, no shadow. */}
-            <b.Glyph className="relative z-10 w-[6.5vw] min-w-[26px] text-white" />
+            <b.Glyph className="relative z-10 w-[8.5vw] min-w-[34px] text-white" />
             <span className="sr-only">{b.label}</span>
           </a>
         ))}
