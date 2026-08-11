@@ -3,16 +3,16 @@
 import Lenis from 'lenis';
 import { useCallback, useEffect, useRef } from 'react';
 import type { Case } from '@/data/cases';
+import { chumsShots as shot } from '@/data/chumsShots';
 import { useSmoothScroll } from '@/components/providers/SmoothScrollProvider';
 import { useMagnetic } from '@/hooks/useMagnetic';
 import { useCanHover } from '@/hooks/useMediaQuery';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 type Props = { data: Case; open: boolean; onClose: () => void };
-type PlaceholderProps = {
-  label: string;
+type ShotProps = {
+  shot: { src: string; w: number; h: number; alt: string };
   caption?: string;
-  ratio?: string;
   className?: string;
   style?: React.CSSProperties;
 };
@@ -23,31 +23,35 @@ const reveal = (classes = '', i = 0, media = false) => ({
   style: { '--reveal-delay': `${i * 90}ms` } as React.CSSProperties,
 });
 
-function MediaPlaceholder({ label, caption, ratio = '4/3', className = '', style }: PlaceholderProps) {
+/**
+ * One screen. width/height are the file's own, so the slot is reserved before
+ * the bytes arrive; `loading="lazy"` keeps everything below the fold off the
+ * critical path, which matters when the sheet carries thirty-one of these.
+ */
+function Shot({ shot, caption, className = '', style }: ShotProps) {
   return (
     <figure className={className} style={style}>
-      <div className="case-media-placeholder" style={{ aspectRatio: ratio }}>
-        <div className="flex flex-col items-center gap-3 text-white/40">
-          <svg aria-hidden="true" viewBox="0 0 48 48" fill="none" className="size-8 md:size-10" stroke="currentColor" strokeWidth="1.5">
-            <rect x="5" y="7" width="38" height="34" rx="4" />
-            <circle cx="17" cy="18" r="4" />
-            <path d="m8 36 10-10 7 7 5-5 10 8" />
-          </svg>
-          <span className="case-kicker text-white/40">{label}</span>
-        </div>
-      </div>
+      <img
+        src={shot.src}
+        alt={shot.alt}
+        width={shot.w}
+        height={shot.h}
+        loading="lazy"
+        decoding="async"
+        className="case-shot"
+      />
       {caption ? <figcaption className="case-caption">{caption}</figcaption> : null}
     </figure>
   );
 }
 
 /** A desktop before/after row: two halves on the 8px gutter, one caption. */
-function MediaPair({ caption, labels }: { caption: string; labels: [string, string] }) {
+function ShotPair({ before, after, caption }: { before: ShotProps['shot']; after: ShotProps['shot']; caption: string }) {
   return (
     <figure {...reveal('', 0, true)}>
       <div className="case-pair">
-        <MediaPlaceholder label={labels[0]} ratio="695/624" />
-        <MediaPlaceholder label={labels[1]} ratio="695/624" />
+        <Shot shot={before} />
+        <Shot shot={after} />
       </div>
       <figcaption className="case-caption">{caption}</figcaption>
     </figure>
@@ -252,8 +256,8 @@ export function CaseStudyModal({ data, open, onClose }: Props) {
             <h3 {...reveal('case-heading', 0)}>Define a new visual direction</h3>
             <p {...reveal('case-lead mt-[calc(32*var(--cu))]', 1)}>I developed a new visual concept for Chums across its key mobile screens and Web3 entry points. Led the concept end to end, and the final direction shown in this case was approved by the CEO.</p>
             <div className="case-phones mt-[calc(96*var(--cu))]">
-              {['ONBOARDING', 'MESSENGER', 'PROFILE', 'VOICE MESSAGE', 'SERVER PICKER', 'ATTACHMENTS'].map((x, i) => (
-                <MediaPlaceholder key={x} label={x} ratio="390/844" {...reveal('', i % 3, true)} />
+              {[shot.onboarding, shot.messenger, shot.profile, shot.voiceMessage, shot.serverPicker, shot.attachments].map((s, i) => (
+                <Shot key={s.src} shot={s} {...reveal('', i % 3, true)} />
               ))}
             </div>
           </section>
@@ -262,11 +266,21 @@ export function CaseStudyModal({ data, open, onClose }: Props) {
             <h3 {...reveal('case-heading max-w-[64%] max-md:max-w-none', 0)}>Treat the desktop client as one product problem</h3>
             <p {...reveal('case-lead mt-[calc(32*var(--cu))] max-w-[96.5%]', 1)}>By May 2025, the desktop client still behaved like a mobile app stretched across a larger window. Layouts broke when resized, pointer states were missing, and simple actions often replaced the entire conversation. Take a look on some of them:</p>
             <div className="mt-[calc(64*var(--cu))] flex flex-col gap-[calc(40*var(--cu))]">
-              <MediaPair labels={['BEFORE · CONTACTS', 'AFTER · CONTACTS']} caption="Replaced a full-screen contact picker with a compact modal that keeps the chat in context." />
-              <MediaPair labels={['BEFORE · RECOVERY KEY', 'AFTER · RECOVERY KEY']} caption="Turned an unexplained recovery-key form into a guided onboarding step with clear context and action." />
-              <MediaPair labels={['BEFORE · MESSAGES', 'AFTER · MESSAGES']} caption="Softened outgoing message bubbles to improve readability and reduce visual noise." />
-              <MediaPair labels={['BEFORE · EMOJI', 'AFTER · EMOJI']} caption="Replaced the full-width emoji panel with a compact popover that keeps the conversation visible." />
-              <MediaPlaceholder label="RESPONSIVE DESKTOP" ratio="1397/624" caption="Defined responsive rules for how panels resize, collapse and adapt across different window sizes." {...reveal('', 0, true)} />
+              <ShotPair before={shot.beforeContacts} after={shot.afterContacts} caption="Replaced a full-screen contact picker with a compact modal that keeps the chat in context." />
+              <ShotPair before={shot.beforeRecoveryKey} after={shot.afterRecoveryKey} caption="Turned an unexplained recovery-key form into a guided onboarding step with clear context and action." />
+              <ShotPair before={shot.beforeMessages} after={shot.afterMessages} caption="Softened outgoing message bubbles to improve readability and reduce visual noise." />
+              <ShotPair before={shot.beforeEmoji} after={shot.afterEmoji} caption="Replaced the full-width emoji panel with a compact popover that keeps the conversation visible." />
+              {/* Three window widths, one row. The columns are weighted by the
+                  shots' own widths — they share a source height, so weighting
+                  keeps their bottoms level without cropping any of them. */}
+              <figure {...reveal('', 0, true)}>
+                <div className="case-widths">
+                  {[shot.responsiveDesktop1, shot.responsiveDesktop2, shot.responsiveDesktop3].map((s) => (
+                    <Shot key={s.src} shot={s} style={{ flex: `${s.w} 1 0` }} />
+                  ))}
+                </div>
+                <figcaption className="case-caption">Defined responsive rules for how panels resize, collapse and adapt across different window sizes.</figcaption>
+              </figure>
             </div>
             <p {...reveal('case-lead mt-[calc(64*var(--cu))] max-w-[96.5%]', 0)}>I packaged the findings into a single proposal, which the founders and Product Manager approved within a week. Over the six months, we rebuilt the client around responsive rules, desktop-native interactions and reusable patterns added back to the design system. The new version shipped to beta and went through several rounds of iteration.</p>
           </section>
@@ -275,8 +289,8 @@ export function CaseStudyModal({ data, open, onClose }: Props) {
             <h3 {...reveal('case-heading max-w-[72.5%] max-md:max-w-none', 0)}>Make Web3 rewards easier to find and understand</h3>
             <p {...reveal('case-lead mt-[calc(32*var(--cu))] max-w-[96.5%]', 1)}>Chums already had quests and wallet rewards, but users struggled to find the feature, understand the tasks and see the payout before starting. I led the benchmark study, defined the product direction and guided a junior designer through the execution.</p>
             <div className="case-phones mt-[calc(96*var(--cu))]" style={{ '--phone-gap': 140 } as React.CSSProperties}>
-              {['CHAT LIST', 'QUESTS', 'STATS', 'ERROR STATE', 'WALLET ONBOARDING', 'QUESTS COMPLETE'].map((x, i) => (
-                <MediaPlaceholder key={x} label={x} ratio="360/812" {...reveal('', i % 3, true)} />
+              {[shot.chatList, shot.quests, shot.stats, shot.errorState, shot.walletOnboarding, shot.questsComplete].map((s, i) => (
+                <Shot key={s.src} shot={s} {...reveal('', i % 3, true)} />
               ))}
             </div>
             <p {...reveal('case-lead mt-[calc(52*var(--cu))] max-w-[96.5%]', 0)}>We built the experience around a clear entry point, upfront reward amounts, visible progress and rules explained directly inside the flow. I reviewed the scenarios and key design decisions throughout the process. The final concept was approved and moved into development.</p>
@@ -294,17 +308,17 @@ export function CaseStudyModal({ data, open, onClose }: Props) {
             <h3 {...reveal('case-heading', 0)}>What shipped</h3>
             <p {...reveal('case-lead mt-[calc(32*var(--cu))] max-w-[96.5%]', 1)}>The new visual direction was approved by the CEO. The desktop redesign was scoped and approved in one week, then shipped to beta three months later. We added responsive layouts, clearer desktop interactions and reusable patterns to the design system. The new reward experience was approved and moved into development. For context, Chums had 32k+ wallets, ~10k downloads and more than $200k in user balances at the time.</p>
             <div className="case-phones mt-[calc(64*var(--cu))]" style={{ '--phone-gap': 136 } as React.CSSProperties}>
-              {['GROUP CHAT', 'MESSAGES', 'MARKDOWN'].map((x, i) => (
-                <MediaPlaceholder key={x} label={x} ratio="375/812" {...reveal('', i, true)} />
+              {[shot.groupChat, shot.messages, shot.markdown].map((s, i) => (
+                <Shot key={s.src} shot={s} {...reveal('', i, true)} />
               ))}
             </div>
-            <MediaPlaceholder label="GROUP CALL" ratio="900/700" {...reveal('mx-auto mt-[calc(136*var(--cu))] w-[64.3%] max-md:w-full', 0, true)} />
+            <Shot shot={shot.groupCall} {...reveal('mx-auto mt-[calc(136*var(--cu))] w-[64.3%] max-md:w-full', 0, true)} />
             <div className="case-phones mt-[calc(136*var(--cu))]" style={{ '--phone-gap': 136 } as React.CSSProperties}>
-              {['CHAT INFO', 'REACTIONS', 'DONATIONS'].map((x, i) => (
-                <MediaPlaceholder key={x} label={x} ratio="375/812" {...reveal('', i, true)} />
+              {[shot.chatInfo, shot.reactions, shot.donations].map((s, i) => (
+                <Shot key={s.src} shot={s} {...reveal('', i, true)} />
               ))}
             </div>
-            <MediaPlaceholder label="BROWSER" ratio="900/716" {...reveal('mx-auto mt-[calc(136*var(--cu))] w-[64.3%] max-md:w-full', 0, true)} />
+            <Shot shot={shot.browser} {...reveal('mx-auto mt-[calc(136*var(--cu))] w-[64.3%] max-md:w-full', 0, true)} />
           </section>
         </div>
       </article>
