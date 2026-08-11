@@ -16,21 +16,25 @@
   --laurel-gold: #ffd92d;
   --laurel-teal: #0ccdd4;
 
-  /* Header metrics (Figma: menu 716x80, items 140x64, buttons 190x80, gap 20) */
+  /* Header metrics. The Figma draws these at menu 716×80 / items 140×64 /
+     buttons 190×80, which built a bar 1286 wide and 80 tall — against the rest
+     of the page that read as a slab, so the whole thing is stepped down about
+     a fifth: 52-tall items in a 64-tall pill, 156×64 buttons, 936 across. The
+     proportions and the type ramp are untouched, only the scale. */
   /* Min is set so the five items + padding still fit a 360px screen; below
      ~630px the header wraps the buttons onto a second row (see Header). */
-  --nav-item-w: clamp(62px, 9.722vw, 140px);
-  --nav-item-h: clamp(42px, 4.444vw, 64px);
-  --nav-pad: clamp(5px, 0.556vw, 8px);
+  --nav-item-w: clamp(56px, 8.05vw, 116px);
+  --nav-item-h: clamp(38px, 3.611vw, 52px);
+  --nav-pad: clamp(4px, 0.417vw, 6px);
   /* Buttons use this as a *minimum* — long labels (TESTFLIGHT SOON) grow the
      box and keep their side padding rather than squeezing the text. */
-  --btn-w: clamp(118px, 13.194vw, 190px);
-  --btn-h: clamp(42px, 5.556vw, 80px);
-  --btn-pad-x: clamp(18px, 2.2vw, 32px);
-  --header-gap: clamp(10px, 1.389vw, 20px);
+  --btn-w: clamp(104px, 10.833vw, 156px);
+  --btn-h: clamp(38px, 4.444vw, 64px);
+  --btn-pad-x: clamp(14px, 1.806vw, 26px);
+  --header-gap: clamp(8px, 1.111vw, 16px);
   /* Sits higher than the Figma's 78 so it clears the hero heading, which also
      moved down — the header stays on screen while reading, so they collided. */
-  --header-top: clamp(14px, 3.9vw, 56px);
+  --header-top: clamp(12px, 2.9vw, 40px);
 
   /* Head plane edge length. The visible silhouette is ~84% of this wide and
      ~57% tall, so the plane runs large on purpose. */
@@ -75,6 +79,11 @@ html {
      the case study, in its own palette (see .case-study-modal). */
   scrollbar-width: thin;
   scrollbar-color: rgba(17, 17, 17, 0.14) transparent;
+  /* The gutter is reserved whether or not the bar is showing. Opening the case
+     locks the page with `overflow: hidden`, and without this the bar vanishes,
+     the viewport widens by its width, and the whole page — plus the centred
+     header — jumps sideways underneath the sheet. */
+  scrollbar-gutter: stable;
 }
 ::-webkit-scrollbar {
   width: 6px;
@@ -261,6 +270,13 @@ html.lenis body {
       inset 0 -1px 1px rgba(255, 255, 255, 0.35),
       inset 0 0 12px rgba(255, 255, 255, 0.25),
       0 10px 30px rgba(0, 0, 0, 0.14);
+  }
+
+  /* Header labels come down with the boxes. Scoped to the header because
+     `.pixel` is the site's button face — the case links and award chips set
+     their own size and must not follow this one. */
+  .header-glass .pixel {
+    font-size: clamp(11px, 1.181vw, 17px);
   }
 
   /* --- the curtain -------------------------------------------------------
@@ -493,9 +509,10 @@ html.lenis body {
 }
 
 /* Details table. In the Figma it spans x 440→1040 of the 1440 frame: 30% in
-   from the content edge, 600 wide, label column 200 / copy 400. */
+   from the content edge, 600 wide, label column 200 / copy 400. The frame
+   leaves 170 above it, which read as a hole on screen — closed to 96. */
 .case-details {
-  margin-top: calc(170 * var(--cu));
+  margin-top: calc(96 * var(--cu));
   margin-left: 30%;
   width: calc(600 / 1400 * 100%);
 }
@@ -556,8 +573,8 @@ html.lenis body {
   z-index: 10;
   top: max(16px, calc(32 * var(--cu)));
   right: max(16px, calc(20 * var(--cu)));
-  width: max(52px, calc(80 * var(--cu)));
-  height: max(52px, calc(80 * var(--cu)));
+  width: max(48px, calc(64 * var(--cu)));
+  height: max(48px, calc(64 * var(--cu)));
 }
 .case-close {
   display: grid;
@@ -569,8 +586,8 @@ html.lenis body {
   cursor: pointer;
 }
 .case-close svg {
-  width: max(18px, calc(28 * var(--cu)));
-  height: max(18px, calc(28 * var(--cu)));
+  width: max(16px, calc(24 * var(--cu)));
+  height: max(16px, calc(24 * var(--cu)));
 }
 
 /* The three liquid-glass balls — 616 wide on the 1400 content (44%), left and
