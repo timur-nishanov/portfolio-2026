@@ -304,7 +304,7 @@ export function CaseStudyModal({ data, open, onClose }: Props) {
 
           <section className="case-section">
             <h3 {...reveal('case-heading max-w-[64%] max-md:max-w-none', 0)}>Treat the desktop client as one product problem</h3>
-            <p {...reveal('case-lead mt-[calc(32*var(--cu))] max-w-[96.5%]', 1)}>By May 2025, the desktop client still behaved like a mobile app stretched across a larger window. Layouts broke when resized, pointer states were missing, and simple actions often replaced the entire conversation. Take a look on some of them:</p>
+            <p {...reveal('case-lead mt-[calc(32*var(--cu))] max-w-[96.5%]', 1)}>By May 2025, the desktop client still behaved like a mobile app stretched across a larger window. Layouts broke when resized, pointer states were missing, and simple actions often replaced the entire conversation. Take a look at some of them:</p>
             <div className="mt-[calc(64*var(--cu))] flex flex-col gap-[calc(40*var(--cu))]">
               <ShotPair before={shot.beforeContacts} after={shot.afterContacts} caption="Replaced a full-screen contact picker with a compact modal that keeps the chat in context." />
               <ShotPair before={shot.beforeRecoveryKey} after={shot.afterRecoveryKey} caption="Turned an unexplained recovery-key form into a guided onboarding step with clear context and action." />
@@ -324,18 +324,15 @@ export function CaseStudyModal({ data, open, onClose }: Props) {
                 <figcaption className="case-caption">Defined responsive rules for how panels resize, collapse and adapt across different window sizes.</figcaption>
               </figure>
             </div>
-            <p {...reveal('case-lead mt-[calc(64*var(--cu))] max-w-[96.5%]', 0)}>I packaged the findings into a single proposal, which the founders and Product Manager approved within a week. Over the six months, we rebuilt the client around responsive rules, desktop-native interactions and reusable patterns added back to the design system. The new version shipped to beta and went through several rounds of iteration.</p>
+            <p {...reveal('case-lead mt-[calc(64*var(--cu))] max-w-[96.5%]', 0)}>I packaged the findings into a single proposal, which the founders and Product Manager approved within a week. Over the following months, we rebuilt the client around responsive rules, desktop-native interactions and reusable patterns added back to the design system. The first beta shipped three months after approval, followed by several rounds of iteration.</p>
           </section>
 
           <section className="case-section">
             <h3 {...reveal('case-heading max-w-[72.5%] max-md:max-w-none', 0)}>Make Web3 rewards easier to find and understand</h3>
             <p {...reveal('case-lead mt-[calc(32*var(--cu))] max-w-[96.5%]', 1)}>Chums already had quests and wallet rewards, but users struggled to find the feature, understand the tasks and see the payout before starting. I led the benchmark study, defined the product direction and guided a junior designer through the execution.</p>
-            <div className="case-phones mt-[calc(96*var(--cu))]" style={{ '--phone-gap': 140 } as React.CSSProperties}>
-              {[shot.chatList, shot.quests, shot.stats, shot.errorState, shot.walletOnboarding, shot.questsComplete].map((s, i) => (
-                <Shot key={s.src} shot={s} radius={MOBILE_RADIUS} box={REWARD_BOX} {...reveal('', i % 3, true)} />
-              ))}
-            </div>
-            <p {...reveal('case-lead mt-[calc(52*var(--cu))] max-w-[96.5%]', 0)}>We built the experience around a clear entry point, upfront reward amounts, visible progress and rules explained directly inside the flow. I reviewed the scenarios and key design decisions throughout the process. The final concept was approved and moved into development.</p>
+            {/* The study leads, the solution follows: the three moments and the
+                constraint they produced come first, then the screens that
+                answer it. */}
             <p {...reveal('case-lead mt-[calc(40*var(--cu))] max-w-[96.5%]', 0)}>Instead of comparing feature lists, we mapped how each product handled the three moments where the experience either worked or fell apart:</p>
             <div className="case-points mt-[calc(64*var(--cu))]">
               <MagneticPoint index={0} title="DISCOVERY" className="case-point-a">can users find the feature without being taught where it is?</MagneticPoint>
@@ -344,11 +341,17 @@ export function CaseStudyModal({ data, open, onClose }: Props) {
             </div>
             <p {...reveal('case-lead mt-[calc(64*var(--cu))] max-w-[96.5%]', 0)}>The third moment became our main design constraint.</p>
             <p {...reveal('case-lead mt-[calc(40*var(--cu))] max-w-[96.5%]', 0)}>A task could be simple and the reward could be valuable, but neither mattered if users had to begin before understanding the payoff.</p>
+            <div className="case-phones mt-[calc(96*var(--cu))]" style={{ '--phone-gap': 140 } as React.CSSProperties}>
+              {[shot.chatList, shot.quests, shot.stats, shot.errorState, shot.walletOnboarding, shot.questsComplete].map((s, i) => (
+                <Shot key={s.src} shot={s} radius={MOBILE_RADIUS} box={REWARD_BOX} {...reveal('', i % 3, true)} />
+              ))}
+            </div>
+            <p {...reveal('case-lead mt-[calc(52*var(--cu))] max-w-[96.5%]', 0)}>We built the experience around a clear entry point, upfront reward amounts, visible progress and rules explained directly inside the flow. I reviewed the scenarios and key design decisions throughout the process. The final concept was approved and moved into development.</p>
           </section>
 
           <section className="case-section">
             <h3 {...reveal('case-heading', 0)}>What shipped</h3>
-            <p {...reveal('case-lead mt-[calc(32*var(--cu))] max-w-[96.5%]', 1)}>The new visual direction was approved by the CEO. The desktop redesign was scoped and approved in one week, then shipped to beta three months later. We added responsive layouts, clearer desktop interactions and reusable patterns to the design system. The new reward experience was approved and moved into development. For context, Chums had 32k+ wallets, ~10k downloads and more than $200k in user balances at the time.</p>
+            <p {...reveal('case-lead mt-[calc(32*var(--cu))] max-w-[96.5%]', 1)}>The new visual direction was approved by the CEO. The desktop redesign was scoped and approved in one week, then shipped to beta three months later. Common actions became noticeably shorter — attaching a file went from 6 steps to 1. We added responsive layouts, clearer desktop interactions and reusable patterns to the design system. The new reward experience was approved and moved into development.</p>
             <div className="case-phones mt-[calc(64*var(--cu))]" style={{ '--phone-gap': 136 } as React.CSSProperties}>
               {[shot.groupChat, shot.messages, shot.markdown].map((s, i) => (
                 <Shot key={s.src} shot={s} radius={MOBILE_RADIUS} {...reveal('', i, true)} />

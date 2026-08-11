@@ -98,7 +98,7 @@ export const cases: Case[] = [
       },
       {
         label: 'PRODUCT RESULTS',
-        body: 'We reworked the desktop experience with drag-and-drop, native context menus, and no full-screen pages. Attaching a file went from 6 steps to 1. Retention increased by roughly 1.5×.',
+        body: 'We reworked the desktop experience with drag-and-drop, native context menus, and no full-screen pages. Attaching a file went from 6 steps to 1. The redesign shipped to beta three months after approval.',
       },
     ],
     links: [{ label: 'CASE STUDY', href: null /* TODO */ }],
