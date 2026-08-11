@@ -674,12 +674,13 @@ html.lenis body {
   height: max(48px, calc(64 * var(--cu)));
 }
 .case-close {
-  /* Its own tint, and the shallow lens: over a white screenshot a white plate
-     left the glyph reading as white-on-white, and at 64px across, the full
-     displacement is deeper than the button's own radius — a status bar behind
-     it came back around the rim as a ghost of itself. Everything else about the
-     glass is shared. */
-  --lg-bg: rgba(18, 18, 18, 0.62);
+  /* Two things are its own. The shallow lens, because at 64px across the full
+     displacement is deeper than the button's own radius and a status bar behind
+     it came back around the rim as a ghost of itself. And a faint smoke in the
+     plate — enough to seat a white glyph on a white screenshot, not enough to
+     read as a black disc; the legibility is carried by the glyph's own shadow
+     below, which costs the glass nothing. */
+  --lg-bg: rgba(16, 16, 18, 0.2);
   --lg-filter: url(#lg-sm);
   display: grid;
   width: 100%;
@@ -692,6 +693,23 @@ html.lenis body {
 .case-close svg {
   width: max(16px, calc(24 * var(--cu)));
   height: max(16px, calc(24 * var(--cu)));
+  /* Seats the outlined cross on the glass without darkening the plate. */
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.4));
+}
+/* Three washes over the plate, in paint order.
+   The first is a pool of shade under the glyph and nowhere else: the button
+   parks wherever the reader stopped, and over a phone's status bar a white
+   cross on white icons is unreadable at any plate density that still counts as
+   glass. Darkening the whole disc fixed that and killed the effect, so the
+   density goes only where the cross is and fades out well before the rim,
+   which is where the refraction lives and has to stay clear.
+   The other two are the sphere's own highlight, same as the case balls: a
+   light source up and to the left, and a lift along the bottom rim. */
+.case-close {
+  background-image:
+    radial-gradient(52% 52% at 50% 50%, rgba(0, 0, 0, 0.26), rgba(0, 0, 0, 0) 76%),
+    radial-gradient(120% 96% at 28% 10%, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0) 58%),
+    radial-gradient(80% 60% at 50% 108%, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0) 70%);
 }
 
 /* The three liquid-glass balls — 616 wide on the 1400 content (44%), left and

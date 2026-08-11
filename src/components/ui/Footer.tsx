@@ -95,6 +95,8 @@ type Body = {
   contact: boolean;
   /** Standing on the floor this tick — the root of the support chain. */
   onFloor: boolean;
+  /** Has been fully inside the stage at least once — see the ceiling. */
+  entered: boolean;
 };
 
 export function Footer() {
@@ -159,6 +161,7 @@ export function Footer() {
             bounce: d.bounce,
             contact: false,
             onFloor: false,
+            entered: false,
           };
         } else if (bodies[i]) {
           bodies[i].r = r;
@@ -169,8 +172,16 @@ export function Footer() {
     };
     layout(true);
 
+    // Distance the whole heap has travelled recently. A wedge the support rule
+    // cannot certify would otherwise hold the loop open for ever; if nothing
+    // has actually moved for a while, it is at rest whatever the rule thinks.
+    let quiet = 0;
+    const prevX: number[] = [];
+    const prevY: number[] = [];
+
     const ro = new ResizeObserver(() => {
       layout(false);
+      quiet = 0;
       wake();
     });
     ro.observe(stage);
@@ -317,8 +328,17 @@ export function Footer() {
         b.x += b.vx * dt;
         b.y += b.vy * dt;
 
-        // Sides and floor. The ceiling is deliberately open — a ball is still
-        // falling in through it, and a throw is allowed to leave the top.
+        // The ceiling is open only until a sphere has dropped through it. After
+        // that it is a wall like any other: a crowded heap used to push its top
+        // sphere back out of the stage, where nothing could reach it again.
+        if (!b.entered && b.y >= b.r) b.entered = true;
+        if (b.entered && b.y < b.r) {
+          b.y = b.r;
+          b.vy = Math.abs(b.vy) * WALL_BOUNCE;
+          b.contact = true;
+        }
+
+        // Sides and floor.
         if (b.x < b.r) {
           b.x = b.r;
           b.vx = Math.abs(b.vx) * WALL_BOUNCE;
@@ -408,7 +428,7 @@ export function Footer() {
         if (i === dragging) continue;
         const b = bodies[i];
         b.x = clamp(b.x, b.r, Math.max(b.r, W - b.r));
-        b.y = Math.min(b.y, H - b.r);
+        b.y = b.entered ? clamp(b.y, b.r, Math.max(b.r, H - b.r)) : Math.min(b.y, H - b.r);
       }
 
       for (let i = 0; i < bodies.length; i++) {
@@ -446,14 +466,24 @@ export function Footer() {
         }
       }
 
+      let moved = 0;
+      for (let i = 0; i < bodies.length; i++) {
+        moved += Math.abs(bodies[i].x - (prevX[i] ?? bodies[i].x)) + Math.abs(bodies[i].y - (prevY[i] ?? bodies[i].y));
+        prevX[i] = bodies[i].x;
+        prevY[i] = bodies[i].y;
+      }
+      quiet = moved < 0.5 ? quiet + dt : 0;
+
       let awake = dragging >= 0 || !running;
       for (let i = 0; i < bodies.length; i++) {
         const b = bodies[i];
         if (b.wait > 0) { awake = true; continue; }
         const speed = Math.hypot(b.vx, b.vy);
         if (i !== dragging && !supported[i]) {
-          // Airborne: gravity's problem, never the settler's.
-          awake = true;
+          // Airborne: gravity's problem, never the settler's — unless the whole
+          // heap has been motionless for a couple of seconds, in which case
+          // there is nothing left to simulate.
+          if (quiet < 2) awake = true;
         } else if (supported[i] && speed < REST_SPEED * zi) {
           b.vx = 0;
           b.vy = 0;
@@ -472,6 +502,7 @@ export function Footer() {
 
     // Restarts the loop after it has parked itself.
     const wake = () => {
+      quiet = 0;
       if (raf) return;
       last = performance.now();
       raf = requestAnimationFrame(step);
@@ -521,12 +552,14 @@ export function Footer() {
           reduced ? 'flex flex-wrap items-end justify-center gap-2 pb-12' : ''
         }`}
       >
-        {/* 30vw of the *visual* viewport — the desktop zoom scales vw along
-            with everything else, so the raw unit is divided by --site-zoom or
-            the spheres shrink 20% and, worse, stop being wider together than
-            the floor, which is what makes them heap two deep instead of lining
-            up. The glyph is sized the same way, so its ratio to the ball holds
-            at any scale. */}
+        {/* Sized against both axes of the *visual* viewport (the desktop zoom
+            scales vw/vh with everything else, hence the --site-zoom divisor).
+            Width sets the character — 30vw means five are wider together than
+            the floor, so they heap two deep instead of lining up in a row. The
+            50vh ceiling is the load-bearing half: a two-layer pyramid stands
+            1.87 diameters tall, so on a wide-but-short window 30vw could not
+            physically fit, the top sphere was squeezed out through the open
+            ceiling and the rest jammed against each other mid-air. */}
         {/* Mounted together with the photo, a section early. Each ball is a
             viewport-scale backdrop-filter surface — keeping three of them
             alive behind the whole page was pure GPU cost the reader never saw. */}
@@ -543,12 +576,12 @@ export function Footer() {
             // pull a ball, trailing a ghost of the URL across the page.
             draggable={false}
             onDragStart={(e) => e.preventDefault()}
-            className={`glass-ball pointer-events-auto z-10 grid size-[calc(30vw/var(--site-zoom,1))] min-h-[112px] min-w-[112px] cursor-grab touch-none select-none place-items-center rounded-full active:cursor-grabbing ${
+            className={`glass-ball pointer-events-auto z-10 grid size-[calc(min(30vw,50vh)/var(--site-zoom,1))] min-h-[112px] min-w-[112px] cursor-grab touch-none select-none place-items-center rounded-full active:cursor-grabbing ${
               reduced ? 'relative' : 'absolute left-0 top-0 will-change-transform'
             }`}
           >
             {/* The mark on its own, white — no plate, no shadow. */}
-            <b.Glyph className="relative z-10 w-[calc(9.5vw/var(--site-zoom,1))] min-w-[36px] text-white" />
+            <b.Glyph className="relative z-10 w-[calc(min(9.5vw,15.8vh)/var(--site-zoom,1))] min-w-[36px] text-white" />
             <span className="sr-only">{b.label}</span>
           </a>
         ))}

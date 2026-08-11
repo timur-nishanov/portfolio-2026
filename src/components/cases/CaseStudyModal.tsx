@@ -109,8 +109,15 @@ function CloseButton({ onClose }: { onClose: () => void }) {
   return (
     <div ref={anchorRef} className="case-close-anchor">
       <button ref={buttonRef} type="button" onClick={onClose} className="case-close glass will-change-transform">
-        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-          <path d="M5 5 19 19M19 5 5 19" />
+        {/* Drawn twice: a dark stroke underneath, the white cross on top. The
+            button parks wherever the reader stopped scrolling, so it can end up
+            over a phone's white status bar — where a plain white cross vanishes
+            — or over a black screen, where a dark one would. An outline carries
+            its own contrast against either, and costs the glass nothing, which
+            darkening the plate enough to do the same job did not. */}
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" strokeLinecap="round">
+          <path d="M5 5 19 19M19 5 5 19" stroke="rgba(0,0,0,0.45)" strokeWidth="4" />
+          <path d="M5 5 19 19M19 5 5 19" stroke="currentColor" strokeWidth="1.6" />
         </svg>
         <span className="sr-only">Close case study</span>
       </button>
