@@ -93,6 +93,8 @@ type Body = {
   bounce: number;
   /** Touched the floor, a wall or another sphere on this tick — see settling. */
   contact: boolean;
+  /** Standing on the floor this tick — the root of the support chain. */
+  onFloor: boolean;
 };
 
 export function Footer() {
@@ -156,6 +158,7 @@ export function Footer() {
             wait: d.delay,
             bounce: d.bounce,
             contact: false,
+            onFloor: false,
           };
         } else if (bodies[i]) {
           bodies[i].r = r;
@@ -328,6 +331,7 @@ export function Footer() {
         if (b.y > H - b.r) {
           b.y = H - b.r;
           b.contact = true;
+          b.onFloor = true;
           // Each ball keeps its own restitution, so they stop tossing in sync.
           b.vy = -Math.abs(b.vy) * b.bounce;
           b.vx *= GROUND_FRICTION;
@@ -336,6 +340,7 @@ export function Footer() {
       }
 
       // Ball vs ball: separate the overlap, then swap the normal component.
+      const touching: [number, number][] = [];
       for (let i = 0; i < bodies.length; i++) {
         for (let j = i + 1; j < bodies.length; j++) {
           const a = bodies[i];
@@ -347,6 +352,7 @@ export function Footer() {
           if (d === 0 || d >= min) continue;
           a.contact = true;
           b.contact = true;
+          touching.push([i, j]);
           const nx = dx / d;
           const ny = dy / d;
           const overlap = Math.max(0, min - d - CONTACT_SLOP) * SEPARATION;
@@ -417,26 +423,49 @@ export function Footer() {
       // --- settling ---------------------------------------------------------
       // Five spheres are wider together than the floor they land on, so the
       // heap is permanently a little wedged and the separation impulses keep
-      // nudging it about long after it looks still. Anything slow and in
-      // contact with the floor or another sphere is brought to a stop, and once
-      // nothing is moving the loop parks itself rather than burning a frame a
-      // tick behind a page nobody is looking at. A grab, a resize or a fresh
-      // reveal wakes it again.
+      // nudging it about long after it looks still — slow, supported spheres
+      // are brought to a stop, and once nothing is moving the loop parks
+      // itself. A grab, a resize or a fresh reveal wakes it again.
+      //
+      // "Supported" is the load-bearing word. An earlier version rested any
+      // slow sphere in *contact*, and a cluster colliding in mid-air could
+      // chain-zero itself and park the loop — spheres frozen in the sky, the
+      // late ones never arriving. Support starts at the floor and climbs the
+      // heap: a sphere counts as held up only by the floor, the held pointer,
+      // or by leaning on a supported sphere below its own centre. Anything
+      // unsupported keeps the loop alive for gravity, no matter how slowly it
+      // happens to be moving.
+      const supported = bodies.map((b) => b.onFloor);
+      if (dragging >= 0 && bodies[dragging]) supported[dragging] = true;
+      // Two passes cover a stack two deep — as tall as five spheres can pile.
+      for (let pass = 0; pass < 2; pass++) {
+        for (const [i, j] of touching) {
+          const lower = bodies[i].y > bodies[j].y ? i : j;
+          const upper = lower === i ? j : i;
+          if (supported[lower]) supported[upper] = true;
+        }
+      }
+
       let awake = dragging >= 0 || !running;
-      for (const b of bodies) {
+      for (let i = 0; i < bodies.length; i++) {
+        const b = bodies[i];
         if (b.wait > 0) { awake = true; continue; }
         const speed = Math.hypot(b.vx, b.vy);
-        if (b.contact && speed < REST_SPEED * zi) {
+        if (i !== dragging && !supported[i]) {
+          // Airborne: gravity's problem, never the settler's.
+          awake = true;
+        } else if (supported[i] && speed < REST_SPEED * zi) {
           b.vx = 0;
           b.vy = 0;
         } else {
-          if (b.contact && speed < CREEP_SPEED * zi) {
+          if (supported[i] && speed < CREEP_SPEED * zi) {
             b.vx *= CONTACT_DAMP;
             b.vy *= CONTACT_DAMP;
           }
           if (speed > 1) awake = true;
         }
         b.contact = false;
+        b.onFloor = false;
       }
       raf = awake ? requestAnimationFrame(step) : 0;
     };
