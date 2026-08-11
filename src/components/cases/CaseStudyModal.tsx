@@ -1,17 +1,31 @@
 'use client';
 
+import Lenis from 'lenis';
 import { useCallback, useEffect, useRef } from 'react';
 import type { Case } from '@/data/cases';
+import { MagneticButton } from '@/components/header/MagneticButton';
 import { useMagnetic } from '@/hooks/useMagnetic';
 import { useCanHover } from '@/hooks/useMediaQuery';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 type Props = { data: Case; open: boolean; onClose: () => void };
-type PlaceholderProps = { label: string; caption?: string; ratio?: string; className?: string };
+type PlaceholderProps = {
+  label: string;
+  caption?: string;
+  ratio?: string;
+  className?: string;
+  style?: React.CSSProperties;
+};
 
-function MediaPlaceholder({ label, caption, ratio = '4/3', className = '' }: PlaceholderProps) {
+/** Marks a block for the blur-in reveal. `i` staggers siblings within a row. */
+const reveal = (classes = '', i = 0, media = false) => ({
+  className: `case-reveal${media ? ' case-reveal-media' : ''}${classes ? ` ${classes}` : ''}`,
+  style: { '--reveal-delay': `${i * 90}ms` } as React.CSSProperties,
+});
+
+function MediaPlaceholder({ label, caption, ratio = '4/3', className = '', style }: PlaceholderProps) {
   return (
-    <figure className={className}>
+    <figure className={className} style={style}>
       <div className="case-media-placeholder" style={{ aspectRatio: ratio }}>
         <div className="flex flex-col items-center gap-3 text-white/40">
           <svg aria-hidden="true" viewBox="0 0 48 48" fill="none" className="size-8 md:size-10" stroke="currentColor" strokeWidth="1.5">
@@ -30,7 +44,7 @@ function MediaPlaceholder({ label, caption, ratio = '4/3', className = '' }: Pla
 /** A desktop before/after row: two halves on the 8px gutter, one caption. */
 function MediaPair({ caption, labels }: { caption: string; labels: [string, string] }) {
   return (
-    <figure>
+    <figure {...reveal('', 0, true)}>
       <div className="case-pair">
         <MediaPlaceholder label={labels[0]} ratio="695/624" />
         <MediaPlaceholder label={labels[1]} ratio="695/624" />
@@ -40,7 +54,7 @@ function MediaPair({ caption, labels }: { caption: string; labels: [string, stri
   );
 }
 
-function MagneticPoint({ title, children, className = '' }: { title: string; children: React.ReactNode; className?: string }) {
+function MagneticPoint({ title, children, className = '', index }: { title: string; children: React.ReactNode; className?: string; index: number }) {
   const rootRef = useRef<HTMLDivElement>(null);
   const ballRef = useRef<HTMLDivElement>(null);
   const canHover = useCanHover();
@@ -50,9 +64,11 @@ function MagneticPoint({ title, children, className = '' }: { title: string; chi
 
   return (
     <div ref={rootRef} className={`case-point-anchor ${className}`}>
-      <div ref={ballRef} className="case-point glass-ball will-change-transform">
-        <p className="case-point-title">{title}</p>
-        <p className="case-point-copy">{children}</p>
+      <div ref={ballRef} {...reveal('', index)}>
+        <div className="case-point glass will-change-transform">
+          <p className="case-point-title">{title}</p>
+          <p className="case-point-copy">{children}</p>
+        </div>
       </div>
     </div>
   );
@@ -67,7 +83,9 @@ const details = [
 
 export function CaseStudyModal({ data, open, onClose }: Props) {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const sheetRef = useRef<HTMLElement>(null);
   const closeTimer = useRef<number | undefined>(undefined);
+  const reduced = useReducedMotion();
 
   const requestClose = useCallback(() => {
     const dialog = dialogRef.current;
@@ -77,13 +95,14 @@ export function CaseStudyModal({ data, open, onClose }: Props) {
       dialog.close();
       dialog.classList.remove('is-closing');
       onClose();
-    }, 360);
+    }, 420);
   }, [onClose]);
 
   useEffect(() => {
     const dialog = dialogRef.current;
     if (!dialog || !open) return;
     dialog.showModal();
+    dialog.scrollTop = 0;
     document.documentElement.style.overflow = 'hidden';
     return () => {
       document.documentElement.style.overflow = '';
@@ -92,31 +111,106 @@ export function CaseStudyModal({ data, open, onClose }: Props) {
     };
   }, [open]);
 
+  // Scrolling and the reveal share one rAF loop.
+  //
+  // The case scrolls with the same easing as the page — the page's Lenis is
+  // bound to the window and cannot drive a dialog, so the dialog gets its own
+  // instance for as long as it is open.
+  //
+  // The reveal is a sweep over the blocks that have not played yet, not an
+  // IntersectionObserver: an observer never fires for elements a jump scrolls
+  // straight past (a drag of the scrollbar, a Home/End key), and those blocks
+  // then sit at opacity 0 forever. A sweep reveals anything whose top has come
+  // above the trigger line, including everything already behind the reader.
+  // The list only shrinks, and reads are batched ahead of the writes.
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    const sheet = sheetRef.current;
+    if (!open || !dialog || !sheet) return;
+
+    let pending = Array.from(sheet.querySelectorAll<HTMLElement>('.case-reveal'));
+    if (reduced) {
+      pending.forEach((el) => el.classList.add('is-in'));
+      return;
+    }
+
+    const sweep = () => {
+      if (!pending.length) return;
+      const line = dialog.clientHeight * 0.88;
+      const hit: HTMLElement[] = [];
+      const rest: HTMLElement[] = [];
+      for (const el of pending) (el.getBoundingClientRect().top < line ? hit : rest).push(el);
+      pending = rest;
+      for (const el of hit) el.classList.add('is-in');
+    };
+
+    const lenis = new Lenis({ wrapper: dialog, content: sheet, lerp: 0.09, smoothWheel: true, syncTouch: false });
+    let raf = 0;
+    let lastY = -1;
+    const loop = (time: number) => {
+      lenis.raf(time);
+      // Measure only when the sheet actually moved, so a still page costs a
+      // single comparison per frame.
+      if (dialog.scrollTop !== lastY) {
+        lastY = dialog.scrollTop;
+        sweep();
+      }
+      raf = requestAnimationFrame(loop);
+    };
+    // One frame's grace so the first screen resolves behind the sheet's own
+    // rise rather than being marked visible during the initial layout.
+    const start = requestAnimationFrame(() => {
+      sweep();
+      raf = requestAnimationFrame(loop);
+    });
+
+    return () => {
+      cancelAnimationFrame(start);
+      cancelAnimationFrame(raf);
+      lenis.destroy();
+    };
+  }, [open, reduced]);
+
   return (
     <dialog
       ref={dialogRef}
-      // data-lenis-prevent: Lenis grabs wheel events at the window and feeds
-      // them to the (locked) page scroll — this hands them back to the dialog,
-      // which is the actual scroller while the case is open.
+      // data-lenis-prevent: the page's Lenis grabs wheel events at the window
+      // and feeds them to the (locked) page scroll — this hands them back, and
+      // the dialog's own Lenis instance above does the smoothing.
       data-lenis-prevent
       className="case-study-modal m-0 h-dvh max-h-none w-screen max-w-none overflow-y-auto overscroll-contain bg-transparent p-0 text-white"
       onCancel={(event) => { event.preventDefault(); requestClose(); }}
       aria-labelledby={`${data.id}-case-title`}
     >
-      <article className="case-study-sheet min-h-dvh">
-        <button type="button" className="case-close glass-ball outline-none focus-visible:ring-1 focus-visible:ring-white/60" onClick={requestClose} aria-label="Close case study">×</button>
+      {/* Outside the sheet on purpose: the sheet is transformed while it opens,
+          and a transformed ancestor makes `position: fixed` resolve against it
+          instead of the viewport — which sent the button scrolling away with
+          the page. As a direct child of the dialog it stays put. */}
+      <div className="case-close">
+        <MagneticButton
+          onClick={requestClose}
+          className="glass rounded-full"
+          style={{ width: '100%', height: '100%', paddingInline: 0 }}
+        >
+          <svg aria-hidden="true" viewBox="0 0 24 24" className="w-[42%] text-white" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+            <path d="M5 5 19 19M19 5 5 19" />
+          </svg>
+          <span className="sr-only">Close case study</span>
+        </MagneticButton>
+      </div>
 
+      <article ref={sheetRef} className="case-study-sheet min-h-dvh">
         <div className="case-wrap">
           <header>
-            <h2 id={`${data.id}-case-title`} className="case-title">Chums Messenger</h2>
-            <p className="case-lead mt-[calc(32*var(--cu))] max-w-[77.5%] max-md:max-w-none">
+            <h2 id={`${data.id}-case-title`} {...reveal('case-title', 0)}>Chums Messenger</h2>
+            <p {...reveal('case-lead mt-[calc(32*var(--cu))] max-w-[77.5%] max-md:max-w-none', 1)}>
               I led the redesign of the desktop client and the Web3 reward experience for Chums — a Matrix-based messenger with tokens, NFTs, domains and dApps built directly into chat. The product already had 32k+ wallets and more than $200k held in user balances. My job was not to add more capability, but to make the existing product easier to reach, understand and use.
             </p>
           </header>
 
           <div className="case-details">
-            {details.map(([label, copy]) => (
-              <div key={label} className="case-detail-row">
+            {details.map(([label, copy], i) => (
+              <div key={label} {...reveal('case-detail-row', i)}>
                 <p className="case-kicker">{label}</p>
                 <p className="case-copy">{copy}</p>
               </div>
@@ -124,62 +218,62 @@ export function CaseStudyModal({ data, open, onClose }: Props) {
           </div>
 
           <section className="case-section">
-            <h3 className="case-heading">Define a new visual direction</h3>
-            <p className="case-lead mt-[calc(32*var(--cu))]">I developed a new visual concept for Chums across its key mobile screens and Web3 entry points. Led the concept end to end, and the final direction shown in this case was approved by the CEO.</p>
+            <h3 {...reveal('case-heading', 0)}>Define a new visual direction</h3>
+            <p {...reveal('case-lead mt-[calc(32*var(--cu))]', 1)}>I developed a new visual concept for Chums across its key mobile screens and Web3 entry points. Led the concept end to end, and the final direction shown in this case was approved by the CEO.</p>
             <div className="case-phones mt-[calc(96*var(--cu))]">
-              {['ONBOARDING', 'MESSENGER', 'PROFILE', 'VOICE MESSAGE', 'SERVER PICKER', 'ATTACHMENTS'].map((x) => (
-                <MediaPlaceholder key={x} label={x} ratio="390/844" />
+              {['ONBOARDING', 'MESSENGER', 'PROFILE', 'VOICE MESSAGE', 'SERVER PICKER', 'ATTACHMENTS'].map((x, i) => (
+                <MediaPlaceholder key={x} label={x} ratio="390/844" {...reveal('', i % 3, true)} />
               ))}
             </div>
           </section>
 
           <section className="case-section">
-            <h3 className="case-heading max-w-[64%] max-md:max-w-none">Treat the desktop client as one product problem</h3>
-            <p className="case-lead mt-[calc(32*var(--cu))] max-w-[96.5%]">By May 2025, the desktop client still behaved like a mobile app stretched across a larger window. Layouts broke when resized, pointer states were missing, and simple actions often replaced the entire conversation. Take a look on some of them:</p>
+            <h3 {...reveal('case-heading max-w-[64%] max-md:max-w-none', 0)}>Treat the desktop client as one product problem</h3>
+            <p {...reveal('case-lead mt-[calc(32*var(--cu))] max-w-[96.5%]', 1)}>By May 2025, the desktop client still behaved like a mobile app stretched across a larger window. Layouts broke when resized, pointer states were missing, and simple actions often replaced the entire conversation. Take a look on some of them:</p>
             <div className="mt-[calc(64*var(--cu))] flex flex-col gap-[calc(40*var(--cu))]">
               <MediaPair labels={['BEFORE · CONTACTS', 'AFTER · CONTACTS']} caption="Replaced a full-screen contact picker with a compact modal that keeps the chat in context." />
               <MediaPair labels={['BEFORE · RECOVERY KEY', 'AFTER · RECOVERY KEY']} caption="Turned an unexplained recovery-key form into a guided onboarding step with clear context and action." />
               <MediaPair labels={['BEFORE · MESSAGES', 'AFTER · MESSAGES']} caption="Softened outgoing message bubbles to improve readability and reduce visual noise." />
               <MediaPair labels={['BEFORE · EMOJI', 'AFTER · EMOJI']} caption="Replaced the full-width emoji panel with a compact popover that keeps the conversation visible." />
-              <MediaPlaceholder label="RESPONSIVE DESKTOP" ratio="1397/624" caption="Defined responsive rules for how panels resize, collapse and adapt across different window sizes." />
+              <MediaPlaceholder label="RESPONSIVE DESKTOP" ratio="1397/624" caption="Defined responsive rules for how panels resize, collapse and adapt across different window sizes." {...reveal('', 0, true)} />
             </div>
-            <p className="case-lead mt-[calc(64*var(--cu))] max-w-[96.5%]">I packaged the findings into a single proposal, which the founders and Product Manager approved within a week. Over the six months, we rebuilt the client around responsive rules, desktop-native interactions and reusable patterns added back to the design system. The new version shipped to beta and went through several rounds of iteration.</p>
+            <p {...reveal('case-lead mt-[calc(64*var(--cu))] max-w-[96.5%]', 0)}>I packaged the findings into a single proposal, which the founders and Product Manager approved within a week. Over the six months, we rebuilt the client around responsive rules, desktop-native interactions and reusable patterns added back to the design system. The new version shipped to beta and went through several rounds of iteration.</p>
           </section>
 
           <section className="case-section">
-            <h3 className="case-heading max-w-[72.5%] max-md:max-w-none">Make Web3 rewards easier to find and understand</h3>
-            <p className="case-lead mt-[calc(32*var(--cu))] max-w-[96.5%]">Chums already had quests and wallet rewards, but users struggled to find the feature, understand the tasks and see the payout before starting. I led the benchmark study, defined the product direction and guided a junior designer through the execution.</p>
+            <h3 {...reveal('case-heading max-w-[72.5%] max-md:max-w-none', 0)}>Make Web3 rewards easier to find and understand</h3>
+            <p {...reveal('case-lead mt-[calc(32*var(--cu))] max-w-[96.5%]', 1)}>Chums already had quests and wallet rewards, but users struggled to find the feature, understand the tasks and see the payout before starting. I led the benchmark study, defined the product direction and guided a junior designer through the execution.</p>
             <div className="case-phones mt-[calc(96*var(--cu))]" style={{ '--phone-gap': 140 } as React.CSSProperties}>
-              {['CHAT LIST', 'QUESTS', 'STATS', 'ERROR STATE', 'WALLET ONBOARDING', 'QUESTS COMPLETE'].map((x) => (
-                <MediaPlaceholder key={x} label={x} ratio="360/812" />
+              {['CHAT LIST', 'QUESTS', 'STATS', 'ERROR STATE', 'WALLET ONBOARDING', 'QUESTS COMPLETE'].map((x, i) => (
+                <MediaPlaceholder key={x} label={x} ratio="360/812" {...reveal('', i % 3, true)} />
               ))}
             </div>
-            <p className="case-lead mt-[calc(52*var(--cu))] max-w-[96.5%]">We built the experience around a clear entry point, upfront reward amounts, visible progress and rules explained directly inside the flow. I reviewed the scenarios and key design decisions throughout the process. The final concept was approved and moved into development.</p>
-            <p className="case-lead mt-[calc(40*var(--cu))] max-w-[96.5%]">Instead of comparing feature lists, we mapped how each product handled the three moments where the experience either worked or fell apart:</p>
+            <p {...reveal('case-lead mt-[calc(52*var(--cu))] max-w-[96.5%]', 0)}>We built the experience around a clear entry point, upfront reward amounts, visible progress and rules explained directly inside the flow. I reviewed the scenarios and key design decisions throughout the process. The final concept was approved and moved into development.</p>
+            <p {...reveal('case-lead mt-[calc(40*var(--cu))] max-w-[96.5%]', 0)}>Instead of comparing feature lists, we mapped how each product handled the three moments where the experience either worked or fell apart:</p>
             <div className="case-points mt-[calc(64*var(--cu))]">
-              <MagneticPoint title="DISCOVERY" className="case-point-a">can users find the feature without being taught where it is?</MagneticPoint>
-              <MagneticPoint title="COMPREHENSION" className="case-point-b">can they understand the rules inside the flow?</MagneticPoint>
-              <MagneticPoint title="PAYOUT VISIBILITY" className="case-point-c">do they know what they will receive before committing?</MagneticPoint>
+              <MagneticPoint index={0} title="DISCOVERY" className="case-point-a">can users find the feature without being taught where it is?</MagneticPoint>
+              <MagneticPoint index={1} title="COMPREHENSION" className="case-point-b">can they understand the rules inside the flow?</MagneticPoint>
+              <MagneticPoint index={2} title="PAYOUT VISIBILITY" className="case-point-c">do they know what they will receive before committing?</MagneticPoint>
             </div>
-            <p className="case-lead mt-[calc(64*var(--cu))] max-w-[96.5%]">The third moment became our main design constraint.</p>
-            <p className="case-lead mt-[calc(40*var(--cu))] max-w-[96.5%]">A task could be simple and the reward could be valuable, but neither mattered if users had to begin before understanding the payoff.</p>
+            <p {...reveal('case-lead mt-[calc(64*var(--cu))] max-w-[96.5%]', 0)}>The third moment became our main design constraint.</p>
+            <p {...reveal('case-lead mt-[calc(40*var(--cu))] max-w-[96.5%]', 0)}>A task could be simple and the reward could be valuable, but neither mattered if users had to begin before understanding the payoff.</p>
           </section>
 
           <section className="case-section">
-            <h3 className="case-heading">What shipped</h3>
-            <p className="case-lead mt-[calc(32*var(--cu))] max-w-[96.5%]">The new visual direction was approved by the CEO. The desktop redesign was scoped and approved in one week, then shipped to beta three months later. We added responsive layouts, clearer desktop interactions and reusable patterns to the design system. The new reward experience was approved and moved into development. For context, Chums had 32k+ wallets, ~10k downloads and more than $200k in user balances at the time.</p>
+            <h3 {...reveal('case-heading', 0)}>What shipped</h3>
+            <p {...reveal('case-lead mt-[calc(32*var(--cu))] max-w-[96.5%]', 1)}>The new visual direction was approved by the CEO. The desktop redesign was scoped and approved in one week, then shipped to beta three months later. We added responsive layouts, clearer desktop interactions and reusable patterns to the design system. The new reward experience was approved and moved into development. For context, Chums had 32k+ wallets, ~10k downloads and more than $200k in user balances at the time.</p>
             <div className="case-phones mt-[calc(64*var(--cu))]" style={{ '--phone-gap': 136 } as React.CSSProperties}>
-              {['GROUP CHAT', 'MESSAGES', 'MARKDOWN'].map((x) => (
-                <MediaPlaceholder key={x} label={x} ratio="375/812" />
+              {['GROUP CHAT', 'MESSAGES', 'MARKDOWN'].map((x, i) => (
+                <MediaPlaceholder key={x} label={x} ratio="375/812" {...reveal('', i, true)} />
               ))}
             </div>
-            <MediaPlaceholder label="GROUP CALL" ratio="900/700" className="mx-auto mt-[calc(136*var(--cu))] w-[64.3%] max-md:w-full" />
+            <MediaPlaceholder label="GROUP CALL" ratio="900/700" {...reveal('mx-auto mt-[calc(136*var(--cu))] w-[64.3%] max-md:w-full', 0, true)} />
             <div className="case-phones mt-[calc(136*var(--cu))]" style={{ '--phone-gap': 136 } as React.CSSProperties}>
-              {['CHAT INFO', 'REACTIONS', 'DONATIONS'].map((x) => (
-                <MediaPlaceholder key={x} label={x} ratio="375/812" />
+              {['CHAT INFO', 'REACTIONS', 'DONATIONS'].map((x, i) => (
+                <MediaPlaceholder key={x} label={x} ratio="375/812" {...reveal('', i, true)} />
               ))}
             </div>
-            <MediaPlaceholder label="BROWSER" ratio="900/716" className="mx-auto mt-[calc(136*var(--cu))] w-[64.3%] max-md:w-full" />
+            <MediaPlaceholder label="BROWSER" ratio="900/716" {...reveal('mx-auto mt-[calc(136*var(--cu))] w-[64.3%] max-md:w-full', 0, true)} />
           </section>
         </div>
       </article>
