@@ -82,7 +82,27 @@ export function useMagnetic(
       }
     };
 
+    // Pointer events do not reach a surface covered by an open dialog, but this
+    // listener is on the window and hears them anyway — so the header's buttons
+    // used to keep leaning toward a cursor that was busy reading the case study.
+    // Anything outside the dialog stands down while one is open.
+    const inDialog = !!root.closest('dialog');
+
     const onMove = (e: PointerEvent) => {
+      if (!inDialog && document.documentElement.hasAttribute('data-modal-open')) {
+        // Release rather than freeze: whatever offset it was holding springs
+        // back to zero, so nothing is left leaning behind the sheet.
+        if (engaged) {
+          engaged = false;
+          targetX = 0;
+          targetY = 0;
+          if (!raf) {
+            last = performance.now();
+            raf = requestAnimationFrame(loop);
+          }
+        }
+        return;
+      }
       const r = root.getBoundingClientRect();
       const dx = e.clientX - (r.left + r.width / 2);
       const dy = e.clientY - (r.top + r.height / 2);

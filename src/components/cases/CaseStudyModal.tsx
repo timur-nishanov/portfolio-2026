@@ -3,7 +3,6 @@
 import Lenis from 'lenis';
 import { useCallback, useEffect, useRef } from 'react';
 import type { Case } from '@/data/cases';
-import { MagneticButton } from '@/components/header/MagneticButton';
 import { useMagnetic } from '@/hooks/useMagnetic';
 import { useCanHover } from '@/hooks/useMediaQuery';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
@@ -51,6 +50,33 @@ function MediaPair({ caption, labels }: { caption: string; labels: [string, stri
       </div>
       <figcaption className="case-caption">{caption}</figcaption>
     </figure>
+  );
+}
+
+/**
+ * Same glass and the same pull as the header's round button, but as one layer:
+ * plate and glyph travel together, so the cross never drifts off the centre of
+ * its own circle. Sits outside the sheet — a transformed or filtered ancestor
+ * would capture its `position: fixed`.
+ */
+function CloseButton({ onClose }: { onClose: () => void }) {
+  // The anchor holds the fixed position and is never transformed, so the magnet
+  // keeps measuring the button's resting box instead of chasing its own offset.
+  const anchorRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const canHover = useCanHover();
+  const reduced = useReducedMotion();
+  useMagnetic(anchorRef, [{ ref: buttonRef, factor: 0.09, max: 6 }], canHover && !reduced);
+
+  return (
+    <div ref={anchorRef} className="case-close-anchor">
+      <button ref={buttonRef} type="button" onClick={onClose} className="case-close glass will-change-transform">
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+          <path d="M5 5 19 19M19 5 5 19" />
+        </svg>
+        <span className="sr-only">Close case study</span>
+      </button>
+    </div>
   );
 }
 
@@ -104,8 +130,12 @@ export function CaseStudyModal({ data, open, onClose }: Props) {
     dialog.showModal();
     dialog.scrollTop = 0;
     document.documentElement.style.overflow = 'hidden';
+    // Read by useMagnetic: every magnetic surface outside the dialog stands
+    // down while the case is open.
+    document.documentElement.setAttribute('data-modal-open', '');
     return () => {
       document.documentElement.style.overflow = '';
+      document.documentElement.removeAttribute('data-modal-open');
       window.clearTimeout(closeTimer.current);
       if (dialog.open) dialog.close();
     };
@@ -157,15 +187,23 @@ export function CaseStudyModal({ data, open, onClose }: Props) {
       }
       raf = requestAnimationFrame(loop);
     };
-    // One frame's grace so the first screen resolves behind the sheet's own
-    // rise rather than being marked visible during the initial layout.
+    // Two frames of grace before the first sweep. The dialog is display:none
+    // until showModal, so its blurred pre-transition state has never been
+    // painted; revealing on the same frame it appears gives the browser no
+    // start value to interpolate from and the first screen snaps in sharp
+    // instead of dissolving. One frame to paint the blur, the next to release
+    // it — and the run loop only starts after that.
+    let warmup = 0;
     const start = requestAnimationFrame(() => {
-      sweep();
-      raf = requestAnimationFrame(loop);
+      warmup = requestAnimationFrame(() => {
+        sweep();
+        raf = requestAnimationFrame(loop);
+      });
     });
 
     return () => {
       cancelAnimationFrame(start);
+      cancelAnimationFrame(warmup);
       cancelAnimationFrame(raf);
       lenis.destroy();
     };
@@ -186,18 +224,7 @@ export function CaseStudyModal({ data, open, onClose }: Props) {
           and a transformed ancestor makes `position: fixed` resolve against it
           instead of the viewport — which sent the button scrolling away with
           the page. As a direct child of the dialog it stays put. */}
-      <div className="case-close">
-        <MagneticButton
-          onClick={requestClose}
-          className="glass rounded-full"
-          style={{ width: '100%', height: '100%', paddingInline: 0 }}
-        >
-          <svg aria-hidden="true" viewBox="0 0 24 24" className="w-[42%] text-white" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-            <path d="M5 5 19 19M19 5 5 19" />
-          </svg>
-          <span className="sr-only">Close case study</span>
-        </MagneticButton>
-      </div>
+      <CloseButton onClose={requestClose} />
 
       <article ref={sheetRef} className="case-study-sheet min-h-dvh">
         <div className="case-wrap">
