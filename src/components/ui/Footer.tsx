@@ -56,6 +56,15 @@ const BALLS: Ball[] = [
 // one still suspends it — it moves only while the button is down — and letting
 // go hands its momentum back to the sim, which is where the bounce comes from.
 const GRAVITY = 2000; // px/s²
+// The collision body is a core at 65% of the visible sphere. Five spheres of
+// 30vw are half again as wide as the screen; colliding on their full size
+// forced them into a pyramid, and a pyramid of glass reads as spheres glued
+// together — every attempt to damp it either looked stuck or never settled.
+// On the cores, the row fits the floor (5 × 30vw × 0.65 = 97.5vw), so they
+// rest side by side, overlapping like bubbles, and nothing ever needs to
+// stand on anything. The floor still uses the full radius so a sphere sits on
+// the screen edge rather than sinking through it, and so does the grab.
+const BODY_R = 0.65;
 const WALL_BOUNCE = 0.58; // sides and floor
 const BALL_BOUNCE = 0.82; // balls spring off each other, they don't just knock
 // Friction where two spheres touch. It exists to stop a resting heap creeping
@@ -95,7 +104,10 @@ type Body = {
   y: number;
   vx: number;
   vy: number;
+  /** Collision-core radius (BODY_R of the visible sphere). */
   r: number;
+  /** Visible radius — the floor, the grab and the drop heights use this. */
+  rv: number;
   /** Seconds until this one is released from above; <= 0 means it is falling. */
   wait: number;
   bounce: number;
@@ -151,7 +163,8 @@ export function Footer() {
       H = stage.clientHeight;
       zi = 1 / zoomOf(stage);
       els.forEach((el, i) => {
-        const r = el.offsetWidth / 2;
+        const rv = el.offsetWidth / 2;
+        const r = rv * BODY_R;
         if (initial) {
           const d = DROPS[i] ?? DROPS[0];
           // Parked just above the clip line — which is itself a screen higher
@@ -159,10 +172,11 @@ export function Footer() {
           // window, not from behind an invisible shelf partway down it.
           bodies[i] = {
             x: r + (W - 2 * r) * d.slot - d.drift * 0.5,
-            y: -r * (1 + d.lift),
+            y: -rv * (1 + d.lift),
             vx: d.drift * zi,
             vy: 0,
             r,
+            rv,
             wait: d.delay,
             bounce: d.bounce,
             contact: false,
@@ -170,8 +184,9 @@ export function Footer() {
           };
         } else if (bodies[i]) {
           bodies[i].r = r;
+          bodies[i].rv = rv;
           bodies[i].x = clamp(bodies[i].x, r, Math.max(r, W - r));
-          bodies[i].y = Math.min(bodies[i].y, H - r);
+          bodies[i].y = Math.min(bodies[i].y, H - rv);
         }
       });
     };
@@ -229,7 +244,7 @@ export function Footer() {
       // visibilitychange handlers below cover the lost-pointer case instead.
       for (let i = 0; i < bodies.length; i++) {
         const b = bodies[i];
-        if (Math.hypot(p.x - b.x, p.y - b.y) <= b.r) {
+        if (Math.hypot(p.x - b.x, p.y - b.y) <= b.rv) {
           dragging = i;
           moved = false;
           lastPX = p.x;
@@ -253,7 +268,7 @@ export function Footer() {
       if (Math.hypot(dx, dy) > 3) moved = true;
       // Follow the pointer exactly while held, clamped inside the stage.
       b.x = clamp(p.x, b.r, Math.max(b.r, W - b.r));
-      b.y = clamp(p.y, b.r, Math.max(b.r, H - b.r));
+      b.y = clamp(p.y, b.r, Math.max(b.r, H - b.rv));
       // Smoothed velocity, but responsive to a flick so the release has real
       // momentum for the bounce.
       b.vx = lerp(b.vx, dx / dt, 0.6);
@@ -347,12 +362,12 @@ export function Footer() {
           b.vx = -Math.abs(b.vx) * WALL_BOUNCE;
           b.contact = true;
         }
-        if (b.y > H - b.r - CONTACT_SKIN) {
+        if (b.y > H - b.rv - CONTACT_SKIN) {
           b.contact = true;
           b.onFloor = true;
         }
-        if (b.y > H - b.r) {
-          b.y = H - b.r;
+        if (b.y > H - b.rv) {
+          b.y = H - b.rv;
           // Each ball keeps its own restitution, so they stop tossing in sync.
           b.vy = -Math.abs(b.vy) * b.bounce;
           b.vx *= GROUND_FRICTION;
@@ -430,7 +445,7 @@ export function Footer() {
         if (i === dragging) continue;
         const b = bodies[i];
         b.x = clamp(b.x, b.r, Math.max(b.r, W - b.r));
-        b.y = Math.min(b.y, H - b.r);
+        b.y = Math.min(b.y, H - b.rv);
       }
 
       for (let i = 0; i < bodies.length; i++) {
@@ -580,12 +595,12 @@ export function Footer() {
             // pull a ball, trailing a ghost of the URL across the page.
             draggable={false}
             onDragStart={(e) => e.preventDefault()}
-            className={`glass-ball pointer-events-auto z-10 grid size-[calc(min(30vw,44vh)/var(--site-zoom,1))] min-h-[112px] min-w-[112px] cursor-grab touch-none select-none place-items-center rounded-full active:cursor-grabbing ${
+            className={`glass-ball pointer-events-auto z-10 grid size-[calc(30vw/var(--site-zoom,1))] min-h-[112px] min-w-[112px] cursor-grab touch-none select-none place-items-center rounded-full active:cursor-grabbing ${
               reduced ? 'relative' : 'absolute left-0 top-0 will-change-transform'
             }`}
           >
             {/* The mark on its own, white — no plate, no shadow. */}
-            <b.Glyph className="relative z-10 w-[calc(min(9.5vw,13.9vh)/var(--site-zoom,1))] min-w-[36px] text-white" />
+            <b.Glyph className="relative z-10 w-[calc(9.5vw/var(--site-zoom,1))] min-w-[36px] text-white" />
             <span className="sr-only">{b.label}</span>
           </a>
         ))}
