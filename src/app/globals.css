@@ -674,13 +674,11 @@ html.lenis body {
   height: max(48px, calc(64 * var(--cu)));
 }
 .case-close {
-  /* Two things are its own. The shallow lens, because at 64px across the full
-     displacement is deeper than the button's own radius and a status bar behind
-     it came back around the rim as a ghost of itself. And a faint smoke in the
-     plate — enough to seat a white glyph on a white screenshot, not enough to
-     read as a black disc; the legibility is carried by the glyph's own shadow
-     below, which costs the glass nothing. */
-  --lg-bg: rgba(16, 16, 18, 0.2);
+  /* Only the shallow lens is its own: at 64px across the full displacement is
+     deeper than the button's radius and a status bar behind it came back
+     around the rim as a ghost of itself. The plate is the same white glass as
+     every other surface — every smoked version read as a black dot punched
+     into the sheet; the cross carries its own contrast instead. */
   --lg-filter: url(#lg-sm);
   display: grid;
   width: 100%;
