@@ -616,6 +616,15 @@ html.lenis body {
   width: 100%;
   height: auto;
 }
+/* A row whose sources disagree on aspect: the plate holds the ratio and the
+   screen fills it, so the row lines up instead of running ragged. */
+.case-plate[data-box] {
+  aspect-ratio: var(--shot-box);
+}
+.case-plate[data-box] .case-shot {
+  height: 100%;
+  object-fit: cover;
+}
 /* Row of windows at different widths but a common height — each child is
    weighted by its own pixel width (see the responsive-desktop row). */
 .case-widths {
@@ -639,9 +648,13 @@ html.lenis body {
   height: max(48px, calc(64 * var(--cu)));
 }
 .case-close {
-  /* Its own tint, and only that: over a white screenshot a white plate left the
-     glyph reading as white-on-white. Everything else about the glass is shared. */
-  --lg-bg: rgba(20, 20, 20, 0.34);
+  /* Its own tint, and the shallow lens: over a white screenshot a white plate
+     left the glyph reading as white-on-white, and at 64px across, the full
+     displacement is deeper than the button's own radius — a status bar behind
+     it came back around the rim as a ghost of itself. Everything else about the
+     glass is shared. */
+  --lg-bg: rgba(18, 18, 18, 0.62);
+  --lg-filter: url(#lg-sm);
   display: grid;
   width: 100%;
   height: 100%;

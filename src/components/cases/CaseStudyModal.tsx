@@ -17,6 +17,8 @@ type ShotProps = {
   style?: React.CSSProperties;
   /** Corner radius at the 1440 reference, in Figma pixels. */
   radius?: number;
+  /** Hold the plate to this ratio and fill it, so a row of screens lines up. */
+  box?: string;
 };
 
 // Corner radii, at the 1440 reference: the concept phones are drawn at 48, the
@@ -24,6 +26,12 @@ type ShotProps = {
 const CONCEPT_RADIUS = 48;
 const MOBILE_RADIUS = 32;
 const DESKTOP_RADIUS = 8;
+
+// The reward screens were captured on two different device widths — 1080 and
+// 1125 across the same height — so scaling them to a shared column width left
+// the row a few dozen pixels ragged. They are held to one box instead and fill
+// it; the odd one out loses about 4% of its width, which is margin.
+const REWARD_BOX = '1080 / 2436';
 
 /** Marks a block for the blur-in reveal. `i` staggers siblings within a row. */
 const reveal = (classes = '', i = 0, media = false) => ({
@@ -40,10 +48,14 @@ const reveal = (classes = '', i = 0, media = false) => ({
  * arrive; `loading="lazy"` keeps everything below the fold off the critical
  * path, which matters when the sheet carries thirty-one of these.
  */
-function Shot({ shot, caption, className = '', style, radius = DESKTOP_RADIUS }: ShotProps) {
+function Shot({ shot, caption, className = '', style, radius = DESKTOP_RADIUS, box }: ShotProps) {
   return (
     <figure className={className} style={style}>
-      <div className="case-plate" style={{ '--shot-radius': `calc(${radius} * var(--cu))` } as React.CSSProperties}>
+      <div
+        className="case-plate"
+        data-box={box ? '' : undefined}
+        style={{ '--shot-radius': `calc(${radius} * var(--cu))`, '--shot-box': box } as React.CSSProperties}
+      >
         <img
           src={shot.src}
           alt={shot.alt}
@@ -320,7 +332,7 @@ export function CaseStudyModal({ data, open, onClose }: Props) {
             <p {...reveal('case-lead mt-[calc(32*var(--cu))] max-w-[96.5%]', 1)}>Chums already had quests and wallet rewards, but users struggled to find the feature, understand the tasks and see the payout before starting. I led the benchmark study, defined the product direction and guided a junior designer through the execution.</p>
             <div className="case-phones mt-[calc(96*var(--cu))]" style={{ '--phone-gap': 140 } as React.CSSProperties}>
               {[shot.chatList, shot.quests, shot.stats, shot.errorState, shot.walletOnboarding, shot.questsComplete].map((s, i) => (
-                <Shot key={s.src} shot={s} radius={MOBILE_RADIUS} {...reveal('', i % 3, true)} />
+                <Shot key={s.src} shot={s} radius={MOBILE_RADIUS} box={REWARD_BOX} {...reveal('', i % 3, true)} />
               ))}
             </div>
             <p {...reveal('case-lead mt-[calc(52*var(--cu))] max-w-[96.5%]', 0)}>We built the experience around a clear entry point, upfront reward amounts, visible progress and rules explained directly inside the flow. I reviewed the scenarios and key design decisions throughout the process. The final concept was approved and moved into development.</p>
