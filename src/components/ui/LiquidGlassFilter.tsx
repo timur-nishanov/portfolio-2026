@@ -59,17 +59,22 @@ const RAMP_Y = svgRamp(false, [
 // half a screen of empty region either side — which the blur then averaged into
 // the middle, leaving the bar less frosted than before, not more. Legibility on
 // a small surface is the plate's job (see .case-close), not the frost's.
+// Each family carries its own region padding, sized for its geometry. The pad
+// exists in *pixels* — the filter has to reach past the box by the displacement
+// (scale × ~0.46) plus the blur tail (~3σ ≈ 21px), about 45px for the deep
+// lenses — but SVG regions are percentages of the element. One shared
+// percentage broke as soon as the lens deepened: 25% of a 64px-tall pill is
+// 16px, the blur ran out of real pixels and averaged transparent black into
+// the rim, which is what read as the frost "not filling" the header.
+//   lg      pills and buttons — short vertical axis, so the Y pad dominates
+//   lg-deep spheres, hundreds of px across — modest percentages suffice
+//   lg-sm   small round buttons — tiny both ways, so both pads run large
 const SCALES = [
-  { id: 'lg', scale: 52 },
-  // The footer and case spheres are hundreds of pixels across — they carry a
-  // deeper lens still, which is what sells them as solid glass.
-  { id: 'lg-deep', scale: 68 },
-  { id: 'lg-sm', scale: 14 },
+  { id: 'lg', scale: 52, padX: 30, padY: 80 },
+  { id: 'lg-deep', scale: 68, padX: 25, padY: 25 },
+  { id: 'lg-sm', scale: 14, padX: 50, padY: 50 },
 ];
 const BLUR = 7;
-// The pad grows the filter region past the blur radius — see the note below.
-const PAD_X = 10; // % of the box width, each side
-const PAD_Y = 25; // % of the box height, each side
 // The frost is part of this chain, not a separate CSS blur: backdrop-filter
 // takes one value, so a url() filter replaces the blur rather than joining it.
 // A blur inside a filter samples transparent black outside the filter region,
@@ -88,14 +93,14 @@ export function LiquidGlassFilter() {
       style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden' }}
     >
       <defs>
-        {SCALES.map(({ id, scale }) => (
+        {SCALES.map(({ id, scale, padX, padY }) => (
         <filter
           key={id}
           id={id}
-          x={`-${PAD_X}%`}
-          y={`-${PAD_Y}%`}
-          width={`${100 + 2 * PAD_X}%`}
-          height={`${100 + 2 * PAD_Y}%`}
+          x={`-${padX}%`}
+          y={`-${padY}%`}
+          width={`${100 + 2 * padX}%`}
+          height={`${100 + 2 * padY}%`}
           colorInterpolationFilters="sRGB"
         >
           {/* preserveAspectRatio="none" so one ramp fits a pill as well as a
