@@ -278,6 +278,10 @@ html.lenis body {
      to stand on its own: they ignore url() inside backdrop-filter, so anything
      that depended on the displacement would render as a bare transparent
      patch. The volume is carried by the shadows, not the blur. */
+  /* Spheres run the deep lens — see LiquidGlassFilter. */
+  .glass-ball {
+    --lg-filter: url(#lg-deep);
+  }
   .glass,
   .glass-ball {
     background-color: var(--lg-bg);
