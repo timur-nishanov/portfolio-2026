@@ -25,23 +25,25 @@ const svgRamp = (horizontal: boolean, stops: [number, number][]) => {
   return `data:image/svg+xml,${svg.replace(/</g, '%3C').replace(/>/g, '%3E').replace(/#/g, '%23')}`;
 };
 
-// The lens lives in the outer ~14% horizontally and ~30% vertically — roughly
-// the corner radius of the surfaces this runs on, so the middle stays flat and
-// whatever sits on the glass is never distorted.
+// The lens lives in the outer ~20% horizontally and ~42% vertically, peaks a
+// touch harder, and still leaves the middle flat so whatever sits on the glass
+// is never distorted. Wider than the first cut (14%/30%) — the effect wanted
+// more presence, and widening the band bends more of the backdrop without the
+// edge artefacts that only raising the scale brings.
 const RAMP_X = svgRamp(true, [
   [0, 128],
-  [0.05, 20],
-  [0.14, 128],
-  [0.86, 128],
-  [0.95, 236],
+  [0.06, 12],
+  [0.2, 128],
+  [0.8, 128],
+  [0.94, 244],
   [1, 128],
 ]);
 const RAMP_Y = svgRamp(false, [
   [0, 128],
-  [0.1, 20],
-  [0.3, 128],
-  [0.7, 128],
-  [0.9, 236],
+  [0.12, 12],
+  [0.42, 128],
+  [0.58, 128],
+  [0.88, 244],
   [1, 128],
 ]);
 
@@ -58,7 +60,10 @@ const RAMP_Y = svgRamp(false, [
 // the middle, leaving the bar less frosted than before, not more. Legibility on
 // a small surface is the plate's job (see .case-close), not the frost's.
 const SCALES = [
-  { id: 'lg', scale: 36 },
+  { id: 'lg', scale: 52 },
+  // The footer and case spheres are hundreds of pixels across — they carry a
+  // deeper lens still, which is what sells them as solid glass.
+  { id: 'lg-deep', scale: 68 },
   { id: 'lg-sm', scale: 14 },
 ];
 const BLUR = 7;
