@@ -40,7 +40,7 @@ export const awards: Award[] = [
   },
   {
     id: 'minimal-gallery',
-    title: 'Minimal Gallery picks',
+    title: 'Minimal Gallery Picks',
     source: 'ARTEMARTEM.COM · WITH CEDRO',
     tier: 'teal',
     href: 'https://artemartem.com',

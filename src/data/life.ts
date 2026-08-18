@@ -29,7 +29,7 @@ export const life: LifeEntry[] = [
     description:
       'I gave a team talk on how I use AI in my design workflow and daily life. People from other teams joined the call too.',
     date: 'MARCH 2026',
-    media: { type: 'image', src: '/life/claude-poster.png', alt: 'Talk on AI in the design process' },
+    media: { type: 'image', src: '/life/claude-poster.webp', alt: 'Talk on AI in the design process' },
   },
   {
     id: 'life-postcards',
