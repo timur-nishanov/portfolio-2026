@@ -369,10 +369,11 @@ html.lenis body {
         animation: curtain-lift linear both;
         /* Both must stay after the shorthand — `animation:` resets them. */
         animation-timeline: --curtain-lift;
-        /* Done within the first third of the reveal — the sheet snaps into
-           its card shape almost as soon as the photo shows, so the move
-           reads as deliberate rather than a slow drift. */
-        animation-range: cover 0% cover 30%;
+        /* The full reveal, end to end: the sheet keeps narrowing for as long
+           as it is moving and peaks exactly when the footer is fully open.
+           Saturating early was tried twice — the card stopped changing with
+           the page still scrolling, which read as the effect breaking. */
+        animation-range: cover 0% cover 100%;
       }
     }
     /* Engines without scroll-driven animations (Safari < 26, Firefox): the
