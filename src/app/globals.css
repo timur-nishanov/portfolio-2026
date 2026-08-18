@@ -100,6 +100,20 @@ body {
   timeline-scope: --curtain-lift;
 }
 
+/* The floating head's grab affordance (set from Head3D): same open/closed
+   hand as the footer spheres. The head floats over text and links whose own
+   cursors beat anything set on an ancestor, so while the pointer is on the
+   head's opaque pixels the hand is forced from the root. `grabbing` sits
+   after `grab` so it wins while both classes are up. */
+.head-grab,
+.head-grab * {
+  cursor: grab !important;
+}
+.head-grabbing,
+.head-grabbing * {
+  cursor: grabbing !important;
+}
+
 html {
   -webkit-text-size-adjust: 100%;
   /* The scroll indicator is a hairline pill, barely there — the platform
@@ -804,8 +818,7 @@ html.lenis body {
   gap: calc(16 * var(--cu));
 }
 /* Close button — same 80px box as the header's own round button, same glass,
-   same magnet, and level with the title at 32 from the top. Only the glyph is
-   white here, because it sits on the dark sheet.
+   same magnet, and level with the title at 32 from the top.
 
    The surface and the glyph move together as one layer: the header's two-speed
    magnet (plate leading, label lagging) is what gives a wide pill its life, but
@@ -830,15 +843,14 @@ html.lenis body {
   height: 100%;
   place-items: center;
   border-radius: 999px;
-  color: #fff;
+  /* Ink, one stroke, no shadow under it — the dressed-up white cross (dark
+     hairline plus drop-shadow) read as a dirty outline on the white plate. */
+  color: #1a1a1a;
   cursor: pointer;
 }
 .case-close svg {
   width: max(16px, calc(24 * var(--cu)));
   height: max(16px, calc(24 * var(--cu)));
-  /* All the contrast the cross gets: a soft seat under it, nothing painted on
-     the glass itself. */
-  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.5));
 }
 /* The sphere's own highlight, same as the case balls: a light source up and to
    the left, and a lift along the bottom rim. Nothing darker than the plate —

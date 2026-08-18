@@ -261,7 +261,24 @@ export function Head3D() {
       };
     };
 
+    // Same affordance as the footer spheres: an open hand over the head, a
+    // closed one while it is held. The head floats over text and links, whose
+    // own cursors would win over anything set on an ancestor — hence the
+    // documentElement classes with !important rules (globals.css). The alpha
+    // hit test keeps the hand strictly on opaque head pixels, so links stay
+    // links right up to the silhouette.
+    let hoverOn = false;
+    const setHover = (on: boolean) => {
+      if (on === hoverOn) return;
+      hoverOn = on;
+      document.documentElement.classList.toggle('head-grab', on);
+    };
+
     const onPointerMove = (e: PointerEvent) => {
+      if (!dragging && e.pointerType === 'mouse') {
+        const { u, v } = headUV(e.clientX, e.clientY);
+        setHover(isOnHead(u, v));
+      }
       if (dragging) {
         const now = performance.now();
         // Real elapsed time, clamped, so a burst of high-frequency mouse events
@@ -293,6 +310,7 @@ export function Head3D() {
       document.getSelection()?.removeAllRanges();
       document.body.style.userSelect = 'none';
       dragging = true;
+      document.documentElement.classList.add('head-grabbing');
       holding = 0;
       downTime = performance.now();
       lastMoveT = downTime;
@@ -307,6 +325,7 @@ export function Head3D() {
     const onPointerUp = () => {
       if (!dragging) return;
       dragging = false;
+      document.documentElement.classList.remove('head-grabbing');
       holding = 0;
       document.body.style.userSelect = '';
       thrown = true;
@@ -517,6 +536,7 @@ export function Head3D() {
       io.disconnect();
       ro.disconnect();
       document.body.style.userSelect = '';
+      document.documentElement.classList.remove('head-grab', 'head-grabbing');
       window.removeEventListener('pointermove', onPointerMove);
       window.removeEventListener('pointerdown', onPointerDown);
       window.removeEventListener('pointerup', onPointerUp);

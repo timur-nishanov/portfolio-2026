@@ -109,13 +109,11 @@ function CloseButton({ onClose }: { onClose: () => void }) {
   return (
     <div ref={anchorRef} className="case-close-anchor">
       <button ref={buttonRef} type="button" onClick={onClose} className="case-close glass will-change-transform">
-        {/* A hairline dark edge under the white cross — enough to hold it over
-            a white status bar, thin enough to vanish everywhere else. A heavy
-            4px outline was tried and read as a marker scrawl on the calm sheet
-            the button spends most of its life over. */}
+        {/* One clean stroke, nothing else. The dual-stroke-plus-shadow version
+            (dark hairline under a white cross) read as a dirty outline on the
+            white plate; the ink cross carries its own contrast instead. */}
         <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" strokeLinecap="round">
-          <path d="M5 5 19 19M19 5 5 19" stroke="rgba(0,0,0,0.35)" strokeWidth="2.4" />
-          <path d="M5 5 19 19M19 5 5 19" stroke="currentColor" strokeWidth="1.5" />
+          <path d="M5 5 19 19M19 5 5 19" stroke="currentColor" strokeWidth="1.6" />
         </svg>
         <span className="sr-only">Close case study</span>
       </button>
