@@ -361,7 +361,10 @@ html.lenis body {
      move; the card has to be unmistakably a card. The two run on split
      curves: the corners are fully round by 45% of the reveal (they are the
      effect, so they lead), while the narrowing keeps developing to the very
-     end so the sheet never stops moving while it is on screen. */
+     end so the sheet never stops moving while it is on screen. Past 45% the
+     radius keeps climbing to half the card's final width — each bottom
+     corner is (50vw − 112px)/zoom, the two together span the whole bottom
+     edge, and the sheet leaves the screen as a perfect half-circle arch. */
   .curtain-lift-sentinel {
     height: 0;
     view-timeline: --curtain-lift block;
@@ -384,11 +387,16 @@ html.lenis body {
        rAF-throttled scroll handler, and this rule is the keyframe. */
     @supports not (animation-timeline: view()) {
       .page-curtain {
+        /* Same two curves as the keyframes: linear sides, radius fast to
+           96px by 45% and on to the half-circle by the end. */
+        --curtain-lift-r: calc(
+          min(var(--curtain-lift-p, 0) / 0.45, 1) * 96px / var(--site-zoom) +
+            max(var(--curtain-lift-p, 0) - 0.45, 0) / 0.55 *
+            (50vw - 208px) / var(--site-zoom)
+        );
         clip-path: inset(
           0 calc(var(--curtain-lift-p, 0) * 112px / var(--site-zoom)) 0
-            round 0 0
-            calc(min(var(--curtain-lift-p, 0) / 0.45, 1) * 96px / var(--site-zoom))
-            calc(min(var(--curtain-lift-p, 0) / 0.45, 1) * 96px / var(--site-zoom))
+            round 0 0 var(--curtain-lift-r) var(--curtain-lift-r)
         );
       }
     }
@@ -409,7 +417,8 @@ html.lenis body {
     to {
       clip-path: inset(
         0 calc(112px / var(--site-zoom)) 0 round 0 0
-          calc(96px / var(--site-zoom)) calc(96px / var(--site-zoom))
+          calc((50vw - 112px) / var(--site-zoom))
+          calc((50vw - 112px) / var(--site-zoom))
       );
     }
   }
