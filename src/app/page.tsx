@@ -25,8 +25,8 @@ export default function Home() {
         <LifeSection />
         <CareerSection />
         {/* Zero-height marker whose travel across the screen drives the
-            footer's frame effect — see "the frame" in globals.css. */}
-        <div aria-hidden="true" className="footer-frame-sentinel" />
+            curtain's lift-off effect — see "the lift" in globals.css. */}
+        <div aria-hidden="true" className="curtain-lift-sentinel" />
       </main>
       <Footer />
     </SmoothScrollProvider>

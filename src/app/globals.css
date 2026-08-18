@@ -90,10 +90,10 @@
 }
 body {
   zoom: var(--site-zoom);
-  /* Publishes the reveal sentinel's view timeline (see "the frame" below) so
-     the fixed footer — an ancestor apart — can animate against it. Inert
-     where scroll-driven animations are unsupported. */
-  timeline-scope: --footer-frame;
+  /* Publishes the reveal sentinel's view timeline (see "the lift" below) so
+     the curtain — the sentinel's own ancestor — can animate against it.
+     Inert where scroll-driven animations are unsupported. */
+  timeline-scope: --curtain-lift;
 }
 
 html {
@@ -343,46 +343,58 @@ html.lenis body {
     margin-bottom: calc(100svh / var(--site-zoom));
   }
 
-  /* --- the frame ---------------------------------------------------------
-     As the curtain lifts, the footer pulls in from the screen edges and its
-     top corners round off — full-bleed when the photo first shows, a framed
-     card by the time it is fully open. The footer is fixed, so it has no
-     view progress of its own: the timeline comes from a zero-height sentinel
-     at the very end of `main`, whose bottom-to-top travel across the screen
-     IS the reveal. Scrubbed by scroll, so it reverses for free and cannot
-     accumulate drift. Desktop only — phones keep the plain curtain. */
+  /* --- the lift ----------------------------------------------------------
+     As the curtain rises off the footer it stops being the page and becomes
+     a sheet: it pulls in from the screen edges and its bottom corners round
+     off, so it lifts away as a card floating over the photograph — which
+     stays full-bleed underneath. Clip-path, deliberately: it changes paint
+     only, so the page never relayouts and the footer never resizes (the
+     ball physics would feel a width change as a wall moving mid-drop).
+     The curtain is in flow but spans the whole document, so the timeline
+     comes from a zero-height sentinel at its very end, whose bottom-to-top
+     travel across the screen IS the reveal. Published to the curtain via
+     timeline-scope on body, scrubbed by scroll, so it reverses for free and
+     cannot accumulate drift. Desktop only — phones keep the plain curtain. */
   /* The lengths divide the zoom back out: 36px of visual inset and a 28px
      visual radius, authored in the 1/0.8 world the body zoom creates. */
-  .footer-frame-sentinel {
+  .curtain-lift-sentinel {
     height: 0;
-    view-timeline: --footer-frame block;
+    view-timeline: --curtain-lift block;
   }
   @media (min-width: 1024px) {
     @supports (animation-timeline: view()) {
-      .footer-reveal {
-        animation: footer-frame linear both;
+      .page-curtain {
+        animation: curtain-lift linear both;
         /* Both must stay after the shorthand — `animation:` resets them. */
-        animation-timeline: --footer-frame;
-        /* Done at 90%, so the frame is already settled while the last strip
-           of the curtain slides off. */
+        animation-timeline: --curtain-lift;
+        /* Done at 90%, so the sheet is fully formed while its last strip
+           slides off the top. */
         animation-range: cover 0% cover 90%;
       }
     }
     /* Engines without scroll-driven animations (Safari < 26, Firefox): the
-       Footer mirrors the same progress into --footer-frame-p (0..1) from a
-       rAF-throttled scroll handler, and this pair of rules is the keyframe. */
+       Footer mirrors the same progress into --curtain-lift-p (0..1) from a
+       rAF-throttled scroll handler, and this rule is the keyframe. */
     @supports not (animation-timeline: view()) {
-      .footer-reveal {
-        margin-inline: calc(var(--footer-frame-p, 0) * 36px / var(--site-zoom));
-        border-radius: calc(var(--footer-frame-p, 0) * 28px / var(--site-zoom))
-          calc(var(--footer-frame-p, 0) * 28px / var(--site-zoom)) 0 0;
+      .page-curtain {
+        clip-path: inset(
+          0 calc(var(--curtain-lift-p, 0) * 36px / var(--site-zoom)) 0
+            round 0 0 calc(var(--curtain-lift-p, 0) * 28px / var(--site-zoom))
+            calc(var(--curtain-lift-p, 0) * 28px / var(--site-zoom))
+        );
       }
     }
   }
-  @keyframes footer-frame {
+  /* Explicit `from`: `none` does not interpolate with an inset(). */
+  @keyframes curtain-lift {
+    from {
+      clip-path: inset(0 0 0 round 0 0 0 0);
+    }
     to {
-      margin-inline: calc(36px / var(--site-zoom));
-      border-radius: calc(28px / var(--site-zoom)) calc(28px / var(--site-zoom)) 0 0;
+      clip-path: inset(
+        0 calc(36px / var(--site-zoom)) 0 round 0 0
+          calc(28px / var(--site-zoom)) calc(28px / var(--site-zoom))
+      );
     }
   }
 
