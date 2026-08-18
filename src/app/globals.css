@@ -355,16 +355,18 @@ html.lenis body {
      travel across the screen IS the reveal. Published to the curtain via
      timeline-scope on body, scrubbed by scroll, so it reverses for free and
      cannot accumulate drift. Desktop only — phones keep the plain curtain. */
-  /* The lengths divide the zoom back out: 112px of visual inset and a 96px
-     visual radius, authored in the 1/0.8 world the body zoom creates. Bold
-     on purpose — at a third of this it read as a rendering glitch, not a
-     move; the card has to be unmistakably a card. The two run on split
-     curves: the corners are fully round by 45% of the reveal (they are the
-     effect, so they lead), while the narrowing keeps developing to the very
-     end so the sheet never stops moving while it is on screen. Past 45% the
-     radius keeps climbing to half the card's final width — each bottom
-     corner is (50vw − 112px)/zoom, the two together span the whole bottom
-     edge, and the sheet leaves the screen as a perfect half-circle arch. */
+  /* The lengths divide the zoom back out: 112px of visual inset, authored
+     in the 1/0.8 world the body zoom creates. Bold on purpose — at a third
+     of this it read as a rendering glitch, not a move; the card has to be
+     unmistakably a card. The sides narrow on one straight line to the very
+     end, so the sheet never stops moving while it is on screen; the radius
+     rides r = R·p^1.5 to half the card's final width — (50vw − 112px)/zoom
+     a corner, the two spanning the whole bottom edge, so the sheet leaves
+     as a perfect half-circle arch. One smooth curve, deliberately: an
+     earlier cut capped the radius at 45% and grew it linearly after, and
+     the kink read as the rounding pausing mid-scroll before starting up
+     again. p^1.5 starts quick and only accelerates, so there is no moment
+     where a big corner grows too slowly to see. */
   .curtain-lift-sentinel {
     height: 0;
     view-timeline: --curtain-lift block;
@@ -387,32 +389,70 @@ html.lenis body {
        rAF-throttled scroll handler, and this rule is the keyframe. */
     @supports not (animation-timeline: view()) {
       .page-curtain {
-        /* Same two curves as the keyframes: linear sides, radius fast to
-           96px by 45% and on to the half-circle by the end. */
-        --curtain-lift-r: calc(
-          min(var(--curtain-lift-p, 0) / 0.45, 1) * 96px / var(--site-zoom) +
-            max(var(--curtain-lift-p, 0) - 0.45, 0) / 0.55 *
-            (50vw - 208px) / var(--site-zoom)
-        );
+        /* Same curves as the keyframes: linear sides, radius on p^1.5 —
+           the handler supplies --curtain-lift-rp = p^1.5 ready-made. */
         clip-path: inset(
           0 calc(var(--curtain-lift-p, 0) * 112px / var(--site-zoom)) 0
-            round 0 0 var(--curtain-lift-r) var(--curtain-lift-r)
+            round 0 0
+            calc(var(--curtain-lift-rp, 0) * (50vw - 112px) / var(--site-zoom))
+            calc(var(--curtain-lift-rp, 0) * (50vw - 112px) / var(--site-zoom))
         );
       }
     }
   }
-  /* Explicit `from`: `none` does not interpolate with an inset(). The 45%
-     stop is where the radius tops out; its inset is 45% of the final value,
-     so the sides still travel one straight line from 0% to 100%. */
+  /* Explicit `from`: `none` does not interpolate with an inset(). Keyframes
+     interpolate linearly, so the smooth r = R·p^1.5 is sampled every 10% —
+     close enough that no segment joint is visible on screen. Each stop's
+     inset is exactly p·112px, which keeps the sides on one straight line
+     through every joint. */
   @keyframes curtain-lift {
     from {
       clip-path: inset(0 0 0 round 0 0 0 0);
     }
-    45% {
-      clip-path: inset(
-        0 calc(50.4px / var(--site-zoom)) 0 round 0 0
-          calc(96px / var(--site-zoom)) calc(96px / var(--site-zoom))
-      );
+    10% {
+      clip-path: inset(0 calc(11.2px / var(--site-zoom)) 0 round 0 0
+        calc(0.0316 * (50vw - 112px) / var(--site-zoom))
+        calc(0.0316 * (50vw - 112px) / var(--site-zoom)));
+    }
+    20% {
+      clip-path: inset(0 calc(22.4px / var(--site-zoom)) 0 round 0 0
+        calc(0.0894 * (50vw - 112px) / var(--site-zoom))
+        calc(0.0894 * (50vw - 112px) / var(--site-zoom)));
+    }
+    30% {
+      clip-path: inset(0 calc(33.6px / var(--site-zoom)) 0 round 0 0
+        calc(0.1643 * (50vw - 112px) / var(--site-zoom))
+        calc(0.1643 * (50vw - 112px) / var(--site-zoom)));
+    }
+    40% {
+      clip-path: inset(0 calc(44.8px / var(--site-zoom)) 0 round 0 0
+        calc(0.253 * (50vw - 112px) / var(--site-zoom))
+        calc(0.253 * (50vw - 112px) / var(--site-zoom)));
+    }
+    50% {
+      clip-path: inset(0 calc(56px / var(--site-zoom)) 0 round 0 0
+        calc(0.3536 * (50vw - 112px) / var(--site-zoom))
+        calc(0.3536 * (50vw - 112px) / var(--site-zoom)));
+    }
+    60% {
+      clip-path: inset(0 calc(67.2px / var(--site-zoom)) 0 round 0 0
+        calc(0.4648 * (50vw - 112px) / var(--site-zoom))
+        calc(0.4648 * (50vw - 112px) / var(--site-zoom)));
+    }
+    70% {
+      clip-path: inset(0 calc(78.4px / var(--site-zoom)) 0 round 0 0
+        calc(0.5857 * (50vw - 112px) / var(--site-zoom))
+        calc(0.5857 * (50vw - 112px) / var(--site-zoom)));
+    }
+    80% {
+      clip-path: inset(0 calc(89.6px / var(--site-zoom)) 0 round 0 0
+        calc(0.7155 * (50vw - 112px) / var(--site-zoom))
+        calc(0.7155 * (50vw - 112px) / var(--site-zoom)));
+    }
+    90% {
+      clip-path: inset(0 calc(100.8px / var(--site-zoom)) 0 round 0 0
+        calc(0.8538 * (50vw - 112px) / var(--site-zoom))
+        calc(0.8538 * (50vw - 112px) / var(--site-zoom)));
     }
     to {
       clip-path: inset(
