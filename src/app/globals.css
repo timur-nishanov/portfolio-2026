@@ -355,7 +355,7 @@ html.lenis body {
      travel across the screen IS the reveal. Published to the curtain via
      timeline-scope on body, scrubbed by scroll, so it reverses for free and
      cannot accumulate drift. Desktop only — phones keep the plain curtain. */
-  /* The lengths divide the zoom back out: 36px of visual inset and a 28px
+  /* The lengths divide the zoom back out: 64px of visual inset and a 48px
      visual radius, authored in the 1/0.8 world the body zoom creates. */
   .curtain-lift-sentinel {
     height: 0;
@@ -367,9 +367,10 @@ html.lenis body {
         animation: curtain-lift linear both;
         /* Both must stay after the shorthand — `animation:` resets them. */
         animation-timeline: --curtain-lift;
-        /* Done at 90%, so the sheet is fully formed while its last strip
-           slides off the top. */
-        animation-range: cover 0% cover 90%;
+        /* Done at half the reveal — the card forms while the sheet is still
+           mostly on screen, so the shape actually registers before it has
+           slid away. */
+        animation-range: cover 0% cover 50%;
       }
     }
     /* Engines without scroll-driven animations (Safari < 26, Firefox): the
@@ -378,9 +379,9 @@ html.lenis body {
     @supports not (animation-timeline: view()) {
       .page-curtain {
         clip-path: inset(
-          0 calc(var(--curtain-lift-p, 0) * 36px / var(--site-zoom)) 0
-            round 0 0 calc(var(--curtain-lift-p, 0) * 28px / var(--site-zoom))
-            calc(var(--curtain-lift-p, 0) * 28px / var(--site-zoom))
+          0 calc(var(--curtain-lift-p, 0) * 64px / var(--site-zoom)) 0
+            round 0 0 calc(var(--curtain-lift-p, 0) * 48px / var(--site-zoom))
+            calc(var(--curtain-lift-p, 0) * 48px / var(--site-zoom))
         );
       }
     }
@@ -392,8 +393,8 @@ html.lenis body {
     }
     to {
       clip-path: inset(
-        0 calc(36px / var(--site-zoom)) 0 round 0 0
-          calc(28px / var(--site-zoom)) calc(28px / var(--site-zoom))
+        0 calc(64px / var(--site-zoom)) 0 round 0 0
+          calc(48px / var(--site-zoom)) calc(48px / var(--site-zoom))
       );
     }
   }
