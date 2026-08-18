@@ -24,6 +24,9 @@ export default function Home() {
         <AboutBlock />
         <LifeSection />
         <CareerSection />
+        {/* Zero-height marker whose travel across the screen drives the
+            footer's frame effect — see "the frame" in globals.css. */}
+        <div aria-hidden="true" className="footer-frame-sentinel" />
       </main>
       <Footer />
     </SmoothScrollProvider>

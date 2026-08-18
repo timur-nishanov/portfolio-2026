@@ -90,6 +90,10 @@
 }
 body {
   zoom: var(--site-zoom);
+  /* Publishes the reveal sentinel's view timeline (see "the frame" below) so
+     the fixed footer — an ancestor apart — can animate against it. Inert
+     where scroll-driven animations are unsupported. */
+  timeline-scope: --footer-frame;
 }
 
 html {
@@ -337,6 +341,49 @@ html.lenis body {
     background: var(--bg);
     margin-bottom: calc(100vh / var(--site-zoom));
     margin-bottom: calc(100svh / var(--site-zoom));
+  }
+
+  /* --- the frame ---------------------------------------------------------
+     As the curtain lifts, the footer pulls in from the screen edges and its
+     top corners round off — full-bleed when the photo first shows, a framed
+     card by the time it is fully open. The footer is fixed, so it has no
+     view progress of its own: the timeline comes from a zero-height sentinel
+     at the very end of `main`, whose bottom-to-top travel across the screen
+     IS the reveal. Scrubbed by scroll, so it reverses for free and cannot
+     accumulate drift. Desktop only — phones keep the plain curtain. */
+  /* The lengths divide the zoom back out: 36px of visual inset and a 28px
+     visual radius, authored in the 1/0.8 world the body zoom creates. */
+  .footer-frame-sentinel {
+    height: 0;
+    view-timeline: --footer-frame block;
+  }
+  @media (min-width: 1024px) {
+    @supports (animation-timeline: view()) {
+      .footer-reveal {
+        animation: footer-frame linear both;
+        /* Both must stay after the shorthand — `animation:` resets them. */
+        animation-timeline: --footer-frame;
+        /* Done at 90%, so the frame is already settled while the last strip
+           of the curtain slides off. */
+        animation-range: cover 0% cover 90%;
+      }
+    }
+    /* Engines without scroll-driven animations (Safari < 26, Firefox): the
+       Footer mirrors the same progress into --footer-frame-p (0..1) from a
+       rAF-throttled scroll handler, and this pair of rules is the keyframe. */
+    @supports not (animation-timeline: view()) {
+      .footer-reveal {
+        margin-inline: calc(var(--footer-frame-p, 0) * 36px / var(--site-zoom));
+        border-radius: calc(var(--footer-frame-p, 0) * 28px / var(--site-zoom))
+          calc(var(--footer-frame-p, 0) * 28px / var(--site-zoom)) 0 0;
+      }
+    }
+  }
+  @keyframes footer-frame {
+    to {
+      margin-inline: calc(36px / var(--site-zoom));
+      border-radius: calc(28px / var(--site-zoom)) calc(28px / var(--site-zoom)) 0 0;
+    }
   }
 
   /* Enhancement layer — Chromium only. The filter carries its own blur, since
