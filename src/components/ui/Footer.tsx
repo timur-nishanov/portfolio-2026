@@ -148,7 +148,11 @@ export function Footer() {
       // gBCR and innerHeight are both visual px, so the body zoom cancels.
       const uncovered = window.innerHeight - curtain.getBoundingClientRect().bottom;
       const p = Math.min(1, Math.max(0, uncovered / window.innerHeight));
-      (curtain as HTMLElement).style.setProperty('--curtain-lift-p', p.toFixed(4));
+      const style = (curtain as HTMLElement).style;
+      style.setProperty('--curtain-lift-p', p.toFixed(4));
+      // The radius rides p^1.5 (see globals.css) — shipped ready-made so the
+      // stylesheet stays a plain multiply.
+      style.setProperty('--curtain-lift-rp', Math.pow(p, 1.5).toFixed(4));
     };
     const schedule = () => {
       if (!raf) raf = requestAnimationFrame(update);
