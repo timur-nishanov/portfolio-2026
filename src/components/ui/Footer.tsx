@@ -144,10 +144,10 @@ export function Footer() {
     let raf = 0;
     const update = () => {
       raf = 0;
-      // Matches the CSS path's `animation-range: cover 0% cover 90%`.
+      // Matches the CSS path's `animation-range: cover 0% cover 50%`.
       // gBCR and innerHeight are both visual px, so the body zoom cancels.
       const uncovered = window.innerHeight - curtain.getBoundingClientRect().bottom;
-      const p = Math.min(1, Math.max(0, uncovered / (window.innerHeight * 0.9)));
+      const p = Math.min(1, Math.max(0, uncovered / (window.innerHeight * 0.5)));
       (curtain as HTMLElement).style.setProperty('--curtain-lift-p', p.toFixed(4));
     };
     const schedule = () => {
