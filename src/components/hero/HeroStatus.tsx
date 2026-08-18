@@ -21,7 +21,7 @@ export function HeroStatus() {
 
   return (
     <p className="pixel absolute inset-x-4 bottom-[clamp(24px,5vw,72px)] text-center text-ink-muted">
-      BANGKOK{time ? ` · ${time}` : ''} · AVAILABLE FOR REMOTE WORK
+      BANGKOK{time ? ` ${time}` : ''} · AVAILABLE FOR REMOTE WORK
     </p>
   );
 }

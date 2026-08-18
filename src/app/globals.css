@@ -390,8 +390,15 @@ html.lenis body {
     view-timeline: --curtain-lift block;
   }
   @media (min-width: 1024px) {
+    /* Not while the case study is open, in either engine path: opening the
+       dialog locks the page scroller (overflow: hidden on the root), which
+       flips the view timeline inactive — and Chromium momentarily resolved
+       the animation at full progress, flashing the footer's edges around
+       the sheet while it was still dissolving in. With the scroller locked
+       there is nothing to scrub anyway, so the lift stands down and comes
+       back at the exact same scroll-derived progress on close. */
     @supports (animation-timeline: view()) {
-      .page-curtain {
+      html:not([data-modal-open]) .page-curtain {
         animation: curtain-lift linear both;
         /* Both must stay after the shorthand — `animation:` resets them. */
         animation-timeline: --curtain-lift;
@@ -406,7 +413,7 @@ html.lenis body {
        Footer mirrors the same progress into --curtain-lift-p (0..1) from a
        rAF-throttled scroll handler, and this rule is the keyframe. */
     @supports not (animation-timeline: view()) {
-      .page-curtain {
+      html:not([data-modal-open]) .page-curtain {
         /* Same curves as the keyframes: linear sides, radius on p^1.5 —
            the handler supplies --curtain-lift-rp = p^1.5 ready-made. */
         clip-path: inset(
@@ -843,9 +850,9 @@ html.lenis body {
   height: 100%;
   place-items: center;
   border-radius: 999px;
-  /* Ink, one stroke, no shadow under it — the dressed-up white cross (dark
-     hairline plus drop-shadow) read as a dirty outline on the white plate. */
-  color: #1a1a1a;
+  /* One stroke, no shadow, no under-stroke — the dressed-up version read as
+     a dirty outline. White by request; the glass plate carries the seat. */
+  color: #fff;
   cursor: pointer;
 }
 .case-close svg {
