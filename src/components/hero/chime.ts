@@ -10,14 +10,25 @@
 // Mode ratios of a struck glass — deliberately inharmonic. Whole-number
 // ratios ring like an organ pipe; these ring like a tumbler.
 const MODES = [1, 2.32, 4.25];
-// Corner rattles fire hitWall several times a frame; unthrottled they
-// machine-gun the chime into a buzz.
-const MIN_GAP_MS = 70;
+// Corner rattles and a heap of spheres all knocking at once would otherwise
+// machine-gun the chime into a buzz — one ring per beat is plenty.
+const MIN_GAP_MS = 110;
 
 let ctx: AudioContext | null = null;
 let lastAt = 0;
 
-export function playChime(impact: number, pan: number) {
+export function playChime(
+  impact: number,
+  pan: number,
+  opts?: {
+    /** Frequency multiplier — under 1 rings deeper, a bowl instead of a glass. */
+    pitch?: number;
+    /** Loudness multiplier on top of the impact curve. */
+    level?: number;
+  },
+) {
+  const pitch = opts?.pitch ?? 1;
+  const loudness = opts?.level ?? 1;
   // Grazing contacts stay silent — only a real knock rings.
   if (impact < 0.18) return;
   const now = performance.now();
@@ -38,8 +49,8 @@ export function playChime(impact: number, pan: number) {
 
   const t = ctx.currentTime;
   // Light means light: even the hardest hit stays around -26 dBFS.
-  const level = Math.min(0.05, 0.012 + impact * 0.016);
-  const base = 1500 + Math.random() * 500 + Math.min(impact, 2) * 260;
+  const level = Math.min(0.05, 0.012 + impact * 0.016) * loudness;
+  const base = (1500 + Math.random() * 500 + Math.min(impact, 2) * 260) * pitch;
 
   const out = ctx.createGain();
   const panner = new StereoPannerNode(ctx, { pan });

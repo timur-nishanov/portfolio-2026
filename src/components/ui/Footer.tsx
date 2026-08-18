@@ -7,6 +7,7 @@ import { site } from '@/data/site';
 import { clamp, lerp, q } from '@/lib/lerp';
 import { zoomOf } from '@/lib/zoom';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { playChime } from '@/components/hero/chime';
 import { XGlyph, LinkedInGlyph, TelegramGlyph, GitHubGlyph, SpotifyGlyph } from './SocialGlyphs';
 
 type Ball = {
@@ -237,6 +238,20 @@ export function Footer() {
     };
     layout(true);
 
+    // The spheres ring the same glass as the head, just deeper and quieter:
+    // pitch falls with size (a bowl, not a wine glass), the level sits at
+    // about half the head's, and only genuine knocks pass the speed gate.
+    // With five bodies in the pen anything gentler turns into wind chimes —
+    // grazes, settling and creep all stay under the gate, and the shared
+    // 70ms throttle in playChime caps a busy landing on top of it.
+    const CHIME_MIN = 320; // px/s, visual — a throw ploughing the heap rings a few times, not a drumroll
+    const chime = (b: Body, speed: number) => {
+      playChime(speed / zi / 520, clamp((b.x / W) * 2 - 1, -0.8, 0.8), {
+        pitch: clamp(150 / (b.r / zi), 0.4, 0.85),
+        level: 0.55,
+      });
+    };
+
     // Distance the whole heap has travelled recently. A wedge the support rule
     // cannot certify would otherwise hold the loop open for ever; if nothing
     // has actually moved for a while, it is at rest whatever the rule thinks.
@@ -413,10 +428,12 @@ export function Footer() {
         // window from squeezing its top member out for good; the size cap fixed
         // that properly, and the wall only took the throws away.
         if (b.x < b.r) {
+          if (Math.abs(b.vx) > CHIME_MIN * zi) chime(b, Math.abs(b.vx));
           b.x = b.r;
           b.vx = Math.abs(b.vx) * WALL_BOUNCE;
           b.contact = true;
         } else if (b.x > W - b.r) {
+          if (Math.abs(b.vx) > CHIME_MIN * zi) chime(b, Math.abs(b.vx));
           b.x = W - b.r;
           b.vx = -Math.abs(b.vx) * WALL_BOUNCE;
           b.contact = true;
@@ -426,6 +443,7 @@ export function Footer() {
           b.onFloor = true;
         }
         if (b.y > H - b.r) {
+          if (Math.abs(b.vy) > CHIME_MIN * zi) chime(b, Math.abs(b.vy));
           b.y = H - b.r;
           // Each ball keeps its own restitution, so they stop tossing in sync.
           b.vy = -Math.abs(b.vy) * b.bounce;
@@ -503,6 +521,7 @@ export function Footer() {
           }
           const sep = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
           if (sep > 0) continue; // already parting
+          if (-sep > CHIME_MIN * zi) chime(a, -sep);
           const e = -sep > BOUNCE_MIN_SPEED * zi ? BALL_BOUNCE : 0;
           const imp = -(1 + e) * sep * 0.5;
           if (!aFixed) {
