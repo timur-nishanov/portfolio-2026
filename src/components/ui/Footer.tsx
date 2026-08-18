@@ -127,20 +127,18 @@ type Body = {
 
 export function Footer() {
   const stageRef = useRef<HTMLDivElement>(null);
-  const footerRef = useRef<HTMLElement>(null);
   const elsRef = useRef<(HTMLAnchorElement | null)[]>([]);
   const reduced = useReducedMotion();
   const [photo, setPhoto] = useState(false);
 
-  // The frame effect (globals.css, "the frame") is scrubbed by a CSS view
-  // timeline where the engine has one. Everywhere else this mirrors the same
-  // progress — how far the curtain's bottom edge has risen — into
-  // --footer-frame-p from a rAF-throttled scroll handler. Same source of
+  // The curtain's lift-off (globals.css, "the lift") is scrubbed by a CSS
+  // view timeline where the engine has one. Everywhere else this mirrors the
+  // same progress — how far the curtain's bottom edge has risen — into
+  // --curtain-lift-p from a rAF-throttled scroll handler. Same source of
   // truth, so both paths are pure functions of the scroll position and
   // scrolling back and forth cannot accumulate anything.
   useEffect(() => {
-    const el = footerRef.current;
-    if (!el || typeof CSS === 'undefined' || CSS.supports('animation-timeline: view()')) return;
+    if (typeof CSS === 'undefined' || CSS.supports('animation-timeline: view()')) return;
     const curtain = document.querySelector('main');
     if (!curtain) return;
     let raf = 0;
@@ -150,7 +148,7 @@ export function Footer() {
       // gBCR and innerHeight are both visual px, so the body zoom cancels.
       const uncovered = window.innerHeight - curtain.getBoundingClientRect().bottom;
       const p = Math.min(1, Math.max(0, uncovered / (window.innerHeight * 0.9)));
-      el.style.setProperty('--footer-frame-p', p.toFixed(4));
+      (curtain as HTMLElement).style.setProperty('--curtain-lift-p', p.toFixed(4));
     };
     const schedule = () => {
       if (!raf) raf = requestAnimationFrame(update);
@@ -664,7 +662,7 @@ export function Footer() {
     // Pinned to the viewport and sitting *behind* the page (see globals.css:
     // main carries the background and a matching bottom margin). The last
     // section slides up over it like a curtain and this is what is underneath.
-    <footer ref={footerRef} className="footer-reveal">
+    <footer className="footer-reveal">
       {/* Fetched only once the reader reaches the last section. The footer is
           pinned, so it counts as on-screen from the start and native lazy
           loading would pull the full photograph during the first paint —
