@@ -65,6 +65,10 @@ const FACE_RIGHT = 0.72;
 const FACE_TOP = 0.6; // forehead
 const FACE_BOTTOM = 0.29; // chin
 
+// The blood gag is parked, not removed — flip this on to bring it back.
+// Everything downstream (canvas, field, splash geometry) stays wired up.
+const BLOOD_ENABLED = false;
+
 // Impact bruises on the face.
 const MAX_MARKS = 6;
 const MARK_FADE = 7; // seconds a bruise takes to disappear
@@ -374,7 +378,7 @@ export function Head3D() {
       squash.velocity += Math.min(impact, 2) * IMPACT_SQUASH * 6;
       addMark(nx, ny, impact);
 
-      if (impact < BLOOD_MIN_SPEED) return;
+      if (!BLOOD_ENABLED || impact < BLOOD_MIN_SPEED) return;
       // Contact point: pulled in ~15% from the silhouette edge, so the splash
       // originates visibly ON the head's surface rather than glued to the wall
       // line — sitting exactly at the wall read as "blood from the wall".
