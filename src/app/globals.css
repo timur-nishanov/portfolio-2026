@@ -83,11 +83,15 @@
 :root {
   --site-zoom: 1;
 }
+/* Desktop 0.8 parked for now — Timur wants to see the site at full scale.
+   Every compensation divides by the token, so flipping this back on is the
+   whole change.
 @media (min-width: 1024px) {
   :root {
     --site-zoom: 0.8;
   }
 }
+*/
 body {
   zoom: var(--site-zoom);
   /* Publishes the reveal sentinel's view timeline (see "the lift" below) so
