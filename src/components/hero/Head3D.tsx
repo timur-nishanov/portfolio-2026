@@ -7,6 +7,7 @@ import { clamp, lerp } from '@/lib/lerp';
 import { zoomOf } from '@/lib/zoom';
 import { stepSpring, type SpringState } from '@/lib/spring';
 import { createBloodField } from './blood';
+import { playChime } from './chime';
 import fragmentShader from './head.frag';
 import vertexShader from './head.vert';
 
@@ -396,6 +397,9 @@ export function Head3D() {
       twistY.velocity -= ny * impact * TWIST_FROM_IMPACT;
       squash.velocity += Math.min(impact, 2) * IMPACT_SQUASH * 6;
       addMark(nx, ny, impact);
+      // A glassy tap, panned toward the wall that was hit (n points inward,
+      // so a left-wall knock has nx > 0 and belongs in the left ear).
+      playChime(impact, -nx * 0.55);
 
       if (!BLOOD_ENABLED || impact < BLOOD_MIN_SPEED) return;
       // Contact point: pulled in ~15% from the silhouette edge, so the splash
