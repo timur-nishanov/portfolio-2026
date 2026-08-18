@@ -390,6 +390,17 @@ export function Footer() {
     document.addEventListener('visibilitychange', onVisibility);
     els.forEach((el) => el.addEventListener('click', onClick));
 
+    const paint = () => {
+      for (let i = 0; i < bodies.length; i++) {
+        const b = bodies[i];
+        // Positioned from the element's own half-size, not the collision
+        // radius — the head's circle is smaller than its box.
+        const hw = els[i].offsetWidth / 2;
+        const hh = els[i].offsetHeight / 2;
+        els[i].style.transform = `translate3d(${q(b.x - hw)}px, ${q(b.y - hh)}px, 0)`;
+      }
+    };
+
     // --- loop ---------------------------------------------------------------
     let raf = 0;
     let last = performance.now();
@@ -562,14 +573,7 @@ export function Footer() {
         b.y = Math.min(b.y, H - b.r);
       }
 
-      for (let i = 0; i < bodies.length; i++) {
-        const b = bodies[i];
-        // Positioned from the element's own half-size, not the collision
-        // radius — the head's circle is smaller than its box.
-        const hw = els[i].offsetWidth / 2;
-        const hh = els[i].offsetHeight / 2;
-        els[i].style.transform = `translate3d(${q(b.x - hw)}px, ${q(b.y - hh)}px, 0)`;
-      }
+      paint();
 
       // --- settling ---------------------------------------------------------
       // Five spheres are wider together than the floor they land on, so the
@@ -668,9 +672,31 @@ export function Footer() {
     };
     raf = requestAnimationFrame(step);
 
+    // Every return to the footer gets the show again. Once the curtain has
+    // covered the photo back up the heap is re-parked above the stage —
+    // nothing visible is teleporting at that moment — with fresh drop delays,
+    // and the parked pose is painted at once so the old rest pose cannot
+    // flash for a frame on the way back down. The next reveal then runs the
+    // whole entrance. Skipped mid-drag (can't happen with the footer hidden,
+    // but a stolen ball would be rude), and the loop is woken on re-reveal
+    // because it parks itself once a heap falls asleep.
+    const coveredAgain = () =>
+      curtain !== null && window.innerHeight - curtain.getBoundingClientRect().bottom <= 0;
+    const onScroll = () => {
+      if (running && dragging < 0 && coveredAgain()) {
+        running = false;
+        layout(true);
+        quiet = 0;
+        paint();
+      }
+      if (!running && revealed()) wake();
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+
     return () => {
       cancelAnimationFrame(raf);
       ro.disconnect();
+      window.removeEventListener('scroll', onScroll);
       stage.removeEventListener('pointerdown', onDown);
       window.removeEventListener('pointermove', onMove);
       window.removeEventListener('pointerup', onUp);
