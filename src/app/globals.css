@@ -355,10 +355,13 @@ html.lenis body {
      travel across the screen IS the reveal. Published to the curtain via
      timeline-scope on body, scrubbed by scroll, so it reverses for free and
      cannot accumulate drift. Desktop only — phones keep the plain curtain. */
-  /* The lengths divide the zoom back out: 112px of visual inset and a 64px
+  /* The lengths divide the zoom back out: 112px of visual inset and a 96px
      visual radius, authored in the 1/0.8 world the body zoom creates. Bold
      on purpose — at a third of this it read as a rendering glitch, not a
-     move; the card has to be unmistakably a card. */
+     move; the card has to be unmistakably a card. The two run on split
+     curves: the corners are fully round by 45% of the reveal (they are the
+     effect, so they lead), while the narrowing keeps developing to the very
+     end so the sheet never stops moving while it is on screen. */
   .curtain-lift-sentinel {
     height: 0;
     view-timeline: --curtain-lift block;
@@ -383,21 +386,30 @@ html.lenis body {
       .page-curtain {
         clip-path: inset(
           0 calc(var(--curtain-lift-p, 0) * 112px / var(--site-zoom)) 0
-            round 0 0 calc(var(--curtain-lift-p, 0) * 64px / var(--site-zoom))
-            calc(var(--curtain-lift-p, 0) * 64px / var(--site-zoom))
+            round 0 0
+            calc(min(var(--curtain-lift-p, 0) / 0.45, 1) * 96px / var(--site-zoom))
+            calc(min(var(--curtain-lift-p, 0) / 0.45, 1) * 96px / var(--site-zoom))
         );
       }
     }
   }
-  /* Explicit `from`: `none` does not interpolate with an inset(). */
+  /* Explicit `from`: `none` does not interpolate with an inset(). The 45%
+     stop is where the radius tops out; its inset is 45% of the final value,
+     so the sides still travel one straight line from 0% to 100%. */
   @keyframes curtain-lift {
     from {
       clip-path: inset(0 0 0 round 0 0 0 0);
     }
+    45% {
+      clip-path: inset(
+        0 calc(50.4px / var(--site-zoom)) 0 round 0 0
+          calc(96px / var(--site-zoom)) calc(96px / var(--site-zoom))
+      );
+    }
     to {
       clip-path: inset(
         0 calc(112px / var(--site-zoom)) 0 round 0 0
-          calc(64px / var(--site-zoom)) calc(64px / var(--site-zoom))
+          calc(96px / var(--site-zoom)) calc(96px / var(--site-zoom))
       );
     }
   }
