@@ -1003,37 +1003,31 @@ html.lenis body {
    that blurs out underneath. Same numbers both ways, so the close is the
    open run backwards.
 --------------------------------------------------------------------------- */
-.random-columns {
+.random-flow {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  /* Room to breathe: 40px between the columns at 1440, and a good deal more
-     between cards down each column. */
-  column-gap: clamp(20px, 2.778vw, 40px);
-  align-items: start;
-}
-.random-col {
-  display: flex;
-  flex-direction: column;
-  gap: clamp(64px, 8.333vw, 120px);
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: clamp(10px, 1.389vw, 20px);
+  /* One card a row, and a lot of air between rows — the zig-zag needs the
+     room, or it reads as a broken grid instead of a rhythm. */
+  row-gap: clamp(72px, 9.72vw, 140px);
   padding: 0;
   margin: 0;
   list-style: none;
 }
-/* The right column starts a card's shoulder lower, so every pair reads as
-   a step down rather than a row. */
-.random-col-b {
-  padding-top: clamp(96px, 11.11vw, 160px);
+/* Eight columns wide, taking turns at either edge. */
+.random-flow > li {
+  grid-column: 1 / span 8;
+}
+.random-flow > li:nth-child(even) {
+  grid-column: 5 / span 8;
 }
 @media (max-width: 767px) {
-  .random-columns {
-    grid-template-columns: 1fr;
+  .random-flow {
     row-gap: clamp(40px, 8vw, 64px);
   }
-  .random-col {
-    gap: clamp(40px, 8vw, 64px);
-  }
-  .random-col-b {
-    padding-top: 0;
+  .random-flow > li,
+  .random-flow > li:nth-child(even) {
+    grid-column: 1 / -1;
   }
 }
 .random-card {
