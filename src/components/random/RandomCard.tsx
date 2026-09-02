@@ -8,6 +8,7 @@ import { useSmoothScroll } from '@/components/providers/SmoothScrollProvider';
 import { useMagnetic } from '@/hooks/useMagnetic';
 import { useCanHover } from '@/hooks/useMediaQuery';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { clamp, q } from '@/lib/lerp';
 import { zoomOf } from '@/lib/zoom';
 
 // One number for both directions; the CSS transition reads the same value.
@@ -53,16 +54,46 @@ function Media({ media, sizes }: { media: RandomMedia | null; sizes: string }) {
  * of the same aspect while the card underneath goes invisible — so nothing
  * pops, the tile just travels. Closing runs the same path back.
  */
-export function RandomCard({ item }: { item: RandomItem }) {
+export function RandomCard({ item, drift = 0 }: { item: RandomItem; drift?: number }) {
+  const driftRef = useRef<HTMLDivElement>(null);
   const rootRef = useRef<HTMLElement>(null);
   const boxRef = useRef<HTMLButtonElement>(null);
   const mediaRef = useRef<HTMLDivElement>(null);
   const captionRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const timer = useRef(0);
-  const { setPaused } = useSmoothScroll();
+  const { register, setPaused } = useSmoothScroll();
   const canHover = useCanHover();
   const reduced = useReducedMotion();
+
+  // Scroll drift: the card slides by `drift` px as it crosses the viewport,
+  // centred at zero mid-screen. On its own wrapper, because the magnet owns
+  // the transforms of everything inside; the wrapper's own offset is
+  // subtracted back out of the measurement so the two never feed each other.
+  useEffect(() => {
+    const el = driftRef.current;
+    if (!el || reduced || drift === 0) return;
+    let inView = false;
+    const io = new IntersectionObserver(([e]) => (inView = e.isIntersecting), {
+      rootMargin: '25% 0px 25% 0px',
+    });
+    io.observe(el);
+    let lastY = 0;
+    const off = register(() => {
+      if (!inView) return;
+      const r = el.getBoundingClientRect();
+      const vh = window.innerHeight;
+      const base = r.top - lastY;
+      const p = clamp((vh / 2 - (base + r.height / 2)) / (vh / 2 + r.height / 2), -1, 1);
+      const y = p * drift;
+      el.style.transform = `translate3d(0, ${q(y)}px, 0)`;
+      lastY = y;
+    });
+    return () => {
+      io.disconnect();
+      off();
+    };
+  }, [register, reduced, drift]);
 
   useMagnetic(
     rootRef,
@@ -167,6 +198,7 @@ export function RandomCard({ item }: { item: RandomItem }) {
   useEffect(() => () => window.clearTimeout(timer.current), []);
 
   return (
+    <div ref={driftRef} className="will-change-transform">
     <article ref={rootRef} className="random-card">
       <button
         ref={boxRef}
@@ -214,5 +246,6 @@ export function RandomCard({ item }: { item: RandomItem }) {
           )
         : null}
     </article>
+    </div>
   );
 }
