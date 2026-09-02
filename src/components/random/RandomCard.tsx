@@ -67,11 +67,11 @@ export function RandomCard({ item }: { item: RandomItem }) {
     const [rw, rh] = item.ratio.split('/').map((n) => parseFloat(n));
     const vw = window.innerWidth;
     const vh = window.innerHeight;
-    // Most of the screen: just under four fifths of the width on desktop
-    // (half read as small), nearly all of it on a phone; never taller than
-    // 86% of the viewport either way, so the caption keeps its room below.
-    const maxW = vw < 768 ? vw * 0.92 : vw * 0.78;
-    const maxH = vh * 0.86;
+    // About two thirds of the width on desktop — half read as small, four
+    // fifths as too much — nearly all of it on a phone; never taller than
+    // 82% of the viewport either way, so the caption keeps its room below.
+    const maxW = vw < 768 ? vw * 0.92 : vw * 0.64;
+    const maxH = vh * 0.82;
     const s = Math.min(maxW / rw, maxH / rh);
     const w = rw * s;
     const h = rh * s;
@@ -170,7 +170,7 @@ export function RandomCard({ item }: { item: RandomItem }) {
                 style={{ left: box.left, top: box.top, width: box.width, height: box.height }}
               >
                 <div className="random-panel-media">
-                  <Media media={item.media} sizes="80vw" />
+                  <Media media={item.media} sizes="64vw" />
                 </div>
                 <div className="random-panel-caption">
                   <p className="random-title t-body">{item.title}</p>
