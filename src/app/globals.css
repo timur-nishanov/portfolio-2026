@@ -1003,22 +1003,37 @@ html.lenis body {
    that blurs out underneath. Same numbers both ways, so the close is the
    open run backwards.
 --------------------------------------------------------------------------- */
-.random-grid {
+.random-columns {
   display: grid;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
-  /* 20px gutters at 1440 between columns, a full breath between rows. */
-  column-gap: clamp(10px, 1.389vw, 20px);
-  row-gap: clamp(36px, 4.44vw, 64px);
+  grid-template-columns: 1fr 1fr;
+  /* Room to breathe: 40px between the columns at 1440, and a good deal more
+     between cards down each column. */
+  column-gap: clamp(20px, 2.778vw, 40px);
+  align-items: start;
+}
+.random-col {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(64px, 8.333vw, 120px);
   padding: 0;
   margin: 0;
   list-style: none;
 }
-.random-grid > li {
-  grid-column: span var(--span, 4);
+/* The right column starts a card's shoulder lower, so every pair reads as
+   a step down rather than a row. */
+.random-col-b {
+  padding-top: clamp(96px, 11.11vw, 160px);
 }
 @media (max-width: 767px) {
-  .random-grid > li {
-    grid-column: 1 / -1;
+  .random-columns {
+    grid-template-columns: 1fr;
+    row-gap: clamp(40px, 8vw, 64px);
+  }
+  .random-col {
+    gap: clamp(40px, 8vw, 64px);
+  }
+  .random-col-b {
+    padding-top: 0;
   }
 }
 .random-card {
