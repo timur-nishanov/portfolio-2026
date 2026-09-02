@@ -25,9 +25,19 @@ export function MediaSlot({ media }: { media: CaseMedia }) {
     );
   }
 
+  // A bleeding mockup runs off the card's edge, and the slot's own corners
+  // used to round it off there — a curved notch bitten out of the iMac's
+  // bezel. The clip stays square on the side that bleeds.
+  const radius =
+    media.bleed === 'right'
+      ? 'rounded-l-card'
+      : media.bleed === 'left'
+        ? 'rounded-r-card'
+        : 'rounded-card';
+
   return (
     <div
-      className="relative w-full overflow-hidden rounded-card"
+      className={`relative w-full overflow-hidden ${radius}`}
       style={{
         aspectRatio: media.aspect.replace('/', ' / '),
         // Sits under the media, so a hairline rounding gap at the box edge (or
