@@ -17,12 +17,14 @@ export const RANDOM_OPEN_MS = 560;
 // The same magnet as the header buttons, scaled to a card: the box leads,
 // the media inside it drifts a little further for depth, and the caption
 // trails behind — three speeds is what keeps it from reading as a flat slide.
-const BOX_PULL = 0.06;
-const BOX_MAX = 12; // px
-const MEDIA_PULL = 0.03;
-const MEDIA_MAX = 6;
-const CAPTION_PULL = 0.045;
-const CAPTION_MAX = 5;
+// Gentler than a button's numbers on purpose: a card is ten times the size,
+// and the same pull that reads as a nudge on a pill read as a lurch here.
+const BOX_PULL = 0.03;
+const BOX_MAX = 7; // px
+const MEDIA_PULL = 0.015;
+const MEDIA_MAX = 3;
+const CAPTION_PULL = 0.025;
+const CAPTION_MAX = 3;
 
 type Box = { left: number; top: number; width: number; height: number };
 
