@@ -6,8 +6,6 @@ import { createPortal } from 'react-dom';
 import type { RandomItem, RandomMedia } from '@/data/random';
 import { useSmoothScroll } from '@/components/providers/SmoothScrollProvider';
 import { CloseButton } from '@/components/ui/CloseButton';
-import { useReducedMotion } from '@/hooks/useReducedMotion';
-import { clamp, q } from '@/lib/lerp';
 import { zoomOf } from '@/lib/zoom';
 
 // One number for both directions; the CSS transition reads the same value.
@@ -41,45 +39,15 @@ function Media({ media, sizes }: { media: RandomMedia | null; sizes: string }) {
  * lift out of the grid and grow to half the screen, over a blurred page. It is
  * a fixed twin painted at the card's exact rect, transitioned to a centred box
  * of the same aspect while the card underneath goes invisible — so nothing
- * pops, the tile just travels. Closing runs the same path back.
+ * pops, the tile just travels. Closing runs the same path back. No hover
+ * magnet and no scroll drift on these — both were tried and both annoyed;
+ * the cards sit still and the media eases up a touch on hover, that is all.
  */
-export function RandomCard({ item, drift = 0 }: { item: RandomItem; drift?: number }) {
-  const driftRef = useRef<HTMLDivElement>(null);
+export function RandomCard({ item }: { item: RandomItem }) {
   const boxRef = useRef<HTMLButtonElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const timer = useRef(0);
-  const { register, setPaused } = useSmoothScroll();
-  const reduced = useReducedMotion();
-
-  // Scroll drift: the card slides by `drift` px as it crosses the viewport,
-  // centred at zero mid-screen. The wrapper's own offset is subtracted back
-  // out of the measurement so it never feeds itself. No magnet on these — it
-  // was tried at two strengths and a card this size made both read as a
-  // lurch; the hover is the media easing up inside its box, nothing more.
-  useEffect(() => {
-    const el = driftRef.current;
-    if (!el || reduced || drift === 0) return;
-    let inView = false;
-    const io = new IntersectionObserver(([e]) => (inView = e.isIntersecting), {
-      rootMargin: '25% 0px 25% 0px',
-    });
-    io.observe(el);
-    let lastY = 0;
-    const off = register(() => {
-      if (!inView) return;
-      const r = el.getBoundingClientRect();
-      const vh = window.innerHeight;
-      const base = r.top - lastY;
-      const p = clamp((vh / 2 - (base + r.height / 2)) / (vh / 2 + r.height / 2), -1, 1);
-      const y = p * drift;
-      el.style.transform = `translate3d(0, ${q(y)}px, 0)`;
-      lastY = y;
-    });
-    return () => {
-      io.disconnect();
-      off();
-    };
-  }, [register, reduced, drift]);
+  const { setPaused } = useSmoothScroll();
 
   const [mounted, setMounted] = useState(false); // overlay in the DOM
   const [grown, setGrown] = useState(false); // at the centred box (vs. at the card)
@@ -176,7 +144,6 @@ export function RandomCard({ item, drift = 0 }: { item: RandomItem; drift?: numb
   useEffect(() => () => window.clearTimeout(timer.current), []);
 
   return (
-    <div ref={driftRef} className="will-change-transform">
     <article className="random-card">
       <button
         ref={boxRef}
@@ -216,6 +183,5 @@ export function RandomCard({ item, drift = 0 }: { item: RandomItem; drift?: numb
           )
         : null}
     </article>
-    </div>
   );
 }
