@@ -5,26 +5,12 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { RandomItem, RandomMedia } from '@/data/random';
 import { useSmoothScroll } from '@/components/providers/SmoothScrollProvider';
-import { useMagnetic } from '@/hooks/useMagnetic';
-import { useCanHover } from '@/hooks/useMediaQuery';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { clamp, q } from '@/lib/lerp';
 import { zoomOf } from '@/lib/zoom';
 
 // One number for both directions; the CSS transition reads the same value.
 export const RANDOM_OPEN_MS = 560;
-
-// The same magnet as the header buttons, scaled to a card: the box leads,
-// the media inside it drifts a little further for depth, and the caption
-// trails behind — three speeds is what keeps it from reading as a flat slide.
-// Gentler than a button's numbers on purpose: a card is ten times the size,
-// and the same pull that reads as a nudge on a pill read as a lurch here.
-const BOX_PULL = 0.03;
-const BOX_MAX = 7; // px
-const MEDIA_PULL = 0.015;
-const MEDIA_MAX = 3;
-const CAPTION_PULL = 0.025;
-const CAPTION_MAX = 3;
 
 type Box = { left: number; top: number; width: number; height: number };
 
@@ -58,20 +44,17 @@ function Media({ media, sizes }: { media: RandomMedia | null; sizes: string }) {
  */
 export function RandomCard({ item, drift = 0 }: { item: RandomItem; drift?: number }) {
   const driftRef = useRef<HTMLDivElement>(null);
-  const rootRef = useRef<HTMLElement>(null);
   const boxRef = useRef<HTMLButtonElement>(null);
-  const mediaRef = useRef<HTMLDivElement>(null);
-  const captionRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const timer = useRef(0);
   const { register, setPaused } = useSmoothScroll();
-  const canHover = useCanHover();
   const reduced = useReducedMotion();
 
   // Scroll drift: the card slides by `drift` px as it crosses the viewport,
-  // centred at zero mid-screen. On its own wrapper, because the magnet owns
-  // the transforms of everything inside; the wrapper's own offset is
-  // subtracted back out of the measurement so the two never feed each other.
+  // centred at zero mid-screen. The wrapper's own offset is subtracted back
+  // out of the measurement so it never feeds itself. No magnet on these — it
+  // was tried at two strengths and a card this size made both read as a
+  // lurch; the hover is the media easing up inside its box, nothing more.
   useEffect(() => {
     const el = driftRef.current;
     if (!el || reduced || drift === 0) return;
@@ -97,15 +80,6 @@ export function RandomCard({ item, drift = 0 }: { item: RandomItem; drift?: numb
     };
   }, [register, reduced, drift]);
 
-  useMagnetic(
-    rootRef,
-    [
-      { ref: boxRef, factor: BOX_PULL, max: BOX_MAX },
-      { ref: mediaRef, factor: MEDIA_PULL, max: MEDIA_MAX },
-      { ref: captionRef, factor: CAPTION_PULL, max: CAPTION_MAX },
-    ],
-    canHover && !reduced,
-  );
   const [mounted, setMounted] = useState(false); // overlay in the DOM
   const [grown, setGrown] = useState(false); // at the centred box (vs. at the card)
   const [box, setBox] = useState<Box | null>(null);
@@ -201,23 +175,19 @@ export function RandomCard({ item, drift = 0 }: { item: RandomItem; drift?: numb
 
   return (
     <div ref={driftRef} className="will-change-transform">
-    <article ref={rootRef} className="random-card">
+    <article className="random-card">
       <button
         ref={boxRef}
         type="button"
         onClick={open}
         aria-label={`Open ${item.title}`}
         aria-expanded={mounted}
-        className="random-box will-change-transform"
+        className="random-box"
         style={{ aspectRatio: item.ratio, visibility: mounted ? 'hidden' : undefined }}
       >
-        {/* Its own layer, so the magnet can move it inside the box; the hover
-            scale on the media underneath keeps the box edges covered. */}
-        <div ref={mediaRef} className="absolute inset-0 will-change-transform">
-          <Media media={item.media} sizes="(max-width: 767px) 92vw, 700px" />
-        </div>
+        <Media media={item.media} sizes="(max-width: 767px) 92vw, 700px" />
       </button>
-      <div ref={captionRef} className="random-caption will-change-transform">
+      <div className="random-caption">
         <p className="random-title t-body">{item.title}</p>
         <p className="random-period t-case-label">{item.period}</p>
       </div>
