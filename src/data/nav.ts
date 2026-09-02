@@ -10,9 +10,7 @@ export const nav: NavItem[] = [
   { label: 'MAIN', id: 'main' },
   { label: 'WORKS', id: 'works' },
   { label: 'AWARDS', id: 'awards' },
-  // RANDOM is parked along with its section (see app/page.tsx) — a menu item
-  // pointing at a hidden block would just be a dead click.
-  // { label: 'RANDOM', id: 'random' },
+  { label: 'RANDOM', id: 'random' },
   { label: 'LIFE', id: 'life' },
   { label: 'CAREER', id: 'career' },
 ];

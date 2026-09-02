@@ -994,3 +994,165 @@ html.lenis body {
     animation: none !important;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Random. Nine cards on the 12-column grid inside the 1400 band; a card is
+   its media box plus a two-line caption. Clicking a box opens it "in place":
+   RandomCard paints a fixed twin at the card's rect and transitions it to a
+   centred half-screen box while the card itself goes invisible, over a page
+   that blurs out underneath. Same numbers both ways, so the close is the
+   open run backwards.
+--------------------------------------------------------------------------- */
+.random-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  /* 20px gutters at 1440 between columns, a full breath between rows. */
+  column-gap: clamp(10px, 1.389vw, 20px);
+  row-gap: clamp(36px, 4.44vw, 64px);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+.random-grid > li {
+  grid-column: span var(--span, 4);
+}
+@media (max-width: 767px) {
+  .random-grid > li {
+    grid-column: 1 / -1;
+  }
+}
+.random-card {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(10px, 0.972vw, 14px);
+}
+.random-box {
+  position: relative;
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  padding: 0;
+  border: none;
+  border-radius: clamp(16px, 1.944vw, 28px);
+  background: var(--surface);
+  cursor: pointer;
+}
+/* Hover: the media eases up a touch inside its box — a nudge that this is a
+   thing you can open, without the box itself moving. */
+.random-box img,
+.random-box video {
+  transition: transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+@media (hover: hover) {
+  .random-box:hover img,
+  .random-box:hover video {
+    transform: scale(1.035);
+  }
+}
+.random-caption {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-inline: 2px;
+}
+.random-title {
+  margin: 0;
+  font-family: var(--font-hoves), sans-serif;
+  font-size: clamp(14px, 1.111vw, 16px);
+  font-weight: 400;
+  line-height: 1.3;
+  color: var(--ink);
+}
+.random-period {
+  margin: 0;
+  font-family: var(--font-hoves), sans-serif;
+  font-size: clamp(12px, 0.903vw, 13px);
+  font-weight: 400;
+  line-height: 1.3;
+  color: var(--ink-muted);
+}
+
+/* --- the opened state ---------------------------------------------------- */
+.random-overlay {
+  position: fixed;
+  inset: 0;
+  /* Above the header (z-50) and everything else on the page. */
+  z-index: 80;
+}
+.random-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(17, 17, 17, 0);
+  backdrop-filter: blur(0px);
+  -webkit-backdrop-filter: blur(0px);
+  transition:
+    background 560ms ease,
+    backdrop-filter 560ms ease,
+    -webkit-backdrop-filter 560ms ease;
+}
+.random-overlay[data-grown='true'] .random-backdrop {
+  background: rgba(17, 17, 17, 0.28);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+/* The travelling twin. Its geometry is inline (from the measured rect to the
+   centred box) and the transition below is what moves it — one element, so
+   animating its box is cheap enough to stay smooth. */
+.random-panel {
+  position: absolute;
+  border-radius: clamp(16px, 1.944vw, 28px);
+  transition:
+    left 560ms cubic-bezier(0.32, 0.72, 0, 1),
+    top 560ms cubic-bezier(0.32, 0.72, 0, 1),
+    width 560ms cubic-bezier(0.32, 0.72, 0, 1),
+    height 560ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+.random-panel-media {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  background: var(--surface);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.22);
+}
+.random-panel-caption {
+  position: absolute;
+  top: calc(100% + 16px);
+  left: 2px;
+  opacity: 0;
+  transition: opacity 320ms ease;
+}
+.random-overlay[data-grown='true'] .random-panel-caption {
+  opacity: 1;
+  transition-delay: 260ms;
+}
+.random-overlay .random-panel-caption .random-title {
+  color: #fff;
+}
+.random-overlay .random-panel-caption .random-period {
+  color: rgba(255, 255, 255, 0.6);
+}
+/* Same round glass button as the case study's close, fixed to the corner. */
+.random-close {
+  --lg-filter: url(#lg-sm);
+  position: fixed;
+  top: max(16px, 2.222vw);
+  right: max(16px, 1.389vw);
+  display: grid;
+  width: max(48px, 4.444vw);
+  height: max(48px, 4.444vw);
+  place-items: center;
+  border-radius: 999px;
+  color: #fff;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 320ms ease;
+}
+.random-overlay[data-grown='true'] .random-close {
+  opacity: 1;
+  transition-delay: 200ms;
+}
+.random-close svg {
+  width: max(16px, 1.667vw);
+  height: max(16px, 1.667vw);
+}

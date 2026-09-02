@@ -3,9 +3,7 @@ import { Header } from '@/components/header/Header';
 import { Hero } from '@/components/hero/Hero';
 import { CasesSection } from '@/components/cases/CasesSection';
 import { AwardsSection } from '@/components/awards/AwardsSection';
-// Random is parked, not removed — uncomment here and in the JSX (and restore
-// its entry in data/nav.ts) to bring it back.
-// import { RandomSection } from '@/components/random/RandomSection';
+import { RandomSection } from '@/components/random/RandomSection';
 import { AboutBlock } from '@/components/random/AboutBlock';
 import { LifeSection } from '@/components/life/LifeSection';
 import { CareerSection } from '@/components/career/CareerSection';
@@ -21,7 +19,7 @@ export default function Home() {
         <CasesSection />
         {/* Awards after the cases; Random then sits after Awards. */}
         <AwardsSection />
-        {/* <RandomSection /> — parked, see the import note above. */}
+        <RandomSection />
         {/* Statement block right after Random, then LIFE and CAREER. */}
         <AboutBlock />
         <LifeSection />
