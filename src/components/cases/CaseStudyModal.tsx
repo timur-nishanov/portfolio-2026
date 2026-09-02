@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef } from 'react';
 import type { Case } from '@/data/cases';
 import { chumsShots as shot } from '@/data/chumsShots';
 import { useSmoothScroll } from '@/components/providers/SmoothScrollProvider';
+import { CloseButton } from '@/components/ui/CloseButton';
 import { useMagnetic } from '@/hooks/useMagnetic';
 import { useCanHover } from '@/hooks/useMediaQuery';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
@@ -88,36 +89,6 @@ function ShotPair({ before, after, caption }: { before: ShotProps['shot']; after
       </div>
       <figcaption className="case-caption">{caption}</figcaption>
     </figure>
-  );
-}
-
-/**
- * Same glass and the same pull as the header's round button, but as one layer:
- * plate and glyph travel together, so the cross never drifts off the centre of
- * its own circle. Sits outside the sheet — a transformed or filtered ancestor
- * would capture its `position: fixed`.
- */
-function CloseButton({ onClose }: { onClose: () => void }) {
-  // The anchor holds the fixed position and is never transformed, so the magnet
-  // keeps measuring the button's resting box instead of chasing its own offset.
-  const anchorRef = useRef<HTMLDivElement>(null);
-  const buttonRef = useRef<HTMLButtonElement>(null);
-  const canHover = useCanHover();
-  const reduced = useReducedMotion();
-  useMagnetic(anchorRef, [{ ref: buttonRef, factor: 0.09, max: 6 }], canHover && !reduced);
-
-  return (
-    <div ref={anchorRef} className="case-close-anchor">
-      <button ref={buttonRef} type="button" onClick={onClose} className="case-close glass will-change-transform">
-        {/* One clean stroke, nothing else. The dual-stroke-plus-shadow version
-            (dark hairline under a white cross) read as a dirty outline on the
-            white plate; the ink cross carries its own contrast instead. */}
-        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" strokeLinecap="round">
-          <path d="M5 5 19 19M19 5 5 19" stroke="currentColor" strokeWidth="1.6" />
-        </svg>
-        <span className="sr-only">Close case study</span>
-      </button>
-    </div>
   );
 }
 
@@ -275,7 +246,7 @@ export function CaseStudyModal({ data, open, onClose }: Props) {
           and a transformed ancestor makes `position: fixed` resolve against it
           instead of the viewport — which sent the button scrolling away with
           the page. As a direct child of the dialog it stays put. */}
-      <CloseButton onClose={requestClose} />
+      <CloseButton onClose={requestClose} label="Close case study" />
 
       <article ref={sheetRef} className="case-study-sheet min-h-dvh">
         <div className="case-wrap">

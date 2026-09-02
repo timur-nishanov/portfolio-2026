@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { RandomItem, RandomMedia } from '@/data/random';
 import { useSmoothScroll } from '@/components/providers/SmoothScrollProvider';
+import { CloseButton } from '@/components/ui/CloseButton';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { clamp, q } from '@/lib/lerp';
 import { zoomOf } from '@/lib/zoom';
@@ -98,10 +99,11 @@ export function RandomCard({ item, drift = 0 }: { item: RandomItem; drift?: numb
     const [rw, rh] = item.ratio.split('/').map((n) => parseFloat(n));
     const vw = window.innerWidth;
     const vh = window.innerHeight;
-    // Half the screen wide on desktop, nearly full on a phone; never taller
-    // than four fifths of the viewport either way.
-    const maxW = vw < 768 ? vw * 0.92 : vw * 0.5;
-    const maxH = vh * 0.8;
+    // Most of the screen: just under four fifths of the width on desktop
+    // (half read as small), nearly all of it on a phone; never taller than
+    // 86% of the viewport either way, so the caption keeps its room below.
+    const maxW = vw < 768 ? vw * 0.92 : vw * 0.78;
+    const maxH = vh * 0.86;
     const s = Math.min(maxW / rw, maxH / rh);
     const w = rw * s;
     const h = rh * s;
@@ -201,18 +203,14 @@ export function RandomCard({ item, drift = 0 }: { item: RandomItem; drift?: numb
                 style={{ left: box.left, top: box.top, width: box.width, height: box.height }}
               >
                 <div className="random-panel-media">
-                  <Media media={item.media} sizes="50vw" />
+                  <Media media={item.media} sizes="80vw" />
                 </div>
                 <div className="random-panel-caption">
                   <p className="random-title t-body">{item.title}</p>
                   <p className="random-period t-case-label">{item.period}</p>
                 </div>
               </div>
-              <button ref={closeRef} type="button" onClick={close} className="random-close glass" aria-label="Close">
-                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" strokeLinecap="round">
-                  <path d="M5 5 19 19M19 5 5 19" stroke="currentColor" strokeWidth="1.6" />
-                </svg>
-              </button>
+              <CloseButton onClose={close} label={`Close ${item.title}`} buttonRef={closeRef} />
             </div>,
             document.body,
           )

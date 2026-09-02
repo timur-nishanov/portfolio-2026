@@ -86,7 +86,9 @@ export function useMagnetic(
     // listener is on the window and hears them anyway — so the header's buttons
     // used to keep leaning toward a cursor that was busy reading the case study.
     // Anything outside the dialog stands down while one is open.
-    const inDialog = !!root.closest('dialog');
+    // A native <dialog> or anything playing one (the Random overlay is a
+    // role="dialog" portal, not a <dialog>).
+    const inDialog = !!root.closest('dialog, [role="dialog"]');
 
     const onMove = (e: PointerEvent) => {
       if (!inDialog && document.documentElement.hasAttribute('data-modal-open')) {

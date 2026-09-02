@@ -1134,27 +1134,18 @@ html.lenis body {
 .random-overlay .random-panel-caption .random-period {
   color: rgba(255, 255, 255, 0.6);
 }
-/* Same round glass button as the case study's close, fixed to the corner. */
-.random-close {
-  --lg-filter: url(#lg-sm);
-  position: fixed;
-  top: max(16px, 2.222vw);
-  right: max(16px, 1.389vw);
-  display: grid;
-  width: max(48px, 4.444vw);
-  height: max(48px, 4.444vw);
-  place-items: center;
-  border-radius: 999px;
-  color: #fff;
-  cursor: pointer;
+/* The case study's own close button (CloseButton), fading in with the
+   overlay. Its sizes are written in --cu, which the case defines on its
+   dialog; the overlay lives in the plain page, where a Figma pixel is just
+   1/1440 of the width. */
+.random-overlay {
+  --cu: calc(100vw / 1440);
+}
+.random-overlay .case-close-anchor {
   opacity: 0;
   transition: opacity 320ms ease;
 }
-.random-overlay[data-grown='true'] .random-close {
+.random-overlay[data-grown='true'] .case-close-anchor {
   opacity: 1;
   transition-delay: 200ms;
-}
-.random-close svg {
-  width: max(16px, 1.667vw);
-  height: max(16px, 1.667vw);
 }
