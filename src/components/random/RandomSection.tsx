@@ -14,7 +14,10 @@ export function RandomSection() {
       <h2 id="random-heading" className="sr-only">
         Random
       </h2>
-      <div className="container-cases">
+      {/* Wider than the site band on purpose: nine tiles want the room, so this
+          runs nearly edge to edge — 20px in from the screen at 1440 — where the
+          cases keep their 1400 band. */}
+      <div className="random-wrap">
         <ul className="random-grid">
           {random.map((item) => (
             <li key={item.id}>
