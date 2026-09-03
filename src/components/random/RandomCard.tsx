@@ -34,14 +34,28 @@ function Media({ media, sizes }: { media: RandomMedia | null; sizes: string }) {
   );
 }
 
+/** The row under a tile: title and years inline, the sphere pill at the right. */
+function Caption({ item }: { item: RandomItem }) {
+  return (
+    <div className="random-caption">
+      <p className="random-meta t-case-copy">
+        <span className="random-title">{item.title}</span>
+        <span className="random-period">{item.period}</span>
+      </p>
+      <span className="random-tag">{item.tag}</span>
+    </div>
+  );
+}
+
 /**
  * A grid card that opens seamlessly: on click the media box itself appears to
- * lift out of the grid and grow to half the screen, over a blurred page. It is
+ * lift out of the grid and grow to most of the screen, over a blurred page. It is
  * a fixed twin painted at the card's exact rect, transitioned to a centred box
  * of the same aspect while the card underneath goes invisible — so nothing
- * pops, the tile just travels. Closing runs the same path back. No hover
- * magnet and no scroll drift on these — both were tried and both annoyed;
- * the cards sit still and the media eases up a touch on hover, that is all.
+ * pops, the tile just travels. Closing runs the same path back. The hover is
+ * the danielsun.space kind — the tile lifts a few pixels, the media eases up
+ * a touch, a soft shadow appears — and nothing more: a magnet and a scroll
+ * drift were both tried here and both annoyed.
  */
 export function RandomCard({ item }: { item: RandomItem }) {
   const boxRef = useRef<HTMLButtonElement>(null);
@@ -156,10 +170,7 @@ export function RandomCard({ item }: { item: RandomItem }) {
       >
         <Media media={item.media} sizes="(max-width: 767px) 92vw, 700px" />
       </button>
-      <div className="random-caption">
-        <p className="random-title t-body">{item.title}</p>
-        <p className="random-period t-case-label">{item.period}</p>
-      </div>
+      <Caption item={item} />
 
       {mounted && box
         ? createPortal(
@@ -173,8 +184,7 @@ export function RandomCard({ item }: { item: RandomItem }) {
                   <Media media={item.media} sizes="64vw" />
                 </div>
                 <div className="random-panel-caption">
-                  <p className="random-title t-body">{item.title}</p>
-                  <p className="random-period t-case-label">{item.period}</p>
+                  <Caption item={item} />
                 </div>
               </div>
               <CloseButton onClose={close} label={`Close ${item.title}`} buttonRef={closeRef} />
