@@ -4,8 +4,8 @@ import { RandomCard } from './RandomCard';
 /**
  * Random — a plain 3×3 grid of 4:3 tiles inside the 1400 band, the
  * madewithjitter.com way: tile, then a caption row with the title and the
- * years inline and a sphere pill at the right. A tile lifts a touch on
- * hover and opens in place to most of the screen — see RandomCard. Content
+ * years inline and a sphere pill at the right. A tile tilts toward the
+ * cursor on hover and opens in place to most of the screen — see RandomCard. Content
  * is placeholder until the files land.
  */
 export function RandomSection() {
@@ -15,7 +15,7 @@ export function RandomSection() {
         Random
       </h2>
       {/* Wider than the site band on purpose: nine tiles want the room, so this
-          runs nearly edge to edge — 20px in from the screen at 1440 — where the
+          runs nearly edge to edge — 36px in from the screen at 1440 — where the
           cases keep their 1400 band. */}
       <div className="random-wrap">
         <ul className="random-grid">
