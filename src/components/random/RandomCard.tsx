@@ -45,7 +45,9 @@ function Caption({ item }: { item: RandomItem }) {
         <span className="random-title">{item.title}</span>
         <span className="random-period">{item.period}</span>
       </p>
-      <span className="random-tag">{item.tag}</span>
+      <span className="random-tag" data-tag={item.tag}>
+        {item.tag}
+      </span>
     </div>
   );
 }
@@ -57,8 +59,8 @@ function Caption({ item }: { item: RandomItem }) {
  * of the same aspect while the card underneath goes invisible — so nothing
  * pops, the tile just travels. Closing runs the same path back. The hover is
  * the danielsun.space kind — the tile leans toward the cursor in perspective
- * (useTilt) over a soft shadow, the media eases up a touch — and nothing
- * more: a magnet and a scroll drift were both tried here and both annoyed.
+ * (useTilt) — and nothing more: a magnet, a scroll drift, a lift with a
+ * shadow and a media zoom were all tried here and all asked off.
  * The tilt lives on an inner tile, so the button's own box — what the open
  * measures — never moves.
  */
