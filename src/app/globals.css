@@ -1003,37 +1003,33 @@ html.lenis body {
    that blurs out underneath. Same numbers both ways, so the close is the
    open run backwards.
 --------------------------------------------------------------------------- */
-.random-flow {
+.random-grid {
   display: grid;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
-  column-gap: clamp(10px, 1.389vw, 20px);
-  /* One card a row, and a lot of air between rows — the zig-zag needs the
-     room, or it reads as a broken grid instead of a rhythm. */
-  row-gap: clamp(72px, 9.72vw, 140px);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  column-gap: clamp(12px, 1.389vw, 20px);
+  row-gap: clamp(28px, 2.778vw, 40px);
   padding: 0;
   margin: 0;
   list-style: none;
 }
-/* Eight columns wide, taking turns at either edge. */
-.random-flow > li {
-  grid-column: 1 / span 8;
-}
-.random-flow > li:nth-child(even) {
-  grid-column: 5 / span 8;
-}
-@media (max-width: 767px) {
-  .random-flow {
-    row-gap: clamp(40px, 8vw, 64px);
-  }
-  .random-flow > li,
-  .random-flow > li:nth-child(even) {
-    grid-column: 1 / -1;
+@media (max-width: 1023px) {
+  .random-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+@media (max-width: 639px) {
+  .random-grid {
+    grid-template-columns: 1fr;
+  }
+}
+/* The tile lifts a few pixels on hover (danielsun.space's touch), its media
+   eases up inside the box and a soft shadow appears under it. Transform on
+   the article is safe: the opened twin lives in a portal, not under it. */
 .random-card {
   display: flex;
   flex-direction: column;
   gap: clamp(10px, 0.972vw, 14px);
+  transition: transform 480ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 .random-box {
   position: relative;
@@ -1042,36 +1038,67 @@ html.lenis body {
   overflow: hidden;
   padding: 0;
   border: none;
-  border-radius: clamp(16px, 1.944vw, 28px);
+  border-radius: clamp(12px, 1.111vw, 16px);
   background: var(--surface);
   cursor: pointer;
+  box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+  transition: box-shadow 480ms cubic-bezier(0.22, 1, 0.36, 1);
 }
-/* Hover: the media eases up a touch inside its box — a nudge that this is a
-   thing you can open, without the box itself moving. */
 .random-box img,
 .random-box video {
   transition: transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 @media (hover: hover) {
-  .random-box:hover img,
-  .random-box:hover video {
-    transform: scale(1.035);
+  .random-card:hover {
+    transform: translateY(-4px);
+  }
+  .random-card:hover .random-box {
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.1);
+  }
+  .random-card:hover .random-box img,
+  .random-card:hover .random-box video {
+    transform: scale(1.03);
   }
 }
+/* Caption row, the jitter way: title and years inline at the left, a small
+   pill at the right naming the sphere. Type is the case copy size. */
 .random-caption {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   padding-inline: 2px;
 }
-/* Type comes from the site's own scale — .t-body for the title, the pixel
-   .t-case-label for the years — so the block reads like the rest. */
-.random-title {
+.random-meta {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  gap: 10px;
   margin: 0;
+  max-width: none;
+}
+.random-title {
   color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .random-period {
-  margin: 0;
+  color: var(--ink-muted);
+  white-space: nowrap;
+}
+.random-tag {
+  flex: none;
+  padding: 5px 8px 4px;
+  border-radius: 999px;
+  background: rgba(91, 148, 240, 0.12);
+  color: var(--accent);
+  font-family: var(--font-pixel), monospace;
+  font-size: 11px;
+  line-height: 1;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 /* --- the opened state ---------------------------------------------------- */
@@ -1128,11 +1155,19 @@ html.lenis body {
   opacity: 1;
   transition-delay: 260ms;
 }
+.random-overlay .random-panel-caption {
+  left: 2px;
+  right: 2px;
+}
 .random-overlay .random-panel-caption .random-title {
   color: #fff;
 }
 .random-overlay .random-panel-caption .random-period {
   color: rgba(255, 255, 255, 0.6);
+}
+.random-overlay .random-panel-caption .random-tag {
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
 }
 /* The case study's own close button (CloseButton), fading in with the
    overlay. Its sizes are written in --cu, which the case defines on its
