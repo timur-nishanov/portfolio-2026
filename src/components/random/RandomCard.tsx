@@ -6,6 +6,9 @@ import { createPortal } from 'react-dom';
 import type { RandomItem, RandomMedia } from '@/data/random';
 import { useSmoothScroll } from '@/components/providers/SmoothScrollProvider';
 import { CloseButton } from '@/components/ui/CloseButton';
+import { useCanHover } from '@/hooks/useMediaQuery';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { useTilt } from '@/hooks/useTilt';
 import { zoomOf } from '@/lib/zoom';
 
 // One number for both directions; the CSS transition reads the same value.
@@ -53,15 +56,21 @@ function Caption({ item }: { item: RandomItem }) {
  * a fixed twin painted at the card's exact rect, transitioned to a centred box
  * of the same aspect while the card underneath goes invisible — so nothing
  * pops, the tile just travels. Closing runs the same path back. The hover is
- * the danielsun.space kind — the tile lifts a few pixels, the media eases up
- * a touch, a soft shadow appears — and nothing more: a magnet and a scroll
- * drift were both tried here and both annoyed.
+ * the danielsun.space kind — the tile leans toward the cursor in perspective
+ * (useTilt) over a soft shadow, the media eases up a touch — and nothing
+ * more: a magnet and a scroll drift were both tried here and both annoyed.
+ * The tilt lives on an inner tile, so the button's own box — what the open
+ * measures — never moves.
  */
 export function RandomCard({ item }: { item: RandomItem }) {
   const boxRef = useRef<HTMLButtonElement>(null);
+  const tileRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const timer = useRef(0);
   const { setPaused } = useSmoothScroll();
+  const canHover = useCanHover();
+  const reduced = useReducedMotion();
+  useTilt(tileRef, canHover && !reduced);
 
   const [mounted, setMounted] = useState(false); // overlay in the DOM
   const [grown, setGrown] = useState(false); // at the centred box (vs. at the card)
@@ -168,7 +177,9 @@ export function RandomCard({ item }: { item: RandomItem }) {
         className="random-box"
         style={{ aspectRatio: item.ratio, visibility: mounted ? 'hidden' : undefined }}
       >
-        <Media media={item.media} sizes="(max-width: 767px) 92vw, 700px" />
+        <div ref={tileRef} className="random-tile">
+          <Media media={item.media} sizes="(max-width: 767px) 92vw, 700px" />
+        </div>
       </button>
       <Caption item={item} />
 
