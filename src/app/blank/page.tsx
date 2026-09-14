@@ -28,8 +28,7 @@ export default function Blank() {
           '--head-size': 'calc(80vh * 0.78)',
         } as React.CSSProperties}
       >
-        {/* Blood is on here and nowhere else — this stage is for clips. */}
-        <FloatingHead blood />
+        <FloatingHead />
       </div>
     </main>
   );

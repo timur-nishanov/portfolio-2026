@@ -6,7 +6,6 @@ import { assets } from '@/data/assets';
 import { clamp, lerp } from '@/lib/lerp';
 import { zoomOf } from '@/lib/zoom';
 import { stepSpring, type SpringState } from '@/lib/spring';
-import { createBloodField } from './blood';
 import { playChime } from './chime';
 import fragmentShader from './head.frag';
 import vertexShader from './head.vert';
@@ -29,7 +28,6 @@ const MAX_THROW_SPEED = 2.6; // cap on a drag flick (uncapped it launched like a
 const THROW_DAMP = 0.26; // glides a long time after release
 const RESTITUTION = 0.9; // keeps most of its energy on a wall bounce
 const CALM_SPEED = 0.1; // stays "thrown" longer before handing back to drift
-const BLOOD_MIN_SPEED = 0.5; // only hard hits bleed — drifting must not spray
 
 // Instead of spinning the plane flat, throws and impacts push the shader's
 // depth-parallax so the head appears to turn in 3D. The twist is a spring, not
@@ -70,15 +68,11 @@ const FACE_BOTTOM = 0.29; // chin
 // Impact bruises on the face.
 const MAX_MARKS = 6;
 const MARK_FADE = 7; // seconds a bruise takes to disappear
-// Matched to BLOOD_MIN_SPEED: if a hit drew blood it should leave a mark too.
+// Only a real knock marks — drifting into a wall must not bruise.
 const MARK_MIN_IMPACT = 0.5;
 
-/** `blood` — the splatter gag (blood.ts). Off on the site; on for /blank. */
-export function Head3D({ blood = false }: { blood?: boolean }) {
+export function Head3D() {
   const wrapRef = useRef<HTMLDivElement>(null);
-  // Read inside the effect's closures without re-running the whole setup.
-  const bloodOn = useRef(blood);
-  bloodOn.current = blood;
 
   useEffect(() => {
     const wrap = wrapRef.current;
@@ -93,16 +87,13 @@ export function Head3D({ blood = false }: { blood?: boolean }) {
     wrap.appendChild(probe);
 
     const canvas = document.createElement('canvas');
-    const bloodCanvas = document.createElement('canvas');
-    for (const c of [canvas, bloodCanvas]) {
-      c.style.position = 'absolute';
-      c.style.inset = '0';
-      c.style.width = '100%';
-      c.style.height = '100%';
-      c.style.display = 'block';
-      c.style.pointerEvents = 'none'; // clicks always fall through to the page
-      wrap.appendChild(c);
-    }
+    canvas.style.position = 'absolute';
+    canvas.style.inset = '0';
+    canvas.style.width = '100%';
+    canvas.style.height = '100%';
+    canvas.style.display = 'block';
+    canvas.style.pointerEvents = 'none'; // clicks always fall through to the page
+    wrap.appendChild(canvas);
 
     const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -152,8 +143,6 @@ export function Head3D({ blood = false }: { blood?: boolean }) {
     const mesh = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material);
     scene.add(mesh);
 
-    const blood = createBloodField(bloodCanvas);
-
     // ---- alpha hit test (grab only opaque head pixels) --------------------
     const hitCanvas = document.createElement('canvas');
     hitCanvas.width = hitCanvas.height = 128;
@@ -198,7 +187,6 @@ export function Head3D({ blood = false }: { blood?: boolean }) {
       mesh.scale.setScalar(sizePx / H);
       half = sizePx / H;
 
-      blood.resize(W, H, renderer.getPixelRatio());
     };
     resize();
     const ro = new ResizeObserver(resize);
@@ -390,7 +378,7 @@ export function Head3D({ blood = false }: { blood?: boolean }) {
       markSlot = (markSlot + 1) % MAX_MARKS;
     };
 
-    /** Bounce against a wall, bleed if the hit was hard. n points inward. */
+    /** Bounce against a wall. n points inward. */
     const hitWall = (nx: number, ny: number, impact: number) => {
       // Impulse into the twist spring's velocity, so the turn swings in and out
       // smoothly instead of jumping — a step here read as a hard snap.
@@ -401,14 +389,6 @@ export function Head3D({ blood = false }: { blood?: boolean }) {
       // A glassy tap, panned toward the wall that was hit (n points inward,
       // so a left-wall knock has nx > 0 and belongs in the left ear).
       playChime(impact, -nx * 0.55);
-
-      if (!bloodOn.current || impact < BLOOD_MIN_SPEED) return;
-      // Contact point: pulled in ~15% from the silhouette edge, so the splash
-      // originates visibly ON the head's surface rather than glued to the wall
-      // line — sitting exactly at the wall read as "blood from the wall".
-      const cx = toStageX(posX) - nx * (sizePx / 2) * HEAD_W_FRAC * 0.85;
-      const cy = toStageY(posY) + ny * (sizePx / 2) * HEAD_H_FRAC * 0.85;
-      blood.splash(cx, cy, nx, -ny, impact);
     };
 
     // ---- loop --------------------------------------------------------------
@@ -512,7 +492,6 @@ export function Head3D({ blood = false }: { blood?: boolean }) {
       // No flat z-rotation on purpose — the turn is sold by the depth shader.
       mesh.position.set(posX, posY, 0);
 
-      blood.step(dt);
       renderer.render(scene, camera);
       raf = onScreen ? requestAnimationFrame(loop) : 0;
     };
@@ -551,7 +530,6 @@ export function Head3D({ blood = false }: { blood?: boolean }) {
       depthTex.dispose();
       renderer.dispose();
       canvas.remove();
-      bloodCanvas.remove();
       probe.remove();
     };
   }, []);
