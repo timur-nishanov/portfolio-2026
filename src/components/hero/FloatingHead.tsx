@@ -14,7 +14,7 @@ const Head3D = dynamic(() => import('./Head3D').then((m) => m.Head3D), { ssr: fa
  * pointer events, which already cover touch. Only reduced motion swaps it for
  * a still image.
  */
-export function FloatingHead() {
+export function FloatingHead({ blood = false }: { blood?: boolean }) {
   const reduced = useReducedMotion();
 
   if (reduced) {
@@ -29,5 +29,5 @@ export function FloatingHead() {
     );
   }
 
-  return <Head3D />;
+  return <Head3D blood={blood} />;
 }

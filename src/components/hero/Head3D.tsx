@@ -66,9 +66,6 @@ const FACE_RIGHT = 0.72;
 const FACE_TOP = 0.6; // forehead
 const FACE_BOTTOM = 0.29; // chin
 
-// The blood gag is parked, not removed — flip this on to bring it back.
-// Everything downstream (canvas, field, splash geometry) stays wired up.
-const BLOOD_ENABLED = false;
 
 // Impact bruises on the face.
 const MAX_MARKS = 6;
@@ -76,8 +73,12 @@ const MARK_FADE = 7; // seconds a bruise takes to disappear
 // Matched to BLOOD_MIN_SPEED: if a hit drew blood it should leave a mark too.
 const MARK_MIN_IMPACT = 0.5;
 
-export function Head3D() {
+/** `blood` — the splatter gag (blood.ts). Off on the site; on for /blank. */
+export function Head3D({ blood = false }: { blood?: boolean }) {
   const wrapRef = useRef<HTMLDivElement>(null);
+  // Read inside the effect's closures without re-running the whole setup.
+  const bloodOn = useRef(blood);
+  bloodOn.current = blood;
 
   useEffect(() => {
     const wrap = wrapRef.current;
@@ -401,7 +402,7 @@ export function Head3D() {
       // so a left-wall knock has nx > 0 and belongs in the left ear).
       playChime(impact, -nx * 0.55);
 
-      if (!BLOOD_ENABLED || impact < BLOOD_MIN_SPEED) return;
+      if (!bloodOn.current || impact < BLOOD_MIN_SPEED) return;
       // Contact point: pulled in ~15% from the silhouette edge, so the splash
       // originates visibly ON the head's surface rather than glued to the wall
       // line — sitting exactly at the wall read as "blood from the wall".
