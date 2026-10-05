@@ -280,7 +280,15 @@ export function MenuContent({ id, labelledBy, open, contentRef, handleRef, onClo
           const k = index++;
           const icon = (
             // eslint-disable-next-line @next/next/no-img-element
-            <img className="lgm-item__icon" src={l.icon} alt="" width={16} height={16} draggable={false} />
+            <img
+              className="lgm-item__icon"
+              src={l.icon}
+              alt=""
+              width={16}
+              height={16}
+              draggable={false}
+              style={l.optical ? { transform: `scale(${l.optical})` } : undefined}
+            />
           );
           if (l.kind === 'external') {
             return (

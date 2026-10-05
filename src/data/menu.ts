@@ -21,14 +21,17 @@ export const menuSections: MenuSection[] = [
 ];
 
 export type MenuLink =
-  | { kind: 'external'; label: string; icon: string; href: string }
-  | { kind: 'copy'; label: string; icon: string; value: string; copiedLabel: string };
+  | { kind: 'external'; label: string; icon: string; optical?: number; href: string }
+  | { kind: 'copy'; label: string; icon: string; optical?: number; value: string; copiedLabel: string };
 
 // Icons are the 16px brand marks exported from the mockup (public/icons).
 export const menuLinks: MenuLink[] = [
   { kind: 'external', label: 'Linkedin', icon: '/icons/linkedin.svg', href: site.linkedin },
-  { kind: 'external', label: 'X', icon: '/icons/x.svg', href: 'https://x.com/nem_etis' },
+  // optical: a scale inside the same 16px box, so the marks read the same
+  // size — the solid black disc reads large, the near-invisible grey disc of
+  // the Google mark leaves only its small G. Labels keep one left edge.
+  { kind: 'external', label: 'X', icon: '/icons/x.svg', optical: 0.9, href: 'https://x.com/nem_etis' },
   // Gmail copies rather than opening a mail client — most visitors on a
   // desktop have no handler set up, and a dead mailto reads as a broken link.
-  { kind: 'copy', label: 'Gmail', icon: '/icons/google.svg', value: site.email, copiedLabel: 'Copied' },
+  { kind: 'copy', label: 'Gmail', icon: '/icons/google.svg', optical: 1.15, value: site.email, copiedLabel: 'Copied' },
 ];
