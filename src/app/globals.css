@@ -19,11 +19,11 @@
   --ink-menu: #151514;
   --chip: #e5e5e6;
 
-  /* SF Pro is Apple-licensed and can't be self-hosted, so this stack resolves
-     to it on Apple devices (named or via -apple-system) and to the closest
-     system sans elsewhere. TT Hoves / 5by7 stay loaded for the hidden sections. */
-  --font-sf: 'SF Pro', 'SF Pro Display', 'SF Pro Text', -apple-system, BlinkMacSystemFont,
-    system-ui, 'Helvetica Neue', Arial, sans-serif;
+  /* SF Pro Text from the client's files (next/font, fonts.ts) first; the
+     system SF and the closest sans only cover the moment before it loads.
+     TT Hoves / 5by7 stay loaded for the hidden sections. */
+  --font-sf: var(--font-sfpro), -apple-system, BlinkMacSystemFont, system-ui, 'Helvetica Neue',
+    Arial, sans-serif;
   --accent: #5b94f0;
   --laurel-gold: #ffd92d;
   --laurel-teal: #0ccdd4;
