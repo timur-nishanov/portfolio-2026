@@ -1,26 +1,34 @@
 import { site } from '@/data/site';
 import { FloatingHead } from './FloatingHead';
-import { HeroStatus } from './HeroStatus';
+// HeroStatus (Bangkok time line) is off the new first screen — kept for later.
 
 export function Hero() {
   return (
     <section
       id="main"
       aria-labelledby="hero-heading"
-      // The head's stage is this box: it plays inside the hero and scrolls away
-      // with it, rather than trailing the reader down the page.
-      className="relative flex min-h-[calc(100svh/var(--site-zoom))] items-center pt-[clamp(60px,8.3vw,120px)]"
+      // Exactly one screen: this box is the head's stage, so it spans the full
+      // viewport (the gutter is released in one-screen mode) and the head can
+      // reach every edge. Divided by the zoom like every full-viewport length.
+      className="relative h-[calc(100svh/var(--site-zoom))] w-full overflow-hidden"
     >
       <FloatingHead />
-      <div className="container-hero relative w-full -translate-y-[clamp(24px,4vw,58px)]">
-        {/* Plain dark text — the head floats over it, so no blend mode. */}
-        {/* Non-selectable — dragging/clicking the head over it kept grabbing a
-            text selection, which was distracting. */}
-        <h1 id="hero-heading" className="t-hero whitespace-pre-line select-none text-ink">
-          {site.hero.text}
-        </h1>
-      </div>
-      <HeroStatus />
+      {/* The tagline doubles as the page heading; the name is in the header's
+          title, so screen readers get it here too. Non-selectable — throwing
+          the head across it kept grabbing a text selection. Sits under the head
+          (z-40), which floats over it; the blood keeps off it (Head3D). */}
+      <h1
+        id="hero-heading"
+        data-blood-keepout=""
+        className="t-title absolute inset-x-4 bottom-[21px] select-none text-center text-ink-strong"
+      >
+        <span className="sr-only">Timur, </span>
+        {site.hero.tagline.map((line) => (
+          <span key={line} className="block">
+            {line}
+          </span>
+        ))}
+      </h1>
     </section>
   );
 }

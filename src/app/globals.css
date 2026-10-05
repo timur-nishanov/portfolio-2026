@@ -8,10 +8,22 @@
    scales continuously instead of snapping at breakpoints.
 --------------------------------------------------------------------------- */
 :root {
-  --bg: #ffffff;
+  /* Warm off-white of the new first screen (was #fff) — every surface that
+     paints the page colour follows it. */
+  --bg: #f7f7f5;
   --surface: #f1f1f1;
   --ink: #111111;
   --ink-muted: #8a8a8a;
+  /* First-screen palette: title/tagline ink, menu text, the chevron chip. */
+  --ink-strong: #08080a;
+  --ink-menu: #151514;
+  --chip: #e5e5e6;
+
+  /* SF Pro is Apple-licensed and can't be self-hosted, so this stack resolves
+     to it on Apple devices (named or via -apple-system) and to the closest
+     system sans elsewhere. TT Hoves / 5by7 stay loaded for the hidden sections. */
+  --font-sf: 'SF Pro', 'SF Pro Display', 'SF Pro Text', -apple-system, BlinkMacSystemFont,
+    system-ui, 'Helvetica Neue', Arial, sans-serif;
   --accent: #5b94f0;
   --laurel-gold: #ffd92d;
   --laurel-teal: #0ccdd4;
@@ -37,8 +49,11 @@
   --header-top: clamp(12px, 2.9vw, 40px);
 
   /* Head plane edge length. The visible silhouette is ~84% of this wide and
-     ~57% tall, so the plane runs large on purpose. */
-  --head-size: clamp(300px, 50vw, 750px);
+     ~57% tall, so the plane runs large on purpose. 40.5vw puts the silhouette
+     at the mock's ~34% of the width (≈465 of 1366); the svh cap keeps it off
+     the title and tagline on short, wide windows, the floor keeps it a real
+     head on phones. */
+  --head-size: clamp(300px, min(40.5vw, 78svh), 900px);
 
   /* LIFE cards (Figma). At 1440: card 656 tall, media 386×512 with 72 above/
      below it (512+144=656), 100 from the card edge to the media and 100 from
@@ -142,10 +157,25 @@ html {
   background: rgba(17, 17, 17, 0.26);
 }
 
+/* --- ONE-SCREEN MODE -------------------------------------------------------
+   While every section below the hero is hidden (page.tsx) the site is a single
+   screen: nothing scrolls, and the reserved scrollbar gutter (above) would
+   only leave a ~10px dead strip on the right that the head's stage can't
+   reach. Toggled by the `one-screen` class in layout.tsx — REVISIT when the
+   sections come back: drop the class and the gutter/scroll behaviour returns. */
+html.one-screen {
+  scrollbar-gutter: auto;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+html.one-screen body {
+  overflow: hidden;
+}
+
 body {
   background: var(--bg);
   color: var(--ink);
-  font-family: var(--font-hoves), sans-serif;
+  font-family: var(--font-sf);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   overflow-x: hidden;
@@ -195,6 +225,27 @@ html.lenis body {
     max-width: 1392px;
     margin-inline: auto;
     padding-inline: 24px;
+  }
+
+  /* --- first screen type (SF Pro, Figma) --------------------------------- */
+  /* Title and tagline: SF Pro Regular 20 / 132% / 0. */
+  .t-title {
+    font-family: var(--font-sf);
+    font-size: 20px;
+    font-weight: 400;
+    line-height: 1.32;
+    letter-spacing: 0;
+  }
+  /* Menu rows: 15 / 18 / 0.2px, ligatures off as specced. */
+  .t-menu {
+    font-family: var(--font-sf);
+    font-size: 15px;
+    font-weight: 400;
+    line-height: 18px;
+    letter-spacing: 0.2px;
+    font-feature-settings:
+      'liga' off,
+      'clig' off;
   }
 
   /* --- type scale (all weights 400 per Figma) ---------------------------- */
