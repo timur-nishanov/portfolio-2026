@@ -5,9 +5,10 @@
 =========================================================================== */
 
 .site-header {
-  /* The page's SF Pro Text (self-hosted, globals.css --font-sf), so the title
-     and the menu can't drift onto a differently installed local SF Pro. */
-  --menu-font: var(--font-sf);
+  /* SF Pro on Apple devices (system font), the closest native sans elsewhere.
+     SF Pro itself cannot be self-hosted under its licence. */
+  --menu-font: 'SF Pro', 'SF Pro Display', 'SF Pro Text', -apple-system, BlinkMacSystemFont, system-ui,
+    'Helvetica Neue', Arial, sans-serif;
   --menu-title-ink: #08080a;
   --menu-ink: #151514;
   --menu-btn: #e5e5e6;
