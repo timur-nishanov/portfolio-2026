@@ -57,13 +57,14 @@ void main() {
   // amount in an arbitrary direction, which pinches the texture into a dark
   // speck at every impact point. Scaling the vector instead goes cleanly to
   // zero at the centre, and pulling each sample toward the mark magnifies the
-  // skin around it — a smooth bulge, no singularity.
+  // skin around it — a smooth bulge, no singularity. 0.36 is the approved
+  // look; silhouette.ts mirrors it so the walls stop the swollen outline.
   vec2 swell = vec2(0.0);
   for (int i = 0; i < MAX_MARKS; i++) {
     vec3 m = uMarks[i];
     vec2 rel = duv - m.xy;
     float f = 1.0 - smoothstep(0.0, 0.18, length(rel));
-    swell += rel * f * m.z * 0.3;
+    swell += rel * f * m.z * 0.36;
   }
   vec2 suv = duv - swell;
 
@@ -150,7 +151,7 @@ void main() {
     // the swelling singularity above, not this, so a visible red core is fine.
     float outer = 1.0 - smoothstep(0.0, outerR * ragged, d);
     float core = 1.0 - smoothstep(0.0, outerR * 0.5 * ragged, d);
-    float amt = m.z * (outer * 0.5 + core * 0.6);
+    float amt = m.z * (outer * 0.62 + core * 0.75); // a notch stronger, as approved
     rawSum += amt;
     colorSum += welt * amt;
   }

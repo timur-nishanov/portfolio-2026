@@ -12,7 +12,7 @@ const Head3D = dynamic(() => import('./Head3D').then((m) => m.Head3D), { ssr: fa
  * Mounts the head inside the hero. It drifts around the hero box on its own,
  * takes a throw on click/drag and bounces off the edges — on mobile too, via
  * pointer events, which already cover touch. Only reduced motion swaps it for
- * a still image.
+ * a still image (centred, where the live head starts; no blood either).
  */
 export function FloatingHead() {
   const reduced = useReducedMotion();
@@ -21,7 +21,7 @@ export function FloatingHead() {
     return (
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute left-1/2 top-[78%] z-40 -translate-x-1/2 -translate-y-1/2"
+        className="pointer-events-none absolute left-1/2 top-1/2 z-40 -translate-x-1/2 -translate-y-1/2"
         style={{ width: 'var(--head-size)', height: 'var(--head-size)' }}
       >
         <StaticHead />
