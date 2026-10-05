@@ -1,0 +1,29 @@
+Head impact sounds (used by src/components/hero/impactSound.ts)
+=================================================================
+
+All sources are CC0 1.0 (public domain dedication):
+https://creativecommons.org/publicdomain/zero/1.0/
+No attribution is required; credited here out of courtesy and for provenance.
+
+thump-1..5.mp3, thump-heavy-1..3.mp3
+  Kenney, "Impact Sounds" (1.0, 2019) - https://kenney.nl/assets/impact-sounds
+  impactPunch_medium_000..004.ogg, impactPunch_heavy_000/002/003.ogg
+  Licence: CC0 (License.txt in the pack). Fetched from the pack mirror in
+  github.com/series-ai/jam-ready-assets (kenney-impact-sounds/).
+
+crunch-1..3.mp3
+  Kenney, "Impact Sounds" - footstep_snow_001/002/004.ogg (CC0), layered with
+  the onset of "eat_03.ogg" from rubberduck, "80 CC0 creature SFX" (below).
+
+khm-1..4.mp3
+  rubberduck, "80 CC0 creature SFX" - https://opengameart.org/content/80-cc0-creature-sfx
+  ooh.ogg (khm-1), hurt_05.ogg (khm-2), hurt_04.ogg (khm-3),
+  cough_02.ogg + grunt_02.ogg (khm-4: the burst of the cough, then the hum).
+  Licence: CC0. Fetched from github.com/novincode/atomcut-library
+  (packs/opengameart-80-cc0-creature-sfx).
+
+Processing (Python/numpy + ffmpeg): trimmed, high/low-passed (the punches
+rolled off above ~3 kHz into a dull knock, the vocals low-passed at
+1.4-1.9 kHz to close the mouth), khm-1/3/4 slowed 0.72-0.84x into a male
+range, short fades, peak-normalised to -1 dBFS, mono 44.1 kHz MP3 64 kbps.
+The playback level (peaks about -28..-14 dBFS) is set at runtime.
