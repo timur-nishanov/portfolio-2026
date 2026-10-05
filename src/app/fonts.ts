@@ -29,17 +29,3 @@ export const pixel = localFont({
   display: 'swap',
   preload: false,
 });
-
-// SF Pro Text — the first screen (title, tagline, menu). Self-hosted from the
-// client's files (subset to Latin + Cyrillic + punctuation, woff2), so it
-// renders the same everywhere instead of falling back off Apple devices.
-export const sfpro = localFont({
-  src: [
-    { path: './fonts/SFProText-Regular.woff2', weight: '400', style: 'normal' },
-    { path: './fonts/SFProText-Medium.woff2', weight: '500', style: 'normal' },
-    { path: './fonts/SFProText-Semibold.woff2', weight: '600', style: 'normal' },
-    { path: './fonts/SFProText-Bold.woff2', weight: '700', style: 'normal' },
-  ],
-  variable: '--font-sfpro',
-  display: 'swap',
-});
