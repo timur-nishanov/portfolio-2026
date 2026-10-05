@@ -115,6 +115,11 @@ export type SplashInput = {
 /** Is the head over (x, y) (CSS px, radius r) now, or `ahead` seconds from now? */
 export type HeadCovers = (x: number, y: number, r: number, ahead: number) => boolean;
 
+/** Stage box (CSS px: x0, y0, x1, y1) no blood may land on: the page copy. */
+export type KeepOut = [number, number, number, number];
+// clearance (CSS px) kept between a stain or a drip and the copy
+const KEEP_MARGIN = 6;
+
 export class Splash {
   readonly timing: Timing;
   readonly floor: boolean;
@@ -137,7 +142,7 @@ export class Splash {
   readonly stains: Stain[] = [];
   readonly beads: Bead[] = [];
   private pin: Pinning;
-  private tSelect = 0;
+  private tSelect = Infinity; // set once all the drops exist
   private rRef = 1;
   private picker: Generator<void, void, void> | null = null;
   private covers: HeadCovers;
@@ -147,6 +152,12 @@ export class Splash {
   private order: number[] = [];
   private dripsChosen = false;
   private dripStains: DripStain[] = [];
+  private keepOut: KeepOut[];
+  // The drops are made over the first frames (see makeDrops): null once all
+  // exist. `fresh`: the first update comes in the knock's own frame, which
+  // already made the first batch.
+  private builder: Generator<void, void, void> | null;
+  private fresh = true;
 
   // GPU-facing data (the layer uploads it)
   kData: Float32Array;
@@ -160,8 +171,12 @@ export class Splash {
   /** CSS px box of all that is drawn this frame: x0, y0, x1, y1 (empty → x0 > x1). */
   box: [number, number, number, number] = [1, 1, 0, 0];
 
-  constructor(inp: SplashInput, opts: { k: number; W: number; H: number; seed: number; density: number; covers: HeadCovers }) {
+  constructor(
+    inp: SplashInput,
+    opts: { k: number; W: number; H: number; seed: number; density: number; covers: HeadCovers; keepOut?: KeepOut[] },
+  ) {
     this.k = opts.k;
+    this.keepOut = opts.keepOut ?? [];
     this.cx = inp.x;
     this.cy = inp.y;
     this.W = opts.W;
@@ -192,12 +207,47 @@ export class Splash {
     this.V = 2050 * Math.sqrt(impEq / 4.3) * kImp ** 0.25;
     this.pData = new Float32Array(512 * P_STRIDE);
     this.fData = new Float32Array(256 * F_STRIDE);
-    this.makeDrops(opts.density, opts.covers);
+    // Room for the hero's stain; sized for real once every drop exists.
+    this.kData = new Float32Array(1600 * K_STRIDE);
+    // The heavy drops now (the hero is in the air from the first frame), the
+    // rest over the next three frames: made all at once they were ~10 ms of
+    // JS on the very frame of the knock, the one everyone is watching. Nothing
+    // shows for it: every drop spends its first frame or so squeezed out
+    // behind the head, which is still at the wall, and the fine mist, made
+    // last, lands no sooner than ~2.6 frames out.
+    this.builder = this.makeDrops(opts.density, opts.covers);
+    this.build();
+  }
+
+  /** One step of the drop making; the last one sizes the stain buffer. */
+  private build() {
+    if (!this.builder) return;
+    const done = this.builder.next().done;
+    // landing order of what exists so far, so the shapes of the first drops
+    // to land (the hero's is the costly one) are worked out in the frames
+    // before they land, within the per-frame budget
+    this.order = this.drops.map((_, i) => i).sort((p, q) => this.drops[p].tl - this.drops[q].tl);
+    if (!done) return;
+    this.builder = null;
     // sized up front from the drops (growing it mid-splash costs a copy and a
     // fresh GPU buffer right when the frame is busiest)
     let est = 1200;
     for (const d of this.drops) est += d.kind === 'big' ? 110 : d.kind === 'comp' ? 80 : d.kind === 'med' ? 20 + 8 * d.R : d.kind === 'small' ? 18 : 2;
-    this.kData = new Float32Array(Math.ceil(est * 1.25) * K_STRIDE);
+    const size = Math.ceil(est * 1.25) * K_STRIDE;
+    if (size > this.kData.length) {
+      const next = new Float32Array(size);
+      next.set(this.kData.subarray(0, this.kCount * K_STRIDE));
+      this.kData = next;
+      this.kUploaded = 0; // new buffer: everything goes up again
+    }
+  }
+
+  /** Is a stage box clear of the copy (with the margin)? */
+  private clearOfCopy(x0: number, y0: number, x1: number, y1: number) {
+    for (const r of this.keepOut) {
+      if (x1 > r[0] - KEEP_MARGIN && x0 < r[2] + KEEP_MARGIN && y1 > r[1] - KEEP_MARGIN && y0 < r[3] + KEEP_MARGIN) return false;
+    }
+    return true;
   }
 
   // ------------------------------------------------------------- drops ----
@@ -241,7 +291,8 @@ export class Splash {
     return X > -pad && X < this.W + pad && Y > -pad && Y < this.H + pad;
   }
 
-  private makeDrops(density: number, covers: HeadCovers) {
+  /** Samples every drop; yields between batches (see the constructor). */
+  private *makeDrops(density: number, covers: HeadCovers): Generator<void, void, void> {
     const rng = this.rng;
     const U = (a: number, b: number) => rng.u(a, b);
     const b = this.burst;
@@ -264,6 +315,17 @@ export class Splash {
       const X = this.cx + this.k * d.lx;
       const Y = this.cy + this.k * d.ly;
       d.behind = this.onStage(d.lx, d.ly, 30) && covers(X, Y, 0.5 * d.R * this.k, d.tl);
+      // A drop that would land on the copy is never thrown: no stain is left
+      // on the text (the canvas is drawn over it), and the splash just looks
+      // as if it went behind the words. The reach is a stain's full drawn
+      // extent (its long radius, splash rim and soft edge: up to ~2.4x the
+      // body ellipse measured), so not even a fringe touches a letter.
+      const reach = ((2.5 * d.R) / Math.max(d.e, 0.35) + 6) * this.k;
+      if (!this.clearOfCopy(X - reach, Y - reach, X + reach, Y + reach)) d.done = d.nofly = true;
+      // fine drops get a comet-like shutter ramp (dense at the drop), so they
+      // read as a drop with a faint tail, never as a headless dash
+      const fine = kind === 'small' || (kind === 'med' && R < 5);
+      d.ramp = fine ? [0.15, 4.25, 4] : [0.3, 1.4, 1];
       this.drops.push(d);
       return d;
     };
@@ -271,6 +333,7 @@ export class Splash {
     // hero: the main mass, slow and short flight → lands near the contact
     const Rh = 23 * b ** 0.5;
     spawn('hero', Rh, () => ({ ang: clipang(rng.n(0, 0.07)), spd: V * U(0.5, 0.56), T: U(3.4, 4.2) / FPS, dt0: U(-0.45, -0.2) / FPS, off: rng.n(0, 2.5) }));
+    this.rRef = Math.max(1, Rh); // the biggest drop there will be (final value below)
     const side0 = rng.next() < 0.5 ? 1 : -1;
     for (let i = 0; i < (b > 0.7 ? 2 : 1); i++) {
       const sd = i === 0 ? side0 : -side0;
@@ -286,6 +349,7 @@ export class Splash {
     for (const a0 of bigAng) {
       parents.push(spawn('big', U(10.5, 15) * b ** 0.5, () => ({ ang: clipang(a0 + rng.n(0, 0.05)), spd: V * U(0.55, 0.78), T: U(4.5, 8) / FPS, dt0: U(-0.4, 0.9) / FPS, off: rng.n(0, 4) })));
     }
+    yield;
     const meds: Drop[] = [];
     for (let i = 0, n = Math.round(26 * b * density); i < n; i++) {
       const R = Math.min(2.2 * (1 - rng.next()) ** (-1 / 1.7), 9) * b ** 0.2;
@@ -299,7 +363,9 @@ export class Splash {
     for (const d of meds) if (d.R >= Math.max(rcut, 3)) parents.push(d);
     const pw = parents.map((d) => d.R * d.R);
     const pwSum = pw.reduce((p, q) => p + q, 0);
+    yield;
     for (let i = 0, n = Math.round(100 * b * density); i < n; i++) {
+      if (i === Math.ceil(n / 2)) yield;
       // mist: most of it clustered along the streams of the bigger drops
       let d: Drop;
       if (parents.length && rng.next() < 0.7) {
@@ -318,12 +384,6 @@ export class Splash {
       }
       // too fine to read in flight: it only appears on the wall
       d.nofly = true;
-    }
-    for (const d of this.drops) {
-      // fine drops get a comet-like shutter ramp (dense at the drop), so they
-      // read as a drop with a faint tail, never as a headless dash
-      const fine = d.kind === 'small' || (d.kind === 'med' && d.R < 5);
-      d.ramp = fine ? [0.15, 4.25, 4] : [0.3, 1.4, 1];
     }
     this.rRef = this.drops.reduce((m, d) => Math.max(m, d.R), 1);
     this.order = this.drops.map((_, i) => i).sort((p, q) => this.drops[p].tl - this.drops[q].tl);
@@ -452,6 +512,15 @@ export class Splash {
   }
 
   // ------------------------------------------------------------- drips ----
+  /** A drip run from (x, y0) down L (event-local offline px) stays off the copy. */
+  private runClearOfCopy(x: number, y0: number, L: number, rb: number) {
+    if (!this.keepOut.length) return true;
+    const k = this.k;
+    const X = this.cx + k * x;
+    const half = k * (1.3 * rb + 3);
+    return this.clearOfCopy(X - half, this.cy + k * y0, X + half, this.cy + k * (y0 + L + rb));
+  }
+
   private pathClear(x: number, y0: number, L: number, rb: number, exclude: number, strict: boolean) {
     const frac = strict ? 1 : 0.7;
     for (const c of this.stains) {
@@ -541,6 +610,7 @@ export class Splash {
         }
         if (L === null) continue;
         const rb0 = rbs[i];
+        if (!this.runClearOfCopy(x, yb, L, rb0)) continue;
         if (!this.pathClear(x, yb + 3, L, rb0, st.id, false)) continue;
         const hits = this.pathHits(x, yb + 3, L, rb0, st.id);
         if (hits > 2) continue;
@@ -566,6 +636,7 @@ export class Splash {
         const rstop = U(3.1, 3.8);
         const rb0 = rstop + U(0.75, 1.2);
         yield;
+        if (!this.runClearOfCopy(x, yb, L + 6, rb0)) continue;
         if (!this.pathClear(x, yb + 3, L + 6, rb0, st.id, true)) continue;
         chosen.push({ st, x, yb, L, rb0, ts: st.tl + U(0.14, 0.7), kind: 'stall', rbStop: rstop });
         break;
@@ -619,13 +690,18 @@ export class Splash {
   /** Advance to event clock t (s since the hit) and rebuild the per-frame buffers. */
   update(t: number, dt: number, covers: HeadCovers) {
     const k = this.k;
+    // The knock's own frame (it already made the first drops) does nothing
+    // that can wait: no more drops, no shapes.
+    const fresh = this.fresh;
+    this.fresh = false;
     const t0 = performance.now();
+    if (!fresh) this.build();
     for (let i = 0; i < this.drops.length; i++) {
       const d = this.drops[i];
       if (!d.done && d.tl <= t) this.land(d, i);
     }
     // shapes of the next drops to land, while this frame has time to spare
-    for (const i of this.order) {
+    for (const i of fresh ? [] : this.order) {
       const d = this.drops[i];
       if (d.done || d.shape) continue;
       if (d.tl > t + 0.3 || performance.now() - t0 > BUDGET_MS) break;

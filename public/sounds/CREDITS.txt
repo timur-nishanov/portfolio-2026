@@ -15,15 +15,27 @@ crunch-1..3.mp3
   Kenney, "Impact Sounds" - footstep_snow_001/002/004.ogg (CC0), layered with
   the onset of "eat_03.ogg" from rubberduck, "80 CC0 creature SFX" (below).
 
-khm-1..4.mp3
+khm-2.mp3, khm-4.mp3, khm-6.mp3 (parts)
   rubberduck, "80 CC0 creature SFX" - https://opengameart.org/content/80-cc0-creature-sfx
-  ooh.ogg (khm-1), hurt_05.ogg (khm-2), hurt_04.ogg (khm-3),
-  cough_02.ogg + grunt_02.ogg (khm-4: the burst of the cough, then the hum).
-  Licence: CC0. Fetched from github.com/novincode/atomcut-library
-  (packs/opengameart-80-cc0-creature-sfx).
+khm-5.mp3, khm-6.mp3 (parts)
+  rubberduck, "80 CC0 creture SFX 2" - https://opengameart.org/content/80-cc0-creture-sfx-2
+  Licence: CC0. Both fetched from github.com/novincode/atomcut-library
+  (packs/opengameart-80-cc0-creature-sfx, packs/opengameart-80-cc0-creture-sfx-2).
 
-Processing (Python/numpy + ffmpeg): trimmed, high/low-passed (the punches
-rolled off above ~3 kHz into a dull knock, the vocals low-passed at
-1.4-1.9 kHz to close the mouth), khm-1/3/4 slowed 0.72-0.84x into a male
-range, short fades, peak-normalised to -1 dBFS, mono 44.1 kHz MP3 64 kbps.
+  khm-2  hurt_05.ogg: a short closed "hmf", no pitch change (f0 ~120-130 Hz).
+  khm-4  the burst of cough_02.ogg (the "kh"), then grunt_02.ogg slowed 0.72x
+         (the hum, f0 ~130-150 Hz), with cough_02's tail as air under the hum.
+  khm-5  the onset of breath_02.ogg (the "kh"), then the soft closed-mouth
+         start of grunt_08.ogg (the hum, f0 ~113-122 Hz), breath_02 as air.
+  khm-6  the last burst of cough_03.ogg (the "kh"), then the low closed-mouth
+         start of grunt_07.ogg (the hum, f0 ~106-119 Hz).
+  The khm-5/6 hums are re-pitched with PSOLA (Praat overlap-add), which keeps
+  the voice's own formants, onto a gentle fall into a male speaking range.
+
+Processing (Python/numpy/Praat + ffmpeg): trimmed, high/low-passed (the
+punches rolled off above ~3 kHz into a dull knock; the hums low-passed at
+1.3-1.9 kHz to close the mouth; the "kh" bursts high-passed at 0.9 kHz, and
+for khm-5/6 also low-passed at 4.5-5 kHz, where a throat "kh" sits), the
+hums shaped to die away like a spoken "m",
+short fades, peak-normalised to -1 dBFS, mono 44.1 kHz MP3 64 kbps.
 The playback level (peaks about -28..-14 dBFS) is set at runtime.

@@ -7,6 +7,9 @@ import './globals.css';
 export const metadata: Metadata = {
   title: site.meta.title,
   description: site.meta.description,
+  // No favicon yet: an empty one stops browsers asking for /favicon.ico, a
+  // 404 in the console on every first load. Swap in the real icon here.
+  icons: { icon: 'data:,' },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

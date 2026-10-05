@@ -13,20 +13,23 @@
 export type SoundKind = 'thump' | 'heavy' | 'khm' | 'crunch';
 
 /**
- * Takes per kind, each with its loudness trim in dB; files are
- * /sounds/<name>.mp3 (MP3 decodes everywhere, Safari included). The files
- * are normalised by peak, and peak says little about loudness: the bassy
- * heavy takes played ~5 dB softer than a thump at the same peak (a full flick
- * sounded weaker than a tap), the vocals 4–5 dB louder, and khm-4 — the one
- * real "kh-m" — the quietest of its kind. The trims bring every take level
- * with the thumps on short-term loudness (100 ms, the mean of A-weighted and
- * of a 250 Hz high-pass, i.e. a laptop or phone speaker), so the levels
- * planned below compare as heard.
+ * Takes per kind, each with its loudness trim in dB and an optional pick
+ * weight (default 1); files are /sounds/<name>.mp3 (MP3 decodes everywhere,
+ * Safari included). The files are normalised by peak, and peak says little
+ * about loudness: the bassy heavy takes played ~5 dB softer than a thump at
+ * the same peak (a full flick sounded weaker than a tap), the open-mouthed
+ * khm-2 4–5 dB louder. The trims bring every take level with the thumps on
+ * short-term loudness (100 ms, the mean of A-weighted and of a 250 Hz
+ * high-pass, i.e. a laptop or phone speaker), so the levels planned below
+ * compare as heard.
+ * khm-4/5/6 are the real "kh-m": a breathy throat burst, then a closed-mouth
+ * hum at 105–150 Hz. khm-2 is a shorter "hmf" grunt with no "kh", so it only
+ * comes up now and then, for variety.
  */
-const TAKES: Record<SoundKind, [name: string, trimDb: number][]> = {
+const TAKES: Record<SoundKind, [name: string, trimDb: number, weight?: number][]> = {
   thump: [['thump-1', 0.3], ['thump-2', -0.4], ['thump-3', 0.4], ['thump-4', -0.5], ['thump-5', 0.3]],
   heavy: [['thump-heavy-1', 5.6], ['thump-heavy-2', 6.2], ['thump-heavy-3', 5.3]],
-  khm: [['khm-1', -4.2], ['khm-2', -4.7], ['khm-3', -4.2], ['khm-4', 0.5]],
+  khm: [['khm-4', 0.5, 2], ['khm-5', -1.0, 2], ['khm-6', 1.2, 2], ['khm-2', -4.7, 1]],
   crunch: [['crunch-1', -1.7], ['crunch-2', -0.5], ['crunch-3', -0.1]],
 };
 
@@ -42,8 +45,13 @@ const HEAVY_FROM = 1.9;
 const KHM_FROM = 0.6;
 const KHM_CHANCE = 0.2;
 const KHM_COOLDOWN_MS: [number, number] = [2000, 4000];
-const CRUNCH_FROM = 1.5;
-const CRUNCH_CHANCE = 0.16;
+// The crunch is the punchline, so the hard end of a tap-throw (its wall hits
+// run ~1–1.8) earns one now and then, likelier the harder it lands: from 1.5
+// with a flat 16%, a visitor who only taps heard about one a minute and a
+// third never heard it at all.
+const CRUNCH_FROM = 1.2;
+const CRUNCH_CHANCE = 0.12; // + CRUNCH_CHANCE_FORCE × force (0…1)
+const CRUNCH_CHANCE_FORCE = 0.2;
 const CRUNCH_COOLDOWN_MS = 3000;
 // Levels against the knock (dB, takes loudness-matched): the heavy takes a
 // touch above it, so a full flick lands over 3 dB louder than a tap; the
@@ -85,14 +93,22 @@ export const createPlanState = (): PlanState => ({
 
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
 
-/** A random take of `kind`, never the one that played last. */
+/** A random take of `kind` by weight, never the one that played last. */
 function pickTake(s: PlanState, kind: SoundKind, rand: () => number) {
-  const n = TAKES[kind].length;
+  const list = TAKES[kind];
   const prev = s.lastTake[kind];
-  let i = Math.floor(rand() * (prev === undefined ? n : n - 1));
-  if (prev !== undefined && i >= prev) i += 1;
-  s.lastTake[kind] = i;
-  return i;
+  let total = 0;
+  for (let i = 0; i < list.length; i++) if (i !== prev) total += list[i][2] ?? 1;
+  let r = rand() * total;
+  let pick = 0;
+  for (let i = 0; i < list.length; i++) {
+    if (i === prev) continue;
+    pick = i;
+    r -= list[i][2] ?? 1;
+    if (r < 0) break;
+  }
+  s.lastTake[kind] = pick;
+  return pick;
 }
 
 /**
@@ -142,7 +158,9 @@ export function planImpact(
   // The crunch rides just behind the thump, in the tail of the knock.
   const crunch =
     blood ||
-    (impact > CRUNCH_FROM && now - s.lastCrunchAt > CRUNCH_COOLDOWN_MS && rand() < CRUNCH_CHANCE);
+    (impact > CRUNCH_FROM &&
+      now - s.lastCrunchAt > CRUNCH_COOLDOWN_MS &&
+      rand() < CRUNCH_CHANCE + CRUNCH_CHANCE_FORCE * t);
   if (crunch) {
     s.lastCrunchAt = now;
     voices.push({
@@ -224,19 +242,46 @@ function startOffset(b: AudioBuffer, voice: boolean) {
   return Math.max(0, i / b.sampleRate - (voice ? 0.001 : 0.002));
 }
 
-/** Fetch and decode every take once (~40 KB in all), in the background. */
+const ALL = (Object.keys(TAKES) as SoundKind[]).flatMap((kind) => TAKES[kind].map(([name]) => ({ kind, name })));
+
+/**
+ * The files' bytes, fetched once. They are prefetched shortly after the page
+ * has loaded, which needs no AudioContext: fetched on the first gesture, a
+ * head grabbed by a wall and slammed into it knocked before the download was
+ * in on a slow phone line, and that first knock — the one that sets the
+ * impression — was silent.
+ */
+const bytes = new Map<string, Promise<ArrayBuffer | null>>();
+
+function fetchTake(name: string) {
+  let p = bytes.get(name);
+  if (!p) {
+    p = fetch(`/sounds/${name}.mp3`)
+      .then((res) => (res.ok ? res.arrayBuffer() : null))
+      .catch(() => null);
+    bytes.set(name, p);
+  }
+  return p;
+}
+
+function prefetch() {
+  for (const { name } of ALL) void fetchTake(name);
+}
+
+/** Decode every take once (~40 KB in all), in the background, as soon as a
+    context exists (decoding works on a suspended one too). */
 function load() {
   const c = getContext();
   if (!c || loading) return;
-  const all = (Object.keys(TAKES) as SoundKind[]).flatMap((kind) => TAKES[kind].map(([name]) => ({ kind, name })));
   loading = Promise.all(
-    all.map(async ({ kind, name }) => {
+    ALL.map(async ({ kind, name }) => {
+      const data = await fetchTake(name);
+      if (!data) return; // a missing take just stays silent; the others still play
       try {
-        const res = await fetch(`/sounds/${name}.mp3`);
-        const buffer = await c.decodeAudioData(await res.arrayBuffer());
+        const buffer = await c.decodeAudioData(data);
         takes.set(name, { buffer, offset: startOffset(buffer, kind === 'khm') });
       } catch {
-        // A missing take just stays silent; the others still play.
+        /* undecodable: silent too */
       }
     }),
   ).then(() => undefined);
@@ -249,8 +294,8 @@ function load() {
  * every kind of gesture tries, and the listeners only stand down once the
  * context really runs — a one-shot on the first press could leave an iPhone
  * silent for the whole visit, since a resume from the animation loop is
- * refused. The first gesture also starts the download: the head can't hit a
- * wall hard before someone touches it anyway.
+ * refused. The first gesture also creates the context, and with it the
+ * decoding of the prefetched takes.
  */
 const GESTURES = ['pointerdown', 'pointerup', 'touchend', 'click', 'keydown'] as const;
 let armed = false;
@@ -290,6 +335,14 @@ function unlock() {
 
 if (typeof window !== 'undefined') {
   arm();
+  // Fetch the takes once the page has settled (idle, or 1.5 s where there is
+  // no idle callback — Safari), well before anyone can throw the head.
+  const soon = () => {
+    if ('requestIdleCallback' in window) window.requestIdleCallback(prefetch, { timeout: 3000 });
+    else setTimeout(prefetch, 1500);
+  };
+  if (document.readyState === 'complete') soon();
+  else window.addEventListener('load', soon, { once: true });
   // Back from the background: try to pick up where it was (the gestures are
   // armed again anyway if this is refused).
   document.addEventListener('visibilitychange', () => {
@@ -315,12 +368,16 @@ export function playImpact(impact: number, pan: number, opts?: { blood?: boolean
   }
   load();
   const voices = planImpact(state, impact, pan, !!opts?.blood, performance.now());
-  const t0 = c.currentTime + 0.005;
+  // Lead the clock by at least its output latency. currentTime advances in
+  // hardware-buffer steps (often 10 ms or more), so a 5 ms lead could already
+  // be in the past when start() ran: the start slipped and the fade-in that
+  // keeps a mid-signal start from clicking fell before it, i.e. was skipped.
+  const t0 = c.currentTime + Math.max(0.01, c.baseLatency || 0);
   for (const v of voices) {
     const [name, trimDb] = TAKES[v.kind][v.take];
     const take = takes.get(name);
     if (!take) continue; // not decoded yet
-    const at = t0 + v.delay;
+    const at = Math.max(c.currentTime + 0.003, t0 + v.delay);
     const src = new AudioBufferSourceNode(c, { buffer: take.buffer, playbackRate: v.rate });
     // Files peak at -1 dBFS: the trim makes the take as loud as a thump, then
     // it plays at the planned level. A 2 ms fade-in, since a knock starts

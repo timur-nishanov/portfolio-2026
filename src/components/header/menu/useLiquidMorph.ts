@@ -4,12 +4,17 @@ import { useEffect, useRef, type RefObject } from 'react';
 import { lerp } from '@/lib/lerp';
 import { zoomOf } from '@/lib/zoom';
 import { stepSpring, type SpringConfig, type SpringState } from '@/lib/spring';
-import { clamp01, metaballPath, smoothstep, springOf } from './liquid';
+import { clamp01, metaball, smoothstep, springOf } from './liquid';
 
 export type MorphRefs = {
   /** Positioning context every rect below is measured in (the header). */
   root: RefObject<HTMLElement | null>;
+  /** The title beside the button: the glass must not slide under it. */
+  title: RefObject<HTMLElement | null>;
   button: RefObject<HTMLElement | null>;
+  /** The button's grey disc (its colour, hover included, is what the morph
+      starts from). */
+  disc: RefObject<HTMLElement | null>;
   blob: RefObject<HTMLDivElement | null>;
   tint: RefObject<HTMLDivElement | null>;
   /** The menu content, laid out at the panel's resting rect — its box IS the
@@ -33,15 +38,20 @@ const edge = (response: number, dampingRatio: number, delay = 0): EdgeMotion => 
   delay,
 });
 
-// Each edge of the shape runs its own spring. Opening, the far edges (bottom,
-// left) are the bounciest, so the panel swells out of the button and settles
-// with the small iOS overshoot away from it; the top edge, which only has to
-// leave the button, is the calmest. The left edge sets off 40ms late (and a
-// touch quicker, so the panel still lands on the same frame): the drop first
-// clears the title row, then spreads — leading with its corner, it slid
-// under the title's last glyphs for ~6 frames.
+// Each edge of the shape runs its own spring. Opening, the shape swells on
+// both axes at once, as an iOS menu does: early on it is never more than
+// about twice as tall as it is wide (a fixed 40ms hold on the left edge made
+// it hang below the button as a 20px grey drip, 1:4, for five frames). The
+// top edge is quick, so the drop is below the title within ~3 frames, and
+// the left edge sets off the moment it is: gated on where the top edge is,
+// not on a timer, so the glass never slides under the title's last glyphs
+// (with any font, zoom or row width) and never waits longer than it must.
+// The far edges (bottom, left) are the bounciest, so the panel settles with
+// the small iOS overshoot away from the button.
 // Closing is quicker and the side edge goes first, so the panel narrows into
-// a drop before it is drawn back up into the button. The closing springs are
+// a drop before it is drawn back up into the button — the top edge is gated
+// on the left edge being past the title, the mirror of the opening. The
+// closing springs are
 // deliberately a little underdamped: an edge is stopped dead when it reaches
 // the button (it never undershoots through it), so the would-be wobble never
 // shows — what it buys is a brisk arrival instead of a near-critical tail,
@@ -50,10 +60,10 @@ const edge = (response: number, dampingRatio: number, delay = 0): EdgeMotion => 
 // (menu.css), so the shape never shrinks over live text — it cut words at
 // its moving edge for two frames.
 const OPEN: Record<Edge, EdgeMotion> = {
-  top: edge(0.4, 0.85),
+  top: edge(0.18, 0.9),
   right: edge(0.42, 0.8),
-  bottom: edge(0.4, 0.74),
-  left: edge(0.4, 0.74, 0.04),
+  bottom: edge(0.48, 0.8),
+  left: edge(0.3, 0.74), // + the title gate (see tick)
 };
 const CLOSE: Record<Edge, EdgeMotion> = {
   top: edge(0.32, 0.78, 0.06),
@@ -73,6 +83,13 @@ const PANEL_RADIUS = 28;
 // liquid bridge lets go. The resting gap is ~17px, so the bridge always snaps
 // before the panel settles and never lingers as a stalk.
 const NECK_REACH = 13;
+// ...and it snaps sooner if it has thinned to this waist (px): drawn down to
+// nothing it read as a 1px diagonal scratch for 2–3 frames, not a liquid neck.
+const NECK_MIN_WAIST = 3.5;
+// The rows come in once the left edge has passed their text inset (px): with
+// the content parked at its final place behind a moving clip, words showed
+// cut at the edge ("andom", "areer") for a few frames.
+const REVEAL_INSET = 15;
 // Rim refraction strength (feDisplacementMap scale, see MenuGlassFilter) and
 // the filter region pad: frost tail (3σ) plus the farthest the rim samples.
 const REFRACT_SCALE = 110;
@@ -105,9 +122,21 @@ function createEngine(refs: MorphRefs) {
   let reduced = false;
   // Closed and absorbed into the button (nothing of the shape is drawn).
   let swallowed = true;
+  // The rows have been let in for this opening (see REVEAL_INSET).
+  let revealed = false;
   let btnColor = 'rgb(229 229 230)';
   let B: Circle = { cx: 0, cy: 0, r: 10 };
   let T: Box = { top: 0, right: 0, bottom: 0, left: 0 };
+  // The title's ink bottom and right end. Opening, the left edge holds until
+  // the top edge is below the title; closing, the top edge holds until the
+  // left edge is past its end — either way the glass never slides under it.
+  let gateY = -Infinity;
+  let gateX = -Infinity;
+
+  const setReveal = (on: boolean) => {
+    revealed = on;
+    refs.content.current?.toggleAttribute('data-reveal', on);
+  };
 
   const measure = () => {
     const root = refs.root.current;
@@ -129,6 +158,8 @@ function createEngine(refs: MorphRefs) {
       cy: (br.top + br.height / 2 - rr.top) / z,
       r,
     };
+    // The content box is capped to the viewport in menu.css (a short landscape
+    // phone), so the glass target is capped with it and the two stay one size.
     const cr = content.getBoundingClientRect();
     T = {
       left: (cr.left - rr.left) / z,
@@ -136,6 +167,19 @@ function createEngine(refs: MorphRefs) {
       right: (cr.right - rr.left) / z,
       bottom: (cr.bottom - rr.top) / z,
     };
+    const title = refs.title.current;
+    if (title) {
+      // Line box minus the half-leading and a descent's worth: about the
+      // baseline, where the digits beside the button end.
+      const tr = title.getBoundingClientRect();
+      const cs = getComputedStyle(title);
+      const fs = parseFloat(cs.fontSize) || 20;
+      const lh = parseFloat(cs.lineHeight) || fs * 1.32;
+      gateY = Math.min((tr.bottom - rr.top) / z - (lh - fs) / 2 - 0.2 * fs, T.top);
+      gateX = Math.min((tr.right - rr.left) / z, B.cx - B.r);
+    } else {
+      gateY = gateX = -Infinity;
+    }
     const filter = refs.filter.current;
     if (filter) {
       // Sized once per morph for the largest the shape gets (the panel plus
@@ -158,7 +202,8 @@ function createEngine(refs: MorphRefs) {
     if (btn) btn.style.transform = Math.abs(bump.value) > 5e-4 ? `scale(${(1 + bump.value).toFixed(4)})` : '';
   };
 
-  // The chevron flips while the liquid covers the button (see menu.css).
+  // The chevron (drawn above the liquid, menu.css) crossfades to the new
+  // direction the moment the menu is toggled, as the button's state.
   const setChevron = (up: boolean) => {
     const btn = refs.button.current;
     if (btn) btn.dataset.chevron = up ? 'up' : 'down';
@@ -231,13 +276,14 @@ function createEngine(refs: MorphRefs) {
     // the top light follows the glass; the drop shadow ramps a touch later —
     // a 40px shadow under a 30px drop is a smudge, not depth. Written whole
     // from here, not as var()-driven colour maths in the stylesheet, so every
-    // engine gets a plain value.
+    // engine gets a plain value. Full strength = the resting shadow in
+    // menu.css.
     const seam = smoothstep(0.015, 0.12, grow);
     const depth = smoothstep(0.08, 0.45, grow);
     blob.style.boxShadow =
-      `inset 0 1px 0 rgba(255,255,255,${(0.95 * glass).toFixed(3)}), ` +
-      `0 0 0 0.5px rgba(0,0,0,${(0.16 * seam).toFixed(3)}), ` +
-      `0 4px 40px rgba(0,0,0,${(0.18 * depth).toFixed(3)})`;
+      `inset 0 1px 0 rgba(255,255,255,${glass.toFixed(3)}), ` +
+      `0 0 0 0.5px rgba(0,0,0,${(0.24 * seam).toFixed(3)}), ` +
+      `0 4px 40px rgba(0,0,0,${(0.22 * depth).toFixed(3)})`;
 
     if (root.hasAttribute('data-refract')) {
       // The displacement map is built from a flood the size of the shape, so
@@ -255,6 +301,9 @@ function createEngine(refs: MorphRefs) {
         `inset(${(top - T.top).toFixed(1)}px ${(T.right - right).toFixed(1)}px ` +
         `${(T.bottom - bottom).toFixed(1)}px ${(left - T.left).toFixed(1)}px round ${radius.toFixed(1)}px)`;
     }
+    // Opening: let the rows in (menu.css fades them top to bottom) once the
+    // glass has passed their text inset, so no word is ever seen cut off.
+    if (target === 1 && !revealed && left <= T.left + REVEAL_INSET) setReveal(true);
 
     // Liquid bridge between the button and the nearest top corner of the
     // shape. Geometric, not timed: it exists while the two are within reach
@@ -270,9 +319,9 @@ function createEngine(refs: MorphRefs) {
       const c2x = minX <= maxX ? Math.min(Math.max(B.cx, minX), maxX) : (left + right) / 2;
       const c2 = { x: c2x, y: top + r2 };
       const gap = Math.hypot(c2.x - B.cx, c2.y - B.cy) - r1 - r2;
-      const path =
+      const ball =
         gap < NECK_REACH
-          ? metaballPath(
+          ? metaball(
               { x: B.cx, y: B.cy },
               r1,
               c2,
@@ -280,8 +329,8 @@ function createEngine(refs: MorphRefs) {
               0.5 * Math.pow(clamp01(1 - Math.max(gap, 0) / NECK_REACH), 0.75),
             )
           : null;
-      if (path) {
-        neck.setAttribute('d', path);
+      if (ball && ball.waist >= NECK_MIN_WAIST) {
+        neck.setAttribute('d', ball.d);
         const g = refs.neckGrad.current;
         if (g) {
           g.setAttribute('x1', B.cx.toFixed(1));
@@ -308,22 +357,31 @@ function createEngine(refs: MorphRefs) {
     const motion = target ? OPEN : CLOSE;
     const steps = Math.max(1, Math.ceil(dt / 0.004));
     for (let i = 0; i < steps; i++) {
+      // Opening, the left edge waits until the top edge is below the title
+      // (or nearly home, should the title ever sit lower than the panel);
+      // closing, the top edge waits until the left edge is past the title's
+      // end (or nearly back on the button).
+      const topY = lerp(B.cy - B.r, T.top, e.top.value);
+      const leftX = lerp(B.cx - B.r, T.left, e.left.value);
+      const belowTitle = topY >= gateY || e.top.value >= 0.9;
+      const pastTitle = leftX >= gateX - 2 || e.left.value <= 0.05;
       for (const k of EDGES) {
         // Until its delay has passed an edge keeps chasing the old target, so
         // a reversal mid-flight never snaps.
-        const goal = since >= motion[k].delay ? target : previous;
-        Object.assign(e[k], stepSpring(e[k], goal, motion[k].spring, dt / steps));
+        let go = since >= motion[k].delay;
+        if (target === 1 && k === 'left' && !belowTitle) go = false;
+        if (target === 0 && k === 'top' && !pastTitle) go = false;
+        Object.assign(e[k], stepSpring(e[k], go ? target : previous, motion[k].spring, dt / steps));
       }
       Object.assign(bump, stepSpring(bump, 0, BUMP, dt / steps));
     }
     if (target === 0) {
       // Back on the button: the shape is dropped (it is the button's double
-      // by now, so nothing pops), the chevron has turned underneath, and the
-      // button takes the leftover momentum as a small gulp.
+      // by now, so nothing pops), and the button takes the leftover momentum
+      // as a small gulp.
       for (const k of EDGES) if (e[k].value < 0) e[k].value = e[k].velocity = 0;
       if (!swallowed && EDGES.every((k) => e[k].value < SWALLOW_AT)) {
         swallowed = true;
-        setChevron(false);
         bump.velocity += BUMP_IN;
       }
     }
@@ -380,6 +438,7 @@ function createEngine(refs: MorphRefs) {
         hide();
         bumpButton();
         setChevron(open);
+        setReveal(open);
         placeResting();
         if (blob) {
           blob.style.visibility = '';
@@ -403,14 +462,16 @@ function createEngine(refs: MorphRefs) {
       previous = target;
       target = next;
       since = 0;
+      setChevron(open);
+      // Each opening reveals the rows afresh; closing drops them at once.
+      setReveal(false);
       if (open) {
         // Match whatever state the button is drawn in (hover darkens it), so
         // the copy laid over it is indistinguishable on the first frame.
-        const btn = refs.button.current;
-        if (btn) btnColor = getComputedStyle(btn).backgroundColor;
+        const disc = refs.disc.current ?? refs.button.current;
+        if (disc) btnColor = getComputedStyle(disc).backgroundColor;
         if (refs.tint.current) refs.tint.current.style.background = btnColor;
         swallowed = false;
-        setChevron(true);
       }
       run();
     },

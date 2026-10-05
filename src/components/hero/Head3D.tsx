@@ -6,7 +6,7 @@ import { assets } from '@/data/assets';
 import { clamp, lerp } from '@/lib/lerp';
 import { zoomOf } from '@/lib/zoom';
 import { stepSpring, type SpringState } from '@/lib/spring';
-import { BloodLayer, type Wall } from './blood';
+import { BloodLayer, type KeepOut, type Wall } from './blood';
 import { playImpact } from './impactSound';
 import { createSilhouette, type EdgeHit, type Side } from './silhouette';
 import fragmentShader from './head.frag';
@@ -230,6 +230,41 @@ export function Head3D() {
       }
     };
 
+    /**
+     * The copy the blood must stay off, in stage px: everything marked
+     * data-blood-keepout (the tagline, the header's title and button). The
+     * canvas is drawn over the page, so a stain there covered the words.
+     * Text is measured by its line boxes — the tagline's block spans the
+     * whole stage — and an element without text by its own box.
+     */
+    const measureKeepOut = () => {
+      const r = wrap.getBoundingClientRect();
+      const z = zoomOf(wrap);
+      const boxes: KeepOut[] = [];
+      const range = document.createRange();
+      for (const el of document.querySelectorAll<HTMLElement>('[data-blood-keepout]')) {
+        const box: KeepOut = [Infinity, Infinity, -Infinity, -Infinity];
+        const take = (b: DOMRect) => {
+          // (the visually hidden sr-only text measures 1px: skip it)
+          if (b.width < 2 || b.height < 2) return;
+          box[0] = Math.min(box[0], b.left);
+          box[1] = Math.min(box[1], b.top);
+          box[2] = Math.max(box[2], b.right);
+          box[3] = Math.max(box[3], b.bottom);
+        };
+        const walk = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+        for (let n = walk.nextNode(); n; n = walk.nextNode()) {
+          if (!n.textContent?.trim()) continue;
+          range.selectNodeContents(n);
+          for (const b of range.getClientRects()) take(b);
+        }
+        if (box[0] === Infinity) take(el.getBoundingClientRect());
+        if (box[0] === Infinity) continue;
+        boxes.push([(box[0] - r.left) / z, (box[1] - r.top) / z, (box[2] - r.left) / z, (box[3] - r.top) / z]);
+      }
+      blood.setKeepOut(boxes);
+    };
+
     const resize = () => {
       W = wrap.clientWidth || window.innerWidth;
       H = wrap.clientHeight || window.innerHeight;
@@ -245,10 +280,15 @@ export function Head3D() {
       half = sizePx / H;
       blood.resize(W, H, sizePx * HEAD_W_FRAC);
       readBackground();
+      measureKeepOut();
     };
     resize();
     const ro = new ResizeObserver(resize);
     ro.observe(wrap);
+    // The copy reflows once the webfonts are in (its width changes).
+    document.fonts?.ready.then(() => {
+      if (!disposed) measureKeepOut();
+    });
 
     // ---- state -------------------------------------------------------------
     // The head deliberately does NOT track the cursor (per request). Its only
@@ -370,6 +410,10 @@ export function Head3D() {
       velX = velY = 0;
       holdX = posX;
       holdY = posY;
+      // A grab is what comes before any bleeding knock: the blood's targets
+      // go in now, in idle time, rather than on the frame of the knock.
+      if ('requestIdleCallback' in window) window.requestIdleCallback(() => blood.prepare(), { timeout: 300 });
+      else setTimeout(() => blood.prepare(), 0);
     };
 
     const endDrag = () => {

@@ -33,9 +33,16 @@ export function SiteHeader() {
   const reduced = useReducedMotion();
   const handle = useRef<MenuContentHandle>(null);
   const focusOnOpen = useRef<'first' | 'last'>('first');
+  // How the menu was opened decides whether its first row shows the keyboard
+  // ring. Not :focus-visible — Chromium passes that on to programmatic focus
+  // from whatever had keyboard focus before, so a click after a Tab (or after
+  // Escape handed focus back to the button) lit the ring on "Works".
+  const openedBy = useRef<'keyboard' | 'pointer'>('pointer');
   const [refs] = useState<MorphRefs>(() => ({
     root: createRef<HTMLElement>(),
+    title: createRef<HTMLElement>(),
     button: createRef<HTMLElement>(),
+    disc: createRef<HTMLElement>(),
     blob: createRef<HTMLDivElement>(),
     tint: createRef<HTMLDivElement>(),
     content: createRef<HTMLDivElement>(),
@@ -63,7 +70,7 @@ export function SiteHeader() {
   // Focus follows the menu in (WAI-ARIA menu button): first row, or the last
   // one when it was opened with ArrowUp.
   useEffect(() => {
-    if (open) handle.current?.focusItem(focusOnOpen.current);
+    if (open) handle.current?.focusItem(focusOnOpen.current, { ring: openedBy.current === 'keyboard' });
   }, [open]);
 
   // Dismissal: a press anywhere outside, or Escape.
@@ -113,7 +120,15 @@ export function SiteHeader() {
       </div>
 
       <div className="site-header__row">
-        <p className="site-title">{menuTitle}</p>
+        {/* data-blood-keepout: the head's blood stays off the title and the
+            button (Head3D measures them). */}
+        <p
+          ref={refs.title as React.RefObject<HTMLParagraphElement | null>}
+          className="site-title"
+          data-blood-keepout=""
+        >
+          {menuTitle}
+        </p>
         <button
           ref={refs.button as React.RefObject<HTMLButtonElement | null>}
           id={BUTTON_ID}
@@ -123,21 +138,30 @@ export function SiteHeader() {
           aria-haspopup="menu"
           aria-expanded={open}
           aria-controls={MENU_ID}
-          onClick={() => {
+          data-blood-keepout=""
+          onClick={(e) => {
+            // detail 0: Enter/Space (or assistive tech), not a pointer.
+            openedBy.current = e.detail === 0 ? 'keyboard' : 'pointer';
             focusOnOpen.current = 'first';
             setOpen((o) => !o);
           }}
           onKeyDown={(e) => {
             if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
             e.preventDefault();
+            openedBy.current = 'keyboard';
             focusOnOpen.current = e.key === 'ArrowUp' ? 'last' : 'first';
-            if (open) handle.current?.focusItem(focusOnOpen.current);
+            if (open) handle.current?.focusItem(focusOnOpen.current, { ring: true });
             else setOpen(true);
           }}
           // Same as the menu: a press here is never a grab on the head below.
           onPointerDown={(e) => e.stopPropagation()}
         >
-          <ButtonChevron className="lgm-button__chevron" />
+          {/* Disc and glyphs are separate layers so the liquid (which starts
+              as a copy of the disc laid over it) runs between them: the
+              chevron stays on top while the button stretches. */}
+          <span ref={refs.disc} className="lgm-button__disc" aria-hidden="true" />
+          <ButtonChevron className="lgm-button__chevron lgm-button__chevron--down" />
+          <ButtonChevron className="lgm-button__chevron lgm-button__chevron--up" />
         </button>
       </div>
 

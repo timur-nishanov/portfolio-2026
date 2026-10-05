@@ -11,10 +11,10 @@
  * allocated on the first splash and released after a quiet spell.
  */
 import * as THREE from 'three';
-import { Splash, K_STRIDE, P_STRIDE, F_STRIDE, type Wall, type HeadCovers, type SplashInput } from './splash';
+import { Splash, K_STRIDE, P_STRIDE, F_STRIDE, type Wall, type HeadCovers, type KeepOut, type SplashInput } from './splash';
 import * as S from './shaders';
 
-export type { Wall, HeadCovers };
+export type { Wall, HeadCovers, KeepOut };
 
 // Only a hard knock bleeds, and only now and then: a full flick into a wall
 // lands at ~1.9-2.3 world units/s (the throw is capped at 2.6 and glides),
@@ -44,6 +44,12 @@ export type BloodHit = {
   /** Speed into the wall, world units/s (Head3D's `impact`). */
   impact: number;
 };
+
+// A knock this close to the copy (px, along the wall), with the copy this
+// close to that wall, doesn't bleed at all: its main mass would land on the
+// text, and a splash with a hole cut where the words are reads as wrong.
+const KEEP_ALONG = 80;
+const KEEP_REACH = 160;
 
 type Gpu = {
   kGeo: THREE.InstancedBufferGeometry;
@@ -129,6 +135,7 @@ export class BloodLayer {
   private renderer: THREE.WebGLRenderer;
   private covers: HeadCovers;
   private live: Live[] = [];
+  private keepOut: KeepOut[] = [];
   private t = 0;
   private quietSince = 0;
   private cooldownUntil = 0;
@@ -310,9 +317,45 @@ export class BloodLayer {
     this.bg.set(r, g, b);
   }
 
+  /**
+   * The copy the blood must stay off (stage CSS px). The head's canvas is
+   * drawn over the page, so a stain on the tagline covered its letters for
+   * seconds; the title sits in the header above the canvas, but the stains
+   * and drips around it made it a mess.
+   */
+  setKeepOut(rects: KeepOut[]) {
+    this.keepOut = rects;
+  }
+
+  /**
+   * The head was grabbed: a bleeding knock may follow within seconds, so get
+   * the stage-sized targets in now (their allocation landed on the knock
+   * frame) and restart the idle clock that would free them again.
+   */
+  prepare() {
+    if (!this.supported || this.disposed) return;
+    if (!this.live.length) this.quietSince = this.t;
+    const rts = this.ensureTargets();
+    for (const rt of Object.values(rts)) this.renderer.initRenderTarget(rt);
+    this.ensureNoise();
+  }
+
+  /** A knock right by the copy, with the copy near that wall (see KEEP_ALONG). */
+  private nearCopy(h: BloodHit) {
+    return this.keepOut.some(([x0, y0, x1, y1]) => {
+      if (h.wall === 'b' || h.wall === 't') {
+        const reach = h.wall === 'b' ? this.H - y1 : y0;
+        return reach < KEEP_REACH && h.x > x0 - KEEP_ALONG && h.x < x1 + KEEP_ALONG;
+      }
+      const reach = h.wall === 'r' ? this.W - x1 : x0;
+      return reach < KEEP_REACH && h.y > y0 - KEEP_ALONG && h.y < y1 + KEEP_ALONG;
+    });
+  }
+
   /** A knock: bleeds if it was hard enough and the last splash was a while ago. */
   hit(h: BloodHit): boolean {
     if (!this.supported || h.impact < MIN_IMPACT || this.t < this.cooldownUntil) return false;
+    if (this.nearCopy(h)) return false;
     const q = Math.min(Math.max((h.impact - MIN_IMPACT) / (FULL_IMPACT - MIN_IMPACT), 0), 1);
     // A floor knock sprays right under the chin (and over the tagline): it
     // reads as a bleeding chin rather than a splash, so it bleeds rarely.
@@ -329,7 +372,7 @@ export class BloodLayer {
     if (this.live.length >= MAX_SPLASHES) this.drop(this.live[0]);
     const seed = Math.floor(Math.random() * 1e9);
     const density = Math.min(1, Math.max(0.55, this.k / 0.9)); // fewer particles on small screens
-    const s = new Splash(inp, { k: this.k, W: this.W, H: this.H, seed, density, covers: this.covers });
+    const s = new Splash(inp, { k: this.k, W: this.W, H: this.H, seed, density, covers: this.covers, keepOut: this.keepOut });
     this.live.push({ s, t0: this.t, gpu: this.makeGpu(s) });
   }
 

@@ -13,8 +13,8 @@ const stroke = {
 } as const;
 
 /** The 9×5 chevron inside the round menu button. Drawn pointing up; the
-    button rotates it, so open/closed is one element turning rather than a
-    glyph swap. */
+    button holds a down and an up copy and crossfades between them (menu.css)
+    — a 9px chevron turning through its side reads as a glyph glitch. */
 export function ButtonChevron({ className = '' }: Props) {
   return (
     <svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true" className={className}>

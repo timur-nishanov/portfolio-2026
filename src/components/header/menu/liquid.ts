@@ -28,6 +28,14 @@ const polar = (c: Point, a: number, r: number): Point => ({
 });
 const fmt = (p: Point) => `${p.x.toFixed(2)} ${p.y.toFixed(2)}`;
 
+const bezier = (a: Point, b: Point, c: Point, d: Point, t: number): Point => {
+  const u = 1 - t;
+  return {
+    x: u * u * u * a.x + 3 * u * u * t * b.x + 3 * u * t * t * c.x + t * t * t * d.x,
+    y: u * u * u * a.y + 3 * u * u * t * b.y + 3 * u * t * t * c.y + t * t * t * d.y,
+  };
+};
+
 /**
  * The classic two-circle metaball connector (after Hiroyuki Sato's gooey
  * blobs): two tangent-ish points on each circle, joined by cubic curves whose
@@ -37,9 +45,16 @@ const fmt = (p: Point) => `${p.x.toFixed(2)} ${p.y.toFixed(2)}`;
  *
  * Returns the bridge only (plus the far cap of the second circle); the first
  * circle is the button itself, drawn on top, so the path's straight closing
- * edge through it is never seen.
+ * edge through it is never seen. `waist` is the neck's narrowest width (px),
+ * so the caller can let it snap while it is still a neck, not a thread.
  */
-export function metaballPath(c1: Point, r1: number, c2: Point, r2: number, spread: number): string | null {
+export function metaball(
+  c1: Point,
+  r1: number,
+  c2: Point,
+  r2: number,
+  spread: number,
+): { d: string; waist: number } | null {
   const dx = c2.x - c1.x;
   const dy = c2.y - c1.y;
   const d = Math.hypot(dx, dy);
@@ -76,9 +91,21 @@ export function metaballPath(c1: Point, r1: number, c2: Point, r2: number, sprea
   const h3 = polar(p3, a3 + Math.PI / 2, r2 * handle);
   const h4 = polar(p4, a4 - Math.PI / 2, r2 * handle);
 
-  return (
-    `M${fmt(p1)} C${fmt(h1)} ${fmt(h3)} ${fmt(p3)} ` +
-    `A${r2.toFixed(2)} ${r2.toFixed(2)} 0 ${d > r1 ? 1 : 0} 0 ${fmt(p4)} ` +
-    `C${fmt(h4)} ${fmt(h2)} ${fmt(p2)} Z`
-  );
+  // The two flanks run p1→p3 and p4→p2; sample them side by side (the second
+  // one reversed) for the narrowest gap between them.
+  let waist = Infinity;
+  for (let i = 1; i < 8; i++) {
+    const t = i / 8;
+    const a = bezier(p1, h1, h3, p3, t);
+    const b = bezier(p2, h2, h4, p4, t);
+    waist = Math.min(waist, Math.hypot(a.x - b.x, a.y - b.y));
+  }
+
+  return {
+    d:
+      `M${fmt(p1)} C${fmt(h1)} ${fmt(h3)} ${fmt(p3)} ` +
+      `A${r2.toFixed(2)} ${r2.toFixed(2)} 0 ${d > r1 ? 1 : 0} 0 ${fmt(p4)} ` +
+      `C${fmt(h4)} ${fmt(h2)} ${fmt(p2)} Z`,
+    waist,
+  };
 }

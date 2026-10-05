@@ -7,7 +7,9 @@ import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { CheckGlyph, CopyGlyph, RowChevron } from './icons';
 
 export type MenuContentHandle = {
-  focusItem: (which: 'first' | 'last') => void;
+  /** `ring`: the menu was opened from the keyboard, so the row shows the
+      focus ring and pill; a click-open focuses it quietly. */
+  focusItem: (which: 'first' | 'last', opts?: { ring?: boolean }) => void;
 };
 
 type Props = {
@@ -57,13 +59,19 @@ export function MenuContent({ id, labelledBy, open, contentRef, handleRef, onClo
   const copiedTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
+  // Whether the focused row got there by keyboard (and so wears the ring).
+  // Tracked by hand rather than read from :focus-visible, which Chromium
+  // carries over into programmatic focus from an earlier keyboard focus.
+  const keyboardFocus = useRef(false);
+
   const items = () => itemsRef.current.filter(Boolean);
 
   useImperativeHandle(
     handleRef,
     () => ({
-      focusItem(which) {
+      focusItem(which, opts) {
         const list = items();
+        keyboardFocus.current = !!opts?.ring;
         (which === 'last' ? list[list.length - 1] : list[0])?.focus({ preventScroll: true });
       },
     }),
@@ -126,12 +134,15 @@ export function MenuContent({ id, labelledBy, open, contentRef, handleRef, onClo
       hoverRef.current = e.currentTarget;
       highlight(e.currentTarget);
     },
-    onPointerDown: () => highlightRef.current?.setAttribute('data-pressed', ''),
+    onPointerDown: () => {
+      keyboardFocus.current = false;
+      highlightRef.current?.setAttribute('data-pressed', '');
+    },
     onPointerUp: () => highlightRef.current?.removeAttribute('data-pressed'),
     onFocus: (e: React.FocusEvent<HTMLElement>) => {
       // Only keyboard focus draws the pill; the programmatic focus that lands
       // on the first row when a click opens the menu should not look hovered.
-      if (e.currentTarget.matches(':focus-visible')) highlight(e.currentTarget, true);
+      if (keyboardFocus.current) highlight(e.currentTarget, true);
     },
     onBlur: (e: React.FocusEvent<HTMLElement>) => {
       // Focus moving to another row keeps the pill, so arrow keys glide it.
@@ -167,7 +178,10 @@ export function MenuContent({ id, labelledBy, open, contentRef, handleRef, onClo
     const list = items();
     const n = list.length;
     const i = list.indexOf(document.activeElement as HTMLElement);
-    const focusAt = (k: number) => list[(k + n) % n]?.focus({ preventScroll: true });
+    const focusAt = (k: number) => {
+      keyboardFocus.current = true;
+      list[(k + n) % n]?.focus({ preventScroll: true });
+    };
     switch (e.key) {
       case 'ArrowDown':
         e.preventDefault();
@@ -205,6 +219,7 @@ export function MenuContent({ id, labelledBy, open, contentRef, handleRef, onClo
             const el = list[(i + k + n) % n];
             if (el?.textContent?.trim().toLowerCase().startsWith(ch)) {
               e.preventDefault();
+              keyboardFocus.current = true;
               el.focus({ preventScroll: true });
               return;
             }
@@ -231,7 +246,7 @@ export function MenuContent({ id, labelledBy, open, contentRef, handleRef, onClo
         onPointerLeave={() => {
           hoverRef.current = null;
           const f = focusedItem();
-          if (f && f.matches(':focus-visible')) highlight(f, true);
+          if (f && keyboardFocus.current) highlight(f, true);
           else highlight(null);
         }}
         // The head listens for grabs on window; a press on the menu must

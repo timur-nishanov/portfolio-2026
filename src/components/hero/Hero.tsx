@@ -16,9 +16,10 @@ export function Hero() {
       {/* The tagline doubles as the page heading; the name is in the header's
           title, so screen readers get it here too. Non-selectable — throwing
           the head across it kept grabbing a text selection. Sits under the head
-          (z-40), which floats over it. */}
+          (z-40), which floats over it; the blood keeps off it (Head3D). */}
       <h1
         id="hero-heading"
+        data-blood-keepout=""
         className="t-title absolute inset-x-4 bottom-[21px] select-none text-center text-ink-strong"
       >
         <span className="sr-only">Timur, </span>

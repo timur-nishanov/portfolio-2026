@@ -31,10 +31,11 @@
 }
 
 /* Title + button. Row centred on the page; vertical centre at y≈31.
-   Stacking inside the header (no z-index on the row, so its children
-   interleave with the morph layers): bridge 1 < button 2 < blob 3 < title and
-   menu content 4. The blob starts *over* the button — the button itself
-   appears to stretch into the panel — while the title stays on top of it. */
+   Stacking inside the header (no z-index on the row or the button, so their
+   children interleave with the morph layers): bridge 1 < button disc 2 <
+   blob 3 < title, button chevron and menu content 4. The blob starts *over*
+   the disc — the button itself appears to stretch into the panel — while the
+   title and the chevron stay on top of it. */
 .site-header__row {
   display: flex;
   align-items: center;
@@ -58,10 +59,13 @@
 
 /* The round button: a 20px #E5E5E6 disc as drawn, with a 44px invisible hit
    area (Apple's minimum tap target). It reaches a few px under the title,
-   which takes no pointer, so nothing is covered. */
+   which takes no pointer, so nothing is covered. No z-index (and no
+   background) on the button itself: that would make it one stacking layer,
+   and the liquid laid over the disc would also cover the chevron — it blinked
+   out for ~4 frames on open and 3 on close instead of staying put, as an iOS
+   button's symbol does while its glass morphs. */
 .lgm-button {
   position: relative;
-  z-index: 2;
   flex: none;
   display: grid;
   place-items: center;
@@ -70,12 +74,11 @@
   padding: 0;
   border: 0;
   border-radius: 50%;
-  background: var(--menu-btn);
+  background: none;
   color: #1c1c1e;
   cursor: pointer;
   pointer-events: auto;
   -webkit-tap-highlight-color: transparent;
-  transition: background-color 160ms ease;
   transform-origin: 50% 50%;
 }
 .lgm-button::before {
@@ -84,8 +87,16 @@
   inset: -12px;
   border-radius: 50%;
 }
+.lgm-button__disc {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: 50%;
+  background: var(--menu-btn);
+  transition: background-color 160ms ease;
+}
 @media (hover: hover) and (pointer: fine) {
-  .lgm-button:hover {
+  .lgm-button:hover .lgm-button__disc {
     background: var(--menu-btn-hover);
   }
 }
@@ -94,16 +105,45 @@
   outline-offset: 3px;
   border-radius: 50%;
 }
+/* Drawn pointing up; closed = down. Two copies, no rotation: a 9px chevron
+   turning through its side reads as a glyph glitch. The old one fades out
+   first and the new one in just after, so the two never overlap (half and
+   half they drew an "×"). The swap follows data-chevron, which useLiquidMorph
+   sets the moment the menu is toggled. */
 .lgm-button__chevron {
+  position: relative;
+  z-index: 4;
+  grid-area: 1 / 1;
   display: block;
-  /* Drawn pointing up; closed = down. No rotation: a 9px chevron turning
-     through its side reads as a glyph glitch. useLiquidMorph flips it while
-     the liquid covers the button (data-chevron), so it is simply the other
-     way round when the button reappears. */
+  pointer-events: none;
+}
+/* entering: as the other is all but gone */
+.lgm-button__chevron--down,
+.lgm-button[data-chevron='up'] .lgm-button__chevron--up {
+  opacity: 1;
+  transition:
+    opacity 100ms ease 40ms,
+    transform 170ms ease 40ms;
+}
+/* leaving: at once */
+.lgm-button__chevron--up,
+.lgm-button[data-chevron='up'] .lgm-button__chevron--down {
+  opacity: 0;
+  transition:
+    opacity 60ms ease-out,
+    transform 120ms ease;
+}
+.lgm-button__chevron--down {
   transform: rotate(180deg) translateY(0.5px);
 }
-.lgm-button[data-chevron='up'] .lgm-button__chevron {
-  transform: rotate(0deg) translateY(-0.5px);
+.lgm-button__chevron--up {
+  transform: translateY(1.5px);
+}
+.lgm-button[data-chevron='up'] .lgm-button__chevron--down {
+  transform: rotate(180deg) translateY(2px);
+}
+.lgm-button[data-chevron='up'] .lgm-button__chevron--up {
+  transform: translateY(-0.5px);
 }
 
 /* --- the glass blob --------------------------------------------------------
@@ -125,20 +165,23 @@
   backdrop-filter: blur(8px) saturate(120%);
   -webkit-backdrop-filter: blur(8px) saturate(120%);
   pointer-events: none;
-  /* Light from above: a crisp top lip, a hairline seam and a wide soft drop
-     (measured off the mockup: ~10% darker right at the edge, gone by ~36px,
-     barely offset). This is the resting value; during the morph
-     useLiquidMorph writes the same three shadows with their strength scaled,
-     so the drop leaves the button flat like the button. */
+  /* Light from above: a crisp top lip, a hairline seam and a wide soft drop.
+     Matched to the mockup's luminance profiles: its rim falls to L ~200 and
+     the shadow just outside to ~219, with a pure-white line under the top
+     edge (at 0.95 / 0.16 / 0.18 ours read flatter: rim 212–221, outside 227,
+     top line 249). This is the resting value; during the morph useLiquidMorph
+     writes the same three shadows with their strength scaled, so the drop
+     leaves the button flat like the button. */
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.95),
-    0 0 0 0.5px rgba(0, 0, 0, 0.16),
-    0 4px 40px rgba(0, 0, 0, 0.18);
+    inset 0 1px 0 0 rgba(255, 255, 255, 1),
+    0 0 0 0.5px rgba(0, 0, 0, 0.24),
+    0 4px 40px 0 rgba(0, 0, 0, 0.22);
 }
 /* The soft glows under the top lip and along the bottom rim (the warm bounce
-   along the mockup's lower edge). A gradient, not inset shadows: a blurred
-   inset shadow with negative spread also lights the side edges, and the
-   mockup's sides stay dark right up to the seam. */
+   along the mockup's lower edge), with the specular line itself at full
+   white for the first pixel. A gradient, not inset shadows: a blurred inset
+   shadow with negative spread also lights the side edges, and the mockup's
+   sides stay dark right up to the seam. */
 .lgm-blob::after {
   content: '';
   position: absolute;
@@ -147,7 +190,8 @@
   border-radius: inherit;
   background: linear-gradient(
     to bottom,
-    rgba(255, 255, 255, 0.55) 0,
+    rgba(255, 255, 255, 1) 0,
+    rgba(255, 255, 255, 0.55) 1.5px,
     rgba(255, 255, 255, 0) 7px,
     rgba(255, 255, 255, 0) calc(100% - 15px),
     rgba(255, 255, 255, 0.8) 100%
@@ -213,6 +257,14 @@
   /* 10 / 8, not 9 / 9: puts the divider and the label centres on the
      mockup's rows (divider at y 268) at the same 342px height. */
   padding: 10px 0 8px;
+  /* Never taller than the screen (the page itself does not scroll): on a
+     phone in landscape the 342px panel ran past a 390px viewport, the Gmail
+     row on the very edge and the bottom corners cut off. useLiquidMorph
+     measures this box, so the glass is capped with it. */
+  max-height: calc(100svh / var(--site-zoom, 1) - 58px - 12px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
   visibility: hidden;
   pointer-events: none;
   /* Stays visible through the fade-out, then drops out of hit-testing and
@@ -223,6 +275,9 @@
   visibility: visible;
   pointer-events: auto;
   transition: none;
+}
+.lgm-menu::-webkit-scrollbar {
+  display: none;
 }
 
 .lgm-item {
@@ -306,10 +361,12 @@
   background: rgba(8, 8, 10, 0.08);
 }
 
-/* Row reveal: once the shape is mostly there the rows sharpen in, top to
-   bottom, a few ms apart; closing drops them all at once, in 70ms, before
-   the shape starts to move (useLiquidMorph holds the close ~45ms), so it is
-   never seen shrinking over live text. */
+/* Row reveal: the rows sharpen in, top to bottom, a few ms apart, once the
+   glass has passed their text inset — useLiquidMorph sets data-reveal from
+   the shape's actual left edge, not on a timer, so no word is ever seen cut
+   off at the moving edge ("rks", "andom"). Closing drops them all at once, in
+   70ms, before the shape starts to move (useLiquidMorph holds the close
+   ~45ms), so it is never seen shrinking over live text. */
 .lgm-row {
   opacity: 0;
   filter: blur(4px);
@@ -320,14 +377,29 @@
     filter 70ms ease,
     transform 120ms ease;
 }
-.lgm-menu[data-state='open'] .lgm-row {
+.lgm-menu[data-state='open'][data-reveal] .lgm-row {
   opacity: 1;
   filter: blur(0);
   transform: none;
   transition:
-    opacity 260ms ease calc(var(--i, 0) * 16ms + 110ms),
-    filter 300ms ease calc(var(--i, 0) * 16ms + 110ms),
-    transform 460ms cubic-bezier(0.2, 1, 0.3, 1) calc(var(--i, 0) * 16ms + 110ms);
+    opacity 180ms ease calc(var(--i, 0) * 14ms),
+    filter 220ms ease calc(var(--i, 0) * 14ms),
+    transform 420ms cubic-bezier(0.2, 1, 0.3, 1) calc(var(--i, 0) * 14ms);
+}
+
+/* Short screens (a phone in landscape): a tighter row pitch, so the whole
+   menu still fits without scrolling down to a 390px viewport. */
+@media (max-height: 420px) {
+  .lgm-item {
+    height: 34px;
+  }
+  .lgm-sep {
+    height: 16px;
+  }
+  .lgm-highlight {
+    height: 32px;
+    border-radius: 16px;
+  }
 }
 
 /* iOS-style hover/selection pill: one element gliding between rows. Strong
@@ -376,13 +448,15 @@
 
 @media (prefers-reduced-motion: reduce) {
   .lgm-row,
-  .lgm-menu[data-state='open'] .lgm-row {
+  .lgm-menu[data-state='open'][data-reveal] .lgm-row {
     filter: none;
     transform: none;
     transition: opacity 140ms ease;
   }
   .lgm-highlight,
-  .lgm-item__trail > svg {
+  .lgm-item__trail > svg,
+  .site-header .lgm-button .lgm-button__chevron,
+  .site-header .lgm-button[data-chevron] .lgm-button__chevron {
     transition: none;
   }
 }
