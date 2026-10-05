@@ -6,7 +6,9 @@ import { assets } from '@/data/assets';
 import { clamp, lerp } from '@/lib/lerp';
 import { zoomOf } from '@/lib/zoom';
 import { stepSpring, type SpringState } from '@/lib/spring';
-import { playChime } from './chime';
+import { BloodLayer, type Wall } from './blood';
+import { playImpact } from './impactSound';
+import { createSilhouette, type EdgeHit, type Side } from './silhouette';
 import fragmentShader from './head.frag';
 import vertexShader from './head.vert';
 
@@ -48,11 +50,11 @@ const HOLD_RAMP = 1.4; // how fast the squeeze builds, per second
 // A little under critical (~24.5): one clean bounce-back on release, no wobble.
 // Lower than this (e.g. 11) oscillated and read as dirty while dragging.
 const SQUASH_SPRING = { stiffness: 150, damping: 16 };
-const IMPACT_SQUASH = 0.3;
+const IMPACT_SQUASH = 0.42; // the approved clip: a harder knock reads harder
 
 // The texture is 1996² with the head occupying x 164–1832, y 444–1576 (TZ §1.3),
-// so the plane carries empty margins. Collisions and splashes use the *visible*
-// silhouette, otherwise the head bounces off thin air well before the edge.
+// so the plane carries empty margins. Until the drawn outline is available
+// (silhouette.ts) the walls fall back to this static box of the visible head.
 const HEAD_W_FRAC = 1668 / 1996;
 const HEAD_H_FRAC = 1132 / 1996;
 
@@ -63,7 +65,6 @@ const FACE_LEFT = 0.28;
 const FACE_RIGHT = 0.72;
 const FACE_TOP = 0.6; // forehead
 const FACE_BOTTOM = 0.29; // chin
-
 
 // Impact bruises on the face.
 const MAX_MARKS = 6;
@@ -77,6 +78,7 @@ export function Head3D() {
   useEffect(() => {
     const wrap = wrapRef.current;
     if (!wrap) return;
+    let disposed = false;
 
     // getComputedStyle on a custom property hands back the authored token
     // ("clamp(...)"), not a resolved length — so measure it with a probe whose
@@ -98,6 +100,8 @@ export function Head3D() {
     const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
+    // Cleared by hand each frame: the blood draws under the head, then over it.
+    renderer.autoClear = false;
 
     const scene = new THREE.Scene();
     // Orthographic in "world" units: y spans -1..1 over the stage height,
@@ -105,12 +109,27 @@ export function Head3D() {
     const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 10);
     camera.position.z = 1;
 
+    // The wall test needs the drawn outline, which needs both textures on the
+    // CPU too — read from the loader's own images once both have arrived.
+    const silhouette = createSilhouette({ depthPivot: DEPTH_PIVOT, tiltStrength: TILT_STRENGTH });
+    let pendingMaps = 2;
+    const mapsLoaded = () => {
+      pendingMaps -= 1;
+      if (pendingMaps > 0) return;
+      const read = () => {
+        if (disposed || !colorTex.image || !depthTex.image) return;
+        silhouette.setImages(colorTex.image as CanvasImageSource, depthTex.image as CanvasImageSource);
+      };
+      // ~10 ms of canvas readback: keep it out of the first frames
+      if ('requestIdleCallback' in window) window.requestIdleCallback(read, { timeout: 1500 });
+      else setTimeout(read, 200);
+    };
     const loader = new THREE.TextureLoader();
-    const colorTex = loader.load(assets.headColor);
+    const colorTex = loader.load(assets.headColor, mapsLoaded);
     colorTex.colorSpace = THREE.SRGBColorSpace;
     colorTex.minFilter = THREE.LinearFilter;
     colorTex.magFilter = THREE.LinearFilter;
-    const depthTex = loader.load(assets.headDepth);
+    const depthTex = loader.load(assets.headDepth, mapsLoaded);
     depthTex.colorSpace = THREE.NoColorSpace; // raw depth values, never gamma them
     depthTex.minFilter = THREE.LinearFilter;
     depthTex.magFilter = THREE.LinearFilter;
@@ -173,6 +192,38 @@ export function Head3D() {
     let half = 0.25;
     let sizePx = 320;
 
+    // State the blood needs from the head (declared before resize uses them).
+    let posX = 0;
+    let posY = 0;
+    let velX = 0;
+    let velY = 0;
+    const toStageX = (wx: number) => W / 2 + wx * (H / 2);
+    const toStageY = (wy: number) => H / 2 - wy * (H / 2);
+
+    /**
+     * Is the head over a spot of the stage (CSS px, radius r) — now, or
+     * `ahead` seconds from now on its current course? A drop landing there
+     * flies behind the head; a pinned drip waits until the head is clear.
+     */
+    const headCovers = (x: number, y: number, r: number, ahead: number) => {
+      const u = (x - toStageX(posX + velX * ahead)) / sizePx + 0.5;
+      const v = (y - toStageY(posY + velY * ahead)) / sizePx + 0.5;
+      const d = r / sizePx;
+      return isOnHead(u, v) || isOnHead(u - d, v) || isOnHead(u + d, v) || isOnHead(u, v - d) || isOnHead(u, v + d);
+    };
+    const blood = new BloodLayer(renderer, headCovers);
+
+    // The film is composited for the page colour behind the stage.
+    const readBackground = () => {
+      for (let el: HTMLElement | null = wrap; el; el = el.parentElement) {
+        const m = getComputedStyle(el).backgroundColor.match(/[\d.]+/g);
+        if (m && m.length >= 3 && (m.length < 4 || Number(m[3]) > 0.5)) {
+          blood.setBackground(Number(m[0]) / 255, Number(m[1]) / 255, Number(m[2]) / 255);
+          return;
+        }
+      }
+    };
+
     const resize = () => {
       W = wrap.clientWidth || window.innerWidth;
       H = wrap.clientHeight || window.innerHeight;
@@ -186,7 +237,8 @@ export function Head3D() {
       sizePx = probe.getBoundingClientRect().width / zoomOf(wrap) || Math.min(W, H) * 0.5;
       mesh.scale.setScalar(sizePx / H);
       half = sizePx / H;
-
+      blood.resize(W, H, sizePx * HEAD_W_FRAC);
+      readBackground();
     };
     resize();
     const ro = new ResizeObserver(resize);
@@ -198,10 +250,8 @@ export function Head3D() {
 
     // Start already in motion — a head sitting dead still on load looks broken.
     let wander = Math.random() * Math.PI * 2;
-    let posX = 0;
-    let posY = 0;
-    let velX = Math.cos(wander) * IDLE_SPEED;
-    let velY = Math.sin(wander) * IDLE_SPEED;
+    velX = Math.cos(wander) * IDLE_SPEED;
+    velY = Math.sin(wander) * IDLE_SPEED;
     let thrown = false;
 
     // Twist as springs — impulses feed velocity so turns ease in and out.
@@ -212,7 +262,6 @@ export function Head3D() {
 
     // Onboarding: a couple of gentle self-squeezes shortly after load, to hint
     // the head is grabbable. Cancelled the moment the user interacts.
-    const introStart = performance.now();
     const INTRO_TL = [
       { t: 1500, v: 0.42 },
       { t: 1950, v: 0.0 },
@@ -235,8 +284,6 @@ export function Head3D() {
 
     // Stage coords are relative to the wrapper, which scrolls with the hero.
     const rect = () => wrap.getBoundingClientRect();
-    const toStageX = (wx: number) => W / 2 + wx * (H / 2);
-    const toStageY = (wy: number) => H / 2 - wy * (H / 2);
 
     const headUV = (clientX: number, clientY: number) => {
       const r = rect();
@@ -320,7 +367,7 @@ export function Head3D() {
       document.body.style.userSelect = '';
       thrown = true;
       const quick = performance.now() - downTime < 220;
-      let speed = Math.hypot(dragVX, dragVY);
+      const speed = Math.hypot(dragVX, dragVY);
       if (quick && speed < 0.25) {
         // A tap → gentle lob away from where it was poked.
         const len = Math.hypot(grabU, grabV) || 1;
@@ -332,7 +379,6 @@ export function Head3D() {
         velX = speed > 1e-4 ? (dragVX / speed) * capped : 0;
         velY = speed > 1e-4 ? (dragVY / speed) * capped : 0;
       }
-      speed = Math.hypot(velX, velY);
       // Twist impulse along the throw — fed into the spring's velocity so the
       // turn eases rather than snapping.
       twistX.velocity -= velX * TWIST_FROM_THROW;
@@ -378,26 +424,111 @@ export function Head3D() {
       markSlot = (markSlot + 1) % MAX_MARKS;
     };
 
-    /** Bounce against a wall. n points inward. */
-    const hitWall = (nx: number, ny: number, impact: number) => {
+    /**
+     * Bounce against a wall. n points inward; `at` is the contact along the
+     * wall (plane UV of the outermost drawn point), `vinX/vinY` the velocity
+     * the head arrived with.
+     */
+    const hitWall = (wall: Wall, nx: number, ny: number, impact: number, at: number, vinX: number, vinY: number) => {
       // Impulse into the twist spring's velocity, so the turn swings in and out
       // smoothly instead of jumping — a step here read as a hard snap.
       twistX.velocity += nx * impact * TWIST_FROM_IMPACT;
       twistY.velocity -= ny * impact * TWIST_FROM_IMPACT;
       squash.velocity += Math.min(impact, 2) * IMPACT_SQUASH * 6;
       addMark(nx, ny, impact);
-      // A glassy tap, panned toward the wall that was hit (n points inward,
-      // so a left-wall knock has nx > 0 and belongs in the left ear).
-      playChime(impact, -nx * 0.55);
+      // The spray leaves the point that actually touched the wall.
+      const along = (at - 0.5) * 2 * half;
+      const bled = blood.hit({
+        wall,
+        x: wall === 'l' ? 0 : wall === 'r' ? W : toStageX(posX + along),
+        y: wall === 't' ? 0 : wall === 'b' ? H : toStageY(posY + along),
+        vx: vinX * (H / 2),
+        vy: -vinY * (H / 2),
+        impact,
+      });
+      // Panned toward the wall that was hit (n points inward, so a left-wall
+      // knock has nx > 0 and belongs in the left ear).
+      playImpact(impact, -nx * 0.55, { blood: bled });
+    };
+
+    /** Outermost drawn point on a side, or the static box until the maps are in. */
+    const edgeOf = (side: Side): EdgeHit => {
+      const e = silhouette.ready ? silhouette.edge(side) : null;
+      if (e) return e;
+      const fx = HEAD_W_FRAC / 2;
+      const fy = HEAD_H_FRAC / 2;
+      if (side === 'l') return { pos: 0.5 - fx, at: 0.5 };
+      if (side === 'r') return { pos: 0.5 + fx, at: 0.5 };
+      if (side === 'b') return { pos: 0.5 - fy, at: 0.5 };
+      return { pos: 0.5 + fy, at: 0.5 };
+    };
+
+    /**
+     * Keep the drawn head inside the stage. The outline is only measured on a
+     * side whose wall the plane itself overlaps — the silhouette can't reach
+     * past its own plane, so anywhere else there is nothing to test.
+     */
+    const collide = () => {
+      if (posX - half < -aspect) {
+        const e = edgeOf('l');
+        const reach = (e.pos - 0.5) * 2 * half;
+        if (posX + reach < -aspect) {
+          posX = -aspect - reach;
+          if (velX < 0) {
+            const vin = velX;
+            const impact = -velX;
+            velX = impact * RESTITUTION;
+            hitWall('l', 1, 0, impact, e.at, vin, velY);
+          }
+        }
+      } else if (posX + half > aspect) {
+        const e = edgeOf('r');
+        const reach = (e.pos - 0.5) * 2 * half;
+        if (posX + reach > aspect) {
+          posX = aspect - reach;
+          if (velX > 0) {
+            const vin = velX;
+            const impact = velX;
+            velX = -impact * RESTITUTION;
+            hitWall('r', -1, 0, impact, e.at, vin, velY);
+          }
+        }
+      }
+      if (posY - half < -1) {
+        const e = edgeOf('b');
+        const reach = (e.pos - 0.5) * 2 * half;
+        if (posY + reach < -1) {
+          posY = -1 - reach;
+          if (velY < 0) {
+            const vin = velY;
+            const impact = -velY;
+            velY = impact * RESTITUTION;
+            hitWall('b', 0, 1, impact, e.at, velX, vin);
+          }
+        }
+      } else if (posY + half > 1) {
+        const e = edgeOf('t');
+        const reach = (e.pos - 0.5) * 2 * half;
+        if (posY + reach > 1) {
+          posY = 1 - reach;
+          if (velY > 0) {
+            const vin = velY;
+            const impact = velY;
+            velY = -impact * RESTITUTION;
+            hitWall('t', 0, -1, impact, e.at, velX, vin);
+          }
+        }
+      }
     };
 
     // ---- loop --------------------------------------------------------------
-    let raf = 0;
-    let last = performance.now();
-    const loop = (now: number) => {
-      const dt = Math.min((now - last) / 1000, 1 / 30);
-      last = now;
-      const t = now / 1000;
+    // Sim time, not wall time: it stands still while the hero is off screen,
+    // and everything timed by it (sway, intro, blood) picks up where it was.
+    let simT = 0;
+    const swayPhase = performance.now() / 1000;
+    const frame = (dt: number) => {
+      simT += dt;
+      const t = swayPhase + simT;
 
       // Orientation is purely physical: twist springs back to face-on, so
       // throws and bounces ease in and out. No cursor tracking.
@@ -425,7 +556,7 @@ export function Head3D() {
       }
       // Advance the onboarding squeeze timeline.
       if (!introDone) {
-        const el = now - introStart;
+        const el = simT * 1000;
         while (introIdx < INTRO_TL.length && el >= INTRO_TL[introIdx].t) {
           introSquash = INTRO_TL[introIdx].v;
           introIdx += 1;
@@ -462,37 +593,33 @@ export function Head3D() {
         posX += velX * dt;
         posY += velY * dt;
 
-        // Bounce off the stage edges, using the visible silhouette.
-        const maxX = aspect - half * HEAD_W_FRAC;
-        const maxY = 1 - half * HEAD_H_FRAC;
-        if (posX < -maxX) {
-          posX = -maxX;
-          const impact = Math.abs(velX);
-          velX = Math.abs(velX) * RESTITUTION;
-          hitWall(1, 0, impact);
-        } else if (posX > maxX) {
-          posX = maxX;
-          const impact = Math.abs(velX);
-          velX = -Math.abs(velX) * RESTITUTION;
-          hitWall(-1, 0, impact);
-        }
-        if (posY < -maxY) {
-          posY = -maxY;
-          const impact = Math.abs(velY);
-          velY = Math.abs(velY) * RESTITUTION;
-          hitWall(0, 1, impact);
-        } else if (posY > maxY) {
-          posY = maxY;
-          const impact = Math.abs(velY);
-          velY = -Math.abs(velY) * RESTITUTION;
-          hitWall(0, -1, impact);
-        }
+        // Bounce off the stage edges against the outline as drawn this frame.
+        silhouette.setState(tx, ty, uniforms.uSquash.value, marks);
+        collide();
       }
 
       // No flat z-rotation on purpose — the turn is sold by the depth shader.
       mesh.position.set(posX, posY, 0);
+      blood.step(dt);
+    };
 
+    const draw = () => {
+      renderer.setRenderTarget(null);
+      renderer.clear();
+      // Landed blood is on the back wall: under the head. Drops still in the
+      // air fly at the camera: over it.
+      if (blood.active) blood.renderUnder();
       renderer.render(scene, camera);
+      if (blood.active) blood.renderOver();
+    };
+
+    let raf = 0;
+    let last = performance.now();
+    const loop = (now: number) => {
+      const dt = Math.min((now - last) / 1000, 1 / 30);
+      last = now;
+      frame(dt);
+      draw();
       raf = onScreen ? requestAnimationFrame(loop) : 0;
     };
 
@@ -514,8 +641,12 @@ export function Head3D() {
     });
     io.observe(wrap);
     raf = requestAnimationFrame(loop);
+    // Compile the blood's programs while nothing is happening yet.
+    const warm = window.setTimeout(() => blood.warmup(), 1200);
 
     return () => {
+      disposed = true;
+      window.clearTimeout(warm);
       cancelAnimationFrame(raf);
       io.disconnect();
       ro.disconnect();
@@ -524,6 +655,7 @@ export function Head3D() {
       window.removeEventListener('pointermove', onPointerMove);
       window.removeEventListener('pointerdown', onPointerDown);
       window.removeEventListener('pointerup', onPointerUp);
+      blood.dispose();
       mesh.geometry.dispose();
       material.dispose();
       colorTex.dispose();
