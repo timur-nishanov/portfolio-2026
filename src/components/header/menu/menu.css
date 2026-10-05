@@ -317,6 +317,8 @@
   place-items: center;
   width: 16px;
   height: 16px;
+  /* box-centred glyphs sit ~0.5px under the label's cap-height centre */
+  transform: translateY(-0.5px);
 }
 .lgm-item__trail > svg {
   grid-area: 1 / 1;

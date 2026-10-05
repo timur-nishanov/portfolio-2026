@@ -287,7 +287,11 @@ export function MenuContent({ id, labelledBy, open, contentRef, handleRef, onClo
               width={16}
               height={16}
               draggable={false}
-              style={l.optical ? { transform: `scale(${l.optical})` } : undefined}
+              style={
+                l.optical && (l.optical.scale || l.optical.dy)
+                  ? { transform: `translateY(${l.optical.dy ?? 0}px) scale(${l.optical.scale ?? 1})` }
+                  : undefined
+              }
             />
           );
           if (l.kind === 'external') {
@@ -303,7 +307,9 @@ export function MenuContent({ id, labelledBy, open, contentRef, handleRef, onClo
                 {...itemProps(k)}
               >
                 {icon}
-                <span className="lgm-item__label">{l.label}</span>
+                <span className="lgm-item__label" style={l.optical?.labelDx ? { transform: `translateX(${l.optical.labelDx}px)` } : undefined}>
+                  {l.label}
+                </span>
                 <span className="lgm-item__trail">
                   <RowChevron />
                 </span>
@@ -322,7 +328,9 @@ export function MenuContent({ id, labelledBy, open, contentRef, handleRef, onClo
               {...itemProps(k)}
             >
               {icon}
-              <span className="lgm-item__label">{copied ? l.copiedLabel : l.label}</span>
+              <span className="lgm-item__label" style={l.optical?.labelDx ? { transform: `translateX(${l.optical.labelDx}px)` } : undefined}>
+                {copied ? l.copiedLabel : l.label}
+              </span>
               <span className="lgm-item__trail">
                 <CopyGlyph className="lgm-copy" />
                 <CheckGlyph className="lgm-check" />
