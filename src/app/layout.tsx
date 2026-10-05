@@ -11,7 +11,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${hoves.variable} ${pixel.variable}`}>
+    // `one-screen`: no scrolling while only the hero is live (globals.css).
+    <html lang="en" className={`${hoves.variable} ${pixel.variable} one-screen`}>
       <body>
         <LiquidGlassFilter />
         {children}

@@ -1,5 +1,9 @@
 import localFont from 'next/font/local';
 
+// The first screen is set in SF Pro, which is a system font (Apple licence, no
+// self-hosting) — it is a CSS stack, --font-sf in globals.css, not loaded here.
+// The two faces below remain for the hidden sections.
+
 // TT Hoves — headings + body (TZ §1.4). Local only, no system fallbacks.
 export const hoves = localFont({
   src: [
