@@ -281,9 +281,10 @@ function createEngine(refs: MorphRefs) {
     const seam = smoothstep(0.015, 0.12, grow);
     const depth = smoothstep(0.08, 0.45, grow);
     blob.style.boxShadow =
-      `inset 0 1px 0 rgba(255,255,255,${glass.toFixed(3)}), ` +
-      `0 0 0 0.5px rgba(0,0,0,${(0.24 * seam).toFixed(3)}), ` +
-      `0 4px 40px rgba(0,0,0,${(0.22 * depth).toFixed(3)})`;
+      `inset 0 0 0 0.5px rgba(255,255,255,${(0.65 * glass).toFixed(3)}), ` +
+      `0 0 0 0.5px rgba(0,0,0,${(0.07 * seam).toFixed(3)}), ` +
+      `0 10px 36px rgba(0,0,0,${(0.1 * depth).toFixed(3)}), ` +
+      `0 2px 6px rgba(0,0,0,${(0.04 * depth).toFixed(3)})`;
 
     if (root.hasAttribute('data-refract')) {
       // The displacement map is built from a flood the size of the shape, so

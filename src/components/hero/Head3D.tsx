@@ -22,8 +22,11 @@ const LIGHT_STRENGTH = 0.3;
 // --- flight physics (world units, where the stage height spans 2) ----------
 const IDLE_SPEED = 0.055; // calm drift
 const IDLE_STEER = 1.2; // how fast idle velocity converges on the wander dir
-const THROW_SPEED = 1.8; // tap impulse — a firm fling, just not a bullet
-const MAX_THROW_SPEED = 2.6; // cap on a drag flick (uncapped it launched like a shot)
+const THROW_SPEED = 2.1; // tap impulse — a firm fling, just not a bullet
+const MAX_THROW_SPEED = 3.1; // cap on a drag flick (uncapped it launched like a shot)
+// A flick leaves the hand a little faster than it moved: at 1:1 the throw felt
+// heavy, the head lagging the gesture that sent it.
+const FLICK_GAIN = 1.2;
 // Heft lives here, not in peak speed: a low decay + lively bounces + a low
 // settle threshold let a throw carry its momentum and ricochet for a while,
 // which reads as weight. Raising THROW_SPEED instead just makes a bullet.
@@ -327,12 +330,6 @@ export function Head3D() {
     let dragVY = 0;
     let grabU = 0;
     let grabV = 0;
-    // Where the hand holds the head, unclamped. The head itself stops at the
-    // walls (frame()), and only follows again once the hand is back: the grab
-    // point stays under the pointer, like a window dragged against the edge.
-    let holdX = 0;
-    let holdY = 0;
-
     // Stage coords are relative to the wrapper, which scrolls with the hero.
     const rect = () => wrap.getBoundingClientRect();
 
@@ -376,8 +373,8 @@ export function Head3D() {
         const k = 2 / (H * zoomOf(wrap)); // visual px → world units
         const dx = (e.clientX - lastPX) * k;
         const dy = -(e.clientY - lastPY) * k;
-        holdX += dx;
-        holdY += dy;
+        posX += dx;
+        posY += dy;
         // Smooth the reported velocity, but stay responsive to a flick so the
         // release has real momentum (too much smoothing killed the throw).
         dragVX = lerp(dragVX, dx / mdt, 0.55);
@@ -408,8 +405,6 @@ export function Head3D() {
       grabV = -(v * 2 - 1);
       dragVX = dragVY = 0;
       velX = velY = 0;
-      holdX = posX;
-      holdY = posY;
       // A grab is what comes before any bleeding knock: the blood's targets
       // go in now, in idle time, rather than on the frame of the knock.
       if ('requestIdleCallback' in window) window.requestIdleCallback(() => blood.prepare(), { timeout: 300 });
@@ -438,11 +433,6 @@ export function Head3D() {
       if (!dragging) return;
       endDrag();
       thrown = true;
-      // Pressed against a wall, the hand's push into it is not a throw.
-      if (pinned.l) dragVX = Math.max(dragVX, 0);
-      if (pinned.r) dragVX = Math.min(dragVX, 0);
-      if (pinned.b) dragVY = Math.max(dragVY, 0);
-      if (pinned.t) dragVY = Math.min(dragVY, 0);
       const quick = performance.now() - downTime < 220;
       const speed = Math.hypot(dragVX, dragVY);
       if (quick && speed < 0.25) {
@@ -451,8 +441,9 @@ export function Head3D() {
         velX = (grabU / len) * THROW_SPEED;
         velY = (grabV / len) * THROW_SPEED + 0.2;
       } else {
-        // Drag flick, capped so it can't be launched off like a bullet.
-        const capped = Math.min(speed, MAX_THROW_SPEED);
+        // Drag flick, a touch livelier than the hand, capped so it can't be
+        // launched off like a bullet.
+        const capped = Math.min(speed * FLICK_GAIN, MAX_THROW_SPEED);
         velX = speed > 1e-4 ? (dragVX / speed) * capped : 0;
         velY = speed > 1e-4 ? (dragVY / speed) * capped : 0;
       }
@@ -721,14 +712,9 @@ export function Head3D() {
         // Bounce off the stage edges against the outline as drawn this frame.
         silhouette.setState(tx, ty, uniforms.uSquash.value, marks);
         collide();
-      } else {
-        // Held: follow the hand, but stop flush at the walls (the squeezed
-        // outline included).
-        posX = holdX;
-        posY = holdY;
-        silhouette.setState(tx, ty, uniforms.uSquash.value, marks);
-        collide(true);
       }
+      // Held: the head goes wherever the hand takes it, past the walls too;
+      // released out there, it is thrown back in and knocks on the way.
 
       // No flat z-rotation on purpose — the turn is sold by the depth shader.
       mesh.position.set(posX, posY, 0);
