@@ -254,14 +254,18 @@ const vec3 SCATTER_DRY = vec3(0.060, 0.0075, 0.0050);
 const vec3 CORE = vec3(0.024, 0.0009, 0.0018);
 const vec3 CORE_DRY = vec3(0.018, 0.0028, 0.0018);
 const vec3 GLOW = vec3(0.55, 0.012, 0.010);
-const float OPT_PER_PX = 0.36;
+// a touch under the offline's 0.36: next to the approved closeups the pools
+// read maroon rather than crimson (~8% darker inside, side by side at 2x)
+const float OPT_PER_PX = 0.33;
 
-// dim studio + small windowed softbox upper-left + a thin rim strip
-float envReflection(float rx, float ry) {
+// dim studio + small windowed softbox upper-left + a thin rim strip; 'wide'
+// grows the softbox on deep pools, whose broad wet streaks in the approved
+// render came out as specks here
+float envReflection(float rx, float ry, float wide) {
   float rr = rx * rx + ry * ry;
   float base = 0.16 * rr + 0.2 * clamp(-ry, 0.0, 1.0) * sqrt(rr);
   vec2 cbox = vec2(-0.32, -0.38);
-  vec2 hb = vec2(0.205, 0.135);
+  vec2 hb = vec2(0.205, 0.135) * (1.0 + wide);
   vec2 dd = abs(vec2(rx, ry) - cbox) - hb;
   float outside = length(max(dd, 0.0)) + min(max(dd.x, dd.y), 0.0);
   float win = 1.0 - smoothstep(-0.015, 0.035, outside);
@@ -310,8 +314,9 @@ void main() {
   // normals over a wider baseline where the liquid is thick: a deep pool's
   // surface is smoother than a thin film's (the offline blurred its height
   // by 0.8 px on films, 2.8 px on pools) — and that is what turns a 1 px
-  // glint line into a soft crescent
-  float hb = mix(1.0, 3.0, smoothstep(0.7, 2.6, Hg));
+  // glint line into a soft crescent. Up to 6 texels: at 3 the crescent was
+  // still a thin line next to the approved closeups.
+  float hb = mix(1.0, 6.0, smoothstep(0.7, 3.8, Hg));
   vec2 tx = vec2(uTexel.x * hb, 0.0);
   vec2 ty = vec2(0.0, uTexel.y * hb);
   float Hx1 = heightOf(texture(uBlur, uv + tx).rg, dcO, fl, hfac, hmg);
@@ -330,7 +335,8 @@ void main() {
 
   vec3 bgL = pow(uBg, vec3(2.2));
   float tau = Hg * OPT_PER_PX * optm * (1.0 + 0.22 * cs);
-  tau *= 1.0 + (0.10 * s.n.g + 0.16 * cs * s.n.b) * clamp(tau, 0.0, 1.0);
+  // (fine mottling kept low: at 0.10 the pools' interiors read speckled)
+  tau *= 1.0 + (0.06 * s.n.g + 0.16 * cs * s.n.b) * clamp(tau, 0.0, 1.0);
   float sdp = max(sdO, 0.0);
   float rim = exp(-sdp / 1.1) * a;
   float ring = exp(-pow((sdp - 1.6) / 1.1, 2.0)) * a;
@@ -353,7 +359,7 @@ void main() {
   float rx = 2.0 * nr.z * nr.x;
   float ry = 2.0 * nr.z * nr.y;
   float fres = 0.04 + 0.96 * pow(1.0 - nr.z, 5.0);
-  float env = envReflection(rx, ry);
+  float env = envReflection(rx, ry, 0.75 * smoothstep(1.5, 4.5, Hg));
   vec3 lpin = normalize(vec3(-0.42, -0.55, 1.0));
   vec3 hpin = normalize(lpin + vec3(0.0, 0.0, 1.0));
   float ndh = clamp(dot(nr, hpin), 0.0, 1.0);

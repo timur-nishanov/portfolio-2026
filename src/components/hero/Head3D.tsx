@@ -30,6 +30,9 @@ const MAX_THROW_SPEED = 2.6; // cap on a drag flick (uncapped it launched like a
 const THROW_DAMP = 0.26; // glides a long time after release
 const RESTITUTION = 0.9; // keeps most of its energy on a wall bounce
 const CALM_SPEED = 0.1; // stays "thrown" longer before handing back to drift
+// A held head driven into a wall faster than this knocks (once per contact);
+// a slower push just stops it there, quietly.
+const HELD_KNOCK = 0.6;
 
 // Instead of spinning the plane flat, throws and impacts push the shader's
 // depth-parallax so the head appears to turn in 3D. The twist is a spring, not
@@ -100,6 +103,9 @@ export function Head3D() {
     const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
+    // The shader logs are read back synchronously on a program's first use;
+    // in production they only add stall time (three.js advises the same).
+    renderer.debug.checkShaderErrors = process.env.NODE_ENV !== 'production';
     // Cleared by hand each frame: the blood draws under the head, then over it.
     renderer.autoClear = false;
 
@@ -281,6 +287,11 @@ export function Head3D() {
     let dragVY = 0;
     let grabU = 0;
     let grabV = 0;
+    // Where the hand holds the head, unclamped. The head itself stops at the
+    // walls (frame()), and only follows again once the hand is back: the grab
+    // point stays under the pointer, like a window dragged against the edge.
+    let holdX = 0;
+    let holdY = 0;
 
     // Stage coords are relative to the wrapper, which scrolls with the hero.
     const rect = () => wrap.getBoundingClientRect();
@@ -325,8 +336,8 @@ export function Head3D() {
         const k = 2 / (H * zoomOf(wrap)); // visual px → world units
         const dx = (e.clientX - lastPX) * k;
         const dy = -(e.clientY - lastPY) * k;
-        posX += dx;
-        posY += dy;
+        holdX += dx;
+        holdY += dy;
         // Smooth the reported velocity, but stay responsive to a flick so the
         // release has real momentum (too much smoothing killed the throw).
         dragVX = lerp(dragVX, dx / mdt, 0.55);
@@ -357,15 +368,37 @@ export function Head3D() {
       grabV = -(v * 2 - 1);
       dragVX = dragVY = 0;
       velX = velY = 0;
+      holdX = posX;
+      holdY = posY;
     };
 
-    const onPointerUp = () => {
-      if (!dragging) return;
+    const endDrag = () => {
       dragging = false;
       document.documentElement.classList.remove('head-grabbing');
       holding = 0;
       document.body.style.userSelect = '';
+    };
+
+    // A press that never ends in a pointerup — a system gesture took the
+    // touch (pointercancel), or the window lost focus mid-drag — lets go
+    // where the head is: no lob, no fling, and no head stuck to the next touch.
+    const onPointerCancel = () => {
+      if (!dragging) return;
+      endDrag();
+      dragVX = dragVY = 0;
+      velX = velY = 0;
+      thrown = false;
+    };
+
+    const onPointerUp = () => {
+      if (!dragging) return;
+      endDrag();
       thrown = true;
+      // Pressed against a wall, the hand's push into it is not a throw.
+      if (pinned.l) dragVX = Math.max(dragVX, 0);
+      if (pinned.r) dragVX = Math.min(dragVX, 0);
+      if (pinned.b) dragVY = Math.max(dragVY, 0);
+      if (pinned.t) dragVY = Math.min(dragVY, 0);
       const quick = performance.now() - downTime < 220;
       const speed = Math.hypot(dragVX, dragVY);
       if (quick && speed < 0.25) {
@@ -386,10 +419,22 @@ export function Head3D() {
       // Let the squeeze spring back on its own (no hard kick — that wobbled).
     };
 
+    // A touch that grabbed the head is a throw, not a pan: unclaimed, the
+    // browser takes the gesture over on the first move (pointercancel), and
+    // a finger could only ever drop the head. The pointerdown that set
+    // `dragging` is dispatched just before this touchstart.
+    const onTouch = (e: TouchEvent) => {
+      if (dragging && e.cancelable) e.preventDefault();
+    };
+
     window.addEventListener('pointermove', onPointerMove);
     // Not passive: grabbing the head calls preventDefault to stop text selection.
     window.addEventListener('pointerdown', onPointerDown, { passive: false });
     window.addEventListener('pointerup', onPointerUp);
+    window.addEventListener('pointercancel', onPointerCancel);
+    window.addEventListener('blur', onPointerCancel);
+    window.addEventListener('touchstart', onTouch, { passive: false });
+    window.addEventListener('touchmove', onTouch, { passive: false });
 
     // Bruise slots, reused round-robin once all six are taken.
     const marks = uniforms.uMarks.value;
@@ -438,17 +483,24 @@ export function Head3D() {
       addMark(nx, ny, impact);
       // The spray leaves the point that actually touched the wall.
       const along = (at - 0.5) * 2 * half;
+      // A flick into a corner splits its speed between two walls, so neither
+      // sees a bleeding knock on its own; a hit that comes in at a real angle
+      // (over ~30° off the wall) bleeds on most of the head's speed instead.
+      // A graze never does. Bruise and sound stay on the speed into the wall.
+      const speed = Math.hypot(vinX, vinY);
       const bled = blood.hit({
         wall,
         x: wall === 'l' ? 0 : wall === 'r' ? W : toStageX(posX + along),
         y: wall === 't' ? 0 : wall === 'b' ? H : toStageY(posY + along),
         vx: vinX * (H / 2),
         vy: -vinY * (H / 2),
-        impact,
+        impact: impact > 0.5 * speed ? Math.max(impact, 0.85 * speed) : impact,
       });
-      // Panned toward the wall that was hit (n points inward, so a left-wall
-      // knock has nx > 0 and belongs in the left ear).
-      playImpact(impact, -nx * 0.55, { blood: bled });
+      // Panned toward the contact: a side wall to its ear (n points inward,
+      // so a left-wall knock has nx > 0), a floor or ceiling knock by where
+      // along it the head struck — a corner is as far out as a side wall.
+      const pan = nx !== 0 ? -nx * 0.55 : clamp((posX + along) / aspect, -1, 1) * 0.55;
+      playImpact(impact, pan, { blood: bled });
     };
 
     /** Outermost drawn point on a side, or the static box until the maps are in. */
@@ -463,18 +515,31 @@ export function Head3D() {
       return { pos: 0.5 + fy, at: 0.5 };
     };
 
+    // Walls the held head is pressed against. Meeting one fast is a knock —
+    // the hand smashed it in — but the push that follows is silent, and it
+    // doesn't turn into a throw at the wall on release.
+    const pinned: Record<Wall, boolean> = { l: false, r: false, t: false, b: false };
+
     /**
      * Keep the drawn head inside the stage. The outline is only measured on a
      * side whose wall the plane itself overlaps — the silhouette can't reach
      * past its own plane, so anywhere else there is nothing to test.
+     * `held`: the hand moves it, so it stops flush with the wall instead of
+     * bouncing (it used to sail off screen, then jump back in with a knock
+     * on release).
      */
-    const collide = () => {
+    const collide = (held = false) => {
+      const touch: Record<Wall, boolean> = { l: false, r: false, t: false, b: false };
       if (posX - half < -aspect) {
         const e = edgeOf('l');
         const reach = (e.pos - 0.5) * 2 * half;
         if (posX + reach < -aspect) {
           posX = -aspect - reach;
-          if (velX < 0) {
+          touch.l = true;
+          if (held) {
+            if (!pinned.l && -dragVX > HELD_KNOCK) hitWall('l', 1, 0, Math.min(-dragVX, MAX_THROW_SPEED), e.at, dragVX, dragVY);
+            dragVX = Math.max(dragVX, 0);
+          } else if (velX < 0) {
             const vin = velX;
             const impact = -velX;
             velX = impact * RESTITUTION;
@@ -486,7 +551,11 @@ export function Head3D() {
         const reach = (e.pos - 0.5) * 2 * half;
         if (posX + reach > aspect) {
           posX = aspect - reach;
-          if (velX > 0) {
+          touch.r = true;
+          if (held) {
+            if (!pinned.r && dragVX > HELD_KNOCK) hitWall('r', -1, 0, Math.min(dragVX, MAX_THROW_SPEED), e.at, dragVX, dragVY);
+            dragVX = Math.min(dragVX, 0);
+          } else if (velX > 0) {
             const vin = velX;
             const impact = velX;
             velX = -impact * RESTITUTION;
@@ -499,7 +568,11 @@ export function Head3D() {
         const reach = (e.pos - 0.5) * 2 * half;
         if (posY + reach < -1) {
           posY = -1 - reach;
-          if (velY < 0) {
+          touch.b = true;
+          if (held) {
+            if (!pinned.b && -dragVY > HELD_KNOCK) hitWall('b', 0, 1, Math.min(-dragVY, MAX_THROW_SPEED), e.at, dragVX, dragVY);
+            dragVY = Math.max(dragVY, 0);
+          } else if (velY < 0) {
             const vin = velY;
             const impact = -velY;
             velY = impact * RESTITUTION;
@@ -511,7 +584,11 @@ export function Head3D() {
         const reach = (e.pos - 0.5) * 2 * half;
         if (posY + reach > 1) {
           posY = 1 - reach;
-          if (velY > 0) {
+          touch.t = true;
+          if (held) {
+            if (!pinned.t && dragVY > HELD_KNOCK) hitWall('t', 0, -1, Math.min(dragVY, MAX_THROW_SPEED), e.at, dragVX, dragVY);
+            dragVY = Math.min(dragVY, 0);
+          } else if (velY > 0) {
             const vin = velY;
             const impact = velY;
             velY = -impact * RESTITUTION;
@@ -519,6 +596,10 @@ export function Head3D() {
           }
         }
       }
+      pinned.l = held && touch.l;
+      pinned.r = held && touch.r;
+      pinned.b = held && touch.b;
+      pinned.t = held && touch.t;
     };
 
     // ---- loop --------------------------------------------------------------
@@ -596,6 +677,13 @@ export function Head3D() {
         // Bounce off the stage edges against the outline as drawn this frame.
         silhouette.setState(tx, ty, uniforms.uSquash.value, marks);
         collide();
+      } else {
+        // Held: follow the hand, but stop flush at the walls (the squeezed
+        // outline included).
+        posX = holdX;
+        posY = holdY;
+        silhouette.setState(tx, ty, uniforms.uSquash.value, marks);
+        collide(true);
       }
 
       // No flat z-rotation on purpose — the turn is sold by the depth shader.
@@ -655,6 +743,10 @@ export function Head3D() {
       window.removeEventListener('pointermove', onPointerMove);
       window.removeEventListener('pointerdown', onPointerDown);
       window.removeEventListener('pointerup', onPointerUp);
+      window.removeEventListener('pointercancel', onPointerCancel);
+      window.removeEventListener('blur', onPointerCancel);
+      window.removeEventListener('touchstart', onTouch);
+      window.removeEventListener('touchmove', onTouch);
       blood.dispose();
       mesh.geometry.dispose();
       material.dispose();

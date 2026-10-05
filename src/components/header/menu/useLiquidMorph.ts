@@ -36,24 +36,30 @@ const edge = (response: number, dampingRatio: number, delay = 0): EdgeMotion => 
 // Each edge of the shape runs its own spring. Opening, the far edges (bottom,
 // left) are the bounciest, so the panel swells out of the button and settles
 // with the small iOS overshoot away from it; the top edge, which only has to
-// leave the button, is the calmest. Closing is quicker and the side edge goes
-// first, so the panel narrows into a drop before it is drawn back up into the
-// button. The closing springs are deliberately a little underdamped: an edge
-// is stopped dead when it reaches the button (it never undershoots through
-// it), so the would-be wobble never shows — what it buys is a brisk arrival
-// instead of a near-critical tail, which left a grey nub sitting on the
-// button for a tenth of a second before the gulp.
+// leave the button, is the calmest. The left edge sets off 40ms late (and a
+// touch quicker, so the panel still lands on the same frame): the drop first
+// clears the title row, then spreads — leading with its corner, it slid
+// under the title's last glyphs for ~6 frames.
+// Closing is quicker and the side edge goes first, so the panel narrows into
+// a drop before it is drawn back up into the button. The closing springs are
+// deliberately a little underdamped: an edge is stopped dead when it reaches
+// the button (it never undershoots through it), so the would-be wobble never
+// shows — what it buys is a brisk arrival instead of a near-critical tail,
+// which left a grey nub sitting on the button for a tenth of a second before
+// the gulp. The whole close waits ~45ms first: the rows fade out in 70ms
+// (menu.css), so the shape never shrinks over live text — it cut words at
+// its moving edge for two frames.
 const OPEN: Record<Edge, EdgeMotion> = {
-  top: edge(0.46, 0.85),
+  top: edge(0.4, 0.85),
   right: edge(0.42, 0.8),
   bottom: edge(0.4, 0.74),
-  left: edge(0.44, 0.74),
+  left: edge(0.4, 0.74, 0.04),
 };
 const CLOSE: Record<Edge, EdgeMotion> = {
-  top: edge(0.32, 0.78, 0.015),
-  right: edge(0.28, 0.8),
-  bottom: edge(0.32, 0.75, 0.015),
-  left: edge(0.28, 0.8),
+  top: edge(0.32, 0.78, 0.06),
+  right: edge(0.28, 0.8, 0.045),
+  bottom: edge(0.32, 0.75, 0.06),
+  left: edge(0.28, 0.8, 0.045),
 };
 // The button gulps when the drop comes back into it.
 const BUMP = springOf(0.3, 0.38);
@@ -158,10 +164,31 @@ function createEngine(refs: MorphRefs) {
     if (btn) btn.dataset.chevron = up ? 'up' : 'down';
   };
 
+  // Reduced motion: the plate sits at the panel's resting rect and only
+  // fades (CSS). Rewritten on every measure, so a resize or a rotation with
+  // the menu open keeps the glass under the content it belongs to.
+  const placeResting = () => {
+    const blob = refs.blob.current;
+    if (!blob) return;
+    blob.style.transform = `translate(${T.left}px, ${T.top}px)`;
+    blob.style.width = `${T.right - T.left}px`;
+    blob.style.height = `${T.bottom - T.top}px`;
+    blob.style.borderRadius = `${PANEL_RADIUS}px`;
+    if (refs.root.current?.hasAttribute('data-refract')) {
+      refs.flood.current?.setAttribute('width', String(T.right - T.left));
+      refs.flood.current?.setAttribute('height', String(T.bottom - T.top));
+      refs.displace.current?.setAttribute('scale', String(REFRACT_SCALE));
+    }
+  };
+
   const render = () => {
     const blob = refs.blob.current;
     const root = refs.root.current;
-    if (!blob || !root || reduced) return;
+    if (!blob || !root) return;
+    if (reduced) {
+      placeResting();
+      return;
+    }
     const p = {
       top: Math.max(0, e.top.value),
       right: Math.max(0, e.right.value),
@@ -353,22 +380,14 @@ function createEngine(refs: MorphRefs) {
         hide();
         bumpButton();
         setChevron(open);
+        placeResting();
         if (blob) {
           blob.style.visibility = '';
-          blob.style.transform = `translate(${T.left}px, ${T.top}px)`;
-          blob.style.width = `${T.right - T.left}px`;
-          blob.style.height = `${T.bottom - T.top}px`;
-          blob.style.borderRadius = `${PANEL_RADIUS}px`;
           blob.style.setProperty('--lgm-glass', '1');
           blob.style.boxShadow = '';
           if (refs.tint.current) refs.tint.current.style.opacity = '0';
           blob.dataset.mode = 'fade';
           blob.toggleAttribute('data-open', open);
-        }
-        if (refs.root.current?.hasAttribute('data-refract')) {
-          refs.flood.current?.setAttribute('width', String(T.right - T.left));
-          refs.flood.current?.setAttribute('height', String(T.bottom - T.top));
-          refs.displace.current?.setAttribute('scale', String(REFRACT_SCALE));
         }
         return;
       }

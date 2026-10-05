@@ -202,39 +202,92 @@ export class BloodLayer {
     return this.live.length > 0;
   }
 
-  /** Compile every program off the critical path, so the first splash doesn't hitch. */
+  /**
+   * Get every pass ready while nothing is happening yet, so the first splash
+   * doesn't hitch. Compiling alone is not enough: without
+   * KHR_parallel_shader_compile, compileAsync resolves at once and three.js
+   * only checks a program's link on its first draw — a blocking driver round
+   * trip that measured 60–470 ms per program in software GL, all landing on
+   * the bloody knock — and Metal/Vulkan backends build the pipeline state on
+   * the first draw into each target format. So once the compile is started,
+   * every pass also draws once, for real: into tiny targets of the formats
+   * the splash uses, or into the canvas with nothing covered (the head's next
+   * frame repaints it anyway), one pass per idle slice so no slice runs long.
+   */
   warmup() {
     if (!this.supported) return;
+    const later = (fn: () => void) => ('requestIdleCallback' in window ? window.requestIdleCallback(fn, { timeout: 500 }) : setTimeout(fn, 50));
+    const r = this.renderer;
     const scene = new THREE.Scene();
-    const add = (m: THREE.Material, geo: THREE.BufferGeometry = this.rect.geometry) => {
-      const mesh = new THREE.Mesh(geo, m);
-      mesh.frustumCulled = false;
-      scene.add(mesh);
+    const mesh = (m: THREE.Material, geo: THREE.BufferGeometry) => {
+      const o = new THREE.Mesh(geo, m);
+      o.frustumCulled = false;
+      return o;
     };
-    for (const m of [this.mClear, this.mMask, this.mBlur, this.mComp, this.mNoise]) add(m);
-    add(this.mKernel, instGeo(new THREE.InstancedInterleavedBuffer(new Float32Array(K_STRIDE), K_STRIDE), K_LAYOUT));
-    add(this.mPlain, instGeo(new THREE.InstancedInterleavedBuffer(new Float32Array(P_STRIDE), P_STRIDE), P_LAYOUT));
-    add(this.mFlyer, instGeo(new THREE.InstancedInterleavedBuffer(new Float32Array(F_STRIDE), F_STRIDE), F_LAYOUT));
-    const done = () => {
-      scene.traverse((o) => (o as THREE.Mesh).geometry !== this.rect.geometry && (o as THREE.Mesh).geometry?.dispose());
-      // the wall noise is a one-off render: do it now, not on the first splash
-      if (this.disposed) return;
-      const prev = this.renderer.getRenderTarget();
-      this.ensureNoise();
-      this.renderer.setRenderTarget(prev);
+    // One instance each, all of them invisible: zero amplitude for the
+    // kernels, a drop parked far off the stage for the flyers.
+    const flyer = new Float32Array(F_STRIDE);
+    flyer.fill(-1e4, 0, 4);
+    const geos = [
+      instGeo(new THREE.InstancedInterleavedBuffer(new Float32Array(K_STRIDE), K_STRIDE), K_LAYOUT),
+      instGeo(new THREE.InstancedInterleavedBuffer(new Float32Array(P_STRIDE), P_STRIDE), P_LAYOUT),
+      instGeo(new THREE.InstancedInterleavedBuffer(flyer, F_STRIDE), F_LAYOUT),
+    ];
+    for (const g of geos) g.instanceCount = 1;
+    const [kMesh, pMesh, fMesh] = [mesh(this.mKernel, geos[0]), mesh(this.mPlain, geos[1]), mesh(this.mFlyer, geos[2])];
+    for (const m of [this.mClear, this.mMask, this.mBlur, this.mComp, this.mNoise]) scene.add(mesh(m, this.rect.geometry));
+    scene.add(kMesh, pMesh, fMesh);
+    // Same formats as ensureTargets(): the two-attachment field, one blur.
+    const base = { depthBuffer: false, stencilBuffer: false, generateMipmaps: false, type: THREE.HalfFloatType, format: THREE.RGBAFormat };
+    const field = new THREE.WebGLRenderTarget(4, 4, { ...base, count: 2 });
+    const blur = new THREE.WebGLRenderTarget(4, 4, base);
+    const none: [number, number, number, number] = [0, 0, 0, 0];
+    const rect = (mat: THREE.RawShaderMaterial) => () => this.drawRect(mat, none);
+    const draws: [THREE.WebGLRenderTarget | null, () => void][] = [
+      [field, rect(this.mClear)],
+      [field, () => r.render(kMesh, this.cam)],
+      [field, () => r.render(pMesh, this.cam)],
+      [blur, rect(this.mMask)],
+      [blur, rect(this.mBlur)],
+      [null, rect(this.mComp)],
+      [null, () => r.render(fMesh, this.cam)],
+    ];
+    const finish = () => {
+      for (const g of geos) g.dispose();
+      field.dispose();
+      blur.dispose();
     };
-    this.renderer.compileAsync(scene, this.cam).then(done, done);
+    const step = (i: number) => {
+      if (this.disposed) return finish();
+      const prev = r.getRenderTarget();
+      const autoClear = r.autoClear;
+      r.autoClear = false;
+      if (i === 0) {
+        // the wall noise is a one-off render: do it now, not on the first splash
+        this.ensureNoise();
+      } else {
+        const [target, draw] = draws[i - 1];
+        r.setRenderTarget(target);
+        draw();
+      }
+      r.autoClear = autoClear;
+      r.setRenderTarget(prev);
+      if (i < draws.length) later(() => step(i + 1));
+      else finish();
+    };
+    // Starts every compile at once (in parallel where the driver can).
+    const go = () => later(() => step(0));
+    r.compileAsync(scene, this.cam).then(go, go);
     // Run a throwaway splash through the CPU side in idle slices: a cold JIT
     // made the very first knock cost ~20 ms, right when everyone is looking.
-    const none = () => false;
-    const ghost = new Splash({ wall: 'l', x: 0, y: this.H / 2, vx: -900, vy: 0, strength: 1 }, { k: this.k, W: this.W, H: this.H, seed: 1, density: 1, covers: none });
+    const covers = () => false;
+    const ghost = new Splash({ wall: 'l', x: 0, y: this.H / 2, vx: -900, vy: 0, strength: 1 }, { k: this.k, W: this.W, H: this.H, seed: 1, density: 1, covers });
     let t = 0;
-    const later = (fn: () => void) => ('requestIdleCallback' in window ? window.requestIdleCallback(fn, { timeout: 500 }) : setTimeout(fn, 50));
     const slice = () => {
       if (this.disposed) return;
       for (let i = 0; i < 4 && t < 1.2; i++) {
         t += 1 / 60;
-        ghost.update(t, 1 / 60, none);
+        ghost.update(t, 1 / 60, covers);
       }
       if (t < 1.2) later(slice);
     };

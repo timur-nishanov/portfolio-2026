@@ -72,6 +72,10 @@ export function SiteHeader() {
     const onDown = (e: PointerEvent) => {
       const t = e.target as Node | null;
       if (t && (refs.content.current?.contains(t) || refs.button.current?.contains(t))) return;
+      // As on iOS, the first press outside only dismisses: it must not also
+      // grab the head (Head3D listens on window, bubbling). The audio unlock
+      // listens on window in the capture phase, so it still sees the press.
+      e.stopPropagation();
       // Only pull focus back if it was inside the menu — a click elsewhere on
       // the page keeps whatever focus that click gave.
       close(!!refs.content.current?.contains(document.activeElement));
