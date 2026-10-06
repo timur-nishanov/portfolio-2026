@@ -26,10 +26,12 @@ export const showcase: ShowcaseCase[] = [
       poster: assets.chumsCasePoster,
       alt: 'Chums messenger: the chat list and a conversation',
     },
+    //   (no-break space) keeps "6 steps to 1." on one line and every
+    // note's last two words together, wherever the line breaks fall.
     notes: [
-      'Senior Product Designer. Led design processes and mentored one junior designer. Created the new visual concept seen in the mockups, approved by the CEO.',
-      'Tokens, NFTs and dApps lived inside chat, but users couldn’t find them. The desktop client reused mobile components and broke when resized.',
-      'Reworked desktop with drag-and-drop and native context menus. Attaching a file went from 6 steps to 1. Shipped to beta three months after approval.',
+      'Senior Product Designer. Led design processes and mentored one junior designer. Created the new visual concept seen in the mockups, approved by the CEO.',
+      'Tokens, NFTs and dApps lived inside chat, but users couldn’t find them. The desktop client reused mobile components and broke when resized.',
+      'Reworked desktop with drag-and-drop and native context menus. Attaching a file went from 6 steps to 1. Shipped to beta three months after approval.',
     ],
   },
 ];
