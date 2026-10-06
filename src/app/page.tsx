@@ -1,8 +1,9 @@
 import { SiteHeader } from '@/components/header/SiteHeader';
 import { Hero } from '@/components/hero/Hero';
-// Hidden for now — the site is one screen until Timur brings the sections
-// back. Code stays in place; restore these imports and the block below.
-// import { SmoothScrollProvider } from '@/components/providers/SmoothScrollProvider';
+import { CaseShowcase } from '@/components/showcase/CaseShowcase';
+import { SmoothScrollProvider } from '@/components/providers/SmoothScrollProvider';
+// The older sections stay hidden until Timur brings them back. Code stays in
+// place; restore these imports and the block below.
 // import { Header } from '@/components/header/Header';
 // import { CasesSection } from '@/components/cases/CasesSection';
 // import { AwardsSection } from '@/components/awards/AwardsSection';
@@ -14,13 +15,13 @@ import { Hero } from '@/components/hero/Hero';
 
 export default function Home() {
   return (
-    <>
+    <SmoothScrollProvider>
       <SiteHeader />
       <main>
         <Hero />
+        <CaseShowcase />
       </main>
-      {/* Previous full page, not rendered while only the first screen is live
-          (also drop `one-screen` in layout.tsx when restoring):
+      {/* Previous full page, not rendered yet:
       <SmoothScrollProvider>
         <Header />
         <main className="page-curtain">
@@ -36,6 +37,6 @@ export default function Home() {
         <Footer />
       </SmoothScrollProvider>
       */}
-    </>
+    </SmoothScrollProvider>
   );
 }

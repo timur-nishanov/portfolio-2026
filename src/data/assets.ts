@@ -30,6 +30,8 @@ export const assets = {
   phoneFrame: '/mockups/iphone-frame.webp', // mockup iphone.png — bezel with a fully transparent screen cutout
   chumsChatVideo: '/mockups/chums-chat.webm', // Chums chat screen.webm — goes inside the frame
   chumsPreview: '/mockups/chums-preview.webp', // chums-preview-ready.png — pre-composited phone
+  chumsCaseVideo: '/mockups/chums-case.mp4', // Chums.mp4 (390x844, 60fps) — first case after the hero, inside the frame
+  chumsCasePoster: '/mockups/chums-case-poster.webp', // its first frame
   goVideo: '/mockups/go-video.mp4', // go-video.mp4 — 16:9 scene of both Beri Zaryad phones
   goPoster: '/mockups/go-poster.webp', // first frame — shown until the clip decodes
   imacFrame: '/mockups/imac-frame.webp', // iMac 27" Silver — bezel with transparent screen (for recordings)

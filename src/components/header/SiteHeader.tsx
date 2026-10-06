@@ -3,6 +3,7 @@
 import { createRef, useCallback, useEffect, useRef, useState } from 'react';
 import { menuTitle } from '@/data/menu';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { useHideOnScroll } from '@/hooks/useScrollDirection';
 import { ButtonChevron } from './menu/icons';
 import { MenuContent, type MenuContentHandle } from './menu/MenuContent';
 import { MenuGlassFilter } from './menu/MenuGlassFilter';
@@ -57,6 +58,11 @@ export function SiteHeader() {
   }));
 
   useEffect(() => setRefract(canRefract()), []);
+
+  // Out of the way while reading down the page, back on the first scroll up
+  // (as the previous header did). Never pinned by hover: the bar has no body.
+  const neverPinned = useRef(false);
+  const hidden = useHideOnScroll(neverPinned);
   useLiquidMorph(open, reduced, refs);
 
   const close = useCallback(
@@ -66,6 +72,11 @@ export function SiteHeader() {
     },
     [refs],
   );
+
+  // Scrolling down with the menu open closes it first, like an iOS menu.
+  useEffect(() => {
+    if (hidden && open) close(false);
+  }, [hidden, open, close]);
 
   // Focus follows the menu in (WAI-ARIA menu button): first row, or the last
   // one when it was opened with ArrowUp.
@@ -101,7 +112,12 @@ export function SiteHeader() {
   }, [open, close, refs]);
 
   return (
-    <header ref={refs.root} className="site-header" data-refract={refract ? '' : undefined}>
+    <header
+      ref={refs.root}
+      className="site-header"
+      data-refract={refract ? '' : undefined}
+      data-hidden={hidden && !open ? '' : undefined}
+    >
       <MenuGlassFilter filterRef={refs.filter} floodRef={refs.flood} displaceRef={refs.displace} />
 
       {/* The bridge is drawn in header space (no viewBox: 1 unit = 1px). */}
