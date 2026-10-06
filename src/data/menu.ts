@@ -29,13 +29,13 @@ export type MenuLink =
  *  mark — a diagonal X or a round G sits further from it than a stemmed L. */
 export type Optical = { scale?: number; dy?: number; labelDx?: number };
 
-// Icons are the 16px brand marks exported from the mockup (public/icons).
+// Icons are 16px brand discs (public/icons), all drawn at one size — the same
+// 16px circle each, nudged onto the label's cap-height centre together.
 export const menuLinks: MenuLink[] = [
   { kind: 'external', label: 'Linkedin', icon: '/icons/linkedin.svg', optical: { dy: -0.5 }, href: site.linkedin },
-  // Same 16px boxes: the solid black disc reads large, the near-invisible
-  // grey disc of the Google mark leaves only its small G.
-  { kind: 'external', label: 'X', icon: '/icons/x.svg', optical: { scale: 0.9, labelDx: -1 }, href: 'https://x.com/nem_etis' },
+  { kind: 'external', label: 'X', icon: '/icons/x.svg', optical: { dy: -0.5, labelDx: -1 }, href: 'https://x.com/nem_etis' },
+  { kind: 'external', label: 'GitHub', icon: '/icons/github.svg', optical: { dy: -0.5 }, href: 'https://github.com/timur-nishanov' },
   // Gmail copies rather than opening a mail client — most visitors on a
   // desktop have no handler set up, and a dead mailto reads as a broken link.
-  { kind: 'copy', label: 'Gmail', icon: '/icons/google.svg', optical: { scale: 1.15, dy: -0.75, labelDx: -0.5 }, value: site.email, copiedLabel: 'Copied' },
+  { kind: 'copy', label: 'Gmail', icon: '/icons/google.svg', optical: { dy: -0.5, labelDx: -0.5 }, value: site.email, copiedLabel: 'Copied' },
 ];
