@@ -73,8 +73,13 @@
   z-index: 51;
   mix-blend-mode: difference;
 }
+/* White, but not set as white: macOS rasterises light-on-dark text heavier
+   than dark-on-light (font smoothing dilates it), and through difference
+   that read as a bolder title than the tagline. So the glyphs are drawn
+   black, exactly as dark text is, and turned white after rasterising. */
 .site-header--blend .site-title {
-  color: #fff;
+  color: #000;
+  filter: invert(1);
 }
 .site-header__button-slot {
   flex: none;
