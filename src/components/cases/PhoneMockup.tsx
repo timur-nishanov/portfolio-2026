@@ -15,6 +15,12 @@ const SCREEN = { top: 1.62, left: 3.97, right: 4.05, bottom: 1.66 };
 // radii so it stays circular at any box size.
 const SCREEN_RADIUS = '9.9% / 4.55%';
 const PHONE_AR = '1310 / 2710';
+// The content runs this far under the bezel on every side (the black rim is
+// ~10px wide at these sizes). Edge to edge with the cutout, the clip and the
+// rim landed on the same fractional pixel and the card behind showed through
+// it: a light hairline across the top of a dark screen. Under the bezel the
+// seam only ever holds the screen's own pixels, whatever their colour.
+const BLEED = '1.5px';
 
 /** One phone in the media strip — either a live frame with content, or a
  *  pre-composited render drawn as-is. */
@@ -53,10 +59,10 @@ export function PhoneMockup({ phone }: { phone: PhoneScreen }) {
   }
 
   const screenStyle: React.CSSProperties = {
-    top: `${SCREEN.top}%`,
-    left: `${SCREEN.left}%`,
-    width: `${100 - SCREEN.left - SCREEN.right}%`,
-    height: `${100 - SCREEN.top - SCREEN.bottom}%`,
+    top: `calc(${SCREEN.top}% - ${BLEED})`,
+    left: `calc(${SCREEN.left}% - ${BLEED})`,
+    width: `calc(${100 - SCREEN.left - SCREEN.right}% + 2 * ${BLEED})`,
+    height: `calc(${100 - SCREEN.top - SCREEN.bottom}% + 2 * ${BLEED})`,
     borderRadius: SCREEN_RADIUS,
   };
 

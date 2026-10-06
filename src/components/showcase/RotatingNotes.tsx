@@ -14,11 +14,15 @@ const FADE_MS = 260; // reduced motion: a plain cross-fade
 // this long before it goes.
 const RESUME_MIN = 1200;
 
-const wordsOf = (text: string) => text.trim().split(/\s+/);
+// What animates as one piece: split on ordinary spaces only, so words tied
+// with a no-break space ("6 steps to 1.") stay one unbreakable unit.
+const unitsOf = (text: string) => text.trim().split(/ +/);
+// Reading time still counts every word, tied or not.
+const wordCount = (text: string) => text.trim().split(/\s+/).length;
 
 /** How long a note stays up once it is in: a calm ~210 wpm read plus a beat to
  *  settle, never shorter than 4.2 s or longer than 9 s. */
-export const holdFor = (text: string) => Math.min(9000, Math.max(4200, 1600 + wordsOf(text).length * 290));
+export const holdFor = (text: string) => Math.min(9000, Math.max(4200, 1600 + wordCount(text) * 290));
 
 type Props = { notes: string[]; className?: string };
 
@@ -66,7 +70,7 @@ export function RotatingNotes({ notes, className = '' }: Props) {
 
   useEffect(() => {
     if (!running || notes.length < 2) return;
-    const n = wordsOf(notes[index]).length;
+    const n = unitsOf(notes[index]).length;
     if (phase === 'in') {
       const entering = !animated ? 0 : reduced ? FADE_MS : IN_MS + (n - 1) * IN_STAGGER;
       const wait = left.current ?? entering + holdFor(notes[index]);
@@ -95,7 +99,7 @@ export function RotatingNotes({ notes, className = '' }: Props) {
     if (e.pointerType === 'mouse') setHeld(on);
   };
 
-  const words = useMemo(() => wordsOf(notes[index]), [notes, index]);
+  const words = useMemo(() => unitsOf(notes[index]), [notes, index]);
 
   return (
     <div

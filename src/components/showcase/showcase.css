@@ -9,16 +9,21 @@
    the menu's (15 / 18, 0.2px, no ligatures).
    =========================================================================== */
 
+/* A size container, so the card's height can follow its own width (cqw). */
 .cs {
+  container-type: inline-size;
   padding: clamp(96px, 11vw, 170px) 20px 20px;
 }
 
+/* 1400 x 736 as drawn, but never taller than the screen, so the card can
+   always be seen whole; on a wide, short screen it gets wider rather than
+   narrower. A height, not aspect-ratio + max-height: Chrome carries that cap
+   over to the width and the card stopped short of the right edge. The vw line
+   is the fallback for engines without container units. */
 .cs-card {
   position: relative;
-  aspect-ratio: 1400 / 736;
-  /* Never taller than the screen, so the card can always be seen whole. */
-  max-height: calc(100svh / var(--site-zoom, 1) - 40px);
-  min-height: 460px;
+  height: clamp(460px, calc((100vw - 40px) * 736 / 1400), calc(100svh / var(--site-zoom, 1) - 40px));
+  height: clamp(460px, calc(100cqw * 736 / 1400), calc(100svh / var(--site-zoom, 1) - 40px));
   border-radius: 24px;
   background: #e6e6e7;
   /* The card will open its case study, and the chip by the arrow says so; a
@@ -82,6 +87,11 @@
   font-feature-settings:
     'liga' off,
     'clig' off;
+  /* Where it's supported, no lone word on a note's last line. The notes also
+     tie their last two words and "6 steps to 1." with no-break spaces, since
+     the system font sets narrower on some Macs than in the design and the
+     breaks move. */
+  text-wrap: pretty;
 }
 /* Every note in one grid cell: the invisible copies hold the tallest height,
    the live one sits on top, aligned to the top edge. */
@@ -210,9 +220,7 @@
     display: flex;
     flex-direction: column;
     gap: 24px;
-    aspect-ratio: auto;
-    max-height: none;
-    min-height: 0;
+    height: auto;
     padding: 28px 20px 32px;
     border-radius: 20px;
   }
