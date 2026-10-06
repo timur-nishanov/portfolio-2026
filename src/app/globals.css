@@ -161,8 +161,9 @@ html {
    While every section below the hero is hidden (page.tsx) the site is a single
    screen: nothing scrolls, and the reserved scrollbar gutter (above) would
    only leave a ~10px dead strip on the right that the head's stage can't
-   reach. Toggled by the `one-screen` class in layout.tsx — REVISIT when the
-   sections come back: drop the class and the gutter/scroll behaviour returns. */
+   reach. Toggled by the `one-screen` class on <html> — off now that the
+   cases follow the hero and the page scrolls again (layout.tsx); kept for a
+   one-screen build. */
 html.one-screen {
   scrollbar-gutter: auto;
   overflow: hidden;

@@ -1,0 +1,232 @@
+/* ===========================================================================
+   Case cards after the hero (CaseShowcase). Measured from the client's
+   reference, a 1440 frame: the card is 1400 x 736 with 20px to the page edges,
+   corner 24px, #E6E6E7; the phone is ~88% of the card's height and centred;
+   the title block is centred vertically 4.7% in from the left; the notes
+   column runs from 71% to 4.7% from the right (340px at 1440) and is anchored
+   by its top edge where a four-line note sits centred. Type: the title and
+   subtitle use the name's style in the header (SF Pro 20 / 132%), the notes
+   the menu's (15 / 18, 0.2px, no ligatures).
+   =========================================================================== */
+
+.cs {
+  padding: clamp(96px, 11vw, 170px) 20px 20px;
+}
+
+.cs-card {
+  position: relative;
+  aspect-ratio: 1400 / 736;
+  /* Never taller than the screen, so the card can always be seen whole. */
+  max-height: calc(100svh / var(--site-zoom, 1) - 40px);
+  min-height: 460px;
+  border-radius: 24px;
+  background: #e6e6e7;
+  /* The card will open its case study, and the chip by the arrow says so; a
+     hand on top of it would only crowd the chip. */
+  cursor: default;
+}
+.cs-card + .cs-card {
+  margin-top: 20px;
+}
+
+.cs-card__head {
+  position: absolute;
+  left: 4.7%;
+  top: 50%;
+  transform: translateY(-50%);
+}
+.cs-card__title,
+.cs-card__sub {
+  margin: 0;
+  font-family: var(--font-sf);
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 1.32;
+  letter-spacing: 0;
+}
+.cs-card__title {
+  color: var(--ink-strong, #08080a);
+}
+.cs-card__sub {
+  color: #ababab;
+}
+
+.cs-card__phone {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  height: 87.7%;
+  transform: translate(-50%, -50%);
+}
+
+/* Anchored by its top edge: two 18px lines above the middle, where the
+   reference's four-line note starts. A longer note only grows downward, a
+   shorter one keeps the same first line. The width stops at the reference's
+   340px so wider screens keep its line breaks. */
+.cs-card__notes {
+  position: absolute;
+  left: 71%;
+  right: 4.7%;
+  top: calc(50% - 36px);
+  max-width: 340px;
+}
+
+/* --- the notes ------------------------------------------------------------ */
+.rn {
+  color: var(--ink-menu, #151514);
+  font-family: var(--font-sf);
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 18px;
+  letter-spacing: 0.2px;
+  font-feature-settings:
+    'liga' off,
+    'clig' off;
+}
+/* Every note in one grid cell: the invisible copies hold the tallest height,
+   the live one sits on top, aligned to the top edge. */
+.rn__stack {
+  display: grid;
+  align-items: start;
+}
+.rn__stack > p {
+  grid-area: 1 / 1;
+  margin: 0;
+}
+.rn__sizer {
+  visibility: hidden;
+}
+.rn__w {
+  display: inline-block;
+}
+/* Words come out of a blur one after another and go back into it a little
+   faster — no movement up or down, the text stays where it is. */
+.rn__live[data-phase='in'][data-animate] .rn__w {
+  animation: rn-in 720ms cubic-bezier(0.22, 0.8, 0.24, 1) both;
+  animation-delay: calc(var(--i) * 26ms);
+}
+.rn__live[data-phase='out'] .rn__w {
+  animation: rn-out 360ms cubic-bezier(0.5, 0, 0.9, 0.4) both;
+  animation-delay: calc(var(--i) * 10ms);
+}
+.rn__live[data-reduced][data-phase='in'][data-animate] .rn__w {
+  animation: rn-fade-in 260ms ease both;
+}
+.rn__live[data-reduced][data-phase='out'] .rn__w {
+  animation: rn-fade-out 260ms ease both;
+}
+@keyframes rn-in {
+  from {
+    opacity: 0;
+    filter: blur(10px);
+  }
+  60% {
+    opacity: 1;
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+@keyframes rn-out {
+  from {
+    opacity: 1;
+    filter: blur(0);
+  }
+  to {
+    opacity: 0;
+    filter: blur(8px);
+  }
+}
+@keyframes rn-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes rn-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* --- the cursor chip -------------------------------------------------------
+   The menu button's twin — the 20px disc and its 12px chevron, #1C1C1E —
+   turned to point right. White rather than the button's grey: on the grey
+   card the grey would vanish. */
+.cs-chip {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 2;
+  width: 20px;
+  height: 20px;
+  pointer-events: none;
+  will-change: transform;
+}
+.cs-chip__dot {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow:
+    0 0 0 0.5px rgba(0, 0, 0, 0.05),
+    0 2px 6px rgba(0, 0, 0, 0.07);
+  color: #1c1c1e;
+  opacity: 0;
+  transform: scale(0.4);
+  transition:
+    opacity 160ms ease,
+    transform 260ms cubic-bezier(0.3, 1.4, 0.5, 1);
+}
+.cs-chip[data-on] .cs-chip__dot {
+  opacity: 1;
+  transform: scale(1);
+}
+.cs-chip[data-on][data-down] .cs-chip__dot {
+  transform: scale(0.86);
+  transition-duration: 120ms;
+}
+/* Drawn pointing up. A quarter turn points it right, and the same half pixel
+   toward its open side that the button gives its down chevron. */
+.cs-chip__chevron {
+  display: block;
+  transform: rotate(90deg) translateY(0.5px);
+}
+
+/* --- stacked (tablet portrait and phones) ---------------------------------- */
+@media (max-width: 899px) {
+  .cs {
+    padding: 72px 12px 12px;
+  }
+  .cs-card {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    aspect-ratio: auto;
+    max-height: none;
+    min-height: 0;
+    padding: 28px 20px 32px;
+    border-radius: 20px;
+  }
+  .cs-card__head,
+  .cs-card__phone,
+  .cs-card__notes {
+    position: static;
+    transform: none;
+  }
+  .cs-card__phone {
+    align-self: center;
+    height: min(560px, 118vw);
+  }
+  .cs-card__notes {
+    max-width: none;
+  }
+}

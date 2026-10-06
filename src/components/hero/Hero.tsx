@@ -7,9 +7,10 @@ export function Hero() {
     <section
       id="main"
       aria-labelledby="hero-heading"
-      // Exactly one screen: this box is the head's stage, so it spans the full
-      // viewport (the gutter is released in one-screen mode) and the head can
-      // reach every edge. Divided by the zoom like every full-viewport length.
+      // Exactly one screen: this box is the head's stage, so it spans the
+      // viewport up to the scrollbar and the head can reach every edge; the
+      // cases follow below it. Divided by the zoom like every full-viewport
+      // length.
       className="relative h-[calc(100svh/var(--site-zoom))] w-full overflow-hidden"
     >
       <FloatingHead />

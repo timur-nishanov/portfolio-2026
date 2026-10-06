@@ -156,10 +156,18 @@ export function MenuContent({ id, labelledBy, open, contentRef, handleRef, onClo
     onClose(true);
     const el = document.getElementById(sectionId);
     if (!el) return; // section not on the page yet — just close
+    // A section can name the block that frames it (Works: the first case
+    // card). When that block fits the screen it lands in the middle of it;
+    // otherwise the section starts just under the header.
+    const frame = el.querySelector<HTMLElement>('[data-scroll-frame]');
+    const fh = frame ? frame.getBoundingClientRect().height : 0;
+    const top =
+      frame && fh < window.innerHeight
+        ? frame.getBoundingClientRect().top + window.scrollY - (window.innerHeight - fh) / 2
+        : el.getBoundingClientRect().top + window.scrollY + SCROLL_OFFSET;
     if (document.documentElement.classList.contains('lenis')) {
-      scrollTo(`#${sectionId}`, { offset: SCROLL_OFFSET, duration: 1.1 });
+      scrollTo(top, { offset: 0, duration: 1.1 });
     } else {
-      const top = el.getBoundingClientRect().top + window.scrollY + SCROLL_OFFSET;
       window.scrollTo({ top, behavior: reduced ? 'auto' : 'smooth' });
     }
   };
