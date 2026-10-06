@@ -65,6 +65,22 @@
   user-select: none;
   -webkit-user-select: none;
 }
+.site-title--slot {
+  visibility: hidden;
+}
+/* The visible title (SiteHeader): white, difference, over everything else. */
+.site-header--blend {
+  z-index: 51;
+  mix-blend-mode: difference;
+}
+.site-header--blend .site-title {
+  color: #fff;
+}
+.site-header__button-slot {
+  flex: none;
+  width: 20px;
+  height: 20px;
+}
 
 /* The round button: a 20px #E5E5E6 disc as drawn, with a 44px invisible hit
    area (Apple's minimum tap target). It reaches a few px under the title,

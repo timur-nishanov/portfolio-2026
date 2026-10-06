@@ -5,6 +5,11 @@ export type ShowcaseCase = {
   id: string;
   title: string;
   subtitle: string;
+  /** The device in the middle of the card: an iPhone (title left, notes
+   *  right, all centred) or an iMac (iMac left; title top right, notes
+   *  bottom right). */
+  device: 'phone' | 'imac';
+  /** The screen recording that plays inside it. */
   phone: PhoneScreen;
   /** The right-hand notes, shown one at a time (RotatingNotes). Each one is
    *  four lines of the menu style in the reference's 340px column, like the
@@ -17,6 +22,7 @@ export type ShowcaseCase = {
 export const showcase: ShowcaseCase[] = [
   {
     id: 'chums',
+    device: 'phone',
     title: 'Chums messenger',
     subtitle: 'Safe crypto chatting',
     phone: {
@@ -26,12 +32,30 @@ export const showcase: ShowcaseCase[] = [
       poster: assets.chumsCasePoster,
       alt: 'Chums messenger: the chat list and a conversation',
     },
-    //   (no-break space) keeps "6 steps to 1." on one line and every
+    // \u00a0 (no-break space) keeps "6 steps to 1." on one line and every
     // note's last two words together, wherever the line breaks fall.
     notes: [
-      'Senior Product Designer. Led design processes and mentored one junior designer. Created the new visual concept seen in the mockups, approved by the CEO.',
-      'Tokens, NFTs and dApps lived inside chat, but users couldn’t find them. The desktop client reused mobile components and broke when resized.',
-      'Reworked desktop with drag-and-drop and native context menus. Attaching a file went from 6 steps to 1. Shipped to beta three months after approval.',
+      'Senior Product Designer. Led design processes and mentored one junior designer. Created the new visual concept seen in the mockups, approved by the\u00a0CEO.',
+      'Tokens, NFTs and dApps lived inside chat, but users couldn’t find them. The desktop client reused mobile components and broke when\u00a0resized.',
+      'Reworked desktop with drag-and-drop and native context menus. Attaching a file went from 6\u00a0steps\u00a0to\u00a01. Shipped to beta three months after\u00a0approval.',
+    ],
+  },
+  {
+    id: 'urbantiger',
+    device: 'imac',
+    title: 'Urbantiger',
+    subtitle: 'Eco ecommerce',
+    phone: {
+      framed: true,
+      type: 'video',
+      src: assets.urbantigerCaseVideo,
+      poster: assets.urbantigerCasePoster,
+      alt: 'Urbantiger: choosing a gift card design',
+    },
+    notes: [
+      'Senior designer, 2025. Ran discovery, owned the core purchase, search and account flows, built the loyalty layer, and directed the designers and illustrator on the\u00a0project.',
+      'Four years in, the fashion store had piled up UX friction, its look no longer matched the new brand, and nothing brought people back. The client chose a full\u00a0rebuild.',
+      'By the client’s numbers, the MVP converts at twice the old site’s rate, even with incoming traffic down\u00a030–40% over the same\u00a0period.',
     ],
   },
 ];

@@ -116,6 +116,20 @@ export function RotatingNotes({ notes, className = '' }: Props) {
         ))}
       </ul>
       <div className="rn__stack" aria-hidden="true">
+        {/* Where this note sits among the others: a hairline track with one
+            dark segment per note, sliding down as they take turns — so it
+            reads at a glance that more is coming. */}
+        {notes.length > 1 && (
+          <span className="rn__track">
+            <span
+              className="rn__thumb"
+              style={{
+                height: `${100 / notes.length}%`,
+                transform: `translateY(${index * 100}%)`,
+              }}
+            />
+          </span>
+        )}
         {notes.map((note) => (
           <p key={note} className="rn__sizer">
             {note}

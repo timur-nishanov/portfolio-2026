@@ -76,6 +76,28 @@
   max-width: 340px;
 }
 
+/* The iMac card, measured from its reference (same 1440 frame, same card):
+   the iMac is 83.8% of the card's height, 5.7% in from the left and a hair
+   below centre; the title sits at the top of the 71% column, the notes at its
+   bottom — the notes' block is pinned by its bottom edge, and inside it every
+   note starts on the same first line, so nothing jumps as they take turns. */
+.cs-card__imac {
+  position: absolute;
+  left: 5.74%;
+  top: 51%;
+  height: 83.8%;
+  transform: translateY(-50%);
+}
+.cs-card[data-device='imac'] .cs-card__head {
+  left: 71%;
+  top: 10.6%;
+  transform: none;
+}
+.cs-card[data-device='imac'] .cs-card__notes {
+  top: auto;
+  bottom: 8.8%;
+}
+
 /* --- the notes ------------------------------------------------------------ */
 .rn {
   color: var(--ink-menu, #151514);
@@ -102,6 +124,33 @@
 .rn__stack > p {
   grid-area: 1 / 1;
   margin: 0;
+}
+/* The progress track, just left of the text so the text keeps its place. It
+   spans the stack (the tallest note); the thumb is one note's share of it. */
+.rn__stack {
+  position: relative;
+}
+.rn__track {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -18px;
+  width: 2px;
+  border-radius: 1px;
+  background: rgba(21, 21, 20, 0.12);
+  overflow: hidden;
+}
+.rn__thumb {
+  display: block;
+  width: 100%;
+  border-radius: 1px;
+  background: var(--ink-menu, #151514);
+  transition: transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .rn__thumb {
+    transition: none;
+  }
 }
 .rn__sizer {
   visibility: hidden;
@@ -226,15 +275,31 @@
   }
   .cs-card__head,
   .cs-card__phone,
-  .cs-card__notes {
+  .cs-card__imac,
+  .cs-card__notes,
+  .cs-card[data-device='imac'] .cs-card__head,
+  .cs-card[data-device='imac'] .cs-card__notes {
     position: static;
     transform: none;
+  }
+  .cs-card__imac {
+    width: 100%;
+    height: auto;
+  }
+  .cs-card__imac > div {
+    width: 100%;
+    height: auto;
   }
   .cs-card__phone {
     align-self: center;
     height: min(560px, 118vw);
   }
+  /* No room left of the column here: the track moves inside it. */
   .cs-card__notes {
     max-width: none;
+    padding-left: 16px;
+  }
+  .rn__track {
+    left: -16px;
   }
 }

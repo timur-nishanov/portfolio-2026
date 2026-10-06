@@ -112,83 +112,99 @@ export function SiteHeader() {
   }, [open, close, refs]);
 
   return (
-    <header
-      ref={refs.root}
-      className="site-header"
-      data-refract={refract ? '' : undefined}
-      data-hidden={hidden && !open ? '' : undefined}
-    >
-      <MenuGlassFilter filterRef={refs.filter} floodRef={refs.flood} displaceRef={refs.displace} />
+    <>
+      <header
+        ref={refs.root}
+        className="site-header"
+        data-refract={refract ? '' : undefined}
+        data-hidden={hidden && !open ? '' : undefined}
+      >
+        <MenuGlassFilter filterRef={refs.filter} floodRef={refs.flood} displaceRef={refs.displace} />
 
-      {/* The bridge is drawn in header space (no viewBox: 1 unit = 1px). */}
-      <svg ref={refs.neckSvg} className="lgm-neck" aria-hidden="true" focusable="false">
-        <defs>
-          <linearGradient ref={refs.neckGrad} id="lgm-neck-fill" gradientUnits="userSpaceOnUse">
-            <stop ref={refs.neckFrom} offset="0.25" stopColor="#e5e5e6" />
-            <stop ref={refs.neckTo} offset="1" stopColor="#f4f4f3" />
-          </linearGradient>
-        </defs>
-        <path ref={refs.neck} fill="url(#lgm-neck-fill)" />
-      </svg>
+        {/* The bridge is drawn in header space (no viewBox: 1 unit = 1px). */}
+        <svg ref={refs.neckSvg} className="lgm-neck" aria-hidden="true" focusable="false">
+          <defs>
+            <linearGradient ref={refs.neckGrad} id="lgm-neck-fill" gradientUnits="userSpaceOnUse">
+              <stop ref={refs.neckFrom} offset="0.25" stopColor="#e5e5e6" />
+              <stop ref={refs.neckTo} offset="1" stopColor="#f4f4f3" />
+            </linearGradient>
+          </defs>
+          <path ref={refs.neck} fill="url(#lgm-neck-fill)" />
+        </svg>
 
-      <div ref={refs.blob} className="lgm-blob" aria-hidden="true">
-        <div ref={refs.tint} className="lgm-blob__tint" />
-      </div>
+        <div ref={refs.blob} className="lgm-blob" aria-hidden="true">
+          <div ref={refs.tint} className="lgm-blob__tint" />
+        </div>
 
-      <div className="site-header__row">
-        {/* data-blood-keepout: the head's blood stays off the title and the
+        <div className="site-header__row">
+          {/* data-blood-keepout: the head's blood stays off the title and the
             button (Head3D measures them). */}
-        <p
-          ref={refs.title as React.RefObject<HTMLParagraphElement | null>}
-          className="site-title"
-          data-blood-keepout=""
-        >
-          {menuTitle}
-        </p>
-        <button
-          ref={refs.button as React.RefObject<HTMLButtonElement | null>}
-          id={BUTTON_ID}
-          type="button"
-          className="lgm-button"
-          aria-label="Menu"
-          aria-haspopup="menu"
-          aria-expanded={open}
-          aria-controls={MENU_ID}
-          data-blood-keepout=""
-          onClick={(e) => {
-            // detail 0: Enter/Space (or assistive tech), not a pointer.
-            openedBy.current = e.detail === 0 ? 'keyboard' : 'pointer';
-            focusOnOpen.current = 'first';
-            setOpen((o) => !o);
-          }}
-          onKeyDown={(e) => {
-            if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
-            e.preventDefault();
-            openedBy.current = 'keyboard';
-            focusOnOpen.current = e.key === 'ArrowUp' ? 'last' : 'first';
-            if (open) handle.current?.focusItem(focusOnOpen.current, { ring: true });
-            else setOpen(true);
-          }}
-          // Same as the menu: a press here is never a grab on the head below.
-          onPointerDown={(e) => e.stopPropagation()}
-        >
-          {/* Disc and glyphs are separate layers so the liquid (which starts
+          {/* Holds the title's place (the morph measures it); the title you
+            see is drawn by the blend layer below. */}
+          <p
+            ref={refs.title as React.RefObject<HTMLParagraphElement | null>}
+            className="site-title site-title--slot"
+            data-blood-keepout=""
+            aria-hidden="true"
+          >
+            {menuTitle}
+          </p>
+          <button
+            ref={refs.button as React.RefObject<HTMLButtonElement | null>}
+            id={BUTTON_ID}
+            type="button"
+            className="lgm-button"
+            aria-label="Menu"
+            aria-haspopup="menu"
+            aria-expanded={open}
+            aria-controls={MENU_ID}
+            data-blood-keepout=""
+            onClick={(e) => {
+              // detail 0: Enter/Space (or assistive tech), not a pointer.
+              openedBy.current = e.detail === 0 ? 'keyboard' : 'pointer';
+              focusOnOpen.current = 'first';
+              setOpen((o) => !o);
+            }}
+            onKeyDown={(e) => {
+              if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+              e.preventDefault();
+              openedBy.current = 'keyboard';
+              focusOnOpen.current = e.key === 'ArrowUp' ? 'last' : 'first';
+              if (open) handle.current?.focusItem(focusOnOpen.current, { ring: true });
+              else setOpen(true);
+            }}
+            // Same as the menu: a press here is never a grab on the head below.
+            onPointerDown={(e) => e.stopPropagation()}
+          >
+            {/* Disc and glyphs are separate layers so the liquid (which starts
               as a copy of the disc laid over it) runs between them: the
               chevron stays on top while the button stretches. */}
-          <span ref={refs.disc} className="lgm-button__disc" aria-hidden="true" />
-          <ButtonChevron className="lgm-button__chevron lgm-button__chevron--down" />
-          <ButtonChevron className="lgm-button__chevron lgm-button__chevron--up" />
-        </button>
-      </div>
+            <span ref={refs.disc} className="lgm-button__disc" aria-hidden="true" />
+            <ButtonChevron className="lgm-button__chevron lgm-button__chevron--down" />
+            <ButtonChevron className="lgm-button__chevron lgm-button__chevron--up" />
+          </button>
+        </div>
 
-      <MenuContent
-        id={MENU_ID}
-        labelledBy={BUTTON_ID}
-        open={open}
-        contentRef={refs.content}
-        handleRef={handle}
-        onClose={close}
-      />
-    </header>
+        <MenuContent
+          id={MENU_ID}
+          labelledBy={BUTTON_ID}
+          open={open}
+          contentRef={refs.content}
+          handleRef={handle}
+          onClose={close}
+        />
+      </header>
+      {/* The title, white in difference mode: dark on the light page, light
+        over the head and anything dark that scrolls under it. A layer of its
+        own because the header is a stacking context — inside it the blend
+        would only see the header's own transparent backdrop. Same row as
+        above (the spacer stands in for the button), same hide-on-scroll. */}
+      <div className="site-header site-header--blend" data-hidden={hidden && !open ? '' : undefined}>
+        <div className="site-header__row">
+          <p className="site-title">{menuTitle}</p>
+          <span className="site-header__button-slot" aria-hidden="true" />
+        </div>
+      </div>
+    </>
   );
 }
