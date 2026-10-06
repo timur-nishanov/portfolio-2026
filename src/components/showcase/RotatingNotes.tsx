@@ -20,9 +20,10 @@ const unitsOf = (text: string) => text.trim().split(/ +/);
 // Reading time still counts every word, tied or not.
 const wordCount = (text: string) => text.trim().split(/\s+/).length;
 
-/** How long a note stays up once it is in: a calm ~210 wpm read plus a beat to
- *  settle, never shorter than 4.2 s or longer than 9 s. */
-export const holdFor = (text: string) => Math.min(9000, Math.max(4200, 1600 + wordCount(text) * 290));
+/** How long a note stays up once it is in: a brisk ~300 wpm skim plus a short
+ *  beat, never shorter than 3.5 s or longer than 7 s (about 5.7 s for these
+ *  four-line notes). Pointing at a note still holds it for slower readers. */
+export const holdFor = (text: string) => Math.min(7000, Math.max(3500, 900 + wordCount(text) * 200));
 
 type Props = { notes: string[]; className?: string };
 

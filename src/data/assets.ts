@@ -30,8 +30,8 @@ export const assets = {
   phoneFrame: '/mockups/iphone-frame.webp', // mockup iphone.png — bezel with a fully transparent screen cutout
   chumsChatVideo: '/mockups/chums-chat.webm', // Chums chat screen.webm — goes inside the frame
   chumsPreview: '/mockups/chums-preview.webp', // chums-preview-ready.png — pre-composited phone
-  chumsCaseVideo: '/mockups/chums-case-2x.mp4', // chums60.mp4 (780x1688, 60fps, sharp on retina) — first case after the hero, inside the frame
-  chumsCasePoster: '/mockups/chums-case-2x.webp', // its first frame
+  chumsCaseVideo: '/mockups/chums-case-3.mp4', // chums80.mp4 (780x1688, 60fps, sharp on retina) — first case after the hero, inside the frame
+  chumsCasePoster: '/mockups/chums-case-3.webp', // its first frame
   urbantigerCaseVideo: '/mockups/urbantiger-case.mp4', // urban-tiger-gift-card-60fps-2x.mp4, browser bar cropped, padded white to the iMac's 16:9 (1600x900, 60fps)
   urbantigerCasePoster: '/mockups/urbantiger-case.webp', // its first frame
   goVideo: '/mockups/go-video.mp4', // go-video.mp4 — 16:9 scene of both Beri Zaryad phones
