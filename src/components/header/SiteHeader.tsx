@@ -24,7 +24,7 @@ function canRefract() {
 }
 
 // How long the bar stays after a scroll up brought it back.
-const IDLE_HIDE_MS = 10000;
+const IDLE_HIDE_MS = 5000;
 
 /**
  * First-screen header: the title, and a round button that opens the menu as
