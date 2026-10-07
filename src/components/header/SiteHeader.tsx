@@ -7,6 +7,7 @@ import { useHideOnScroll } from '@/hooks/useScrollDirection';
 import { ButtonChevron } from './menu/icons';
 import { MenuContent, type MenuContentHandle } from './menu/MenuContent';
 import { MenuGlassFilter } from './menu/MenuGlassFilter';
+import { PillGlassFilter } from './menu/PillGlassFilter';
 import { useLiquidMorph, type MorphRefs } from './menu/useLiquidMorph';
 import './menu/menu.css';
 
@@ -142,6 +143,8 @@ export function SiteHeader() {
         style={{ '--title-w': `${pillW}px` } as React.CSSProperties}
       >
         <MenuGlassFilter filterRef={refs.filter} floodRef={refs.flood} displaceRef={refs.displace} />
+        {/* The pill: the title, the 8px gap, the 20px button, 28px each side. */}
+        {refract && <PillGlassFilter width={pillW + 84} height={40} />}
 
         {/* The bridge is drawn in header space (no viewBox: 1 unit = 1px). */}
         <svg ref={refs.neckSvg} className="lgm-neck" aria-hidden="true" focusable="false">
