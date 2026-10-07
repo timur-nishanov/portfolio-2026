@@ -70,6 +70,10 @@ export function CaseShowcase() {
         // 0 while the next card is a full card (and the gap) below, 1 once it
         // has slid all the way over and parked on the same line.
         const p = Math.min(1, Math.max(0, 1 - (next - top) / (card.offsetHeight + GAP)));
+        // The incoming card lifts off the one beneath with a soft shadow on its
+        // top edge: strongest mid-way, gone once it has parked (there is
+        // nothing left under it to cast onto).
+        cards[i + 1].style.setProperty('--lift', (4 * p * (1 - p)).toFixed(3));
         if (p === 0) {
           card.style.transform = '';
           card.style.filter = '';
