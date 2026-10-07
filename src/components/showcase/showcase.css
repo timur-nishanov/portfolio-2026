@@ -21,9 +21,15 @@
    over to the width and the card stopped short of the right edge. The vw line
    is the fallback for engines without container units. */
 .cs-card {
-  position: relative;
+  /* Sticky, so the cards stack: each one parks in the middle of the screen
+     and the next slides up over it (the one beneath shrinks, blurs and fades
+     — CaseShowcase drives that from the scroll position). */
+  position: sticky;
+  top: max(20px, calc((100svh / var(--site-zoom, 1) - (100vw - 40px) * 736 / 1400) / 2));
+  top: max(20px, calc((100svh / var(--site-zoom, 1) - 100cqw * 736 / 1400) / 2));
   height: clamp(460px, calc((100vw - 40px) * 736 / 1400), calc(100svh / var(--site-zoom, 1) - 40px));
   height: clamp(460px, calc(100cqw * 736 / 1400), calc(100svh / var(--site-zoom, 1) - 40px));
+  transform-origin: 50% 0;
   border-radius: 24px;
   background: #e6e6e7;
   /* The card will open its case study, and the chip by the arrow says so; a
@@ -32,6 +38,15 @@
 }
 .cs-card + .cs-card {
   margin-top: 20px;
+}
+/* A click on the notes skips to the next one: a hand there, and the chip
+   (which means "open the case") steps aside. */
+.cs-card__notes {
+  cursor: pointer;
+}
+.cs-card:has(.cs-card__notes:hover) .cs-chip__dot {
+  opacity: 0;
+  transform: scale(0.4);
 }
 
 .cs-card__head {
@@ -269,6 +284,7 @@
     display: flex;
     flex-direction: column;
     gap: 24px;
+    top: 12px;
     height: auto;
     padding: 28px 20px 32px;
     border-radius: 20px;
