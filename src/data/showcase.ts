@@ -76,4 +76,23 @@ export const showcase: ShowcaseCase[] = [
       '2nd place, one point behind the winner and ahead of every in-house team. Our concept moved Alice from chat to the lock screen, with cards that appear in\u00a0context.',
     ],
   },
+  {
+    id: 'yandex-cloud',
+    device: 'imac',
+    title: 'Yandex Cloud at Scale 2026',
+    subtitle: 'Touchscreen game for a conference booth',
+    phone: {
+      framed: true,
+      type: 'video',
+      src: assets.ycCaseVideo,
+      poster: assets.ycCasePoster,
+      alt: 'Yandex Cloud booth game: choosing a business task',
+    },
+    notes: [
+      'I designed it and coded the front-end myself in a week and a half. The art director asked the engineers to build on my code, which cut design review almost to zero on a tight\u00a0deadline.',
+      'Real business tasks, solved by hand. Visitors drag Yandex Cloud services into a chain on a 55-inch touchscreen and hit “run”. The right chain lights up and earns a coin for the booth\u00a0contest.',
+      'The brand did the heavy lifting. Yandex Cloud’s identity is built from constructor parts with holes and connectors, so every card, slot and verdict is made of\u00a0them.',
+      'Two ways to play. Builders assemble the chain and get instant feedback: spot on, close, or miss. People in a hurry pick a ready bundle and still get a\u00a0coin.',
+    ],
+  },
 ];
