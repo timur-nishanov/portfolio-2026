@@ -49,13 +49,15 @@ const COVERED_SCALE = 0.08;
 const COVERED_RISE = 56; // px it drifts up as it recedes, a slower layer behind
 const COVERED_BLUR = 10; // px
 const COVERED_DIM = 0.06; // darker by this much once covered — depth without a shadow
-// The gap between cards, as in showcase.css.
-const GAP = 20;
 // Parking is eased: a sticky card would ride the scroll at full speed and
 // stop dead on its line, a jolt every time. Instead its speed fades out over
 // roughly ±2.5·SETTLE px around the line (a softplus curve), so it glides in
-// and settles, and the scroll never meets a wall.
-const SETTLE = 48;
+// and settles, and the scroll never meets a wall. At the line it trails by
+// ~22px, which the gap between cards (showcase.css) is wide enough to absorb.
+const SETTLE = 32;
+// How far the next card has come over (0..1) before the one beneath starts
+// to shrink, blur and fade.
+const RECEDE_FROM = 0.4;
 
 /** The cases after the hero (#works, the menu's "Works"). */
 export function CaseShowcase() {
@@ -73,11 +75,13 @@ export function CaseShowcase() {
     const rise = cards.map(() => 0);
     // Each card's offset within the section in normal flow (sticky aside).
     let flow: number[] = [];
+    let gaps: number[] = [];
     const measure = () => {
       const cs = getComputedStyle(root);
       let y = parseFloat(cs.paddingTop);
+      gaps = cards.map((c, i) => (i > 0 ? parseFloat(getComputedStyle(c).marginTop) : 0));
       flow = cards.map((c, i) => {
-        if (i > 0) y += parseFloat(getComputedStyle(c).marginTop);
+        y += gaps[i];
         const at = y;
         y += c.offsetHeight;
         return at;
@@ -105,13 +109,17 @@ export function CaseShowcase() {
           const next = cards[i + 1].getBoundingClientRect().top - Number(cards[i + 1].dataset.settle || 0) + settle[i + 1];
           // 0 while the next card is a full card (and the gap) below, 1 once it
           // has slid all the way over and parked on the same line.
-          p = Math.min(1, Math.max(0, 1 - (next - top) / (card.offsetHeight + GAP)));
+          p = Math.min(1, Math.max(0, 1 - (next - top) / (card.offsetHeight + gaps[i + 1])));
           if (p > 0.998) p = 1;
           // The incoming card's light top edge: strongest mid-way, gone once it
           // has parked (there is nothing left under it to part from).
           cards[i + 1].style.setProperty('--lift', (4 * p * (1 - p)).toFixed(3));
         }
         card.dataset.settle = settle[i].toFixed(2);
+        // The card beneath stays sharp while the next one starts to slide
+        // over it, so it can still be looked at; it recedes over the rest.
+        p = Math.min(1, Math.max(0, (p - RECEDE_FROM) / (1 - RECEDE_FROM)));
+        p = p * p * (3 - 2 * p);
         if (p === 0) {
           rise[i] = 0;
           card.style.transform = settle[i] > 0.05 ? `translateY(${settle[i].toFixed(2)}px)` : '';
