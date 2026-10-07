@@ -18,6 +18,8 @@ export const menuSections: MenuSection[] = [
   { label: 'Awards', id: 'awards' },
   { label: 'Career', id: 'career' },
   { label: 'Life', id: 'life' },
+  // No CV section on the page yet: the row just closes the menu until there is.
+  { label: 'CV', id: 'cv' },
 ];
 
 export type MenuLink =

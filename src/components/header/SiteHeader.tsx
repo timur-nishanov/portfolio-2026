@@ -23,6 +23,9 @@ function canRefract() {
   return /(Chrome|Chromium)\//.test(ua) && !/Firefox\//.test(ua) && CSS.supports('backdrop-filter', 'url(#a)');
 }
 
+// How long the bar stays after a scroll up brought it back.
+const IDLE_HIDE_MS = 10000;
+
 /**
  * First-screen header: the title, and a round button that opens the menu as
  * an iOS-style liquid-glass panel. The panel is not faded in on top of the
@@ -63,7 +66,41 @@ export function SiteHeader() {
   // Out of the way while reading down the page, back on the first scroll up
   // (as the previous header did). Never pinned by hover: the bar has no body.
   const neverPinned = useRef(false);
-  const hidden = useHideOnScroll(neverPinned);
+  const scrollHidden = useHideOnScroll(neverPinned);
+
+  // Brought back by a scroll up, the bar doesn't stay for good: after
+  // IDLE_HIDE_MS without another scroll up it slides away again, unless the
+  // pointer is on the button or the menu is open. Near the top it stays.
+  const [idleHidden, setIdleHidden] = useState(false);
+  const pinned = useRef(false); // pointer over the button
+  const openRef = useRef(false);
+  const idleTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const armIdle = useCallback(() => {
+    clearTimeout(idleTimer.current);
+    idleTimer.current = setTimeout(() => {
+      if (!pinned.current && !openRef.current && window.scrollY >= 120) setIdleHidden(true);
+    }, IDLE_HIDE_MS);
+  }, []);
+  useEffect(() => {
+    let lastY = window.scrollY;
+    const onScroll = () => {
+      const y = window.scrollY;
+      if (y < 120) {
+        clearTimeout(idleTimer.current);
+        setIdleHidden(false);
+      } else if (y < lastY) {
+        setIdleHidden(false);
+        armIdle();
+      }
+      lastY = y;
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      clearTimeout(idleTimer.current);
+    };
+  }, [armIdle]);
+  const hidden = scrollHidden || idleHidden;
   useLiquidMorph(open, reduced, refs);
 
   const close = useCallback(
@@ -93,6 +130,11 @@ export function SiteHeader() {
       window.removeEventListener('resize', measure);
     };
   }, [refs]);
+
+  useEffect(() => {
+    openRef.current = open;
+    if (!open && window.scrollY >= 120) armIdle();
+  }, [open, armIdle]);
 
   // Scrolling down with the menu open closes it first, like an iOS menu.
   useEffect(() => {
@@ -202,6 +244,13 @@ export function SiteHeader() {
             }}
             // Same as the menu: a press here is never a grab on the head below.
             onPointerDown={(e) => e.stopPropagation()}
+            onPointerEnter={() => {
+              pinned.current = true;
+            }}
+            onPointerLeave={() => {
+              pinned.current = false;
+              if (window.scrollY >= 120) armIdle();
+            }}
           >
             {/* Disc and glyphs are separate layers so the liquid (which starts
               as a copy of the disc laid over it) runs between them: the
