@@ -47,7 +47,9 @@ function CaseCard({ item }: { item: ShowcaseCase }) {
 // is covered.
 const COVERED_SCALE = 0.08;
 const COVERED_BLUR = 10; // px
-const GAP = 20; // between cards, as in showcase.css
+// The cover starts when the next card's top meets this card's bottom (plus a
+// hair), however long the beat between them in showcase.css.
+const GAP = 20;
 
 /** The cases after the hero (#works, the menu's "Works"). */
 export function CaseShowcase() {

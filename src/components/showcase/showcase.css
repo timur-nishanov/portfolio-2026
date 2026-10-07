@@ -33,16 +33,22 @@
   /* --lift (0..1, CaseShowcase): the shadow that parts this card from the one
      it is sliding over. */
   box-shadow:
-    0 -0.5px 0 rgba(0, 0, 0, calc(0.06 * var(--lift, 0))),
-    0 -18px 44px -10px rgba(0, 0, 0, calc(0.16 * var(--lift, 0)));
+    0 -6px 18px -8px rgba(0, 0, 0, calc(0.04 * var(--lift, 0))),
+    0 -24px 64px -16px rgba(0, 0, 0, calc(0.09 * var(--lift, 0)));
   border-radius: 24px;
   background: #e6e6e7;
   /* The card will open its case study, and the chip by the arrow says so; a
      hand on top of it would only crowd the chip. */
   cursor: default;
 }
+/* A beat between cards. The next card waits just out of sight below the
+   parked one (its parking offset keeps it under the screen's bottom edge)
+   plus 20svh more — about two wheel notches with the smooth scroll — so a
+   card that has just settled holds the screen alone for a moment before the
+   next one rises. The scroll itself never stops. */
 .cs-card + .cs-card {
-  margin-top: 20px;
+  margin-top: calc(max(20px, calc((100svh / var(--site-zoom, 1) - (100vw - 40px) * 736 / 1400) / 2)) + 20svh);
+  margin-top: calc(max(20px, calc((100svh / var(--site-zoom, 1) - 100cqw * 736 / 1400) / 2)) + 20svh);
 }
 /* A click on the notes skips to the next one: a hand there, and the chip
    (which means "open the case") steps aside. */
@@ -293,6 +299,9 @@
     height: auto;
     padding: 28px 20px 32px;
     border-radius: 20px;
+  }
+  .cs-card + .cs-card {
+    margin-top: 35svh;
   }
   .cs-card__head,
   .cs-card__phone,
