@@ -90,6 +90,8 @@ export function RotatingNotes({ notes, className = '' }: Props) {
     const leaving = reduced ? FADE_MS : OUT_MS + (n - 1) * OUT_STAGGER;
     const t = window.setTimeout(() => {
       setAnimated(true);
+      // A fresh note gets its full time (a click may have cut the last short).
+      left.current = null;
       setIndex((i) => (i + 1) % notes.length);
       setPhase('in');
     }, leaving);
@@ -100,6 +102,13 @@ export function RotatingNotes({ notes, className = '' }: Props) {
     if (e.pointerType === 'mouse') setHeld(on);
   };
 
+  // A click on the note skips to the next one, for anyone reading faster. It
+  // stays on the notes: the card's own click is kept for opening the case.
+  const skip = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (notes.length > 1 && phase === 'in') setPhase('out');
+  };
+
   const words = useMemo(() => unitsOf(notes[index]), [notes, index]);
 
   return (
@@ -108,6 +117,7 @@ export function RotatingNotes({ notes, className = '' }: Props) {
       className={`rn ${className}`}
       onPointerEnter={(e) => hold(e, true)}
       onPointerLeave={(e) => hold(e, false)}
+      onClick={skip}
     >
       {/* Screen readers get every note once, not a live region that keeps
           interrupting. */}

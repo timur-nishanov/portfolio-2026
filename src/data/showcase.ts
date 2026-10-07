@@ -58,4 +58,22 @@ export const showcase: ShowcaseCase[] = [
       'By the client’s numbers, the MVP converts at twice the old site’s rate, even with incoming traffic down\u00a030–40% over the same\u00a0period.',
     ],
   },
+  {
+    id: 'alice',
+    device: 'phone',
+    title: 'Yandex Alice',
+    subtitle: 'Design battle concept',
+    phone: {
+      framed: true,
+      type: 'video',
+      src: assets.aliceCaseVideo,
+      poster: assets.aliceCasePoster,
+      alt: 'Alice on the lock screen: a warm-up card after a short night',
+    },
+    notes: [
+      'Product Designer, 2025. Joined a studio team of five for the design battle at Kaiference, developed the scenario and designed the\u00a0screens.',
+      'Chat works like a request queue: you have to know what to ask and remember to open the app. That falls apart when you’re short on\u00a0sleep.',
+      '2nd place, one point behind the winner and ahead of every in-house team. Our concept moved Alice from chat to the lock screen, with cards that appear in\u00a0context.',
+    ],
+  },
 ];
