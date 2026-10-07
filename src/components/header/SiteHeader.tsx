@@ -73,6 +73,26 @@ export function SiteHeader() {
     [refs],
   );
 
+  // Over the cases the bar comes back on a glass pill, so the title and the
+  // button read cleanly against whatever card is under them; over the hero
+  // they sit on the page as drawn. The pill's width follows the title.
+  const [overContent, setOverContent] = useState(false);
+  const [pillW, setPillW] = useState(0);
+  useEffect(() => {
+    const hero = document.getElementById('main');
+    const measure = () => setPillW(refs.title.current?.offsetWidth ?? 0);
+    const check = () => setOverContent(!!hero && hero.getBoundingClientRect().bottom < 80);
+    measure();
+    check();
+    document.fonts?.ready.then(measure);
+    window.addEventListener('scroll', check, { passive: true });
+    window.addEventListener('resize', measure);
+    return () => {
+      window.removeEventListener('scroll', check);
+      window.removeEventListener('resize', measure);
+    };
+  }, [refs]);
+
   // Scrolling down with the menu open closes it first, like an iOS menu.
   useEffect(() => {
     if (hidden && open) close(false);
@@ -118,6 +138,8 @@ export function SiteHeader() {
         className="site-header"
         data-refract={refract ? '' : undefined}
         data-hidden={hidden && !open ? '' : undefined}
+        data-glass={overContent && !open ? '' : undefined}
+        style={{ '--title-w': `${pillW}px` } as React.CSSProperties}
       >
         <MenuGlassFilter filterRef={refs.filter} floodRef={refs.flood} displaceRef={refs.displace} />
 
@@ -135,6 +157,8 @@ export function SiteHeader() {
         <div ref={refs.blob} className="lgm-blob" aria-hidden="true">
           <div ref={refs.tint} className="lgm-blob__tint" />
         </div>
+
+        <span className="site-header__glass" aria-hidden="true" />
 
         <div className="site-header__row">
           {/* data-blood-keepout: the head's blood stays off the title and the
