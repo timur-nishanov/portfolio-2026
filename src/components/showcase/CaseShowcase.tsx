@@ -47,6 +47,7 @@ function CaseCard({ item }: { item: ShowcaseCase }) {
 // is covered.
 const COVERED_SCALE = 0.08;
 const COVERED_BLUR = 10; // px
+const COVERED_DIM = 0.06; // darker by this much once covered — depth without a shadow
 // The cover starts when the next card's top meets this card's bottom (plus a
 // hair), however long the beat between them in showcase.css.
 const GAP = 20;
@@ -72,9 +73,8 @@ export function CaseShowcase() {
         // 0 while the next card is a full card (and the gap) below, 1 once it
         // has slid all the way over and parked on the same line.
         const p = Math.min(1, Math.max(0, 1 - (next - top) / (card.offsetHeight + GAP)));
-        // The incoming card lifts off the one beneath with a soft shadow on its
-        // top edge: strongest mid-way, gone once it has parked (there is
-        // nothing left under it to cast onto).
+        // The incoming card's light top edge: strongest mid-way, gone once it
+        // has parked (there is nothing left under it to part from).
         cards[i + 1].style.setProperty('--lift', (4 * p * (1 - p)).toFixed(3));
         if (p === 0) {
           card.style.transform = '';
@@ -84,7 +84,7 @@ export function CaseShowcase() {
         }
         if (!reduced) {
           card.style.transform = `scale(${1 - COVERED_SCALE * p})`;
-          card.style.filter = `blur(${(COVERED_BLUR * p).toFixed(2)}px)`;
+          card.style.filter = `blur(${(COVERED_BLUR * p).toFixed(2)}px) brightness(${(1 - COVERED_DIM * p).toFixed(3)})`;
         }
         card.style.opacity = String(1 - p * p);
       }
