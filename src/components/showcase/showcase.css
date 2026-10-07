@@ -116,8 +116,15 @@
 }
 .cs-card[data-device='imac'] .cs-card__head {
   left: 71%;
+  right: 4.7%;
   top: 10.6%;
+  max-width: 340px;
   transform: none;
+}
+/* A long title or subtitle wraps inside the notes' column, in even lines. */
+.cs-card__title,
+.cs-card__sub {
+  text-wrap: balance;
 }
 .cs-card[data-device='imac'] .cs-card__notes {
   top: auto;
