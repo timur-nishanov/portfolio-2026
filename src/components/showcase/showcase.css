@@ -41,8 +41,11 @@
      hand on top of it would only crowd the chip. */
   cursor: default;
 }
+/* Air between cards: the next one shows below a parked card with a clear
+   gap, and the gap also absorbs the ~22px a card trails by as it glides
+   onto its line (CaseShowcase). */
 .cs-card + .cs-card {
-  margin-top: 20px;
+  margin-top: 56px;
 }
 /* A click on the notes skips to the next one: a hand there, and the chip
    (which means "open the case") steps aside. */
