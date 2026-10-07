@@ -116,12 +116,17 @@
 }
 .cs-card[data-device='imac'] .cs-card__head {
   left: 71%;
-  right: 4.7%;
   top: 10.6%;
-  max-width: 340px;
   transform: none;
 }
-/* A long title or subtitle wraps inside the notes' column, in even lines. */
+/* On desktop the title and subtitle stay one line each, as drawn; stacked on
+   a phone they wrap in even lines. */
+@media (min-width: 900px) {
+  .cs-card__title,
+  .cs-card__sub {
+    white-space: nowrap;
+  }
+}
 .cs-card__title,
 .cs-card__sub {
   text-wrap: balance;
