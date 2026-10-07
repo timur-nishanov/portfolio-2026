@@ -46,6 +46,7 @@ function CaseCard({ item }: { item: ShowcaseCase }) {
 // little toward its top edge, blurs, and fades out completely by the time it
 // is covered.
 const COVERED_SCALE = 0.08;
+const COVERED_RISE = 56; // px it drifts up as it recedes, a slower layer behind
 const COVERED_BLUR = 10; // px
 const COVERED_DIM = 0.06; // darker by this much once covered — depth without a shadow
 // The cover starts when the next card's top meets this card's bottom (plus a
@@ -63,12 +64,15 @@ export function CaseShowcase() {
     if (cards.length < 2) return;
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     let raf = 0;
+    // The rise each card was last given, so its place can be read back out of
+    // its rect without the lift feeding into its own progress.
+    const rise = cards.map(() => 0);
     const update = () => {
       raf = 0;
       for (let i = 0; i < cards.length - 1; i++) {
         const card = cards[i];
-        // Scaled from its top edge, so its rect's top is still its place.
-        const top = card.getBoundingClientRect().top;
+        // Scaled from its top edge, so the rect's top (less the rise) is its place.
+        const top = card.getBoundingClientRect().top + rise[i];
         const next = cards[i + 1].getBoundingClientRect().top;
         // 0 while the next card is a full card (and the gap) below, 1 once it
         // has slid all the way over and parked on the same line.
@@ -77,13 +81,15 @@ export function CaseShowcase() {
         // has parked (there is nothing left under it to part from).
         cards[i + 1].style.setProperty('--lift', (4 * p * (1 - p)).toFixed(3));
         if (p === 0) {
+          rise[i] = 0;
           card.style.transform = '';
           card.style.filter = '';
           card.style.opacity = '';
           continue;
         }
         if (!reduced) {
-          card.style.transform = `scale(${1 - COVERED_SCALE * p})`;
+          rise[i] = COVERED_RISE * p;
+          card.style.transform = `translateY(${(-rise[i]).toFixed(2)}px) scale(${1 - COVERED_SCALE * p})`;
           card.style.filter = `blur(${(COVERED_BLUR * p).toFixed(2)}px) brightness(${(1 - COVERED_DIM * p).toFixed(3)})`;
         }
         card.style.opacity = String(1 - p * p);
