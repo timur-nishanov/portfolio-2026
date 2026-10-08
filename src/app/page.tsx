@@ -3,6 +3,7 @@ import { Hero } from '@/components/hero/Hero';
 import { CaseShowcase } from '@/components/showcase/CaseShowcase';
 import { AboutAwards } from '@/components/about/AboutAwards';
 import { RandomCollage } from '@/components/random/RandomCollage';
+import { LoopToStart } from '@/components/loop/LoopToStart';
 import { SmoothScrollProvider } from '@/components/providers/SmoothScrollProvider';
 // The older sections stay hidden until Timur brings them back. Code stays in
 // place; restore these imports and the block below.
@@ -24,6 +25,8 @@ export default function Home() {
         <CaseShowcase />
         <AboutAwards />
         <RandomCollage />
+        {/* Always last: runs the end of the page back into the hero. */}
+        <LoopToStart />
       </main>
       {/* Previous full page, not rendered yet:
       <SmoothScrollProvider>
