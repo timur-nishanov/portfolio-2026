@@ -37,7 +37,12 @@ export function RandomCollage() {
       </h2>
       <ul className="rc__list">
         {collage.map((item) => (
-          <li key={item.id} className="rc__item" data-side={item.side}>
+          <li
+            key={item.id}
+            className="rc__item"
+            data-side={item.side}
+            data-shape={item.video.height > item.video.width ? 'upright' : 'wide'}
+          >
             <div className="rc__media" style={{ aspectRatio: `${item.video.width} / ${item.video.height}` }}>
               <Clip video={item.video} />
             </div>
