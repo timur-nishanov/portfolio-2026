@@ -309,6 +309,12 @@
     padding: 28px 20px 32px;
     border-radius: 20px;
   }
+  /* A phone card fills most of the screen, so with a narrow gap the next one
+     would slide over its notes almost at once. A wider gap here keeps the
+     whole card, notes included, in view for a stretch of scroll. */
+  .cs-card + .cs-card {
+    margin-top: 30svh;
+  }
   .cs-card__head,
   .cs-card__phone,
   .cs-card__imac,
