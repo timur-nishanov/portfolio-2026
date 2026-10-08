@@ -1,37 +1,34 @@
 'use client';
 
 import Image from 'next/image';
-import { useEffect, useRef } from 'react';
+import { Fragment, useEffect, useRef } from 'react';
 import { aboutText, awardPosters } from '@/data/about';
 import './about.css';
 
 // Scroll lengths, in screen heights (also feed the section's height in CSS).
-const LEAD = 0.05; // the text alone before the first diploma comes up
-const PER = 0.85; // scroll per diploma
-const DWELL = 0.45; // the finished stack holds before the block lets go
-// Where each new diploma settles (its top), and how much of the one before
-// stays showing above it. Every arrival pushes the earlier ones up by a
-// shrinking share (STRIP, STRIP·R, STRIP·R², …), so they gather in ever
-// thinner slivers at the top and fade out under the top edge.
-const LINE = 0.32; // of the screen height
-const STRIP = 0.17; // of a diploma's height
-const R = 0.55;
+const LEAD = 0.08; // the text alone before the first diploma comes up
+const PER = 0.5; // scroll between one diploma and the next
+const DWELL = 0.95; // after the last one comes up, before the block lets go
+// Each diploma comes up from below the screen and keeps gliding towards the
+// line TOP, slower and slower, never stopping and starting again: after each
+// new arrival it is left R of its distance to TOP. So the earlier ones gather
+// above the newest in a fan of ever thinner slivers, as on the reference.
+const TOP = 0.11; // of the screen height
+const R = 0.42;
 
 // Once the stage holds, the text slows from scroll speed to TEXT_SPEED of it
 // over the first TEXT_EASE screen heights, so the diplomas catch it up.
-const TEXT_SPEED = 0.18;
-const TEXT_EASE = 0.2;
-
-const clamp01 = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v);
+const TEXT_SPEED = 0.16;
+const TEXT_EASE = 0.12;
 
 /**
  * About me, with the award diplomas coming up over it (#awards, the menu's
  * "Awards"), after the "Hi! I am Per!" block on perappelgren.de. A sticky
  * stage holds the text and the diplomas while the section scrolls past: the
- * text keeps moving up, slower than the page, and fades under the top edge, and the
- * diplomas rise from below one by one, each settling on the same line and
- * lifting the earlier ones into a fan of slivers above it. After the last,
- * the stage lets go and the stack scrolls away with the page.
+ * text keeps moving up, slower than the page, and fades under the top edge,
+ * and the diplomas come up from below one by one, each gliding on towards
+ * the top and covering the earlier ones but their top slivers. After the
+ * last, the stage lets go and the stack scrolls away with the page.
  */
 export function AboutAwards() {
   const ref = useRef<HTMLElement>(null);
@@ -49,29 +46,25 @@ export function AboutAwards() {
     const update = () => {
       raf = 0;
       const vh = stage.clientHeight;
-      const scrolled = Math.max(0, -sec.getBoundingClientRect().top);
+      // Scroll since the stage took hold, up to where it lets go: past that
+      // everything stays put on the stage and leaves with the page.
+      const held = Math.min(
+        Math.max(0, -sec.getBoundingClientRect().top),
+        (LEAD + (posters.length - 1) * PER + DWELL) * vh,
+      );
       // Distance the text has risen: speed 1 at the hand-over from the page
       // (no kink), easing down to TEXT_SPEED.
       const S = TEXT_EASE * vh;
-      const rise = TEXT_SPEED * scrolled + (1 - TEXT_SPEED) * S * (1 - Math.exp(-scrolled / S));
+      const rise = TEXT_SPEED * held + (1 - TEXT_SPEED) * S * (1 - Math.exp(-held / S));
       text.style.transform = `translate3d(0, ${(-rise).toFixed(1)}px, 0)`;
-      // How many diplomas have come up, continuously (2.5 = the third is half
-      // way); it stops at the last, so the finished stack holds still.
-      const c = Math.min(posters.length, (scrolled - LEAD * vh) / (PER * vh));
-      const line = Math.max(140, LINE * vh);
+      // The diplomas glide from just below the screen towards TOP; the glide's
+      // length leaves each one R of its way when the next comes up.
+      const glide = (PER * vh) / Math.log(1 / R);
+      const top = TOP * vh;
+      const below = vh + 24;
       posters.forEach((el, i) => {
-        const s = el.offsetHeight * STRIP;
-        const a = clamp01(c - i);
-        let y: number;
-        if (a < 1) {
-          // Up from below the screen, slowing into its line.
-          const e = 1 - (1 - a) * (1 - a);
-          y = vh + 40 + (line - vh - 40) * e;
-        } else {
-          // Settled; lifted by every diploma that has come after it.
-          const k = c - i - 1;
-          y = line - (s * (1 - Math.pow(R, k))) / (1 - R);
-        }
+        const t = held - (LEAD + i * PER) * vh;
+        const y = t <= 0 ? below : top + (below - top) * Math.exp(-t / glide);
         const pose = awardPosters[i];
         // Half the sideways nudge on a phone.
         const nudge = pose.nudge * (window.innerWidth < 900 ? 0.5 : 1);
@@ -100,13 +93,23 @@ export function AboutAwards() {
       style={{ '--n': awardPosters.length, '--lead': LEAD, '--per': PER, '--dwell': DWELL } as React.CSSProperties}
     >
       <div className="aw__stage">
-        <div className="aw__text">
-          <h2 id="about-heading" className="sr-only">
-            About me and awards
-          </h2>
-          {aboutText.map((p) => (
-            <p key={p}>{p}</p>
-          ))}
+        {/* Only the text fades under the top edge; the diplomas stay crisp. */}
+        <div className="aw__copy">
+          <div className="aw__text">
+            <h2 id="about-heading" className="sr-only">
+              About me and awards
+            </h2>
+            {aboutText.map((lines) => (
+              <p key={lines[0]}>
+                {lines.map((line, i) => (
+                  <Fragment key={line}>
+                    {i > 0 && ' '}
+                    <span>{line}</span>
+                  </Fragment>
+                ))}
+              </p>
+            ))}
+          </div>
         </div>
         <ol className="aw__stack" aria-label="Awards">
           {awardPosters.map((poster) => (
