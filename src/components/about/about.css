@@ -4,9 +4,9 @@
    the height of the screen holds the text and the diplomas while it scrolls
    past, and AboutAwards moves them from the scroll position:
    - the text keeps rising, slower than the page, and fades under the top edge;
-   - the diplomas come up from below one at a time and settle on one line,
-     each lifting the earlier ones into a fan of slivers that thin out and
-     fade at the top;
+   - the diplomas come up from below one at a time, each gliding on towards
+     the top without a stop and covering the earlier ones but a fan of ever
+     thinner slivers;
    - after the last one the section ends, the stage lets go and the stack
      scrolls away with the page.
    The stage's own overflow is clipped, which doesn't affect its stickiness;
@@ -17,26 +17,32 @@
 .aw {
   --W: min(440px, 30vw, 46svh); /* diploma width: the settled one fits below its line */
   position: relative;
-  /* The stage's screen, plus the text's lead, a stretch per diploma and the
-     dwell on the finished stack (AboutAwards: LEAD, PER, DWELL). */
-  height: calc(100svh * (1 + var(--lead) + var(--n) * var(--per) + var(--dwell)));
-  margin-top: clamp(80px, 8vw, 140px);
+  /* The stage's screen, plus the text's lead, the stretches between the
+     diplomas and the glide after the last (AboutAwards: LEAD, PER, DWELL). */
+  height: calc(100svh * (1 + var(--lead) + (var(--n) - 1) * var(--per) + var(--dwell)));
+  margin-top: clamp(48px, 5vw, 80px);
 }
 .aw__stage {
   position: sticky;
   top: 0;
   height: 100svh;
   overflow: hidden;
-  /* Text and diplomas melt away under the top edge, as on the reference. */
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 16svh);
-  mask-image: linear-gradient(to bottom, transparent 0, #000 16svh);
 }
 
 /* --- the text ------------------------------------------------------------- */
+/* The text's own layer the size of the stage: it melts away under the top
+   edge, as on the reference. The diplomas sit above it, untouched. */
+.aw__copy {
+  position: absolute;
+  inset: 0;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 4svh, #000 16svh);
+  mask-image: linear-gradient(to bottom, transparent 4svh, #000 16svh);
+}
 .aw__text {
   position: absolute;
-  inset: 20svh 0 auto;
-  max-width: 600px;
+  /* Low enough that the first diplomas come up over it while it still reads. */
+  inset: 34svh 0 auto;
+  max-width: 560px;
   margin: 0 auto;
   padding: 0 20px;
   /* The case cards' title style: SF Pro 20 / 132%. */
@@ -47,11 +53,16 @@
   letter-spacing: 0;
   color: var(--ink-strong, #08080a);
   text-align: center;
-  text-wrap: pretty;
   will-change: transform;
 }
 .aw__text p {
   margin: 0;
+}
+/* One line of the paragraph (about.ts); when it has to wrap, the two halves
+   come out even rather than a full line and a stray word. */
+.aw__text span {
+  display: block;
+  text-wrap: balance;
 }
 .aw__text p + p {
   margin-top: 1.5em;
@@ -71,13 +82,7 @@
   /* Parked below the screen until AboutAwards places it. */
   transform: translate3d(0, 110svh, 0) rotate(var(--tilt));
   will-change: transform;
-  /* Paper on paper: a hairline and a soft drop, so the white diplomas don't
-     melt into the page. */
   border-radius: 2px;
-  box-shadow:
-    0 0 0 0.5px rgba(0, 0, 0, 0.06),
-    0 2px 6px rgba(0, 0, 0, 0.06),
-    0 14px 36px rgba(0, 0, 0, 0.1);
 }
 .aw__poster img {
   display: block;
@@ -90,10 +95,10 @@
 @media (max-width: 899px) {
   .aw {
     --W: min(72vw, 44svh);
-    margin-top: 96px;
+    margin-top: 56px;
   }
   .aw__text {
-    inset: 14svh 0 auto;
+    inset: 30svh 0 auto;
     padding: 0 16px;
   }
 }
@@ -108,9 +113,12 @@
     position: static;
     height: auto;
     overflow: visible;
+    padding-bottom: 48px;
+  }
+  .aw__copy {
+    position: static;
     -webkit-mask-image: none;
     mask-image: none;
-    padding-bottom: 48px;
   }
   .aw__text {
     position: static;

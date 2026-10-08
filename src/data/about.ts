@@ -1,9 +1,20 @@
-// The "about me" block after the cases (AboutAwards): two paragraphs pinned in
-// place while the award diplomas slide up over them one by one.
+// The "about me" block after the cases (AboutAwards): two paragraphs, then the
+// award diplomas coming up over them one by one.
 
+// Each paragraph set line by line, broken where the sense breaks; a line too
+// long for a phone wraps within itself, evenly.
 export const aboutText = [
-  'Experienced mostly in B2C, fintech and Web3. Focused on visuals and complex user flows. Skilled in research, vibe coding, and AI generation.',
-  'I love to mix craft and systems. Always trying to keep interfaces and concepts balanced between emotion and usability. But I still prefer a bit more craft :)',
+  [
+    'Experienced mostly in B2C, fintech and Web3.',
+    'Focused on visuals and complex user flows.',
+    'Skilled in research, vibe coding, and AI generation.',
+  ],
+  [
+    'I love to mix craft and systems.',
+    'Always trying to keep interfaces and concepts',
+    'balanced between emotion and usability.',
+    'But I still prefer a bit more craft :)',
+  ],
 ];
 
 export type AwardPoster = {
