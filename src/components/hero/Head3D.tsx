@@ -789,6 +789,5 @@ export function Head3D() {
   }, []);
 
   // Fills the hero box. Above the page content, below the header (z-50).
-  // data-head: LoopToStart fades it in when the page loops back to the top.
-  return <div ref={wrapRef} className="pointer-events-none absolute inset-0 z-40" aria-hidden="true" data-head="" />;
+  return <div ref={wrapRef} className="pointer-events-none absolute inset-0 z-40" aria-hidden="true" />;
 }
