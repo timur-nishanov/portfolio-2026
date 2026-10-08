@@ -13,10 +13,18 @@ type ScrollApi = {
   scrollTo: (target: string | number, opts?: { offset?: number; duration?: number }) => void;
   /** Park the page scroller while something else owns the scroll (the case study). */
   setPaused: (paused: boolean) => void;
+  /** Move the page to an offset at once, carrying on any glide in progress
+      from there (the loop back to the top, LoopToStart). */
+  jumpTo: (y: number) => void;
 };
 
 const noop = () => {};
-const ScrollContext = createContext<ScrollApi>({ register: () => noop, scrollTo: noop, setPaused: noop });
+const ScrollContext = createContext<ScrollApi>({
+  register: () => noop,
+  scrollTo: noop,
+  setPaused: noop,
+  jumpTo: noop,
+});
 
 export const useSmoothScroll = () => useContext(ScrollContext);
 
@@ -87,7 +95,23 @@ export function SmoothScrollProvider({ children }: { children: React.ReactNode }
     else lenis.start();
   }, []);
 
-  const api = useMemo<ScrollApi>(() => ({ register, scrollTo, setPaused }), [register, scrollTo, setPaused]);
+  const jumpTo = useCallback((y: number) => {
+    const lenis = lenisRef.current;
+    if (!lenis) {
+      window.scrollTo({ top: y, behavior: 'instant' });
+      return;
+    }
+    // Where the smoothing was still heading, so the glide goes on past the
+    // jump instead of stopping dead on it.
+    const ahead = lenis.targetScroll - lenis.animatedScroll;
+    lenis.scrollTo(y, { immediate: true, force: true });
+    if (Math.abs(ahead) > 0.5) lenis.scrollTo(y + ahead, { force: true });
+  }, []);
+
+  const api = useMemo<ScrollApi>(
+    () => ({ register, scrollTo, setPaused, jumpTo }),
+    [register, scrollTo, setPaused, jumpTo],
+  );
 
   return <ScrollContext.Provider value={api}>{children}</ScrollContext.Provider>;
 }
