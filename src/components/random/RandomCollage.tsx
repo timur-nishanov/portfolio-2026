@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useRef } from 'react';
 import { collage, type CollageItem } from '@/data/randomCollage';
 import { useLazyVideo } from '@/hooks/useLazyVideo';
 import './random-collage.css';
@@ -24,14 +25,61 @@ function Clip({ video }: { video: CollageItem['video'] }) {
   );
 }
 
+// How far the clip slides inside its frame each way, as a share of the
+// frame's height; the clip is that much taller than the frame at each end
+// (CSS --travel), so its edges never show.
+const TRAVEL = 0.07;
+
 /**
  * Random (#random, the menu's "Random"), after the work list on rsquare.work:
  * one big clip per project, leaning left or right of centre, with the title
- * under it in the case cards' style.
+ * under it in the case cards' style. As on glossar.app's "Seamless fluency",
+ * each clip slides a little inside its frame while the frame crosses the
+ * screen, slower than the page, so it reads as lying deeper than the card;
+ * nothing moves under reduced motion.
  */
 export function RandomCollage() {
+  const ref = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const sec = ref.current;
+    if (!sec) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const frames = [...sec.querySelectorAll<HTMLElement>('.rc__media')];
+    let raf = 0;
+    const update = () => {
+      raf = 0;
+      const vh = window.innerHeight;
+      for (const frame of frames) {
+        const r = frame.getBoundingClientRect();
+        if (r.bottom < 0 || r.top > vh) continue;
+        // -1 as the frame comes in at the bottom, 1 as it leaves at the top.
+        const t = (2 * (vh - r.top)) / (vh + r.height) - 1;
+        const clip = frame.firstElementChild as HTMLElement;
+        clip.style.transform = `translate3d(0, ${(t * TRAVEL * r.height).toFixed(1)}px, 0)`;
+      }
+    };
+    const schedule = () => {
+      if (!raf) raf = requestAnimationFrame(update);
+    };
+    update();
+    window.addEventListener('scroll', schedule, { passive: true });
+    window.addEventListener('resize', schedule);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener('scroll', schedule);
+      window.removeEventListener('resize', schedule);
+    };
+  }, []);
+
   return (
-    <section id="random" aria-labelledby="random-heading" className="rc">
+    <section
+      ref={ref}
+      id="random"
+      aria-labelledby="random-heading"
+      className="rc"
+      style={{ '--travel': TRAVEL } as React.CSSProperties}
+    >
       <h2 id="random-heading" className="sr-only">
         Random
       </h2>

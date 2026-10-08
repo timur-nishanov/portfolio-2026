@@ -36,16 +36,24 @@
   margin-top: clamp(140px, 15vw, 260px);
 }
 
+/* The frame: rounds and clips the clip, which is taller than it by --travel
+   at each end and slides inside it on scroll (RandomCollage). clip-path
+   rather than overflow + radius, which Safari lets a transformed video
+   paint past. */
 .rc__media {
   position: relative;
+  clip-path: inset(0 round 16px);
+  background: #ececea;
 }
 .rc__video {
+  position: absolute;
+  left: 0;
+  top: calc(var(--travel) * -100%);
   display: block;
   width: 100%;
-  height: 100%;
+  height: calc(100% + var(--travel) * 200%);
   object-fit: cover;
-  border-radius: 16px;
-  background: #ececea;
+  will-change: transform;
 }
 
 /* The case cards' title style: SF Pro 20 / 132%. */
@@ -82,10 +90,19 @@
   .rc__item + .rc__item {
     margin-top: 120px;
   }
-  .rc__video {
-    border-radius: 12px;
+  .rc__media {
+    clip-path: inset(0 round 12px);
   }
   .rc__title {
     margin-top: 12px;
+  }
+}
+
+/* --- reduced motion: the clip fills its frame and stays put. --------------- */
+@media (prefers-reduced-motion: reduce) {
+  .rc__video {
+    top: 0;
+    height: 100%;
+    will-change: auto;
   }
 }
