@@ -1,9 +1,13 @@
-// The "about me" block after the cases (AboutAwards): two paragraphs, then the
+// The "about me" block after the cases (AboutAwards): three paragraphs, then the
 // award diplomas coming up over them one by one.
+
+// A line of a paragraph: plain text, or a link (shown grey, like the case
+// subtitles).
+export type AboutLine = string | { text: string; href: string };
 
 // Each paragraph set line by line, broken where the sense breaks; a line too
 // long for a phone wraps within itself, evenly.
-export const aboutText = [
+export const aboutText: AboutLine[][] = [
   [
     'Experienced mostly in B2C, fintech and Web3.',
     'Focused on visuals and complex user flows.',
@@ -14,6 +18,11 @@ export const aboutText = [
     'Always trying to keep interfaces and concepts',
     'balanced between emotion and usability.',
     'But I still prefer a bit more craft :)',
+  ],
+  [
+    'I designed a site for film director Artem Shcherbakov.',
+    'It got Site of the Day on Awwwards, FWA and CSSDA.',
+    { text: 'artemartemartem.com', href: 'https://artemartemartem.com' },
   ],
 ];
 
