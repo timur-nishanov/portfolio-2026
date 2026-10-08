@@ -1,6 +1,7 @@
 /* ===========================================================================
    Random (RandomCollage), after the work list on rsquare.work: big clips that
-   lean left and right of centre down the page, each titled underneath.
+   lean left and right of centre down the page, each titled underneath, each
+   sliding over the one before as they go.
    =========================================================================== */
 
 .rc {
@@ -36,24 +37,22 @@
   margin-top: clamp(140px, 15vw, 260px);
 }
 
-/* The frame: rounds and clips the clip, which is taller than it by --travel
-   at each end and slides inside it on scroll (RandomCollage). clip-path
-   rather than overflow + radius, which Safari lets a transformed video
-   paint past. */
+/* The clip and its title: trails the page near the top and recedes under
+   the next card (RandomCollage), shrinking toward its top edge. */
+.rc__card {
+  transform-origin: 50% 0;
+  will-change: transform, opacity, filter;
+}
 .rc__media {
   position: relative;
-  clip-path: inset(0 round 16px);
-  background: #ececea;
 }
 .rc__video {
-  position: absolute;
-  left: 0;
-  top: calc(var(--travel) * -100%);
   display: block;
   width: 100%;
-  height: calc(100% + var(--travel) * 200%);
+  height: 100%;
   object-fit: cover;
-  will-change: transform;
+  border-radius: 16px;
+  background: #ececea;
 }
 
 /* The case cards' title style: SF Pro 20 / 132%. */
@@ -90,19 +89,17 @@
   .rc__item + .rc__item {
     margin-top: 120px;
   }
-  .rc__media {
-    clip-path: inset(0 round 12px);
+  .rc__video {
+    border-radius: 12px;
   }
   .rc__title {
     margin-top: 12px;
   }
 }
 
-/* --- reduced motion: the clip fills its frame and stays put. --------------- */
+/* --- reduced motion: the cards just scroll. -------------------------------- */
 @media (prefers-reduced-motion: reduce) {
-  .rc__video {
-    top: 0;
-    height: 100%;
+  .rc__card {
     will-change: auto;
   }
 }
