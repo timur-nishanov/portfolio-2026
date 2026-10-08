@@ -28,6 +28,9 @@ export function useHideOnScroll(hoveredRef: React.RefObject<boolean>): boolean {
         setHidden(false);
         return;
       }
+      // A jump of more than a screen is the page looping round (LoopToStart),
+      // not a scroll down or up.
+      if (Math.abs(delta) > window.innerHeight) return;
       if (Math.sign(delta) !== Math.sign(acc)) acc = 0;
       acc += delta;
       if (acc > THRESHOLD) {

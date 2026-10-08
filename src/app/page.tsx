@@ -25,7 +25,7 @@ export default function Home() {
         <CaseShowcase />
         <AboutAwards />
         <RandomCollage />
-        {/* Always last: runs the end of the page back into the hero. */}
+        {/* Always last: closes the page into a loop with the hero. */}
         <LoopToStart />
       </main>
       {/* Previous full page, not rendered yet:

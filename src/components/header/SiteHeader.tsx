@@ -119,7 +119,12 @@ export function SiteHeader() {
   useEffect(() => {
     const hero = document.getElementById('main');
     const measure = () => setPillW(refs.title.current?.offsetWidth ?? 0);
-    const check = () => setOverContent(!!hero && hero.getBoundingClientRect().bottom < 80);
+    // Off the screen either way counts: past the middle of the page the hero
+    // waits at the end for the loop (LoopToStart), below the screen.
+    const check = () => {
+      const r = hero?.getBoundingClientRect();
+      setOverContent(!!r && (r.bottom < 80 || r.top > window.innerHeight));
+    };
     measure();
     check();
     document.fonts?.ready.then(measure);

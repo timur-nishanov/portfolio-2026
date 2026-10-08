@@ -5,6 +5,9 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef } fr
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 type FrameCb = (scrollY: number) => void;
+/** A wheel step the smooth scroller is about to apply, with where it is now
+    (scroll) and where it was already heading (target). */
+type IntentCb = (step: { deltaY: number; scroll: number; target: number }) => void;
 
 type ScrollApi = {
   /** Register a per-frame callback driven by the single rAF loop. Returns an unsubscribe. */
@@ -14,8 +17,11 @@ type ScrollApi = {
   /** Park the page scroller while something else owns the scroll (the case study). */
   setPaused: (paused: boolean) => void;
   /** Move the page to an offset at once, carrying on any glide in progress
-      from there (the loop back to the top, LoopToStart). */
+      from there (the page's loop, LoopToStart). */
   jumpTo: (y: number) => void;
+  /** Hear each wheel step before the smooth scroller applies it (touch stays
+      native and isn't reported). Returns an unsubscribe. */
+  onIntent: (cb: IntentCb) => () => void;
 };
 
 const noop = () => {};
@@ -24,6 +30,7 @@ const ScrollContext = createContext<ScrollApi>({
   scrollTo: noop,
   setPaused: noop,
   jumpTo: noop,
+  onIntent: () => noop,
 });
 
 export const useSmoothScroll = () => useContext(ScrollContext);
@@ -32,6 +39,7 @@ export function SmoothScrollProvider({ children }: { children: React.ReactNode }
   const reduced = useReducedMotion();
   const lenisRef = useRef<Lenis | null>(null);
   const callbacks = useRef<Set<FrameCb>>(new Set());
+  const intents = useRef<Set<IntentCb>>(new Set());
 
   const register = useCallback((cb: FrameCb) => {
     callbacks.current.add(cb);
@@ -50,6 +58,13 @@ export function SmoothScrollProvider({ children }: { children: React.ReactNode }
       syncTouch: false, // keep native touch scroll (TZ §13)
     });
     lenisRef.current = lenis;
+    // Emitted before Lenis moves its target, so a listener can still move the
+    // page first and the step carries on from there.
+    lenis.on('virtual-scroll', ({ deltaY, event }) => {
+      if (event.type.startsWith('touch')) return;
+      const step = { deltaY, scroll: lenis.animatedScroll, target: lenis.targetScroll };
+      intents.current.forEach((cb) => cb(step));
+    });
 
     let raf = 0;
     const loop = (time: number) => {
@@ -108,9 +123,16 @@ export function SmoothScrollProvider({ children }: { children: React.ReactNode }
     if (Math.abs(ahead) > 0.5) lenis.scrollTo(y + ahead, { force: true });
   }, []);
 
+  const onIntent = useCallback((cb: IntentCb) => {
+    intents.current.add(cb);
+    return () => {
+      intents.current.delete(cb);
+    };
+  }, []);
+
   const api = useMemo<ScrollApi>(
-    () => ({ register, scrollTo, setPaused, jumpTo }),
-    [register, scrollTo, setPaused, jumpTo],
+    () => ({ register, scrollTo, setPaused, jumpTo, onIntent }),
+    [register, scrollTo, setPaused, jumpTo, onIntent],
   );
 
   return <ScrollContext.Provider value={api}>{children}</ScrollContext.Provider>;

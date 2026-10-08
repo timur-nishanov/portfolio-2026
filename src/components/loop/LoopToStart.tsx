@@ -1,70 +1,110 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { site } from '@/data/site';
 import { useSmoothScroll } from '@/components/providers/SmoothScrollProvider';
-import './loop.css';
 
-// How long the head's fade-in on arrival takes (loop.css runs it).
-const ARRIVE_MS = 900;
+// How close to the very top the scroll has to be to be carried round to the
+// end going up: under the hero there is the blank top of the cases, under its
+// place at the end the blank room below — they match only that far.
+const NEAR_TOP = 80;
 
 /**
- * The end of the page runs back into its start. After the last section comes
- * a copy of the first screen (its tagline in the same place; no head), and the
- * moment the copy fills the screen the page jumps to the real one at the top,
- * carrying on whatever glide is in progress, so the scroll just goes on from
- * the hero and round again. Up there the header is back, as near the top it
- * always is, and the head fades in. Only forwards: scrolling up at the top
- * stays at the top.
+ * The page is a loop, both ways (as on redis.agency). After the last section
+ * comes a place the size of the first screen, and past the middle of the page
+ * the hero itself — live head and all — is moved down into it; the hero is
+ * only ever seen at the very top or the very end, so the move is never seen.
+ * Going down, once that place fills the screen the page jumps to the top,
+ * where the same hero is; going up from the top, it jumps to the end and the
+ * hero goes with it. Each jump keeps the glide in progress, so the scroll
+ * just carries on. The header behaves at either end as it does near the top.
  */
 export function LoopToStart() {
   const ref = useRef<HTMLDivElement>(null);
-  const { register, jumpTo } = useSmoothScroll();
+  const { register, jumpTo, onIntent } = useSmoothScroll();
 
   useEffect(() => {
-    const copy = ref.current;
-    if (!copy) return;
-    let timer = 0;
+    const slot = ref.current;
+    const hero = document.getElementById('main');
+    if (!slot || !hero) return;
+    let shift = 0; // how far the hero is moved down right now
+    const slotTop = () => slot.getBoundingClientRect().top + window.scrollY;
+    // Where the hero is at the top or the end, from the middle of the page.
+    const place = () => {
+      const end = slotTop();
+      const heroTop = hero.getBoundingClientRect().top - shift + window.scrollY;
+      const next = window.scrollY > end / 2 ? end - heroTop : 0;
+      if (next === shift) return;
+      shift = next;
+      hero.style.transform = shift ? `translate3d(0, ${shift}px, 0)` : '';
+    };
+    // Down: the place at the end has reached the top of the screen; less
+    // however far past it the scroll has run, that is the top of the page.
+    // Only on the way down — a jump up lands right on that place.
+    let lastY = window.scrollY;
     const check = () => {
-      const top = copy.getBoundingClientRect().top;
-      if (top > 0.5) return;
-      // The copy at the top of the screen, less however far past it the
-      // scroll has run, is the hero at that same offset.
-      jumpTo(Math.max(0, -top));
-      const hero = document.getElementById('main');
-      if (!hero) return;
-      hero.removeAttribute('data-arrive');
-      void hero.offsetWidth; // restart the fade if it is still running
-      hero.setAttribute('data-arrive', '');
-      clearTimeout(timer);
-      timer = window.setTimeout(() => hero.removeAttribute('data-arrive'), ARRIVE_MS);
+      const down = window.scrollY > lastY;
+      lastY = window.scrollY;
+      const top = slot.getBoundingClientRect().top;
+      if (down && top <= 0.5) {
+        jumpTo(Math.max(0, -top));
+        lastY = window.scrollY;
+      }
+      place();
     };
-    // Every frame with smooth scrolling (before it paints, so the jump never
-    // shows), and on native scroll where there is none (reduced motion).
-    const off = register(check);
+    // Up: from the hero at the top to the hero at the end, same offset.
+    const back = (offset: number) => {
+      jumpTo(slotTop() + offset);
+      lastY = window.scrollY;
+      place();
+    };
+
+    // Smooth scroll: every frame (before it paints, so a jump never shows),
+    // and each wheel step before it is applied, to catch one pushing past the
+    // top.
+    const offFrame = register(check);
+    const offIntent = onIntent(({ deltaY, scroll, target }) => {
+      if (deltaY < 0 && target + deltaY < 0 && scroll <= NEAR_TOP) back(scroll);
+    });
+    // Native scroll: touch always, the wheel too under reduced motion.
+    const onWheel = (e: WheelEvent) => {
+      if (document.documentElement.classList.contains('lenis')) return;
+      if (e.deltaY < 0 && window.scrollY <= 0) back(0);
+    };
+    let touchY = 0;
+    const onTouchStart = (e: TouchEvent) => {
+      touchY = e.touches[0].clientY;
+    };
+    const onTouchMove = (e: TouchEvent) => {
+      const y = e.touches[0].clientY;
+      // A pull down with the page already at the top (or bouncing past it).
+      if (window.scrollY <= 0 && y - touchY > 6) back(0);
+      touchY = y;
+    };
     window.addEventListener('scroll', check, { passive: true });
+    window.addEventListener('resize', place);
+    window.addEventListener('wheel', onWheel, { passive: true });
+    window.addEventListener('touchstart', onTouchStart, { passive: true });
+    window.addEventListener('touchmove', onTouchMove, { passive: true });
+    place();
     return () => {
-      off();
+      offFrame();
+      offIntent();
       window.removeEventListener('scroll', check);
-      clearTimeout(timer);
+      window.removeEventListener('resize', place);
+      window.removeEventListener('wheel', onWheel);
+      window.removeEventListener('touchstart', onTouchStart);
+      window.removeEventListener('touchmove', onTouchMove);
+      hero.style.transform = '';
     };
-  }, [register, jumpTo]);
+  }, [register, jumpTo, onIntent]);
 
   return (
-    <div ref={ref} aria-hidden="true" inert>
-      {/* The hero, as drawn (Hero): one screen, the tagline at its foot. */}
-      <div className="relative h-[calc(100svh/var(--site-zoom))] w-full overflow-hidden">
-        <p className="t-title absolute inset-x-4 bottom-[21px] select-none text-center text-ink-strong">
-          {site.hero.tagline.map((line) => (
-            <span key={line} className="block text-balance">
-              {line}
-            </span>
-          ))}
-        </p>
-      </div>
-      {/* Room past the copy for a scroll to overshoot it before the jump:
-          blank, as the top of the cases right under the hero is. */}
-      <div className="h-[50svh]" />
+    <div aria-hidden="true">
+      {/* The hero's place at the end, one screen like the hero itself. */}
+      <div ref={ref} className="h-[calc(100svh/var(--site-zoom))]" />
+      {/* Room past it for a scroll to overshoot before the jump: blank, as
+          the top of the cases right under the hero is. */}
+      <div className="h-[30svh]" />
     </div>
   );
 }

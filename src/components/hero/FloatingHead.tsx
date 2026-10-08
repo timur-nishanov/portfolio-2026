@@ -21,7 +21,6 @@ export function FloatingHead() {
     return (
       <div
         aria-hidden="true"
-        data-head=""
         className="pointer-events-none absolute left-1/2 top-1/2 z-40 -translate-x-1/2 -translate-y-1/2"
         style={{ width: 'var(--head-size)', height: 'var(--head-size)' }}
       >
