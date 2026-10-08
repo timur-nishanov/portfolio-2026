@@ -1,0 +1,126 @@
+/* ===========================================================================
+   About me + the award diplomas (AboutAwards), after perappelgren.de's
+   "Hi! I am Per!": the text stays pinned while the diplomas slide up from
+   below, one at a time, each landing a little lower than the last so every
+   one keeps its top strip (the award) in view — a stack of diplomas. After
+   the last, the whole block lets go and the page scrolls on.
+
+   Pure CSS sticky. The text and the diplomas share one grid cell, each in a
+   track of its own; inside it the item is sticky. A track's top padding sets
+   when its diploma arrives, its height when it lets go. With
+     P0  scroll before the first diploma arrives,
+     E   scroll between one diploma settling and the next arriving,
+     s   how much lower each diploma lands (its visible strip),
+     H   diploma height, T the first one's line, D the dwell after the last,
+   diploma i arrives at  P0 + i·(E + s)  and its track ends at  C + i·s,
+   C = P0 + (n−1)·E + H + D (less any shortfall of a diploma's own height
+   from H). Every diploma i is then pushed off its line when
+   the section's top passes T + H − C — the same moment for all, so the stack
+   leaves whole. The text track ends at C + Tt + B − T − H for its box of
+   height B, which lands on that same moment too.
+
+   Nothing on the way up is a scroll container (overflow on body propagates
+   to the viewport), so sticky holds.
+   =========================================================================== */
+
+.aw {
+  --W: min(380px, 30vw, 36svh); /* diploma width */
+  --H: calc(var(--W) * 1.412); /* the CSSDA/FWA aspect; Awwwards is a touch shorter */
+  --s: calc(var(--H) * 0.23); /* the strip left showing: date, name, award line */
+  --T: max(120px, 18svh); /* where the first diploma lands */
+  --Tt: max(72px, 9svh); /* where the text is pinned */
+  --B: 30svh; /* the text's sticky box (release timing only) */
+  --P0: 70svh;
+  --E: 42svh;
+  --D: 35svh;
+  --C: calc(var(--P0) + (var(--n) - 1) * var(--E) + var(--H) + var(--D));
+  --xk: 1; /* scales the sideways nudge (smaller on phones) */
+
+  display: grid;
+  margin-top: clamp(96px, 11vw, 170px);
+  /* Room after the stack lets go, so its lowest diploma can scroll fully into
+     view before the page ends. */
+  padding-bottom: max(48px, calc(var(--T) + (var(--n) - 1) * var(--s) + var(--H) + 48px - 100svh));
+}
+.aw__stack {
+  display: grid;
+  grid-area: 1 / 1;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.aw__track {
+  grid-area: 1 / 1;
+  box-sizing: border-box;
+}
+
+/* --- the text ------------------------------------------------------------- */
+.aw__track--text {
+  height: calc(var(--C) + var(--Tt) + var(--B) - var(--T) - var(--H));
+}
+.aw__text {
+  position: sticky;
+  top: var(--Tt);
+  height: var(--B);
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 0 20px;
+  /* The case cards' title style: SF Pro 20 / 132%. */
+  font-family: var(--font-sf);
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 1.32;
+  letter-spacing: 0;
+  color: var(--ink-strong, #08080a);
+  text-align: center;
+  text-wrap: pretty;
+}
+.aw__text p {
+  margin: 0;
+}
+.aw__text p + p {
+  margin-top: 0.9em;
+}
+
+/* --- the diplomas --------------------------------------------------------- */
+.aw__stack > .aw__track {
+  padding-top: calc(var(--P0) + var(--i) * (var(--E) + var(--s)));
+  /* Less the shortfall of a diploma shorter than H (Awwwards' is), so it
+     lets go with the rest instead of a little after. */
+  height: calc(var(--C) + var(--i) * var(--s) - var(--H) + var(--W) * var(--ar));
+}
+.aw__poster {
+  position: sticky;
+  top: calc(var(--T) + var(--i) * var(--s));
+  width: var(--W);
+  margin: 0 auto;
+  transform: translateX(calc(var(--nudge) * 1px * var(--xk))) rotate(var(--tilt));
+  /* Paper on paper: a hairline and a soft drop, so the white diplomas don't
+     melt into the page. */
+  border-radius: 2px;
+  box-shadow:
+    0 0 0 0.5px rgba(0, 0, 0, 0.06),
+    0 2px 6px rgba(0, 0, 0, 0.06),
+    0 14px 36px rgba(0, 0, 0, 0.1);
+}
+.aw__poster img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: inherit;
+}
+
+/* --- phones ---------------------------------------------------------------- */
+@media (max-width: 899px) {
+  .aw {
+    --W: min(72vw, 40svh);
+    --T: max(170px, 22svh);
+    --Tt: 64px;
+    --B: 40svh;
+    --xk: 0.5;
+    margin-top: 72px;
+  }
+  .aw__text {
+    padding: 0 16px;
+  }
+}

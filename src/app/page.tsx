@@ -1,6 +1,7 @@
 import { SiteHeader } from '@/components/header/SiteHeader';
 import { Hero } from '@/components/hero/Hero';
 import { CaseShowcase } from '@/components/showcase/CaseShowcase';
+import { AboutAwards } from '@/components/about/AboutAwards';
 import { SmoothScrollProvider } from '@/components/providers/SmoothScrollProvider';
 // The older sections stay hidden until Timur brings them back. Code stays in
 // place; restore these imports and the block below.
@@ -20,6 +21,7 @@ export default function Home() {
       <main>
         <Hero />
         <CaseShowcase />
+        <AboutAwards />
       </main>
       {/* Previous full page, not rendered yet:
       <SmoothScrollProvider>

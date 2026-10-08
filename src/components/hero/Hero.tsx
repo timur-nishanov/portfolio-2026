@@ -25,7 +25,9 @@ export function Hero() {
       >
         <span className="sr-only">Timur, </span>
         {site.hero.tagline.map((line) => (
-          <span key={line} className="block">
+          // Balanced: on a phone the long first line splits in two even
+          // halves instead of leaving one word on a line of its own.
+          <span key={line} className="block text-balance">
             {line}
           </span>
         ))}
