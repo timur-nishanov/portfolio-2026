@@ -35,9 +35,9 @@ export const showcase: ShowcaseCase[] = [
     // \u00a0 (no-break space) keeps "6 steps to 1." on one line and every
     // note's last two words together, wherever the line breaks fall.
     notes: [
-      'Senior Product Designer. Led design processes and mentored one junior designer. Created the new visual concept seen in the mockups, approved by the\u00a0CEO.',
-      'Tokens, NFTs and dApps lived inside chat, but users couldn’t find them. The desktop client reused mobile components and broke when\u00a0resized.',
-      'Reworked desktop with drag-and-drop and native context menus. Attaching a file went from 6\u00a0steps\u00a0to\u00a01. Shipped to beta three months after\u00a0approval.',
+      'Tokens, NFTs and dApps lived inside the chat, but users couldn’t find them. The desktop client reused mobile components and broke when\u00a0resized.',
+      'Rebuilt desktop around drag-and-drop and native context menus. Attaching a file went from 6\u00a0steps\u00a0to\u00a01.',
+      'Led design for a year and mentored a junior designer. The new visual concept you see here is\u00a0mine.',
     ],
   },
   {
@@ -53,9 +53,9 @@ export const showcase: ShowcaseCase[] = [
       alt: 'Urbantiger: choosing a gift card design',
     },
     notes: [
-      'Senior designer, 2025. Ran discovery, owned the core purchase, search and account flows, built the loyalty layer, and directed the designers and illustrator on the\u00a0project.',
-      'Four years in, the fashion store had piled up UX friction, its look no longer matched the new brand, and nothing brought people back. The client chose a full\u00a0rebuild.',
-      'By the client’s numbers, the MVP converts at twice the old site’s rate, even with incoming traffic down\u00a030–40% over the same\u00a0period.',
+      'The MVP converts at twice the old site’s rate, with traffic down\u00a030–40% over the same period. The client’s own\u00a0numbers.',
+      'Senior designer leading two juniors and an illustrator. I owned purchase, search and account flows and covered every corner, from three login options to an 8-step\u00a0return.',
+      'Nothing brought people back, so I turned loyalty into a game: achievements for purchases, eco choices and activity, with silver-to-platinum tiers and bonuses you spend at\u00a0checkout.',
     ],
   },
   {
@@ -71,9 +71,9 @@ export const showcase: ShowcaseCase[] = [
       alt: 'Alice on the lock screen: a warm-up card after a short night',
     },
     notes: [
-      'Product Designer, 2025. Joined a studio team of five for the design battle at Kaiference, developed the scenario and designed the\u00a0screens.',
-      'Chat works like a request queue: you have to know what to ask and remember to open the app. That falls apart when you’re short on\u00a0sleep.',
-      '2nd place, one point behind the winner and ahead of every in-house team. Our concept moved Alice from chat to the lock screen, with cards that appear in\u00a0context.',
+      'Chat works like a request queue: you have to know what to ask and remember to open the app. We moved Alice to the lock screen, where she shows up when something is about to\u00a0happen.',
+      'One person, one day: breakfast ordered before the daily, questions for a 1:1, a summary after it, tickets for the weekend. Alice acts, you confirm with one\u00a0tap.',
+      '2nd place at a Yandex design battle, one point behind the winner and ahead of every in\u2011house team. Studio team of five; I built the scenario and the\u00a0screens.',
     ],
   },
   {
@@ -89,10 +89,9 @@ export const showcase: ShowcaseCase[] = [
       alt: 'Yandex Cloud booth game: choosing a business task',
     },
     notes: [
-      'I designed it and coded the front-end myself in a week and a half. The art director asked the engineers to build on my code, which cut design review almost to zero on a tight\u00a0deadline.',
-      'Real business tasks, solved by hand. Visitors drag Yandex Cloud services into a chain on a 55-inch touchscreen and hit “run”. The right chain lights up and earns a coin for the booth\u00a0contest.',
-      'The brand did the heavy lifting. Yandex Cloud’s identity is built from constructor parts with holes and connectors, so every card, slot and verdict is made of\u00a0them.',
-      'Two ways to play. Builders assemble the chain and get instant feedback: spot on, close, or miss. People in a hurry pick a ready bundle and still get a\u00a0coin.',
+      'Designed and coded the front-end myself in a week and a half. Engineers built on my code, so design review on a tight deadline took almost no\u00a0time.',
+      'Visitors drag Yandex Cloud services into a chain on a 55-inch touchscreen and hit “run”. The right chain lights up and earns a coin for the booth\u00a0contest.',
+      'Two ways to play: assemble the chain yourself and get instant feedback, or pick a ready bundle and still get a\u00a0coin.',
     ],
   },
 ];
