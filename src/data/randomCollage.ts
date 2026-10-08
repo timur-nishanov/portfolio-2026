@@ -48,4 +48,16 @@ export const collage: CollageItem[] = [
       alt: 'A reward screen on an iPhone: hold to unlock, and a chrome drop bursts into a star',
     },
   },
+  {
+    id: 'kritika-review',
+    title: 'A piece of interaction from my film review app',
+    side: 'right',
+    video: {
+      src: '/random/kritika-review.mp4', // BtJr5050gdQcQBWs.mp4, 960×1200 (4:5), 60fps, no audio
+      poster: '/random/kritika-review.webp',
+      width: 960,
+      height: 1200,
+      alt: 'Kritika: picking a poster, typing the film title and rating the plot, acting and action',
+    },
+  },
 ];

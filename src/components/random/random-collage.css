@@ -28,6 +28,10 @@
 .rc__item[data-shape='upright'][data-side='left'] {
   margin-left: 14vw;
 }
+.rc__item[data-shape='upright'][data-side='right'] {
+  margin-right: 14vw;
+  margin-left: auto;
+}
 .rc__item + .rc__item {
   margin-top: clamp(140px, 15vw, 260px);
 }
@@ -71,6 +75,9 @@
   }
   .rc__item[data-shape='upright'][data-side='left'] {
     margin-left: var(--gutter);
+  }
+  .rc__item[data-shape='upright'][data-side='right'] {
+    margin-right: var(--gutter);
   }
   .rc__item + .rc__item {
     margin-top: 120px;
