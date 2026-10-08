@@ -1,68 +1,42 @@
 /* ===========================================================================
-   About me + the award diplomas (AboutAwards), after perappelgren.de's
-   "Hi! I am Per!": the text stays pinned while the diplomas slide up from
-   below, one at a time, each landing a little lower than the last so every
-   one keeps its top strip (the award) in view — a stack of diplomas. After
-   the last, the whole block lets go and the page scrolls on.
-
-   Pure CSS sticky. The text and the diplomas share one grid cell, each in a
-   track of its own; inside it the item is sticky. A track's top padding sets
-   when its diploma arrives, its height when it lets go. With
-     P0  scroll before the first diploma arrives,
-     E   scroll between one diploma settling and the next arriving,
-     s   how much lower each diploma lands (its visible strip),
-     H   diploma height, T the first one's line, D the dwell after the last,
-   diploma i arrives at  P0 + i·(E + s)  and its track ends at  C + i·s,
-   C = P0 + (n−1)·E + H + D (less any shortfall of a diploma's own height
-   from H). Every diploma i is then pushed off its line when
-   the section's top passes T + H − C — the same moment for all, so the stack
-   leaves whole. The text track ends at C + Tt + B − T − H for its box of
-   height B, which lands on that same moment too.
-
-   Nothing on the way up is a scroll container (overflow on body propagates
-   to the viewport), so sticky holds.
+   About me + the award diplomas (AboutAwards), after the "Hi! I am Per!"
+   block on perappelgren.de. The section is tall; inside it a sticky stage
+   the height of the screen holds the text and the diplomas while it scrolls
+   past, and AboutAwards moves them from the scroll position:
+   - the text keeps rising, slower than the page, and fades under the top edge;
+   - the diplomas come up from below one at a time and settle on one line,
+     each lifting the earlier ones into a fan of slivers that thin out and
+     fade at the top;
+   - after the last one the section ends, the stage lets go and the stack
+     scrolls away with the page.
+   The stage's own overflow is clipped, which doesn't affect its stickiness;
+   nothing above it is a scroll container (body's overflow-x propagates to the
+   viewport).
    =========================================================================== */
 
 .aw {
-  --W: min(380px, 30vw, 36svh); /* diploma width */
-  --H: calc(var(--W) * 1.412); /* the CSSDA/FWA aspect; Awwwards is a touch shorter */
-  --s: calc(var(--H) * 0.23); /* the strip left showing: date, name, award line */
-  --T: max(120px, 18svh); /* where the first diploma lands */
-  --Tt: max(72px, 9svh); /* where the text is pinned */
-  --B: 30svh; /* the text's sticky box (release timing only) */
-  --P0: 70svh;
-  --E: 42svh;
-  --D: 35svh;
-  --C: calc(var(--P0) + (var(--n) - 1) * var(--E) + var(--H) + var(--D));
-  --xk: 1; /* scales the sideways nudge (smaller on phones) */
-
-  display: grid;
-  margin-top: clamp(96px, 11vw, 170px);
-  /* Room after the stack lets go, so its lowest diploma can scroll fully into
-     view before the page ends. */
-  padding-bottom: max(48px, calc(var(--T) + (var(--n) - 1) * var(--s) + var(--H) + 48px - 100svh));
+  --W: min(440px, 30vw, 46svh); /* diploma width: the settled one fits below its line */
+  position: relative;
+  /* The stage's screen, plus the text's lead, a stretch per diploma and the
+     dwell on the finished stack (AboutAwards: LEAD, PER, DWELL). */
+  height: calc(100svh * (1 + var(--lead) + var(--n) * var(--per) + var(--dwell)));
+  margin-top: clamp(80px, 8vw, 140px);
 }
-.aw__stack {
-  display: grid;
-  grid-area: 1 / 1;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-.aw__track {
-  grid-area: 1 / 1;
-  box-sizing: border-box;
+.aw__stage {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  overflow: hidden;
+  /* Text and diplomas melt away under the top edge, as on the reference. */
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 16svh);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 16svh);
 }
 
 /* --- the text ------------------------------------------------------------- */
-.aw__track--text {
-  height: calc(var(--C) + var(--Tt) + var(--B) - var(--T) - var(--H));
-}
 .aw__text {
-  position: sticky;
-  top: var(--Tt);
-  height: var(--B);
-  max-width: 560px;
+  position: absolute;
+  inset: 20svh 0 auto;
+  max-width: 600px;
   margin: 0 auto;
   padding: 0 20px;
   /* The case cards' title style: SF Pro 20 / 132%. */
@@ -74,27 +48,29 @@
   color: var(--ink-strong, #08080a);
   text-align: center;
   text-wrap: pretty;
+  will-change: transform;
 }
 .aw__text p {
   margin: 0;
 }
 .aw__text p + p {
-  margin-top: 0.9em;
+  margin-top: 1.5em;
 }
 
 /* --- the diplomas --------------------------------------------------------- */
-.aw__stack > .aw__track {
-  padding-top: calc(var(--P0) + var(--i) * (var(--E) + var(--s)));
-  /* Less the shortfall of a diploma shorter than H (Awwwards' is), so it
-     lets go with the rest instead of a little after. */
-  height: calc(var(--C) + var(--i) * var(--s) - var(--H) + var(--W) * var(--ar));
+.aw__stack {
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 .aw__poster {
-  position: sticky;
-  top: calc(var(--T) + var(--i) * var(--s));
+  position: absolute;
+  top: 0;
+  left: calc(50% - var(--W) / 2);
   width: var(--W);
-  margin: 0 auto;
-  transform: translateX(calc(var(--nudge) * 1px * var(--xk))) rotate(var(--tilt));
+  /* Parked below the screen until AboutAwards places it. */
+  transform: translate3d(0, 110svh, 0) rotate(var(--tilt));
+  will-change: transform;
   /* Paper on paper: a hairline and a soft drop, so the white diplomas don't
      melt into the page. */
   border-radius: 2px;
@@ -113,14 +89,40 @@
 /* --- phones ---------------------------------------------------------------- */
 @media (max-width: 899px) {
   .aw {
-    --W: min(72vw, 40svh);
-    --T: max(170px, 22svh);
-    --Tt: 64px;
-    --B: 40svh;
-    --xk: 0.5;
-    margin-top: 72px;
+    --W: min(72vw, 44svh);
+    margin-top: 96px;
   }
   .aw__text {
+    inset: 14svh 0 auto;
     padding: 0 16px;
+  }
+}
+
+/* --- reduced motion: no scroll-driven movement — the text, then the
+   diplomas as a still stack, each overlapping the one before. ------------- */
+@media (prefers-reduced-motion: reduce) {
+  .aw {
+    height: auto;
+  }
+  .aw__stage {
+    position: static;
+    height: auto;
+    overflow: visible;
+    -webkit-mask-image: none;
+    mask-image: none;
+    padding-bottom: 48px;
+  }
+  .aw__text {
+    position: static;
+    margin-bottom: 64px;
+  }
+  .aw__poster {
+    position: relative;
+    left: auto;
+    margin: 0 auto;
+    transform: translateX(calc(var(--nudge) * 1px)) rotate(var(--tilt));
+  }
+  .aw__poster + .aw__poster {
+    margin-top: calc(var(--W) * -1.15);
   }
 }
