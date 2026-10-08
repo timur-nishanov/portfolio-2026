@@ -5,7 +5,8 @@
 export type CollageItem = {
   id: string;
   title: string;
-  /** Which side of the page the clip leans to. */
+  /** Which side of the page the clip leans to. An upright clip is set
+   *  narrower, so it fits the screen's height, and further in. */
   side: 'left' | 'right';
   video: { src: string; poster: string; width: number; height: number; alt: string };
 };
@@ -33,6 +34,18 @@ export const collage: CollageItem[] = [
       width: 1400,
       height: 978,
       alt: 'Kritika on an iPhone: a film page with its ratings',
+    },
+  },
+  {
+    id: 'opus-experiment',
+    title: 'Quick experiment with Opus 5.5',
+    side: 'left',
+    video: {
+      src: '/random/opus-experiment.mp4', // D4OzCiDYGSrnN6HD.mp4, 960×1200 (4:5), 60fps, no audio
+      poster: '/random/opus-experiment.webp',
+      width: 960,
+      height: 1200,
+      alt: 'A reward screen on an iPhone: hold to unlock, and a chrome drop bursts into a star',
     },
   },
 ];

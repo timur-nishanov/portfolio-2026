@@ -20,6 +20,14 @@
 .rc__item[data-side='right'] {
   margin-left: 26vw;
 }
+/* An upright clip: narrow enough to fit the screen's height (4:5 at most
+   88% of it), and set in from the edge, between the wide ones. */
+.rc__item[data-shape='upright'] {
+  width: min(36vw, 70svh);
+}
+.rc__item[data-shape='upright'][data-side='left'] {
+  margin-left: 14vw;
+}
 .rc__item + .rc__item {
   margin-top: clamp(140px, 15vw, 260px);
 }
@@ -57,6 +65,12 @@
   }
   .rc__item[data-side='right'] {
     margin-left: calc(var(--gutter) + 10vw);
+  }
+  .rc__item[data-shape='upright'] {
+    width: min(var(--clip-w), 56svh);
+  }
+  .rc__item[data-shape='upright'][data-side='left'] {
+    margin-left: var(--gutter);
   }
   .rc__item + .rc__item {
     margin-top: 120px;
