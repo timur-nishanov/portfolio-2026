@@ -1,7 +1,6 @@
 /* ===========================================================================
    Random (RandomCollage), after the work list on rsquare.work: big clips that
-   lean left and right of centre down the page, each titled underneath, each
-   sliding over the one before as they go.
+   lean left and right of centre down the page, each titled underneath.
    =========================================================================== */
 
 .rc {
@@ -37,11 +36,9 @@
   margin-top: clamp(140px, 15vw, 260px);
 }
 
-/* The clip and its title: trails the page near the top and recedes under
-   the next card (RandomCollage), shrinking toward its top edge. */
+/* The clip and its title; drifts against the page on scroll (RandomCollage). */
 .rc__card {
-  transform-origin: 50% 0;
-  will-change: transform, opacity, filter;
+  will-change: transform;
 }
 .rc__media {
   position: relative;
@@ -97,7 +94,7 @@
   }
 }
 
-/* --- reduced motion: the cards just scroll. -------------------------------- */
+/* --- reduced motion: the cards stay put. ----------------------------------- */
 @media (prefers-reduced-motion: reduce) {
   .rc__card {
     will-change: auto;
