@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { Fragment, useEffect, useRef } from 'react';
-import { aboutText, awardPosters } from '@/data/about';
+import { aboutText, awardPosters, type AboutLine } from '@/data/about';
 import './about.css';
 
 // Scroll lengths, in screen heights (also feed the section's height in CSS).
@@ -18,7 +18,7 @@ const R = 0.42;
 
 // Once the stage holds, the text slows from scroll speed to TEXT_SPEED of it
 // over the first TEXT_EASE screen heights, so the diplomas catch it up.
-const TEXT_SPEED = 0.16;
+const TEXT_SPEED = 0.2;
 const TEXT_EASE = 0.12;
 
 /**
@@ -30,6 +30,8 @@ const TEXT_EASE = 0.12;
  * the top and covering the earlier ones but their top slivers. After the
  * last, the stage lets go and the stack scrolls away with the page.
  */
+const lineText = (line: AboutLine) => (typeof line === 'string' ? line : line.text);
+
 export function AboutAwards() {
   const ref = useRef<HTMLElement>(null);
 
@@ -100,11 +102,19 @@ export function AboutAwards() {
               About me and awards
             </h2>
             {aboutText.map((lines) => (
-              <p key={lines[0]}>
+              <p key={lineText(lines[0])}>
                 {lines.map((line, i) => (
-                  <Fragment key={line}>
+                  <Fragment key={lineText(line)}>
                     {i > 0 && ' '}
-                    <span>{line}</span>
+                    <span>
+                      {typeof line === 'string' ? (
+                        line
+                      ) : (
+                        <a className="aw__link" href={line.href} target="_blank" rel="noopener noreferrer">
+                          {line.text}
+                        </a>
+                      )}
+                    </span>
                   </Fragment>
                 ))}
               </p>
