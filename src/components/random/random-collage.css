@@ -1,8 +1,6 @@
 /* ===========================================================================
    Random (RandomCollage), after the work list on rsquare.work: big clips that
-   lean left and right of centre down the page, each titled underneath, with
-   stills from the same project laid over their edges. The stills may stick
-   out past the clip; on a phone they are placed to stay inside the screen.
+   lean left and right of centre down the page, each titled underneath.
    =========================================================================== */
 
 .rc {
@@ -26,7 +24,6 @@
   margin-top: clamp(140px, 15vw, 260px);
 }
 
-/* The clip, and the box the stills are placed against. */
 .rc__media {
   position: relative;
 }
@@ -37,19 +34,6 @@
   object-fit: cover;
   border-radius: 16px;
   background: #ececea;
-}
-.rc__shot {
-  position: absolute;
-  left: var(--x);
-  top: var(--y);
-  width: var(--w);
-  will-change: transform;
-}
-.rc__shot img {
-  display: block;
-  width: 100%;
-  height: auto;
-  border-radius: 10px;
 }
 
 /* The case cards' title style: SF Pro 20 / 132%. */
@@ -79,14 +63,6 @@
   }
   .rc__video {
     border-radius: 12px;
-  }
-  .rc__shot {
-    left: var(--mx);
-    top: var(--my);
-    width: var(--mw);
-  }
-  .rc__shot img {
-    border-radius: 8px;
   }
   .rc__title {
     margin-top: 12px;
