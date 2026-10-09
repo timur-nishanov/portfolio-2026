@@ -17,7 +17,7 @@ export const site = {
   about:
     'Most of my experience is in B2C, fintech, and Web3. I work across research, complex user flows, and visual design. I shape hypotheses, test them with users, and check whether the design worked. I also use AI tools and build prototypes in code.',
   meta: {
-    title: 'Timur — Senior Product Designer',
+    title: 'Timur Nishanov',
     description: 'Senior Product Designer. Worked with Yandex, Stepik, HSE, Meama, Sber, and Moneta.',
   },
 } as const;
