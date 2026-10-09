@@ -5,9 +5,9 @@ import { collage, type CollageItem } from '@/data/randomCollage';
 import { useLazyVideo } from '@/hooks/useLazyVideo';
 import './random-collage.css';
 
-/** A project's clip; its source is attached on approach (useLazyVideo). */
+/** A project's clip; its source and poster are attached on approach (useLazyVideo). */
 function Clip({ video }: { video: CollageItem['video'] }) {
-  const ref = useLazyVideo(video.src);
+  const ref = useLazyVideo(video.src, video.poster);
   return (
     <video
       ref={ref}
@@ -19,7 +19,6 @@ function Clip({ video }: { video: CollageItem['video'] }) {
       loop
       playsInline
       preload="none"
-      poster={video.poster}
       aria-label={video.alt}
     />
   );

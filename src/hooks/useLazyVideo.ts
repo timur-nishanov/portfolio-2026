@@ -3,8 +3,8 @@
 import { useEffect, useRef } from 'react';
 
 /**
- * Attaches a video's source only once it is near the viewport, then plays it
- * while it is on screen.
+ * Attaches a video's source (and its poster) only once it is near the
+ * viewport, then plays it while it is on screen.
  *
  * The page ships seven clips. With the source in the markup the browser fetched
  * every one of them up front — around 12MB of video before a single scroll,
@@ -13,7 +13,7 @@ import { useEffect, useRef } from 'react';
  * the poster covers the gap, and by the time a clip scrolls in it has had time
  * to buffer.
  */
-export function useLazyVideo(src: string) {
+export function useLazyVideo(src: string, poster?: string) {
   const ref = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -24,6 +24,9 @@ export function useLazyVideo(src: string) {
     const attach = () => {
       if (attached) return;
       attached = true;
+      // The poster too: in the markup, every one of them loaded with the
+      // page, ahead of the first screen's own picture.
+      if (poster) v.poster = poster;
       v.src = src;
       v.load();
     };
@@ -59,7 +62,7 @@ export function useLazyVideo(src: string) {
       near.disconnect();
       play.disconnect();
     };
-  }, [src]);
+  }, [src, poster]);
 
   return ref;
 }

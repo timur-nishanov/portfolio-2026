@@ -14,7 +14,7 @@ import { useLazyVideo } from '@/hooks/useLazyVideo';
 export function MediaSlot({ media }: { media: CaseMedia }) {
   // Fetched and played on approach only. The Yandex Go clip alone is ~5MB and
   // used to download in full before the first screen had finished painting.
-  const videoRef = useLazyVideo(media.src ?? '');
+  const videoRef = useLazyVideo(media.src ?? '', media.poster);
 
   // Twin phones don't need the card clip/skeleton bg — they fill the slot.
   if (media.phones && media.phones.length > 0) {
@@ -84,7 +84,6 @@ export function MediaSlot({ media }: { media: CaseMedia }) {
           loop
           playsInline
           preload="none"
-          poster={media.poster}
           aria-label={media.alt}
         />
       )}

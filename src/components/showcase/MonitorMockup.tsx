@@ -20,8 +20,8 @@ const BLEED = '1.5px';
 
 /** An iMac with a screen recording playing in it; the frame sits on top. */
 export function MonitorMockup({ screen }: { screen: PhoneScreen }) {
-  // Source is attached on approach, not in the markup — see useLazyVideo.
-  const videoRef = useLazyVideo(screen.src);
+  // Source and poster are attached on approach, not in the markup — see useLazyVideo.
+  const videoRef = useLazyVideo(screen.src, screen.poster);
   return (
     <div className="relative h-full" style={{ aspectRatio: FRAME_AR }}>
       <video
@@ -38,7 +38,6 @@ export function MonitorMockup({ screen }: { screen: PhoneScreen }) {
         loop
         playsInline
         preload="none"
-        poster={screen.poster}
         aria-label={screen.alt}
       />
       <Image

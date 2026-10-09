@@ -16,7 +16,7 @@ const FADE_DROP = 0.28;
 
 /** Fixed 386×512 media slot (Figma). Poster fills it, no rounding. */
 function LifeMedia({ media }: { media: LifeEntry['media'] }) {
-  const videoRef = useLazyVideo(media.src);
+  const videoRef = useLazyVideo(media.src, media.poster);
 
   return (
     <div className="relative h-full shrink-0 overflow-hidden bg-surface" style={{ aspectRatio: '386 / 512' }}>
@@ -30,7 +30,6 @@ function LifeMedia({ media }: { media: LifeEntry['media'] }) {
           loop
           playsInline
           preload="none"
-          poster={media.poster}
           aria-label={media.alt}
         />
       ) : (

@@ -10,6 +10,7 @@ export const assets = {
 
   // Head textures — pre-processed, 1996×1996, pixel-aligned (TZ §1.3).
   headColor: '/head/head.webp', // was head.png.png
+  headStill: '/head/head-700.webp', // headColor at half size, for the still head on 1x screens
   headDepth: '/head/head-depth.webp', // head-depth.png
   // 128px alpha-only silhouette used purely for the hit test. Loading the full
   // 1.8MB colour texture a second time just to read its alpha was doubling the
