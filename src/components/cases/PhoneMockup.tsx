@@ -25,8 +25,8 @@ const BLEED = '1.5px';
 /** One phone in the media strip — either a live frame with content, or a
  *  pre-composited render drawn as-is. */
 export function PhoneMockup({ phone }: { phone: PhoneScreen }) {
-  // Source is attached on approach, not in the markup — see useLazyVideo.
-  const videoRef = useLazyVideo(phone.src);
+  // Source and poster are attached on approach, not in the markup — see useLazyVideo.
+  const videoRef = useLazyVideo(phone.src, phone.poster);
 
   // Already-a-mockup render: draw as-is, no iPhone frame layered on top.
   if (!phone.framed) {
@@ -42,7 +42,6 @@ export function PhoneMockup({ phone }: { phone: PhoneScreen }) {
             loop
             playsInline
             preload="none"
-            poster={phone.poster}
             aria-label={phone.alt}
           />
         ) : (
@@ -80,7 +79,6 @@ export function PhoneMockup({ phone }: { phone: PhoneScreen }) {
           loop
           playsInline
           preload="none"
-          poster={phone.poster}
           aria-label={phone.alt}
         />
       ) : (
