@@ -22,8 +22,3 @@ export function onOpenCase(l: Listener) {
     listeners.delete(l);
   };
 }
-
-/** Sent as a case closes, so its card on the page picks up the note the
-    case's copy of it had got to (CaseCard). */
-export const CASE_RETURN_EVENT = 'case:return';
-export type CaseReturn = { id: string; note: number };
