@@ -26,7 +26,7 @@
   top: 0;
   left: 0;
   z-index: 70;
-  width: 100vw;
+  width: calc(100vw / var(--site-zoom, 1));
   height: 100%;
 }
 .cp__backdrop {
@@ -44,6 +44,10 @@
   scrollbar-gutter: stable;
   scrollbar-width: thin;
   scrollbar-color: rgba(17, 17, 17, 0.14) transparent;
+}
+/* Focused only from script (CaseLayer), for the keyboard's scrolling. */
+.cp__scroll:focus {
+  outline: none;
 }
 .cp__content {
   min-height: 100%;

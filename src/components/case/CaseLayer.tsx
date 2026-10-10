@@ -21,7 +21,18 @@ const GLIDE_OUT = 640;
 // back from off the screen: the case sinks away instead.
 const MIN_VISIBLE = 80;
 
-type Opened = { id: string; card: HTMLElement | null; note: number };
+type Opened = { id: string; card: HTMLElement | null; note: number; seq: number };
+type CaseState = { case?: string; layer?: string } | null;
+
+// Marks the history entries this page load put there itself. A case's
+// address can also be an entry of its standalone page (reached by a reload,
+// or with a link home from it): going back to one of those is Next's to
+// render, never a cue to open the layer.
+const LAYER = Math.random().toString(36).slice(2);
+const ours = (state: unknown, id?: string) => {
+  const s = state as CaseState;
+  return s?.layer === LAYER && (id === undefined || s.case === id);
+};
 
 const caseByPath = (path: string) => {
   const p = path.replace(/\/+$/, '') || '/';
@@ -44,6 +55,9 @@ export function CaseLayer() {
   const [opened, setOpened] = useState<Opened | null>(null);
   const openedRef = useRef<Opened | null>(null);
   const closing = useRef(false);
+  const started = useRef(false);
+  const leaving = useRef(false);
+  const seq = useRef(0);
   const running = useRef<Animation[]>([]);
   const headerFade = useRef<Animation[]>([]);
   const lenisRef = useRef<Lenis | null>(null);
@@ -58,7 +72,7 @@ export function CaseLayer() {
   const begin = useCallback((id: string, card: HTMLElement | null) => {
     if (openedRef.current || !CASES[id]) return;
     const note = Number(card?.querySelector<HTMLElement>('[data-note]')?.dataset.note) || 0;
-    const o = { id, card, note };
+    const o = { id, card, note, seq: ++seq.current };
     openedRef.current = o;
     setOpened(o);
   }, []);
@@ -70,6 +84,25 @@ export function CaseLayer() {
     const heroCard = heroRef.current?.querySelector<HTMLElement>('.cs-card');
     if (!o || !root || !heroCard || closing.current) return;
     closing.current = true;
+    const finish = () => {
+      openedRef.current = null;
+      closing.current = false;
+      setOpened(null);
+      // A forward pressed while it was closing: the address is the case's
+      // again, so it opens again.
+      const again = caseByPath(window.location.pathname);
+      if (again && ours(window.history.state, again.id)) {
+        requestAnimationFrame(() =>
+          begin(again.id, document.querySelector<HTMLElement>(`#works [data-case="${again.id}"]`)),
+        );
+      }
+    };
+    // Closed before it had even come in (it waits on its pictures for a
+    // moment): nothing to undo on screen.
+    if (!started.current) {
+      finish();
+      return;
+    }
     running.current.forEach((a) => a.finish());
     running.current = [];
     // Nothing takes the pointer or the wheel while it goes, and the case's
@@ -166,21 +199,19 @@ export function CaseLayer() {
         });
       }
     }
-    const finish = () => {
-      openedRef.current = null;
-      closing.current = false;
-      setOpened(null);
-    };
     if (done) done.finished.then(finish, finish);
     else finish();
-  }, []);
+  }, [begin]);
 
   // Back, the bar's button, the end of the case, Escape: the browser's own
   // back where the case put itself in the history, so its forward still works.
   const requestClose = useCallback(() => {
     const o = openedRef.current;
-    if (!o || closing.current) return;
-    if ((window.history.state as { case?: string } | null)?.case === o.id) {
+    if (!o || closing.current || leaving.current) return;
+    if (ours(window.history.state, o.id)) {
+      // Once: a second click before the address has gone back would take
+      // the browser a second step back, off the site.
+      leaving.current = true;
       window.history.back();
     } else {
       close();
@@ -193,7 +224,7 @@ export function CaseLayer() {
     () =>
       onOpenCase(({ id, href, card }) => {
         if (openedRef.current) return;
-        window.history.pushState({ case: id }, '', href);
+        window.history.pushState({ case: id, layer: LAYER }, '', href);
         begin(id, card);
       }),
     [begin],
@@ -201,11 +232,13 @@ export function CaseLayer() {
 
   // Back and forward through the case's entry.
   useEffect(() => {
-    const onPop = () => {
+    const onPop = (e: PopStateEvent) => {
+      leaving.current = false;
       const item = caseByPath(window.location.pathname);
       const o = openedRef.current;
       if (o && o.id !== item?.id) close();
-      else if (!o && item) begin(item.id, document.querySelector<HTMLElement>(`#works [data-case="${item.id}"]`));
+      else if (!o && item && ours(e.state, item.id))
+        begin(item.id, document.querySelector<HTMLElement>(`#works [data-case="${item.id}"]`));
     };
     window.addEventListener('popstate', onPop);
     return () => window.removeEventListener('popstate', onPop);
@@ -235,6 +268,7 @@ export function CaseLayer() {
     const html = document.documentElement;
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const card = opened.card?.isConnected ? opened.card : null;
+    started.current = false;
 
     // The page underneath: still, out of reach, and out of the tab order.
     html.style.overflow = 'hidden';
@@ -259,10 +293,14 @@ export function CaseLayer() {
     root.style.visibility = 'hidden';
     const start = () => {
       if (cancelled || closing.current) return;
+      started.current = true;
       root.style.visibility = '';
-      if (card) card.style.visibility = 'hidden';
-      dropShot = handOver(pageVideo, heroCard.querySelector('video'));
-      pageVideo?.pause();
+      // Under a plain fade the card stays put beneath it: no hole.
+      if (card && !reduced) {
+        card.style.visibility = 'hidden';
+        dropShot = handOver(pageVideo, heroCard.querySelector('video'));
+        pageVideo?.pause();
+      }
 
       const anims: Animation[] = [];
       const add = (el: Element | null, frames: Keyframe[], opts: KeyframeAnimationOptions) => {
@@ -342,7 +380,9 @@ export function CaseLayer() {
         },
         () => {},
       );
-      barRef.current?.querySelector<HTMLElement>('.cp-back')?.focus({ preventScroll: true });
+      // Focus in the case's scroll, so the keyboard reads it down (arrows,
+      // Page Down, Space) from the start.
+      scroller.focus({ preventScroll: true });
     };
     const imgs = Array.from(heroCard.querySelectorAll('img'));
     imgs.forEach((img) => {
@@ -396,11 +436,20 @@ export function CaseLayer() {
   const { Article } = entry;
 
   return createPortal(
-    <div ref={rootRef} className="cp" role="dialog" aria-modal="true" aria-label={`${entry.title} case study`}>
+    <div
+      key={opened.seq}
+      ref={rootRef}
+      className="cp"
+      role="dialog"
+      aria-modal="true"
+      aria-label={`${entry.title} case study`}
+    >
       <div ref={backdropRef} className="cp__backdrop" />
+      {/* First in the tab order, though drawn over the case. */}
+      <CaseBar ref={barRef} title={entry.title} onBack={requestClose} scrollerRef={scrollRef} />
       {/* data-lenis-prevent: the page's smooth scroll leaves this wheel alone;
           the case's own instance runs it. */}
-      <div ref={scrollRef} className="cp__scroll" data-lenis-prevent>
+      <div ref={scrollRef} className="cp__scroll" data-lenis-prevent tabIndex={-1}>
         <div ref={contentRef} className="cp__content">
           <div ref={heroRef} className="cs cp-hero">
             <CaseCard item={item} idPrefix="cp" home={false} titleAs="h1" noteStart={opened.note} />
@@ -410,7 +459,6 @@ export function CaseLayer() {
           </div>
         </div>
       </div>
-      <CaseBar ref={barRef} title={entry.title} onBack={requestClose} scrollerRef={scrollRef} />
     </div>,
     document.body,
   );
