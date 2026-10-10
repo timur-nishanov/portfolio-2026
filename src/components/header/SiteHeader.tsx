@@ -4,6 +4,7 @@ import { createRef, useCallback, useEffect, useRef, useState } from 'react';
 import { menuTitle } from '@/data/menu';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useHideOnScroll } from '@/hooks/useScrollDirection';
+import { cancelFrame, scheduleFrame, type FrameJob } from '@/lib/frame';
 import { canRefract } from '@/lib/refract';
 import { ButtonChevron } from './menu/icons';
 import { MenuContent, type MenuContentHandle } from './menu/MenuContent';
@@ -79,19 +80,27 @@ export function SiteHeader() {
   }, []);
   useEffect(() => {
     let lastY = window.scrollY;
-    const onScroll = () => {
-      const y = window.scrollY;
-      if (y < 120) {
-        clearTimeout(idleTimer.current);
-        setIdleHidden(false);
-      } else if (y < lastY) {
-        setIdleHidden(false);
-        armIdle();
-      }
-      lastY = y;
+    let y = lastY;
+    // With the other scroll effects' reads and writes (lib/frame).
+    const job: FrameJob = {
+      read: () => {
+        y = window.scrollY;
+      },
+      write: () => {
+        if (y < 120) {
+          clearTimeout(idleTimer.current);
+          setIdleHidden(false);
+        } else if (y < lastY) {
+          setIdleHidden(false);
+          armIdle();
+        }
+        lastY = y;
+      },
     };
+    const onScroll = () => scheduleFrame(job);
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => {
+      cancelFrame(job);
       window.removeEventListener('scroll', onScroll);
       clearTimeout(idleTimer.current);
     };
@@ -115,19 +124,20 @@ export function SiteHeader() {
   useEffect(() => {
     const hero = document.getElementById('main');
     const measure = () => setPillW(refs.title.current?.offsetWidth ?? 0);
-    // Off the screen either way counts: past the middle of the page the hero
-    // waits at the end for the loop (LoopToStart), below the screen.
-    const check = () => {
-      const r = hero?.getBoundingClientRect();
-      setOverContent(!!r && (r.bottom < 80 || r.top > window.innerHeight));
-    };
     measure();
-    check();
     document.fonts?.ready.then(measure);
-    window.addEventListener('scroll', check, { passive: true });
     window.addEventListener('resize', measure);
+    // Over content once the hero is out of the screen below the bar's 80px,
+    // either way: past the middle of the page the hero waits at the end for
+    // the loop (LoopToStart), below the screen. Watched, not measured on
+    // every scroll.
+    const io = hero
+      ? new IntersectionObserver(([e]) => setOverContent(!e.isIntersecting), { rootMargin: '-80px 0px 0px 0px' })
+      : null;
+    if (hero) io?.observe(hero);
+    else setOverContent(true);
     return () => {
-      window.removeEventListener('scroll', check);
+      io?.disconnect();
       window.removeEventListener('resize', measure);
     };
   }, [refs]);

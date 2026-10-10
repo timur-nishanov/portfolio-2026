@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { Fragment, useEffect, useRef } from 'react';
 import { aboutText, awardPosters, type AboutLine } from '@/data/about';
+import { cancelFrame, scheduleFrame, type FrameJob } from '@/lib/frame';
 import './about.css';
 
 // Scroll lengths, in screen heights (also feed the section's height in CSS).
@@ -20,6 +21,13 @@ const R = 0.42;
 // over the first TEXT_EASE screen heights, so the diplomas catch it up.
 const TEXT_SPEED = 0.2;
 const TEXT_EASE = 0.12;
+// Keyframes per scroll-driven animation: the curves between them are short
+// enough to be straight to within a pixel.
+const SAMPLES = 96;
+
+// Scroll-driven animation timelines (Chrome 115+, Safari 26+); not in the DOM
+// typings yet.
+type ViewTimelineCtor = new (options: { subject: Element; axis?: 'block' | 'inline' }) => AnimationTimeline;
 
 /**
  * About me, with the award diplomas coming up over it (#awards, the menu's
@@ -43,46 +51,133 @@ export function AboutAwards() {
     const text = sec.querySelector<HTMLElement>('.aw__text');
     const posters = [...sec.querySelectorAll<HTMLElement>('.aw__poster')];
     if (!stage || !text || posters.length === 0) return;
-    let raf = 0;
 
-    const update = () => {
-      raf = 0;
-      const vh = stage.clientHeight;
-      // Scroll since the stage took hold, up to where it lets go: past that
-      // everything stays put on the stage and leaves with the page.
-      const held = Math.min(
-        Math.max(0, -sec.getBoundingClientRect().top),
-        (LEAD + (posters.length - 1) * PER + DWELL) * vh,
-      );
+    // The stage's height and the screen's width change only with the window.
+    let vh = 0;
+    let phone = false;
+    const measure = () => {
+      vh = stage.clientHeight;
+      phone = window.innerWidth < 900;
+    };
+    // Scroll from the stage taking hold to it letting go.
+    const span = () => (LEAD + (posters.length - 1) * PER + DWELL) * vh;
+    // Where everything is, a given distance into the hold.
+    const at = (held: number) => {
       // Distance the text has risen: speed 1 at the hand-over from the page
       // (no kink), easing down to TEXT_SPEED.
       const S = TEXT_EASE * vh;
       const rise = TEXT_SPEED * held + (1 - TEXT_SPEED) * S * (1 - Math.exp(-held / S));
-      text.style.transform = `translate3d(0, ${(-rise).toFixed(1)}px, 0)`;
       // The diplomas glide from just below the screen towards TOP; the glide's
       // length leaves each one R of its way when the next comes up.
       const glide = (PER * vh) / Math.log(1 / R);
       const top = TOP * vh;
       const below = vh + 24;
-      posters.forEach((el, i) => {
-        const t = held - (LEAD + i * PER) * vh;
-        const y = t <= 0 ? below : top + (below - top) * Math.exp(-t / glide);
-        const pose = awardPosters[i];
-        // Half the sideways nudge on a phone.
-        const nudge = pose.nudge * (window.innerWidth < 900 ? 0.5 : 1);
-        el.style.transform = `translate3d(${nudge}px, ${y.toFixed(1)}px, 0) rotate(${pose.tilt}deg)`;
-      });
+      return {
+        text: `translate3d(0, ${(-rise).toFixed(1)}px, 0)`,
+        posters: posters.map((_, i) => {
+          const t = held - (LEAD + i * PER) * vh;
+          const y = t <= 0 ? below : top + (below - top) * Math.exp(-t / glide);
+          const pose = awardPosters[i];
+          // Half the sideways nudge on a phone.
+          const nudge = pose.nudge * (phone ? 0.5 : 1);
+          return `translate3d(${nudge}px, ${y.toFixed(1)}px, 0) rotate(${pose.tilt}deg)`;
+        }),
+      };
     };
+
+    // Where the browser can run an animation off the scroll itself, the text
+    // and the diplomas are such animations, their keyframes sampled from the
+    // curves above: they then move with the scroll on the compositor, in step
+    // with a phone's native scroll. Driven from the scroll event they arrived
+    // a frame or two behind it there, and the incoming diploma, at its
+    // fastest, jumped by tens of pixels.
+    const Timeline = (globalThis as { ViewTimeline?: ViewTimelineCtor }).ViewTimeline;
+    if (Timeline && typeof CSS !== 'undefined' && typeof CSS.px === 'function') {
+      let anims: Animation[] = [];
+      const build = () => {
+        anims.forEach((a) => a.cancel());
+        measure();
+        const max = span();
+        const frames = Array.from({ length: SAMPLES + 1 }, (_, k) => at((max * k) / SAMPLES));
+        const opts = {
+          timeline: new Timeline({ subject: sec, axis: 'block' }),
+          // From the section's top reaching the screen's top, for the length
+          // of the hold; before and after, the ends hold.
+          rangeStart: { rangeName: 'contain', offset: CSS.px(0) },
+          rangeEnd: { rangeName: 'contain', offset: CSS.px(max) },
+          fill: 'both',
+          easing: 'linear',
+        } as KeyframeAnimationOptions;
+        anims = [
+          text.animate(
+            frames.map((f) => ({ transform: f.text })),
+            opts,
+          ),
+          ...posters.map((el, i) =>
+            el.animate(
+              frames.map((f) => ({ transform: f.posters[i] })),
+              opts,
+            ),
+          ),
+        ];
+      };
+      build();
+      window.addEventListener('resize', build);
+      return () => {
+        window.removeEventListener('resize', build);
+        anims.forEach((a) => a.cancel());
+      };
+    }
+
+    let secTop = 0;
+    let shown = NaN; // the held distance last drawn
+    const job: FrameJob = {
+      read: () => {
+        secTop = sec.getBoundingClientRect().top;
+      },
+      write: () => {
+        // Scroll since the stage took hold, up to where it lets go: past that
+        // everything stays put on the stage and leaves with the page.
+        const held = Math.min(Math.max(0, -secTop), span());
+        // Before it takes hold and after it lets go nothing moves: nothing to
+        // write either.
+        if (held === shown) return;
+        shown = held;
+        const f = at(held);
+        text.style.transform = f.text;
+        posters.forEach((el, i) => {
+          el.style.transform = f.posters[i];
+        });
+      },
+    };
+    // Only while the section is anywhere near the screen.
+    let near = false;
+    const io = new IntersectionObserver(
+      ([e]) => {
+        near = e.isIntersecting;
+        if (near) scheduleFrame(job);
+      },
+      { rootMargin: '50% 0px' },
+    );
+    io.observe(sec);
     const schedule = () => {
-      if (!raf) raf = requestAnimationFrame(update);
+      if (near) scheduleFrame(job);
     };
-    update();
+    const onResize = () => {
+      measure();
+      shown = NaN;
+      scheduleFrame(job);
+    };
+    measure();
+    job.read?.();
+    job.write();
     window.addEventListener('scroll', schedule, { passive: true });
-    window.addEventListener('resize', schedule);
+    window.addEventListener('resize', onResize);
     return () => {
-      cancelAnimationFrame(raf);
+      cancelFrame(job);
+      io.disconnect();
       window.removeEventListener('scroll', schedule);
-      window.removeEventListener('resize', schedule);
+      window.removeEventListener('resize', onResize);
     };
   }, []);
 

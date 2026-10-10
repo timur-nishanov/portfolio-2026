@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { showcase } from '@/data/showcase';
+import { cancelFrame, scheduleFrame, type FrameJob } from '@/lib/frame';
 import { CaseCard } from './CaseCard';
 import './showcase.css';
 
@@ -32,85 +33,145 @@ export function CaseShowcase() {
     const cards = [...root.querySelectorAll<HTMLElement>('.cs-card')];
     if (cards.length < 2) return;
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    let raf = 0;
-    // The rise each card was last given, so its place can be read back out of
-    // its rect without the lift feeding into its own progress.
+    // A touch screen scrolls the page natively, on the compositor, and parks
+    // a sticky card there in step with it; the glide, written from script a
+    // frame or two after the scroll, only made the parking card shake. There
+    // it parks as plain sticky.
+    const glides = !reduced && !window.matchMedia('(pointer: coarse)').matches;
+    const videos = cards.map((c) => c.querySelector('video'));
+    // The rise and the glide each card was last given, so its place can be
+    // read back out of its rect without them feeding into its own progress.
     const rise = cards.map(() => 0);
-    // Each card's offset within the section in normal flow (sticky aside).
+    const glide = cards.map(() => 0);
+    // Measured once per layout, not every frame: each card's offset within
+    // the section in normal flow (sticky aside), the gap above it, its height
+    // and the line it parks on.
     let flow: number[] = [];
     let gaps: number[] = [];
+    let heights: number[] = [];
+    let park: number[] = [];
     const measure = () => {
       const cs = getComputedStyle(root);
       let y = parseFloat(cs.paddingTop);
       gaps = cards.map((c, i) => (i > 0 ? parseFloat(getComputedStyle(c).marginTop) : 0));
+      heights = cards.map((c) => c.offsetHeight);
+      park = cards.map((c) => parseFloat(getComputedStyle(c).top) || 0);
       flow = cards.map((c, i) => {
         y += gaps[i];
         const at = y;
-        y += c.offsetHeight;
+        y += heights[i];
         return at;
       });
     };
-    const softplus = (x: number) => (x > 30 ? x : Math.log1p(Math.exp(x)));
-    const update = () => {
-      raf = 0;
-      const sectionTop = root.getBoundingClientRect().top;
-      // The glide: where each card would be in flow, and its eased place.
-      const settle = cards.map((card, i) => {
-        if (reduced) return 0;
-        const park = parseFloat(getComputedStyle(card).top) || 0;
-        const t = sectionTop + flow[i];
-        const eased = park + SETTLE * softplus((t - park) / SETTLE);
-        return eased - Math.max(t, park);
-      });
-      for (let i = 0; i < cards.length; i++) {
-        const card = cards[i];
-        const last = i === cards.length - 1;
-        let p = 0;
-        if (!last) {
-          // Scaled from its top edge, so the rect's top (less the transform) is its place.
-          const top = card.getBoundingClientRect().top + rise[i] - Number(card.dataset.settle || 0);
-          const next = cards[i + 1].getBoundingClientRect().top - Number(cards[i + 1].dataset.settle || 0) + settle[i + 1];
-          // 0 while the next card is a full card (and the gap) below, 1 once it
-          // has slid all the way over and parked on the same line.
-          p = Math.min(1, Math.max(0, 1 - (next - top) / (card.offsetHeight + gaps[i + 1])));
-          if (p > 0.998) p = 1;
-          // The incoming card's light top edge: strongest mid-way, gone once it
-          // has parked (there is nothing left under it to part from).
-          cards[i + 1].style.setProperty('--lift', (4 * p * (1 - p)).toFixed(3));
-        }
-        card.dataset.settle = settle[i].toFixed(2);
-        // The card beneath stays sharp while the next one starts to slide
-        // over it, so it can still be looked at; it recedes over the rest.
-        p = Math.min(1, Math.max(0, (p - RECEDE_FROM) / (1 - RECEDE_FROM)));
-        p = p * p * (3 - 2 * p);
-        if (p === 0) {
-          rise[i] = 0;
-          card.style.transform = settle[i] > 0.05 ? `translateY(${settle[i].toFixed(2)}px)` : '';
-          card.style.filter = '';
-          card.style.opacity = '';
-          continue;
-        }
-        if (!reduced) {
-          rise[i] = COVERED_RISE * p;
-          card.style.transform = `translateY(${(settle[i] - rise[i]).toFixed(2)}px) scale(${1 - COVERED_SCALE * p})`;
-          card.style.filter = `blur(${(COVERED_BLUR * p).toFixed(2)}px) brightness(${(1 - COVERED_DIM * p).toFixed(3)})`;
-        }
-        card.style.opacity = String(1 - p * p);
-      }
+    // Styles are written only where they change: rewriting the same values
+    // every frame still made the browser restyle the cards.
+    const written = cards.map(() => new Map<string, string>());
+    const put = (i: number, prop: string, value: string) => {
+      if (written[i].get(prop) === value) return;
+      written[i].set(prop, value);
+      cards[i].style.setProperty(prop, value);
     };
+    // A card fully covered by the next one isn't drawn at all (nor its blur),
+    // and its clip waits: four videos decoding under one card was the worst
+    // of the scroll's cost.
+    const covered = cards.map(() => false);
+    const heldBack = cards.map(() => false);
+    const softplus = (x: number) => (x > 30 ? x : Math.log1p(Math.exp(x)));
+    let sectionTop = 0;
+    const tops = cards.map(() => 0);
+    const job: FrameJob = {
+      read: () => {
+        sectionTop = root.getBoundingClientRect().top;
+        cards.forEach((card, i) => {
+          tops[i] = card.getBoundingClientRect().top;
+        });
+      },
+      write: () => {
+        // The glide: where each card would be in flow, and its eased place.
+        const settle = cards.map((_, i) => {
+          if (!glides) return 0;
+          const t = sectionTop + flow[i];
+          const eased = park[i] + SETTLE * softplus((t - park[i]) / SETTLE);
+          return eased - Math.max(t, park[i]);
+        });
+        for (let i = 0; i < cards.length; i++) {
+          let p = 0;
+          if (i < cards.length - 1) {
+            // Scaled from its top edge, so the rect's top (less the transform) is its place.
+            const top = tops[i] + rise[i] - glide[i];
+            const next = tops[i + 1] - glide[i + 1] + settle[i + 1];
+            // 0 while the next card is a full card (and the gap) below, 1 once it
+            // has slid all the way over and parked on the same line.
+            p = Math.min(1, Math.max(0, 1 - (next - top) / (heights[i] + gaps[i + 1])));
+            if (p > 0.998) p = 1;
+            // The incoming card's light top edge: strongest mid-way, gone once it
+            // has parked (there is nothing left under it to part from).
+            put(i + 1, '--lift', (4 * p * (1 - p)).toFixed(3));
+          }
+          glide[i] = settle[i];
+          // The card beneath stays sharp while the next one starts to slide
+          // over it, so it can still be looked at; it recedes over the rest.
+          p = Math.min(1, Math.max(0, (p - RECEDE_FROM) / (1 - RECEDE_FROM)));
+          p = p * p * (3 - 2 * p);
+          if (p === 0) {
+            rise[i] = 0;
+            put(i, 'transform', settle[i] > 0.05 ? `translateY(${settle[i].toFixed(2)}px)` : '');
+            put(i, 'filter', '');
+            put(i, 'opacity', '');
+          } else {
+            if (!reduced) {
+              rise[i] = COVERED_RISE * p;
+              put(i, 'transform', `translateY(${(settle[i] - rise[i]).toFixed(2)}px) scale(${1 - COVERED_SCALE * p})`);
+              put(
+                i,
+                'filter',
+                `blur(${(COVERED_BLUR * p).toFixed(2)}px) brightness(${(1 - COVERED_DIM * p).toFixed(3)})`,
+              );
+            }
+            put(i, 'opacity', String(1 - p * p));
+          }
+          const gone = p === 1;
+          if (gone !== covered[i]) {
+            covered[i] = gone;
+            put(i, 'visibility', gone ? 'hidden' : '');
+          }
+          const video = videos[i];
+          if (!video) continue;
+          if (gone && !video.paused) {
+            video.pause();
+            heldBack[i] = true;
+          } else if (!gone && heldBack[i]) {
+            heldBack[i] = false;
+            video.play().catch(() => {});
+          }
+        }
+      },
+    };
+    // Only while the section is anywhere near the screen.
+    let near = false;
+    const io = new IntersectionObserver(
+      ([e]) => {
+        near = e.isIntersecting;
+        if (near) scheduleFrame(job);
+      },
+      { rootMargin: '50% 0px' },
+    );
+    io.observe(root);
     const schedule = () => {
-      if (!raf) raf = requestAnimationFrame(update);
+      if (near) scheduleFrame(job);
     };
     const onResize = () => {
       measure();
-      schedule();
+      scheduleFrame(job);
     };
     measure();
-    update();
+    job.read?.();
+    job.write();
     window.addEventListener('scroll', schedule, { passive: true });
     window.addEventListener('resize', onResize);
     return () => {
-      cancelAnimationFrame(raf);
+      cancelFrame(job);
+      io.disconnect();
       window.removeEventListener('scroll', schedule);
       window.removeEventListener('resize', onResize);
     };
