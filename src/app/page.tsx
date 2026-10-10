@@ -4,6 +4,7 @@ import { CaseShowcase } from '@/components/showcase/CaseShowcase';
 import { AboutAwards } from '@/components/about/AboutAwards';
 import { RandomCollage } from '@/components/random/RandomCollage';
 import { LoopToStart } from '@/components/loop/LoopToStart';
+import { CaseLayer } from '@/components/case/CaseLayer';
 import { SmoothScrollProvider } from '@/components/providers/SmoothScrollProvider';
 // The older sections stay hidden until Timur brings them back. Code stays in
 // place; restore these imports and the block below.
@@ -28,6 +29,8 @@ export default function Home() {
         {/* Always last: closes the page into a loop with the hero. */}
         <LoopToStart />
       </main>
+      {/* A case opens over the page, out of its card. */}
+      <CaseLayer />
       {/* Previous full page, not rendered yet:
       <SmoothScrollProvider>
         <Header />

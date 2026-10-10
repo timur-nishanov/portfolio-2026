@@ -15,6 +15,8 @@ export type ShowcaseCase = {
    *  four lines of the menu style in the reference's 340px column, like the
    *  note in the design. */
   notes: string[];
+  /** The case study, when there is one: the card opens it (CaseCard). */
+  href?: string;
 };
 
 // The cases after the hero, one card each (CaseShowcase). The notes condense
@@ -22,6 +24,7 @@ export type ShowcaseCase = {
 export const showcase: ShowcaseCase[] = [
   {
     id: 'chums',
+    href: '/cases/chums',
     device: 'phone',
     title: 'Chums messenger',
     subtitle: 'Safe crypto chatting',

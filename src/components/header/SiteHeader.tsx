@@ -4,6 +4,7 @@ import { createRef, useCallback, useEffect, useRef, useState } from 'react';
 import { menuTitle } from '@/data/menu';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useHideOnScroll } from '@/hooks/useScrollDirection';
+import { canRefract } from '@/lib/refract';
 import { ButtonChevron } from './menu/icons';
 import { MenuContent, type MenuContentHandle } from './menu/MenuContent';
 import { MenuGlassFilter } from './menu/MenuGlassFilter';
@@ -13,15 +14,6 @@ import './menu/menu.css';
 
 const MENU_ID = 'site-menu';
 const BUTTON_ID = 'site-menu-button';
-
-/** backdrop-filter: url() only renders in Chromium. Safari parses it and
-    paints nothing (the bare-patch failure globals.css also guards against),
-    so the refracting filter is opted into per engine, not via @supports. */
-function canRefract() {
-  if (typeof CSS === 'undefined' || typeof navigator === 'undefined') return false;
-  const ua = navigator.userAgent;
-  return /(Chrome|Chromium)\//.test(ua) && !/Firefox\//.test(ua) && CSS.supports('backdrop-filter', 'url(#a)');
-}
 
 // How long the bar stays after a scroll up brought it back.
 const IDLE_HIDE_MS = 5000;
@@ -260,7 +252,7 @@ export function SiteHeader() {
             {/* Disc and glyphs are separate layers so the liquid (which starts
               as a copy of the disc laid over it) runs between them: the
               chevron stays on top while the button stretches. */}
-            <span ref={refs.disc} className="lgm-button__disc" aria-hidden="true" />
+            <span ref={refs.disc} className="lgm-button__disc glass-disc" aria-hidden="true" />
             <ButtonChevron className="lgm-button__chevron lgm-button__chevron--down" />
             <ButtonChevron className="lgm-button__chevron lgm-button__chevron--up" />
           </button>

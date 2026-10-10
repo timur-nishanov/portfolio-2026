@@ -65,9 +65,11 @@ export function LoopToStart() {
     const offIntent = onIntent(({ deltaY, scroll, target }) => {
       if (deltaY < 0 && target + deltaY < 0 && scroll <= NEAR_TOP) back(scroll);
     });
-    // Native scroll: touch always, the wheel too under reduced motion.
+    // Native scroll: touch always, the wheel too under reduced motion. Never
+    // while a case is open over the page (CaseLayer): its scroll is its own.
+    const caseOpen = () => document.documentElement.hasAttribute('data-case-open');
     const onWheel = (e: WheelEvent) => {
-      if (document.documentElement.classList.contains('lenis')) return;
+      if (document.documentElement.classList.contains('lenis') || caseOpen()) return;
       if (e.deltaY < 0 && window.scrollY <= 0) back(0);
     };
     let touchY = 0;
@@ -75,6 +77,7 @@ export function LoopToStart() {
       touchY = e.touches[0].clientY;
     };
     const onTouchMove = (e: TouchEvent) => {
+      if (caseOpen()) return;
       const y = e.touches[0].clientY;
       // A pull down with the page already at the top (or bouncing past it).
       if (window.scrollY <= 0 && y - touchY > 6) back(0);

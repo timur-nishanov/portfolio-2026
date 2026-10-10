@@ -25,8 +25,17 @@ function pillImage(w: number, h: number) {
   return `data:image/svg+xml,${encodeURIComponent(svg)}`;
 }
 
+type Props = {
+  width: number;
+  height: number;
+  /** Another id, for a second shape on the page (the round buttons). */
+  id?: string;
+  /** Scales the rim and the bend, for shapes far smaller than the pill. */
+  scale?: number;
+};
+
 /** Sized to the pill (its CSS box), so the lens hugs its edge exactly. */
-export function PillGlassFilter({ width, height }: { width: number; height: number }) {
+export function PillGlassFilter({ width, height, id = PILL_GLASS_FILTER_ID, scale = 1 }: Props) {
   const w = Math.max(1, Math.round(width));
   const h = Math.max(1, Math.round(height));
   const channel = (c: 'r' | 'g' | 'b') => {
@@ -40,7 +49,7 @@ export function PillGlassFilter({ width, height }: { width: number; height: numb
         <feDisplacementMap
           in="glass"
           in2="map"
-          scale={BEND[c]}
+          scale={BEND[c] * scale}
           xChannelSelector="R"
           yChannelSelector="G"
           result={`bent-${c}`}
@@ -59,7 +68,7 @@ export function PillGlassFilter({ width, height }: { width: number; height: numb
     >
       <defs>
         <filter
-          id={PILL_GLASS_FILTER_ID}
+          id={id}
           filterUnits="userSpaceOnUse"
           x={-PAD}
           y={-PAD}
@@ -70,13 +79,13 @@ export function PillGlassFilter({ width, height }: { width: number; height: numb
           <feFlood floodColor="#000" result="black" />
           <feImage href={pillImage(w, h)} x="0" y="0" width={w} height={h} result="pill" />
           <feComposite in="pill" in2="black" operator="over" result="shape" />
-          <feGaussianBlur in="shape" stdDeviation={RIM} result="ramp" />
-          <feOffset in="ramp" dx={STEP} result="xBack" />
-          <feOffset in="ramp" dx={-STEP} result="xFwd" />
+          <feGaussianBlur in="shape" stdDeviation={RIM * scale} result="ramp" />
+          <feOffset in="ramp" dx={STEP * scale} result="xBack" />
+          <feOffset in="ramp" dx={-STEP * scale} result="xFwd" />
           <feColorMatrix in="xFwd" type="matrix" values={INVERT} result="xFwdInv" />
           <feComposite in="xBack" in2="xFwdInv" operator="arithmetic" k1="0" k2="0.5" k3="0.5" k4="0" result="dx" />
-          <feOffset in="ramp" dy={STEP} result="yBack" />
-          <feOffset in="ramp" dy={-STEP} result="yFwd" />
+          <feOffset in="ramp" dy={STEP * scale} result="yBack" />
+          <feOffset in="ramp" dy={-STEP * scale} result="yFwd" />
           <feColorMatrix in="yFwd" type="matrix" values={INVERT} result="yFwdInv" />
           <feComposite in="yBack" in2="yFwdInv" operator="arithmetic" k1="0" k2="0.5" k3="0.5" k4="0" result="dy" />
           <feColorMatrix in="dx" type="matrix" values="1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" result="mapX" />
