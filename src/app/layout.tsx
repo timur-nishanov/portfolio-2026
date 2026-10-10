@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { hoves, pixel } from './fonts';
 import { site } from '@/data/site';
 import { LiquidGlassFilter } from '@/components/ui/LiquidGlassFilter';
+import { PillGlassFilter } from '@/components/header/menu/PillGlassFilter';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -17,6 +18,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={`${hoves.variable} ${pixel.variable}`}>
       <body>
         <LiquidGlassFilter />
+        {/* The 20px round chevron buttons' glass (.glass-disc): the header's,
+            the chip over a case card, the case page's back button. */}
+        <PillGlassFilter id="lg-disc" width={20} height={20} scale={0.42} />
         {children}
       </body>
     </html>

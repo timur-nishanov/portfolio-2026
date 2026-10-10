@@ -118,7 +118,7 @@ export function CursorChip({ zoneRef }: { zoneRef: React.RefObject<HTMLElement |
 
   return (
     <div ref={chipRef} className="cs-chip" aria-hidden="true">
-      <span className="cs-chip__dot">
+      <span className="cs-chip__dot glass-disc">
         <ButtonChevron className="cs-chip__chevron" />
       </span>
     </div>

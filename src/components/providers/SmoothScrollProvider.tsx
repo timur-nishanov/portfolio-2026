@@ -60,8 +60,9 @@ export function SmoothScrollProvider({ children }: { children: React.ReactNode }
     lenisRef.current = lenis;
     // Emitted before Lenis moves its target, so a listener can still move the
     // page first and the step carries on from there.
+    // Not while parked: the wheel then belongs to the case on top.
     lenis.on('virtual-scroll', ({ deltaY, event }) => {
-      if (event.type.startsWith('touch')) return;
+      if (event.type.startsWith('touch') || lenis.isStopped) return;
       const step = { deltaY, scroll: lenis.animatedScroll, target: lenis.targetScroll };
       intents.current.forEach((cb) => cb(step));
     });

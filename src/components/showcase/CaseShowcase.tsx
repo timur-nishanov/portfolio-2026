@@ -1,46 +1,9 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { showcase, type ShowcaseCase } from '@/data/showcase';
-import { PhoneMockup } from '@/components/cases/PhoneMockup';
-import { MonitorMockup } from './MonitorMockup';
-import { RotatingNotes } from './RotatingNotes';
-import { CursorChip } from './CursorChip';
+import { showcase } from '@/data/showcase';
+import { CaseCard } from './CaseCard';
 import './showcase.css';
-
-function CaseCard({ item }: { item: ShowcaseCase }) {
-  const ref = useRef<HTMLElement>(null);
-  return (
-    // The whole card will open the case study; that design comes later, so a
-    // click does nothing yet — the chip only previews the affordance.
-    // data-scroll-frame: the menu's "Works" lands with the first card centred.
-    <article
-      ref={ref}
-      className="cs-card"
-      data-device={item.device}
-      aria-labelledby={`cs-${item.id}`}
-      data-scroll-frame
-    >
-      <div className="cs-card__head">
-        <h2 id={`cs-${item.id}`} className="cs-card__title">
-          {item.title}
-        </h2>
-        <p className="cs-card__sub">{item.subtitle}</p>
-      </div>
-      {item.device === 'imac' ? (
-        <div className="cs-card__imac">
-          <MonitorMockup screen={item.phone} />
-        </div>
-      ) : (
-        <div className="cs-card__phone">
-          <PhoneMockup phone={item.phone} />
-        </div>
-      )}
-      <RotatingNotes notes={item.notes} className="cs-card__notes" />
-      <CursorChip zoneRef={ref} />
-    </article>
-  );
-}
 
 // How the card beneath goes as the next one slides over it: it shrinks a
 // little toward its top edge, blurs, and fades out completely by the time it

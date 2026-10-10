@@ -47,9 +47,24 @@
 .cs-card + .cs-card {
   margin-top: 56px;
 }
+/* The case link covers the whole card (CaseCard). No hand on it either: the
+   chip is the cue. */
+.cs-card__link {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  cursor: default;
+  -webkit-tap-highlight-color: transparent;
+}
+.cs-card__link:focus-visible {
+  outline: 2px solid var(--accent, #5b94f0);
+  outline-offset: 4px;
+}
 /* A click on the notes skips to the next one: a hand there, and the chip
-   (which means "open the case") steps aside. */
+   (which means "open the case") steps aside. Above the link. */
 .cs-card__notes {
+  z-index: 2;
   cursor: pointer;
 }
 .cs-card:has(.cs-card__notes:hover) .cs-chip__dot {
@@ -263,16 +278,12 @@
   pointer-events: none;
   will-change: transform;
 }
+/* Glass (.glass-disc, globals.css): the same disc as the header's button. */
 .cs-chip__dot {
   display: grid;
   place-items: center;
   width: 100%;
   height: 100%;
-  border-radius: 50%;
-  background: #fff;
-  box-shadow:
-    0 0 0 0.5px rgba(0, 0, 0, 0.05),
-    0 2px 6px rgba(0, 0, 0, 0.07);
   color: #1c1c1e;
   opacity: 0;
   transform: scale(0.4);
@@ -336,8 +347,11 @@
     align-self: center;
     height: min(560px, 118vw);
   }
-  /* No room left of the column here: the track moves inside it. */
+  /* No room left of the column here: the track moves inside it. Still above
+     the card's link. */
   .cs-card__notes {
+    position: relative;
+    inset: auto; /* the desktop column's offsets don't apply in the stack */
     max-width: none;
     padding-left: 16px;
   }
