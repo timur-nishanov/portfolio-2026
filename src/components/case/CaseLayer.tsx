@@ -11,28 +11,28 @@ import { CASES } from './registry';
 import { onOpenCase } from './caseStore';
 import './case.css';
 
-// The card's surface grows into the page and folds back into the card on
-// an emphasised curve: it gathers, moves, and lands long and soft, so the
-// motion fills its time instead of jumping and then waiting.
+// The card's surface grows into the page on an emphasised curve: it
+// gathers, moves, and lands long and soft. It folds back on a balanced one,
+// so it lands briskly and the card fills again without a wait.
 const GROW = 'cubic-bezier(0.2, 0, 0, 1)';
-// Things going away accelerate out; things arriving settle in.
-const LEAVE = 'cubic-bezier(0.4, 0, 1, 1)';
+const FOLD = 'cubic-bezier(0.4, 0, 0.2, 1)';
+// Fades clear quickly and have no hard end; a hand-over between two layers
+// eases in and out.
+const FADE = 'cubic-bezier(0, 0, 0.2, 1)';
+const SWAP = 'cubic-bezier(0.4, 0, 0.2, 1)';
 const SETTLE = 'cubic-bezier(0.22, 1, 0.36, 1)';
 
-// The choreography, in ms. In: the card's contents melt into a blur, its
-// surface takes over (fading in over the card's own grey) and grows to the
-// whole screen, turning the page's colour on the way; the case comes out of
-// a blur once the surface is most of the way there.
-const IN = { melt: 240, surfaceAt: 60, surfaceFade: 140, grow: 560, contentAt: 200 };
-// Out: the case melts away, the surface folds back into the card and, a
-// little before it lands, lets go of it, while the card's contents come
-// back out of the blur underneath — no moment of an empty card.
-const OUT = { melt: 180, foldAt: 60, fold: 480, releaseAt: 200, release: 280, settleAt: 160, settle: 440 };
-const BLUR = 14; // px, the card's contents at their most melted
-// Melting, the card's contents swell a touch, as if the eye went into the
-// card; the case, leaving, sinks back a touch.
-const SWELL = 1.06;
-const SINK = 0.985;
+// The choreography, in ms. In: the card's contents fade where they are —
+// only fade: blurred and swelling, under a surface fading in over them, they
+// went muddy — and once they are all but gone the surface takes over from
+// the card, whole and at once (the same grey in the same place, so the
+// hand-over doesn't show), and grows into the page, turning its colour on
+// the way; the case comes in as it opens.
+const IN = { clear: 180, surfaceAt: 150, grow: 520, contentAt: 300 };
+// Out: the case fades, the surface folds back into the card and lets go of
+// it as it lands: the card under it is the same grey, so all that comes
+// through is the card's contents, with no moment of an empty card.
+const OUT = { clear: 160, foldAt: 60, fold: 460, lift: 200, refill: 240 };
 
 type Opened = { id: string; card: HTMLElement | null; seq: number };
 type CaseState = { case?: string; layer?: string } | null;
@@ -84,7 +84,7 @@ function cardBox(card: HTMLElement | null, layer: HTMLElement): Rect | null {
 const inset = (b: Rect) => `inset(${b.top}px ${b.right}px ${b.bottom}px ${b.left}px round ${b.radius}px)`;
 const FULL = 'inset(0px 0px 0px 0px round 0px)';
 
-/** What melts away on the card: everything but its link, which draws nothing. */
+/** What fades on the card: everything but its link, which draws nothing. */
 const cardParts = (card: HTMLElement | null) =>
   card ? Array.from(card.children).filter((el) => !el.classList.contains('cs-card__link')) : [];
 
@@ -147,9 +147,9 @@ function flyTitle(
  * going back finds the page exactly as it was left.
  *
  * There is no copy of the card in the case: the card itself becomes the
- * page. Its contents melt into a blur, its grey surface grows to the whole
- * screen and turns the page's colour, and the case comes out of the blur on
- * it. The way back folds the page into the same card.
+ * page. Its contents fade, its grey surface grows to the whole screen and
+ * turns the page's colour, and the case comes in on it. The way back folds
+ * the page into the same card, which fills again.
  */
 export function CaseLayer() {
   const { setPaused } = useSmoothScroll();
@@ -215,14 +215,7 @@ export function CaseLayer() {
       back: now(back)?.opacity ?? '1',
       title: now(barTitle)?.opacity ?? '1',
       header: now(document.querySelector('.site-header'))?.opacity ?? '0',
-      parts: parts.map((el) => {
-        const cs = getComputedStyle(el);
-        return {
-          opacity: cs.opacity,
-          filter: cs.filter === 'none' ? 'blur(0px)' : cs.filter,
-          scale: cs.scale === 'none' ? '1' : cs.scale,
-        };
-      }),
+      parts: parts.map((el) => getComputedStyle(el).opacity),
     };
     openTimers.current.forEach((t) => window.clearTimeout(t));
     openTimers.current = [];
@@ -249,30 +242,24 @@ export function CaseLayer() {
       if (cardTitle) cardTitle.style.opacity = '';
       done = out(root, [{ opacity: 1 }, { opacity: 0 }], { duration: 220, easing: 'ease' });
     } else {
-      // The case melts away first.
-      out(
-        scrollRef.current,
-        [
-          { opacity: 1, filter: 'blur(0px)', scale: '1' },
-          { opacity: 0, filter: 'blur(6px)', scale: String(SINK) },
-        ],
-        { duration: OUT.melt, easing: LEAVE },
-      );
-      // The bar is glass: a filter on it would empty its backdrop, so its
-      // parts only fade.
-      out(back, [{ opacity: was.back }, { opacity: 0 }], { duration: OUT.melt, easing: LEAVE });
+      // The case fades first, the bar with it.
+      out(scrollRef.current, [{ opacity: 1 }, { opacity: 0 }], { duration: OUT.clear, easing: FADE });
+      out(back, [{ opacity: was.back }, { opacity: 0 }], { duration: OUT.clear, easing: FADE });
       out(barRef.current?.querySelector('.cp-bar__glass'), [{ opacity: 1 }, { opacity: 0 }], {
-        duration: OUT.melt,
-        easing: LEAVE,
+        duration: OUT.clear,
+        easing: FADE,
       });
       const box = cardBox(card, root);
+      // Closed before the surface had taken over from the card: there is
+      // nothing to fold, the card is still there under it.
+      const fold = !!box && Number(was.opacity) > 0.5;
       // The name flies back into the card — from the bar, or from wherever
       // it was still on its way up — landing as the card does, where the
       // card's own title takes over from it.
       const from =
         was.fly ??
         (barTitle && Number(was.title) > 0.5 && onScreen(barTitle) ? barTitle.getBoundingClientRect() : null);
-      if (box && fly && from && cardTitle) {
+      if (fold && fly && from && cardTitle) {
         const [flight] = flyTitle(
           fly,
           { rect: from, text: barTitle?.textContent ?? null },
@@ -289,7 +276,7 @@ export function CaseLayer() {
         );
       } else {
         if (cardTitle) cardTitle.style.opacity = '';
-        out(barTitle, [{ opacity: was.title }, { opacity: 0 }], { duration: OUT.melt, easing: LEAVE });
+        out(barTitle, [{ opacity: was.title }, { opacity: 0 }], { duration: OUT.clear, easing: FADE });
       }
       // The site's header comes back where the bar was, once the bar has
       // gone.
@@ -297,48 +284,45 @@ export function CaseLayer() {
       headerFade.current = Array.from(document.querySelectorAll('.site-header'), (h) =>
         h.animate([{ opacity: was.header }, { opacity: 1 }], {
           duration: 280,
-          delay: Number(was.header) > 0.5 ? 0 : OUT.melt,
+          delay: Number(was.header) > 0.5 ? 0 : OUT.clear,
           easing: 'ease-out',
           fill: 'backwards',
         }),
       );
-      if (box && card) {
+      if (box && card && fold) {
         // Then the page folds back into the card...
-        const grey = getComputedStyle(card).backgroundColor;
+        const landing = OUT.foldAt + OUT.fold;
         out(
           surface,
           [
             { clipPath: was.clipPath, backgroundColor: was.backgroundColor },
-            { clipPath: inset(box), backgroundColor: grey },
+            { clipPath: inset(box), backgroundColor: getComputedStyle(card).backgroundColor },
           ],
-          { duration: OUT.fold, delay: OUT.foldAt, easing: GROW, fill: 'both' },
+          { duration: OUT.fold, delay: OUT.foldAt, easing: FOLD, fill: 'both' },
         );
-        // ...lets go of it as it lands, and the card's contents come back
-        // out of the blur underneath, from however melted they had got.
+        // ...and lets go of it as it lands. The card's contents are whole
+        // again under it by then, so they come through as it clears.
         out(surface, [{ opacity: was.opacity }, { opacity: 0 }], {
-          duration: OUT.release,
-          delay: OUT.releaseAt,
-          easing: 'ease-in-out',
+          duration: OUT.lift,
+          delay: landing - OUT.lift,
+          easing: SWAP,
         });
         melted.current = parts.map((el, i) =>
-          el.animate([was.parts[i], { opacity: 1, filter: 'blur(0px)', scale: '1' }], {
-            duration: OUT.settle,
-            delay: OUT.settleAt,
-            easing: SETTLE,
-            fill: 'backwards',
-          }),
+          el.animate([{ opacity: was.parts[i] }, { opacity: was.parts[i] }], { duration: landing - OUT.lift }),
         );
-        // Done once the surface has both landed and let go, and the name is
-        // home.
-        done = surface.animate([{}, {}], { duration: Math.max(OUT.foldAt + OUT.fold, OUT.releaseAt + OUT.release) });
+        done = surface.animate([{}, {}], { duration: landing });
+      } else if (box && card) {
+        // Closed before the surface had taken over: the card is still there
+        // under it, and its contents just come back in.
+        melted.current = parts.map((el, i) =>
+          el.animate([{ opacity: was.parts[i] }, { opacity: 1 }], { duration: OUT.refill, easing: FADE }),
+        );
+        done = surface.animate([{}, {}], { duration: 0 });
       } else {
         // No card to fold into: the page just lets go, and the card (if it
-        // had melted at all) comes back where it is.
+        // had faded at all) comes back where it is.
         melted.current = parts.map((el, i) =>
-          el.animate([was.parts[i], { opacity: 1, filter: 'blur(0px)', scale: '1' }], {
-            duration: OUT.settle,
-            easing: SETTLE,
-          }),
+          el.animate([{ opacity: was.parts[i] }, { opacity: 1 }], { duration: OUT.refill, easing: FADE }),
         );
         done = out(surface, [{ opacity: was.opacity }, { opacity: 0 }], {
           duration: 360,
@@ -451,33 +435,33 @@ export function CaseLayer() {
       const box = cardBox(card, root);
       const page = getComputedStyle(surface).backgroundColor;
       if (box && card) {
-        // The card's contents melt into a blur, where they are.
+        // The card's contents fade, where they are.
         melted.current = cardParts(card).map((el) =>
-          el.animate(
-            [
-              { opacity: 1, filter: 'blur(0px)', scale: '1' },
-              { opacity: 0, filter: `blur(${BLUR}px)`, scale: String(SWELL) },
-            ],
-            { duration: IN.melt, easing: LEAVE, fill: 'forwards' },
-          ),
+          el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: IN.clear, easing: FADE, fill: 'forwards' }),
         );
-        // Its surface takes over from the card's own grey — the same colour
-        // in the same place, so the hand-over doesn't show — and grows.
+        // Its surface takes over from the card, whole and at once, once the
+        // card is its own grey under it — the same colour in the same place,
+        // so the hand-over doesn't show — and grows.
         const grey = getComputedStyle(card).backgroundColor;
         add(surface, [{ opacity: 0 }, { opacity: 1 }], {
-          duration: IN.surfaceFade,
-          delay: IN.surfaceAt,
-          easing: 'linear',
+          duration: IN.surfaceAt,
+          easing: 'step-end',
           fill: 'backwards',
         });
-        add(
-          surface,
-          [
-            { clipPath: inset(box), backgroundColor: grey },
-            { clipPath: FULL, backgroundColor: page },
-          ],
-          { duration: IN.grow, delay: IN.surfaceAt, easing: GROW, fill: 'backwards' },
-        );
+        add(surface, [{ clipPath: inset(box) }, { clipPath: FULL }], {
+          duration: IN.grow,
+          delay: IN.surfaceAt,
+          easing: GROW,
+          fill: 'backwards',
+        });
+        // The colour turns evenly over the whole way, not with the size's
+        // early rush: across the whole screen that read as a flash.
+        add(surface, [{ backgroundColor: grey }, { backgroundColor: page }], {
+          duration: IN.grow,
+          delay: IN.surfaceAt,
+          easing: SWAP,
+          fill: 'backwards',
+        });
       } else {
         // No card to grow out of (reopened with the page elsewhere): the
         // page simply arrives.
@@ -535,7 +519,7 @@ export function CaseLayer() {
           openTimers.current.push(
             window.setTimeout(release, IN.contentAt),
             // The card's video has nothing to show while the case is over it.
-            window.setTimeout(() => pageVideo?.pause(), IN.melt),
+            window.setTimeout(() => pageVideo?.pause(), IN.clear),
           );
         });
       });
