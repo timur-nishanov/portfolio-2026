@@ -10,7 +10,7 @@
 .cp-page,
 .cp-bar {
   --cp-ink: var(--ink-strong, #08080a);
-  --cp-text: rgba(8, 8, 10, 0.72); /* running text: a step softer than headings */
+  --cp-text: rgba(8, 8, 10, 0.8); /* running text: a step softer than headings */
   --cp-grey: #ababab; /* the page's secondary grey: labels, captions */
   --cp-hair: rgba(8, 8, 10, 0.08);
   --cp-card: #e6e6e7;
@@ -254,7 +254,9 @@
   font-family: var(--font-sf);
   font-size: 20px;
   font-weight: 400;
-  line-height: 1.32;
+  /* Room between the lines for reading on: the cards' 1.32 is for a line or
+     two, and at length it packed the text into a grey block. */
+  line-height: 1.5;
   letter-spacing: 0;
   color: var(--cp-text);
 }
@@ -286,7 +288,7 @@
   margin-right: auto;
 }
 .cp-col > * + * {
-  margin-top: 20px;
+  margin-top: 24px;
 }
 
 /* The two styles. Headings are the text's own size, in full ink; labels and
@@ -298,6 +300,10 @@
   color: var(--cp-ink);
   line-height: 1.32;
   text-wrap: balance;
+}
+.cp-lead {
+  line-height: 1.45;
+  text-wrap: pretty;
 }
 .cp-label,
 .cp-cap,
@@ -335,7 +341,7 @@
   margin-top: 72px;
 }
 .cp-part > * + * {
-  margin-top: 20px;
+  margin-top: 24px;
 }
 .cp-part > .cp-label + * {
   margin-top: 8px;
@@ -346,13 +352,13 @@
   position: relative;
 }
 .cp-list li + li {
-  margin-top: 8px;
+  margin-top: 10px;
 }
 .cp-list li::before {
   content: '';
   position: absolute;
   left: -18px;
-  top: calc(0.66em - 2px);
+  top: calc(0.75em - 2px);
   width: 4px;
   height: 4px;
   border-radius: 50%;
@@ -373,8 +379,11 @@
 .cp-fact:last-child {
   border-bottom: 1px solid var(--cp-hair);
 }
+.cp-fact dd {
+  line-height: 22px;
+}
 .cp-lines li + li {
-  margin-top: 6px;
+  margin-top: 4px;
 }
 .cp-intro > .cp-note {
   margin-top: 14px;
@@ -415,6 +424,66 @@
 }
 .cp-rule__title + .cp-list {
   margin-top: 8px;
+}
+
+/* A long passage kept to its first three lines (More), the last of them
+   fading under a veil of the page's colour; "Read more" below, in the notes'
+   style. Open, the veil lifts and the passage runs its full height. */
+.cp-more__body {
+  position: relative;
+  overflow: hidden;
+  max-height: 4.5em;
+}
+.cp-more[data-open] .cp-more__body {
+  max-height: none;
+}
+.cp-more__body::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3em;
+  background: linear-gradient(to bottom, rgba(247, 247, 245, 0), var(--bg, #f7f7f5) 85%);
+  pointer-events: none;
+  transition: opacity 360ms var(--cp-ease);
+}
+.cp-more[data-open] .cp-more__body::after {
+  opacity: 0;
+}
+.cp-more__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin: 6px 0 0 -6px;
+  padding: 6px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  font-family: inherit;
+  font-size: 15px;
+  line-height: 18px;
+  letter-spacing: 0.2px;
+  color: var(--cp-grey);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 160ms ease;
+}
+.cp-more__chevron {
+  transform: rotate(180deg);
+  transition: transform 360ms var(--cp-ease);
+}
+.cp-more[data-open] .cp-more__chevron {
+  transform: none;
+}
+@media (hover: hover) and (pointer: fine) {
+  .cp-more__toggle:hover {
+    color: var(--cp-ink);
+  }
+}
+.cp-more__toggle:focus-visible {
+  outline: 2px solid var(--accent, #5b94f0);
+  outline-offset: 0;
 }
 
 /* Where it landed: three short paragraphs, each led by its subject. */
@@ -728,8 +797,11 @@
     --cp-chapter: 88px;
     --cp-step: 40px;
   }
+  /* A phone's column takes the text a step smaller, so a line still holds
+     a phrase. */
   .cp-article {
     padding: 0 20px;
+    font-size: 18px;
   }
   .cp-wide {
     margin-left: -8px;

@@ -4,9 +4,9 @@ import { useEffect, useRef } from 'react';
 import { assets } from '@/data/assets';
 
 /**
- * Non-interactive head — reduced motion, browsers without GPU-drawn WebGL, and
- * the moment before the live head is ready (FloatingHead). Same box the 3D
- * stage occupies so the layout doesn't shift when three.js is skipped.
+ * Non-interactive head — reduced motion and browsers without GPU-drawn WebGL
+ * (FloatingHead). Same box the 3D stage occupies so the layout doesn't shift
+ * when three.js is skipped.
  * pointer-events-none: it sits behind the hero text and never blocks
  * selection.
  *
@@ -57,8 +57,8 @@ export function StaticHead() {
   return (
     <div className="pointer-events-none absolute inset-0">
       {/* The live head is lit by its shader: darker, warmer and richer than
-          the bare texture. Matched by eye-and-numbers, so the two read as one
-          head and the hand-over (FloatingHead) doesn't flash. */}
+          the bare texture. Matched by eye-and-numbers, so the still head
+          reads as the same one. */}
       <canvas
         ref={ref}
         aria-hidden="true"

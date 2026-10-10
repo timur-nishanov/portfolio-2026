@@ -36,9 +36,39 @@
   margin-top: clamp(140px, 15vw, 260px);
 }
 
-/* The clip and its title; drifts against the page on scroll (RandomCollage). */
+/* The clip and its title; drifts against the page on scroll: from
+   --drift screens above its place as it comes in at the bottom to as far
+   below as it leaves at the top, so it moves a touch slower than the page. Tied to the scroll by the browser where it
+   can (it then runs with the scroll on the compositor, so a phone's native
+   scroll never leaves it behind); elsewhere RandomCollage drives it. */
+.rc__item {
+  --drift: 0.035;
+}
+.rc__item[data-shape='upright'] {
+  --drift: 0.075;
+}
 .rc__card {
   will-change: transform;
+}
+@keyframes rc-drift {
+  from {
+    transform: translate3d(0, calc(var(--drift) * -100vh), 0);
+  }
+  to {
+    transform: translate3d(0, calc(var(--drift) * 100vh), 0);
+  }
+}
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .rc__item {
+      view-timeline: --rc-item block;
+    }
+    .rc__card {
+      animation: rc-drift linear both;
+      animation-timeline: --rc-item;
+      animation-range: cover 0% cover 100%;
+    }
+  }
 }
 .rc__media {
   position: relative;

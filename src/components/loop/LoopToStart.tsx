@@ -42,6 +42,9 @@ export function LoopToStart() {
     // Only on the way down — a jump up lands right on that place.
     let lastY = window.scrollY;
     const check = () => {
+      // Every frame from the smooth scroll's loop: nothing to do (or read)
+      // while the page stands still.
+      if (window.scrollY === lastY) return;
       const down = window.scrollY > lastY;
       lastY = window.scrollY;
       const top = slot.getBoundingClientRect().top;
@@ -83,7 +86,11 @@ export function LoopToStart() {
       if (window.scrollY <= 0 && y - touchY > 6) back(0);
       touchY = y;
     };
-    window.addEventListener('scroll', check, { passive: true });
+    // Without the smooth scroll (reduced motion) its loop doesn't run.
+    const onScroll = () => {
+      if (!document.documentElement.classList.contains('lenis')) check();
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', place);
     window.addEventListener('wheel', onWheel, { passive: true });
     window.addEventListener('touchstart', onTouchStart, { passive: true });
@@ -92,7 +99,7 @@ export function LoopToStart() {
     return () => {
       offFrame();
       offIntent();
-      window.removeEventListener('scroll', check);
+      window.removeEventListener('scroll', onScroll);
       window.removeEventListener('resize', place);
       window.removeEventListener('wheel', onWheel);
       window.removeEventListener('touchstart', onTouchStart);

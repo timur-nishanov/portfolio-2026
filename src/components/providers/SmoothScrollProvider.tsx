@@ -3,6 +3,7 @@
 import Lenis from 'lenis';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef } from 'react';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { flushFrame } from '@/lib/frame';
 
 type FrameCb = (scrollY: number) => void;
 /** A wheel step the smooth scroller is about to apply, with where it is now
@@ -73,6 +74,9 @@ export function SmoothScrollProvider({ children }: { children: React.ReactNode }
       const y = lenis.scroll;
       // One loop feeds every parallax subscriber — no per-element scroll listeners.
       callbacks.current.forEach((cb) => cb(y));
+      // Then the scroll effects' pass (lib/frame), on the page where it is
+      // now: in step with the scroll, never a frame behind it.
+      flushFrame();
       raf = requestAnimationFrame(loop);
     };
     raf = requestAnimationFrame(loop);

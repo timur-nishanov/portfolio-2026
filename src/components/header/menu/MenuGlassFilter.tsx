@@ -4,7 +4,9 @@ export const MENU_GLASS_FILTER_ID = 'lg-menu';
 
 // Frost σ measured off the mockup: the hair behind the panel blurs over ~18px
 // (10–90%), i.e. σ ≈ 7–8.
-const FROST = 8;
+export const MENU_FROST = 8;
+// Colour lift of what shows through the frost.
+export const MENU_SATURATE = 1.2;
 // The lip is clearer glass: a thin band along the edge shows the backdrop
 // only lightly softened, bent by the rim, before the frost takes over.
 const CLEAR = 2.5;
@@ -26,6 +28,10 @@ type Props = {
   filterRef: Ref<SVGFilterElement>;
   floodRef: Ref<SVGFEFloodElement>;
   displaceRef: Ref<SVGFEDisplacementMapElement>;
+  /** The frost and the colour lift: the morph starts them at the button
+      disc's clearer glass (#lg-disc) and ends them at the panel's. */
+  frostRef: Ref<SVGFEGaussianBlurElement>;
+  saturateRef: Ref<SVGFEColorMatrixElement>;
 };
 
 /**
@@ -45,7 +51,7 @@ type Props = {
  * the blur. Region and flood are in user space (= the element's own px), set
  * from JS; the values here are only the resting panel's.
  */
-export function MenuGlassFilter({ filterRef, floodRef, displaceRef }: Props) {
+export function MenuGlassFilter({ filterRef, floodRef, displaceRef, frostRef, saturateRef }: Props) {
   return (
     <svg
       width="0"
@@ -85,11 +91,17 @@ export function MenuGlassFilter({ filterRef, floodRef, displaceRef }: Props) {
           <feBlend in="mapX" in2="mapY" mode="lighten" result="map" />
           {/* Frost inside, a nearly clear lip at the edge. */}
           <feColorMatrix in="ramp" type="matrix" values={LIP} result="lipMask" />
-          <feGaussianBlur in="SourceGraphic" stdDeviation={FROST} result="frost" />
+          <feGaussianBlur ref={frostRef} in="SourceGraphic" stdDeviation={MENU_FROST} result="frost" />
           <feGaussianBlur in="SourceGraphic" stdDeviation={CLEAR} result="clear" />
           <feComposite in="clear" in2="lipMask" operator="in" result="lip" />
           <feComposite in="lip" in2="frost" operator="over" result="glass" />
-          <feColorMatrix in="glass" type="saturate" values="1.2" result="glassSat" />
+          <feColorMatrix
+            ref={saturateRef}
+            in="glass"
+            type="saturate"
+            values={String(MENU_SATURATE)}
+            result="glassSat"
+          />
           <feDisplacementMap
             ref={displaceRef}
             in="glassSat"

@@ -180,6 +180,13 @@ body {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   overflow-x: hidden;
+  /* Clip, not hide, where the engine has it: hidden makes body a scroll
+     container the moment the page is locked (a case open sets overflow on
+     html, which then stops passing body's on to the viewport), and sticky
+     and scroll-driven animations would measure against body instead of the
+     page — the parked card jumped up in the first frame of every opening,
+     and the awards and Random drift jumped while a case was going. */
+  overflow-x: clip;
 }
 
 html.lenis,
