@@ -25,13 +25,7 @@ const wordCount = (text: string) => text.trim().split(/\s+/).length;
  *  four-line notes). Pointing at a note still holds it for slower readers. */
 export const holdFor = (text: string) => Math.min(7000, Math.max(3500, 900 + wordCount(text) * 200));
 
-type Props = {
-  notes: string[];
-  className?: string;
-  /** Which note to open on, already shown (the case page's copy of a card
-   *  carries on from the card's note). */
-  startAt?: number;
-};
+type Props = { notes: string[]; className?: string };
 
 /**
  * Notes that take turns in one place. The block is anchored by its top edge
@@ -40,10 +34,10 @@ type Props = {
  * nothing below shifts. Runs only while on screen and the tab is visible, and
  * holds while a mouse points at it — someone reading shouldn't lose the line.
  */
-export function RotatingNotes({ notes, className = '', startAt = 0 }: Props) {
+export function RotatingNotes({ notes, className = '' }: Props) {
   const reduced = useReducedMotion();
   const rootRef = useRef<HTMLDivElement>(null);
-  const [index, setIndex] = useState(() => (startAt >= 0 && startAt < notes.length ? startAt : 0));
+  const [index, setIndex] = useState(0);
   const [phase, setPhase] = useState<'in' | 'out'>('in');
   const [active, setActive] = useState(false);
   const [held, setHeld] = useState(false);
@@ -121,7 +115,6 @@ export function RotatingNotes({ notes, className = '', startAt = 0 }: Props) {
     <div
       ref={rootRef}
       className={`rn ${className}`}
-      data-note={index}
       onPointerEnter={(e) => hold(e, true)}
       onPointerLeave={(e) => hold(e, false)}
       onClick={skip}

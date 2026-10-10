@@ -81,7 +81,8 @@ export const CaseBar = forwardRef<HTMLDivElement, Props>(function CaseBar(
           <span className="cp-back__disc glass-disc" aria-hidden="true" />
           <ButtonChevron className="cp-back__chevron cp-chevron-left" />
         </BackLink>
-        <p className="cp-bar__title">{title}</p>
+        {/* The page's title, as the site's own title sits in its header. */}
+        <h1 className="cp-bar__title">{title}</h1>
       </div>
     </div>
   );
