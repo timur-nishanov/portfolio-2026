@@ -248,14 +248,13 @@
   transform: rotate(-90deg) translateY(0.5px);
 }
 
-
 /* --- the article ---------------------------------------------------------- */
 .cp-article {
   padding: 0 20px;
   font-family: var(--font-sf);
   font-size: 20px;
   font-weight: 400;
-  line-height: 1.4;
+  line-height: 1.32;
   letter-spacing: 0;
   color: var(--cp-text);
 }
@@ -322,15 +321,9 @@
 .cp-panel__sub {
   color: var(--cp-grey);
 }
-/* Written in capitals in the copy; set in sentence case. */
 .cp-label,
 .cp-moment__label {
   display: block;
-  text-transform: lowercase;
-}
-.cp-label::first-letter,
-.cp-moment__label::first-letter {
-  text-transform: uppercase;
 }
 
 /* --- overview ------------------------------------------------------------- */
@@ -359,7 +352,7 @@
   content: '';
   position: absolute;
   left: -18px;
-  top: calc(0.7em - 2px);
+  top: calc(0.66em - 2px);
   width: 4px;
   height: 4px;
   border-radius: 50%;
@@ -381,7 +374,7 @@
   border-bottom: 1px solid var(--cp-hair);
 }
 .cp-lines li + li {
-  margin-top: 2px;
+  margin-top: 6px;
 }
 .cp-intro > .cp-note {
   margin-top: 14px;
@@ -526,6 +519,12 @@
   border-radius: 10px;
 }
 
+/* Under a corner label the screen sits a touch smaller, clear of it. */
+.cp-card--small .cp-frame--shot,
+.cp-card--small .cp-ph--desktop {
+  width: min(74cqw, 60cqh * 16 / 10);
+}
+
 /* The stand-in: a lighter shape of the screen to come, and what goes there. */
 .cp-ph {
   display: flex;
@@ -624,11 +623,11 @@
   flex: none;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 12px;
   width: var(--d);
   height: var(--d);
-  padding: 0 calc(var(--d) * 0.18);
+  padding: calc(var(--d) * 0.3) calc(var(--d) * 0.12) 0;
   border-radius: 50%;
   box-shadow: inset 0 0 0 1px rgba(8, 8, 10, 0.14);
   text-align: center;
@@ -731,7 +730,6 @@
   }
   .cp-article {
     padding: 0 20px;
-    font-size: 18px;
   }
   .cp-wide {
     margin-left: -8px;
@@ -777,6 +775,11 @@
   .cp-card__label {
     top: 12px;
     left: 14px;
+  }
+  .cp-card--half .cp-frame--phone,
+  .cp-card--half .cp-ph--phone {
+    height: min(72cqh, 80cqw * 2710 / 1310);
+    margin-top: 12px;
   }
   .cp-cap {
     padding: 0 8px;

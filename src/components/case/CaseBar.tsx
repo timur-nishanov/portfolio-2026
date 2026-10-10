@@ -24,10 +24,7 @@ type Props = {
  * comes back on a glass pill once there is content under it; it gets out of
  * the way while reading down and returns on the first scroll up.
  */
-export const CaseBar = forwardRef<HTMLDivElement, Props>(function CaseBar(
-  { title, onBack, backHref, scrollerRef },
-  ref,
-) {
+export const CaseBar = forwardRef<HTMLElement, Props>(function CaseBar({ title, onBack, backHref, scrollerRef }, ref) {
   const rowRef = useRef<HTMLDivElement>(null);
   const [refract, setRefract] = useState(false);
   const [pillW, setPillW] = useState(0);
@@ -65,7 +62,7 @@ export const CaseBar = forwardRef<HTMLDivElement, Props>(function CaseBar(
   }, [scrollerRef]);
 
   return (
-    <div
+    <header
       ref={ref}
       className="cp-bar"
       data-refract={refract ? '' : undefined}
@@ -84,6 +81,6 @@ export const CaseBar = forwardRef<HTMLDivElement, Props>(function CaseBar(
         {/* The page's title, as the site's own title sits in its header. */}
         <h1 className="cp-bar__title">{title}</h1>
       </div>
-    </div>
+    </header>
   );
 });

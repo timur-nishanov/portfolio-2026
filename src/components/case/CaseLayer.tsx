@@ -55,12 +55,24 @@ const caseByPath = (path: string) => {
 
 const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-/** The card's box inside the layer (which covers the screen from 0,0), or
-    null when it isn't on the screen to grow out of or fold into. */
-function cardBox(card: HTMLElement | null, layer: HTMLElement): Rect | null {
-  if (!card?.isConnected) return null;
+/** Whether the card can actually be seen: on the screen, and not faded out
+    under the next card sliding over it (the cards stack, CaseShowcase). By
+    geometry, not by hit-testing — the page is inert while a case is open. */
+function cardSeen(card: HTMLElement | null): card is HTMLElement {
+  if (!card?.isConnected) return false;
   const r = card.getBoundingClientRect();
-  if (r.bottom <= 0 || r.top >= window.innerHeight || !r.width) return null;
+  if (r.bottom <= 0 || r.top >= window.innerHeight || !r.width) return false;
+  if (parseFloat(getComputedStyle(card).opacity) < 0.5) return false;
+  const next = card.nextElementSibling;
+  if (next?.classList.contains('cs-card') && next.getBoundingClientRect().top < r.top + r.height * 0.5) return false;
+  return true;
+}
+
+/** The card's box inside the layer (which covers the screen from 0,0), or
+    null when it can't be seen to grow out of or fold into. */
+function cardBox(card: HTMLElement | null, layer: HTMLElement): Rect | null {
+  if (!cardSeen(card)) return null;
+  const r = card.getBoundingClientRect();
   const z = zoomOf(layer);
   const w = layer.clientWidth;
   const h = layer.clientHeight;
@@ -90,13 +102,19 @@ const onScreen = (el: HTMLElement | null | undefined): el is HTMLElement => {
  * on, while it is moving fast, and arrives as the very text it lands on: it
  * hands over without a crossfade. Visible only while the flight runs.
  */
-function flyTitle(fly: HTMLElement, from: HTMLElement, to: HTMLElement, layer: HTMLElement, duration: number) {
+function flyTitle(
+  fly: HTMLElement,
+  from: { rect: DOMRect; text: string | null },
+  to: HTMLElement,
+  layer: HTMLElement,
+  duration: number,
+) {
   const z = zoomOf(layer);
-  const a = from.getBoundingClientRect();
+  const a = from.rect;
   const b = to.getBoundingClientRect();
   const start = document.createElement('span');
   const end = document.createElement('span');
-  start.textContent = from.textContent;
+  start.textContent = from.text;
   end.textContent = to.textContent;
   end.className = 'cp-fly__to';
   fly.replaceChildren(start, end);
@@ -143,12 +161,13 @@ export function CaseLayer() {
   const running = useRef<Animation[]>([]);
   const melted = useRef<Animation[]>([]);
   const headerFade = useRef<Animation[]>([]);
+  const openTimers = useRef<number[]>([]);
   const lenisRef = useRef<Lenis | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const surfaceRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
-  const barRef = useRef<HTMLDivElement>(null);
+  const barRef = useRef<HTMLElement>(null);
   const flyRef = useRef<HTMLDivElement>(null);
 
   const begin = useCallback((id: string, card: HTMLElement | null) => {
@@ -178,15 +197,46 @@ export function CaseLayer() {
         );
       }
     };
-    running.current.forEach((a) => a.finish());
+    // A close can come while the way in is still running: everything sets
+    // off back from wherever it has got to, never from the end of the way in.
+    const card = o.card?.isConnected ? o.card : null;
+    const fly = flyRef.current;
+    const back = barRef.current?.querySelector<HTMLElement>('.cp-back');
+    const barTitle = barRef.current?.querySelector<HTMLElement>('.cp-bar__title');
+    const cardTitle = card?.querySelector<HTMLElement>('.cs-card__title');
+    const parts = cardParts(card);
+    const now = (el: Element | null | undefined) => (el ? getComputedStyle(el) : null);
+    const surfaceNow = now(surface)!;
+    const was = {
+      clipPath: surfaceNow.clipPath === 'none' ? FULL : surfaceNow.clipPath,
+      backgroundColor: surfaceNow.backgroundColor,
+      opacity: surfaceNow.opacity,
+      fly: fly && now(fly)?.visibility === 'visible' ? fly.getBoundingClientRect() : null,
+      back: now(back)?.opacity ?? '1',
+      title: now(barTitle)?.opacity ?? '1',
+      header: now(document.querySelector('.site-header'))?.opacity ?? '0',
+      parts: parts.map((el) => {
+        const cs = getComputedStyle(el);
+        return {
+          opacity: cs.opacity,
+          filter: cs.filter === 'none' ? 'blur(0px)' : cs.filter,
+          scale: cs.scale === 'none' ? '1' : cs.scale,
+        };
+      }),
+    };
+    openTimers.current.forEach((t) => window.clearTimeout(t));
+    openTimers.current = [];
+    running.current.forEach((a) => a.cancel());
     running.current = [];
+    melted.current.forEach((a) => a.cancel());
+    melted.current = [];
+    surface.style.opacity = was.opacity;
     // Nothing takes the pointer or the wheel while it goes, and the case's
     // own glide stops where it is.
     root.style.pointerEvents = 'none';
     const lenis = lenisRef.current;
     if (lenis) lenis.scrollTo(lenis.animatedScroll, { immediate: true, force: true });
 
-    const card = o.card?.isConnected ? o.card : null;
     card
       ?.querySelector('video')
       ?.play()
@@ -196,6 +246,7 @@ export function CaseLayer() {
     let done: Animation | undefined;
 
     if (reducedMotion()) {
+      if (cardTitle) cardTitle.style.opacity = '';
       done = out(root, [{ opacity: 1 }, { opacity: 0 }], { duration: 220, easing: 'ease' });
     } else {
       // The case melts away first.
@@ -207,74 +258,93 @@ export function CaseLayer() {
         ],
         { duration: OUT.melt, easing: LEAVE },
       );
-      // The bar is glass: a filter on it would empty its backdrop, so it
-      // only fades.
-      out(barRef.current, [{ opacity: 1 }, { opacity: 0 }], { duration: OUT.melt, easing: LEAVE });
+      // The bar is glass: a filter on it would empty its backdrop, so its
+      // parts only fade.
+      out(back, [{ opacity: was.back }, { opacity: 0 }], { duration: OUT.melt, easing: LEAVE });
+      out(barRef.current?.querySelector('.cp-bar__glass'), [{ opacity: 1 }, { opacity: 0 }], {
+        duration: OUT.melt,
+        easing: LEAVE,
+      });
       const box = cardBox(card, root);
-      // The name flies back from the bar into the card, landing as the card
-      // does, where the card's own title takes over from it.
-      const barTitle = barRef.current?.querySelector<HTMLElement>('.cp-bar__title');
-      const cardTitle = card?.querySelector<HTMLElement>('.cs-card__title');
-      const fly = flyRef.current;
-      let flight: Animation | undefined;
-      if (box && fly && onScreen(barTitle) && cardTitle) {
-        [flight] = flyTitle(fly, barTitle, cardTitle, root, OUT.foldAt + OUT.fold);
-        barTitle.style.visibility = 'hidden';
+      // The name flies back into the card — from the bar, or from wherever
+      // it was still on its way up — landing as the card does, where the
+      // card's own title takes over from it.
+      const from =
+        was.fly ??
+        (barTitle && Number(was.title) > 0.5 && onScreen(barTitle) ? barTitle.getBoundingClientRect() : null);
+      if (box && fly && from && cardTitle) {
+        const [flight] = flyTitle(
+          fly,
+          { rect: from, text: barTitle?.textContent ?? null },
+          cardTitle,
+          root,
+          OUT.foldAt + OUT.fold,
+        );
+        if (barTitle) barTitle.style.visibility = 'hidden';
         flight.finished.then(
           () => {
             cardTitle.style.opacity = '';
           },
           () => {},
         );
-      } else if (cardTitle) {
-        cardTitle.style.opacity = '';
+      } else {
+        if (cardTitle) cardTitle.style.opacity = '';
+        out(barTitle, [{ opacity: was.title }, { opacity: 0 }], { duration: OUT.melt, easing: LEAVE });
       }
       // The site's header comes back where the bar was, once the bar has
       // gone.
       headerFade.current.forEach((a) => a.cancel());
       headerFade.current = Array.from(document.querySelectorAll('.site-header'), (h) =>
-        h.animate([{ opacity: 0 }, { opacity: 1 }], {
+        h.animate([{ opacity: was.header }, { opacity: 1 }], {
           duration: 280,
-          delay: OUT.melt,
+          delay: Number(was.header) > 0.5 ? 0 : OUT.melt,
           easing: 'ease-out',
           fill: 'backwards',
         }),
       );
-      const page = getComputedStyle(surface).backgroundColor;
       if (box && card) {
         // Then the page folds back into the card...
         const grey = getComputedStyle(card).backgroundColor;
         out(
           surface,
           [
-            { clipPath: FULL, backgroundColor: page },
+            { clipPath: was.clipPath, backgroundColor: was.backgroundColor },
             { clipPath: inset(box), backgroundColor: grey },
           ],
-          { duration: OUT.fold, delay: OUT.foldAt, easing: GROW },
+          { duration: OUT.fold, delay: OUT.foldAt, easing: GROW, fill: 'both' },
         );
         // ...lets go of it as it lands, and the card's contents come back
-        // out of the blur underneath.
-        out(surface, [{ opacity: 1 }, { opacity: 0 }], {
+        // out of the blur underneath, from however melted they had got.
+        out(surface, [{ opacity: was.opacity }, { opacity: 0 }], {
           duration: OUT.release,
           delay: OUT.releaseAt,
           easing: 'ease-in-out',
         });
-        melted.current.forEach((a) => a.cancel());
-        melted.current = cardParts(card).map((el) =>
-          el.animate(
-            [
-              { opacity: 0, filter: `blur(${BLUR}px)`, scale: String(SWELL) },
-              { opacity: 1, filter: 'blur(0px)', scale: '1' },
-            ],
-            { duration: OUT.settle, delay: OUT.settleAt, easing: SETTLE, fill: 'backwards' },
-          ),
+        melted.current = parts.map((el, i) =>
+          el.animate([was.parts[i], { opacity: 1, filter: 'blur(0px)', scale: '1' }], {
+            duration: OUT.settle,
+            delay: OUT.settleAt,
+            easing: SETTLE,
+            fill: 'backwards',
+          }),
         );
         // Done once the surface has both landed and let go, and the name is
         // home.
         done = surface.animate([{}, {}], { duration: Math.max(OUT.foldAt + OUT.fold, OUT.releaseAt + OUT.release) });
       } else {
-        // No card on the screen to fold into: the page just lets go.
-        done = out(surface, [{ opacity: 1 }, { opacity: 0 }], { duration: 360, delay: OUT.foldAt, easing: 'ease' });
+        // No card to fold into: the page just lets go, and the card (if it
+        // had melted at all) comes back where it is.
+        melted.current = parts.map((el, i) =>
+          el.animate([was.parts[i], { opacity: 1, filter: 'blur(0px)', scale: '1' }], {
+            duration: OUT.settle,
+            easing: SETTLE,
+          }),
+        );
+        done = out(surface, [{ opacity: was.opacity }, { opacity: 0 }], {
+          duration: 360,
+          delay: OUT.foldAt,
+          easing: 'ease',
+        });
       }
     }
     if (done) done.finished.then(finish, finish);
@@ -367,7 +437,6 @@ export function CaseLayer() {
     // most of the way out, then come out of the blur in turn.
     const release = () => root.removeAttribute('data-hold');
     const anims: Animation[] = [];
-    const timers: number[] = [];
     let cancelGo = () => {};
     const add = (el: Element | null | undefined, frames: Keyframe[], opts: KeyframeAnimationOptions) => {
       const a = el?.animate(frames, opts);
@@ -436,10 +505,18 @@ export function CaseLayer() {
       headerFade.current = Array.from(document.querySelectorAll('.site-header'), (h) =>
         h.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 160, easing: 'ease-out', fill: 'forwards' }),
       );
-      if (box && fly && barTitle && onScreen(cardTitle)) {
+      if (box && fly && barTitle && onScreen(cardTitle) && cardSeen(card)) {
         flownTitle = cardTitle;
         cardTitle.style.opacity = '0';
-        anims.push(...flyTitle(fly, cardTitle, barTitle, root, IN.grow));
+        anims.push(
+          ...flyTitle(
+            fly,
+            { rect: cardTitle.getBoundingClientRect(), text: cardTitle.textContent },
+            barTitle,
+            root,
+            IN.grow,
+          ),
+        );
         // The bar's own title waits under it and takes over as it lands.
         add(barTitle, [{ opacity: 0 }, { opacity: 0 }], { duration: IN.grow });
       } else {
@@ -455,9 +532,11 @@ export function CaseLayer() {
         go = requestAnimationFrame(() => {
           if (closing.current) return; // closed before it set off: nothing to start
           held.forEach((a) => a.play());
-          timers.push(window.setTimeout(release, IN.contentAt));
-          // The card's video has nothing to show while the case is over it.
-          timers.push(window.setTimeout(() => pageVideo?.pause(), IN.melt));
+          openTimers.current.push(
+            window.setTimeout(release, IN.contentAt),
+            // The card's video has nothing to show while the case is over it.
+            window.setTimeout(() => pageVideo?.pause(), IN.melt),
+          );
         });
       });
       cancelGo = () => cancelAnimationFrame(go);
@@ -483,12 +562,23 @@ export function CaseLayer() {
     }
     lenisRef.current = lenis;
     // Focus in the case's scroll, so the keyboard reads it down (arrows,
-    // Page Down, Space) from the start.
+    // Page Down, Space) from the start; the first Tab goes up to the bar's
+    // back button, as the bar comes first.
     scroller.focus({ preventScroll: true });
+    const onTab = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab' || e.shiftKey || e.target !== scroller) return;
+      const backButton = barRef.current?.querySelector<HTMLElement>('.cp-back');
+      if (!backButton) return;
+      e.preventDefault();
+      backButton.focus();
+    };
+    scroller.addEventListener('keydown', onTab);
 
     return () => {
+      scroller.removeEventListener('keydown', onTab);
       cancelGo();
-      timers.forEach((t) => window.clearTimeout(t));
+      openTimers.current.forEach((t) => window.clearTimeout(t));
+      openTimers.current = [];
       cancelAnimationFrame(raf);
       lenis?.destroy();
       lenisRef.current = null;

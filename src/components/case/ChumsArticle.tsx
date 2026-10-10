@@ -31,7 +31,7 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
 
         <section className="cp-part" aria-labelledby="cp-problems">
           <p id="cp-problems" className="cp-label cp-reveal">
-            PROBLEMS
+            Problems
           </p>
           <h2 className="cp-h cp-reveal">The tech worked. Getting to it didn’t.</h2>
           <ul className="cp-list cp-reveal">
@@ -54,7 +54,7 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
         {/* The facts, as a small ruled table in the notes' type. */}
         <dl className="cp-facts">
           <div className="cp-fact cp-reveal">
-            <dt className="cp-label">PRODUCT</dt>
+            <dt className="cp-label">Product</dt>
             <dd>
               <ul className="cp-lines">
                 <li>Messenger + Web3 wallet, desktop and mobile</li>
@@ -65,7 +65,7 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
             </dd>
           </div>
           <div className="cp-fact cp-reveal">
-            <dt className="cp-label">GOAL</dt>
+            <dt className="cp-label">Goal</dt>
             <dd>
               Get more people to use the wallet inside the chat and top it up. Sending coins and paid reactions already
               worked. But nothing in the interface showed it, desktop made it awkward, and the rewards meant to drive
@@ -73,7 +73,7 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
             </dd>
           </div>
           <div className="cp-fact cp-reveal">
-            <dt className="cp-label">TIMELINE</dt>
+            <dt className="cp-label">Timeline</dt>
             <dd>
               <ul className="cp-lines">
                 <li>Concept in 2024</li>
@@ -82,7 +82,7 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
             </dd>
           </div>
           <div className="cp-fact cp-reveal">
-            <dt className="cp-label">TEAM</dt>
+            <dt className="cp-label">Team</dt>
             <dd>
               <ul className="cp-lines">
                 <li>Founders</li>
@@ -117,7 +117,9 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
           <ul className="cp-list cp-reveal">
             <li>Servers sit in a row at the top, like stories. Switching takes one tap.</li>
             <li>Signing in to a new server happens in a sheet over the chat list, with your accounts ready to pick.</li>
-            <li>Direct messages and server spaces are clearly separated. You always know where a conversation lives.</li>
+            <li>
+              Direct messages and server spaces are clearly separated. You always know where a conversation lives.
+            </li>
             <li>
               Sending coins sits in the attachment menu, next to photos and files. Money is part of the conversation,
               not a separate app.
@@ -169,8 +171,8 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
               <h3 className="cp-rule__title">Explain anything that can cost people their money</h3>
               <ul className="cp-list">
                 <li>
-                  Turned an unexplained recovery-key form into a guided onboarding step. The key is how you get back into
-                  your account and your wallet after losing a device. The old form never said so.
+                  Turned an unexplained recovery-key form into a guided onboarding step. The key is how you get back
+                  into your account and your wallet after losing a device. The old form never said so.
                 </li>
               </ul>
             </li>
@@ -208,8 +210,8 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
             The junior designer got the brief. Before drawing anything, we took it apart: wrote down how we understood
             it, listed the open questions and synced with the PM. What problem are we solving? What does the user get at
             the end? Do points live in Chums or on Venom’s side? Which metric should move? The PM had the idea but not
-            the answers, so we worked them out together. The way the system works is what we came up with. Only then
-            did we look at benchmarks.
+            the answers, so we worked them out together. The way the system works is what we came up with. Only then did
+            we look at benchmarks.
           </p>
         </div>
 
@@ -256,17 +258,17 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
 
         <ol className="cp-wide cp-moments">
           <li className="cp-moment cp-reveal">
-            <span className="cp-moment__label">DISCOVERY</span>
+            <span className="cp-moment__label">Discovery</span>
             <span className="sr-only"> — </span>
             <p className="cp-moment__q">can users find the feature without being told where it is?</p>
           </li>
           <li className="cp-moment cp-reveal">
-            <span className="cp-moment__label">COMPREHENSION</span>
+            <span className="cp-moment__label">Comprehension</span>
             <span className="sr-only"> — </span>
             <p className="cp-moment__q">can they understand the rules inside the flow?</p>
           </li>
           <li className="cp-moment cp-moment--key cp-reveal">
-            <span className="cp-moment__label">PAYOUT VISIBILITY</span>
+            <span className="cp-moment__label">Payout visibility</span>
             <span className="sr-only"> — </span>
             <p className="cp-moment__q">do they know what they’ll get before committing?</p>
           </li>

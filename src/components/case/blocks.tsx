@@ -158,6 +158,16 @@ export function useReveal(ref: React.RefObject<HTMLElement | null>) {
         raf = requestAnimationFrame(sweep);
       });
     };
+    // On the case's own page the text is already on screen from the server:
+    // what is in view stays as it is, only what is further down waits.
+    if (!hold) {
+      const line = window.innerHeight * 0.92;
+      pending = pending.filter((el) => {
+        if (el.getBoundingClientRect().top >= line) return true;
+        el.classList.add('is-in');
+        return false;
+      });
+    }
     root.classList.add('cp-armed');
     let watch: MutationObserver | null = null;
     if (hold) {
