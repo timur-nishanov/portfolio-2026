@@ -71,10 +71,10 @@ export function CaseShowcase() {
       written[i].set(prop, value);
       cards[i].style.setProperty(prop, value);
     };
-    // A card fully covered by the next one isn't drawn at all (nor its blur),
-    // and its clip waits: four videos decoding under one card was the worst
-    // of the scroll's cost.
-    const covered = cards.map(() => false);
+    // A card fully covered by the next one (opacity 0) drops its blur, and
+    // its clip waits: videos decoding and blurred under the stack were the
+    // worst of the scroll's cost. It stays in the page for the keyboard and
+    // screen readers, as before.
     const heldBack = cards.map(() => false);
     const softplus = (x: number) => (x > 30 ? x : Math.log1p(Math.exp(x)));
     let sectionTop = 0;
@@ -125,16 +125,12 @@ export function CaseShowcase() {
               put(
                 i,
                 'filter',
-                `blur(${(COVERED_BLUR * p).toFixed(2)}px) brightness(${(1 - COVERED_DIM * p).toFixed(3)})`,
+                p < 1 ? `blur(${(COVERED_BLUR * p).toFixed(2)}px) brightness(${(1 - COVERED_DIM * p).toFixed(3)})` : '',
               );
             }
             put(i, 'opacity', String(1 - p * p));
           }
           const gone = p === 1;
-          if (gone !== covered[i]) {
-            covered[i] = gone;
-            put(i, 'visibility', gone ? 'hidden' : '');
-          }
           const video = videos[i];
           if (!video) continue;
           if (gone && !video.paused) {

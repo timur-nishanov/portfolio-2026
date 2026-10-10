@@ -255,18 +255,15 @@ export function CaseLayer() {
       const fold = !!box && Number(was.opacity) > 0.5;
       // The name flies back into the card — from the bar, or from wherever
       // it was still on its way up — landing as the card does, where the
-      // card's own title takes over from it.
+      // card's own title takes over from it. Closed before the surface took
+      // over, it was still near the card: it goes back as the card fills.
       const from =
         was.fly ??
         (barTitle && Number(was.title) > 0.5 && onScreen(barTitle) ? barTitle.getBoundingClientRect() : null);
-      if (fold && fly && from && cardTitle) {
-        const [flight] = flyTitle(
-          fly,
-          { rect: from, text: barTitle?.textContent ?? null },
-          cardTitle,
-          root,
-          OUT.foldAt + OUT.fold,
-        );
+      const homing = fold ? OUT.foldAt + OUT.fold : OUT.refill;
+      const flies = !!box && !!fly && !!from && !!cardTitle && (fold || !!was.fly);
+      if (flies && fly && from && cardTitle) {
+        const [flight] = flyTitle(fly, { rect: from, text: barTitle?.textContent ?? null }, cardTitle, root, homing);
         if (barTitle) barTitle.style.visibility = 'hidden';
         flight.finished.then(
           () => {
@@ -317,7 +314,7 @@ export function CaseLayer() {
         melted.current = parts.map((el, i) =>
           el.animate([{ opacity: was.parts[i] }, { opacity: 1 }], { duration: OUT.refill, easing: FADE }),
         );
-        done = surface.animate([{}, {}], { duration: 0 });
+        done = surface.animate([{}, {}], { duration: flies ? homing : 0 });
       } else {
         // No card to fold into: the page just lets go, and the card (if it
         // had faded at all) comes back where it is.
