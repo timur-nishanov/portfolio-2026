@@ -48,9 +48,13 @@ export function SiteHeader() {
     neckFrom: createRef<SVGStopElement>(),
     neckTo: createRef<SVGStopElement>(),
     neckGrad: createRef<SVGLinearGradientElement>(),
+    neckClipDisc: createRef<SVGPathElement>(),
+    neckClipBlob: createRef<SVGPathElement>(),
     filter: createRef<SVGFilterElement>(),
     flood: createRef<SVGFEFloodElement>(),
     displace: createRef<SVGFEDisplacementMapElement>(),
+    frost: createRef<SVGFEGaussianBlurElement>(),
+    saturate: createRef<SVGFEColorMatrixElement>(),
   }));
 
   useEffect(() => setRefract(canRefract()), []);
@@ -181,19 +185,63 @@ export function SiteHeader() {
         data-glass={overContent && !open ? '' : undefined}
         style={{ '--title-w': `${pillW}px` } as React.CSSProperties}
       >
-        <MenuGlassFilter filterRef={refs.filter} floodRef={refs.flood} displaceRef={refs.displace} />
+        <MenuGlassFilter
+          filterRef={refs.filter}
+          floodRef={refs.flood}
+          displaceRef={refs.displace}
+          frostRef={refs.frost}
+          saturateRef={refs.saturate}
+        />
         {/* The pill: the title, the 8px gap, the 20px button, 28px each side. */}
         {refract && <PillGlassFilter width={pillW + 84} height={40} />}
 
-        {/* The bridge is drawn in header space (no viewBox: 1 unit = 1px). */}
+        {/* The bridge is drawn in header space (no viewBox: 1 unit = 1px),
+          and with it, while the glass moves, the one outline of the disc, the
+          bridge and the shape together (useLiquidMorph). */}
         <svg ref={refs.neckSvg} className="lgm-neck" aria-hidden="true" focusable="false">
           <defs>
             <linearGradient ref={refs.neckGrad} id="lgm-neck-fill" gradientUnits="userSpaceOnUse">
-              <stop ref={refs.neckFrom} offset="0.25" stopColor="#e5e5e6" />
-              <stop ref={refs.neckTo} offset="1" stopColor="#f4f4f3" />
+              <stop ref={refs.neckFrom} offset="0.25" stopColor="rgba(255,255,255,0.3)" />
+              <stop ref={refs.neckTo} offset="1" stopColor="rgba(247,247,247,0.7)" />
             </linearGradient>
+            {/* Everything but the disc, and everything but the shape: both
+                are see-through glass, so the bridge runs only between them. */}
+            <clipPath id="lgm-neck-off-disc">
+              <path ref={refs.neckClipDisc} clipRule="evenodd" />
+            </clipPath>
+            <clipPath id="lgm-neck-off-blob">
+              <path ref={refs.neckClipBlob} clipRule="evenodd" />
+            </clipPath>
+            {/* Outside the liquid: the disc, the bridge and the shape as one. */}
+            {/* Region and backdrop sized from JS to the morph's reach. */}
+            <mask id="lgm-off-glass" maskUnits="userSpaceOnUse" x="0" y="0" width="0" height="0">
+              <rect fill="#fff" />
+              <circle data-rim="m-disc" fill="#000" />
+              <path data-rim="m-neck" fill="#000" />
+              <path data-rim="m-blob" fill="#000" />
+            </mask>
+            <filter id="lgm-shade-near" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="1.5" />
+            </filter>
+            <filter id="lgm-shade-far" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="5" />
+            </filter>
           </defs>
-          <path ref={refs.neck} fill="url(#lgm-neck-fill)" />
+          <g clipPath="url(#lgm-neck-off-disc)">
+            <g clipPath="url(#lgm-neck-off-blob)">
+              <path ref={refs.neck} fill="url(#lgm-neck-fill)" />
+            </g>
+          </g>
+          {/* The disc's own hairline and shadow (.glass-disc), and the hairline
+              of the bridge and the shape, drawn only outside the three: no
+              rim across the joins, no shadow of the disc on the glass. */}
+          <g data-rim="g" mask="url(#lgm-off-glass)">
+            <circle data-rim="shade-near" fill="#000" fillOpacity="0.1" filter="url(#lgm-shade-near)" />
+            <circle data-rim="shade-far" fill="#000" fillOpacity="0.05" filter="url(#lgm-shade-far)" />
+            <circle data-rim="r-disc" fill="none" stroke="#000" strokeOpacity="0.1" strokeWidth="1" />
+            <path data-rim="r-neck" fill="none" stroke="#000" strokeWidth="1" />
+            <path data-rim="r-blob" fill="none" stroke="#000" strokeWidth="1" />
+          </g>
         </svg>
 
         <div ref={refs.blob} className="lgm-blob" aria-hidden="true">

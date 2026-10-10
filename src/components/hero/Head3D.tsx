@@ -78,12 +78,8 @@ const MARK_FADE = 7; // seconds a bruise takes to disappear
 // Only a real knock marks — drifting into a wall must not bruise.
 const MARK_MIN_IMPACT = 0.5;
 
-/** onReady: called once the head is first drawn (both maps in), so the still
- *  head standing in for it until then can go (FloatingHead). */
-export function Head3D({ onReady }: { onReady?: () => void } = {}) {
+export function Head3D() {
   const wrapRef = useRef<HTMLDivElement>(null);
-  const onReadyRef = useRef(onReady);
-  onReadyRef.current = onReady;
 
   useEffect(() => {
     const wrap = wrapRef.current;
@@ -126,7 +122,6 @@ export function Head3D({ onReady }: { onReady?: () => void } = {}) {
     // CPU too — read from the loader's own images once both have arrived.
     const silhouette = createSilhouette({ depthPivot: DEPTH_PIVOT, tiltStrength: TILT_STRENGTH });
     let pendingMaps = 2;
-    let announced = false;
     const mapsLoaded = () => {
       pendingMaps -= 1;
       if (pendingMaps > 0) return;
@@ -743,11 +738,6 @@ export function Head3D({ onReady }: { onReady?: () => void } = {}) {
       last = now;
       frame(dt);
       draw();
-      // The first frame with the head in it is on screen from the next one.
-      if (!announced && pendingMaps === 0) {
-        announced = true;
-        requestAnimationFrame(() => onReadyRef.current?.());
-      }
       raf = onScreen ? requestAnimationFrame(loop) : 0;
     };
 

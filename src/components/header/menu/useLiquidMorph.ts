@@ -5,6 +5,8 @@ import { lerp } from '@/lib/lerp';
 import { zoomOf } from '@/lib/zoom';
 import { stepSpring, type SpringConfig, type SpringState } from '@/lib/spring';
 import { clamp01, metaball, smoothstep, springOf } from './liquid';
+import { MENU_FROST, MENU_SATURATE } from './MenuGlassFilter';
+import { PILL_SATURATE, PILL_SOFTEN } from './PillGlassFilter';
 
 export type MorphRefs = {
   /** Positioning context every rect below is measured in (the header). */
@@ -12,7 +14,7 @@ export type MorphRefs = {
   /** The title beside the button: the glass must not slide under it. */
   title: RefObject<HTMLElement | null>;
   button: RefObject<HTMLElement | null>;
-  /** The button's grey disc (its colour, hover included, is what the morph
+  /** The button's glass disc (its tint, hover included, is what the morph
       starts from). */
   disc: RefObject<HTMLElement | null>;
   blob: RefObject<HTMLDivElement | null>;
@@ -25,9 +27,14 @@ export type MorphRefs = {
   neckFrom: RefObject<SVGStopElement | null>;
   neckTo: RefObject<SVGStopElement | null>;
   neckGrad: RefObject<SVGLinearGradientElement | null>;
+  /** Clip paths that keep the bridge off the disc and off the shape. */
+  neckClipDisc: RefObject<SVGPathElement | null>;
+  neckClipBlob: RefObject<SVGPathElement | null>;
   filter: RefObject<SVGFilterElement | null>;
   flood: RefObject<SVGFEFloodElement | null>;
   displace: RefObject<SVGFEDisplacementMapElement | null>;
+  frost: RefObject<SVGFEGaussianBlurElement | null>;
+  saturate: RefObject<SVGFEColorMatrixElement | null>;
 };
 
 type Edge = 'top' | 'right' | 'bottom' | 'left';
@@ -95,15 +102,106 @@ const REVEAL_INSET = 15;
 const REFRACT_SCALE = 110;
 const FILTER_PAD = 48;
 
-const BTN_RGB: [number, number, number] = [229, 229, 230];
-// What the glass reads as over the page background — the bridge fades to it
-// so the liquid looks continuous where it meets the panel.
-const GLASS_RGB: [number, number, number] = [244, 244, 243];
-const mixRgb = (t: number) =>
-  `rgb(${BTN_RGB.map((c, i) => Math.round(c + (GLASS_RGB[i] - c) * t)).join(' ')})`;
+// How far past the disc (px) the shape reaches before it is fully drawn:
+// nearer, it is all but the disc itself, and what showed of it round the
+// disc was a sliver (a second rim under the button, a line, two ears).
+const FADE_IN = 6;
+// Room left round the shape by its clip (px): its drop shadow reaches 46.
+const CLIP_PAD = 80;
+
+type Rgba = [number, number, number, number];
+// "rgb(…)" / "rgba(…)", as getComputedStyle hands colours back.
+const parseRgba = (s: string, fallback: Rgba): Rgba => {
+  const n = s.match(/-?[\d.]+/g)?.map(Number);
+  return n && n.length >= 3 ? [n[0], n[1], n[2], n.length > 3 ? n[3] : 1] : fallback;
+};
+const fade = (c: Rgba, k: number): Rgba => [c[0], c[1], c[2], c[3] * k];
+// Straight-alpha "a over b".
+const over = (a: Rgba, b: Rgba): Rgba => {
+  const al = a[3] + b[3] * (1 - a[3]);
+  if (al < 1e-4) return [b[0], b[1], b[2], 0];
+  const mix = (i: number) => (a[i] * a[3] + b[i] * b[3] * (1 - a[3])) / al;
+  return [mix(0), mix(1), mix(2), al];
+};
+const css = (c: Rgba) => `rgba(${Math.round(c[0])}, ${Math.round(c[1])}, ${Math.round(c[2])}, ${c[3].toFixed(3)})`;
+
+const f2 = (v: number) => v.toFixed(2);
+const circlePath = (cx: number, cy: number, r: number) =>
+  `M${f2(cx - r)} ${f2(cy)}a${f2(r)} ${f2(r)} 0 1 0 ${f2(2 * r)} 0a${f2(r)} ${f2(r)} 0 1 0 ${f2(-2 * r)} 0Z`;
+const roundRectPath = (x: number, y: number, w: number, h: number, r: number) =>
+  `M${f2(x + r)} ${f2(y)}H${f2(x + w - r)}A${f2(r)} ${f2(r)} 0 0 1 ${f2(x + w)} ${f2(y + r)}` +
+  `V${f2(y + h - r)}A${f2(r)} ${f2(r)} 0 0 1 ${f2(x + w - r)} ${f2(y + h)}` +
+  `H${f2(x + r)}A${f2(r)} ${f2(r)} 0 0 1 ${f2(x)} ${f2(y + h - r)}` +
+  `V${f2(y + r)}A${f2(r)} ${f2(r)} 0 0 1 ${f2(x + r)} ${f2(y)}Z`;
+// Everything (as far as the header goes) but the shape after it, evenodd.
+const EVERYWHERE = 'M-10000 -10000H10000V10000H-10000Z';
+
+// The outer hairline's strength, the disc's to the panel's.
+const hairOf = (m: number) => lerp(0.1, 0.07, m);
+
+/**
+ * The shape's edge, from the button disc's (.glass-disc, globals.css) at
+ * m = 0 to the panel's resting one (menu.css) at m = 1, as one list of
+ * layers so it blends: the disc's two inner lights give way to the panel's
+ * hairline, the outer hair and both drops carry over and grow. While the
+ * glass moves the outer hair is drawn with the disc's and the bridge's
+ * instead, as one outline (the rim layer), so `hair` is off then.
+ */
+const edgeShadow = (m: number, hair: boolean) => {
+  const a = (v: number) => v.toFixed(3);
+  return (
+    `inset 0 0.5px 0.5px rgba(255,255,255,${a(1 - m)}), ` +
+    `inset 0 -0.5px 1px rgba(255,255,255,${a(0.6 * (1 - m))}), ` +
+    `inset 0 0 0 0.5px rgba(255,255,255,${a(0.65 * m)}), ` +
+    `0 0 0 0.5px rgba(0,0,0,${a(hair ? hairOf(m) : 0)}), ` +
+    `0 ${f2(lerp(1, 2, m))}px ${f2(lerp(3, 6, m))}px rgba(0,0,0,${a(lerp(0.1, 0.04, m))}), ` +
+    `0 ${f2(lerp(4, 10, m))}px ${f2(lerp(10, 36, m))}px rgba(0,0,0,${a(lerp(0.05, 0.1, m))})`
+  );
+};
 
 type Circle = { cx: number; cy: number; r: number };
 type Box = Record<Edge, number>;
+
+type Rim = {
+  g: SVGGElement;
+  mask: SVGMaskElement;
+  maskBack: SVGRectElement;
+  maskDisc: SVGCircleElement;
+  maskNeck: SVGPathElement;
+  maskBlob: SVGPathElement;
+  shadeNear: SVGCircleElement;
+  shadeFar: SVGCircleElement;
+  hairDisc: SVGCircleElement;
+  hairNeck: SVGPathElement;
+  hairBlob: SVGPathElement;
+};
+
+// The rim layer's parts, in the bridge's svg (SiteHeader).
+function findRim(svg: SVGSVGElement | null): Rim | null {
+  if (!svg) return null;
+  const q = <T extends Element>(k: string) => svg.querySelector<T>(`[data-rim="${k}"]`);
+  const mask = svg.querySelector<SVGMaskElement>('mask');
+  const rim = {
+    g: q<SVGGElement>('g'),
+    mask,
+    maskBack: mask?.querySelector<SVGRectElement>('rect') ?? null,
+    maskDisc: q<SVGCircleElement>('m-disc'),
+    maskNeck: q<SVGPathElement>('m-neck'),
+    maskBlob: q<SVGPathElement>('m-blob'),
+    shadeNear: q<SVGCircleElement>('shade-near'),
+    shadeFar: q<SVGCircleElement>('shade-far'),
+    hairDisc: q<SVGCircleElement>('r-disc'),
+    hairNeck: q<SVGPathElement>('r-neck'),
+    hairBlob: q<SVGPathElement>('r-blob'),
+  };
+  return Object.values(rim).every(Boolean) ? (rim as Rim) : null;
+}
+
+const setCircle = (el: SVGCircleElement, cx: number, cy: number, r: number) => {
+  el.setAttribute('cx', f2(cx));
+  el.setAttribute('cy', f2(cy));
+  el.setAttribute('r', f2(r));
+};
 
 function createEngine(refs: MorphRefs) {
   // Progress of each edge from the button (0) to the panel (1).
@@ -124,7 +222,24 @@ function createEngine(refs: MorphRefs) {
   let swallowed = true;
   // The rows have been let in for this opening (see REVEAL_INSET).
   let revealed = false;
-  let btnColor = 'rgb(229 229 230)';
+  // The disc's tint and the panel's veil (both read off the CSS per toggle,
+  // hover and reduced transparency included).
+  let btnColor: Rgba = [255, 255, 255, 0.3];
+  let veil: Rgba = [247, 247, 247, 0.7];
+  let solidVeil = false;
+  let rimCache: Rim | null = null;
+  const rim = () => (rimCache ??= findRim(refs.neckSvg.current));
+
+  // While the glass moves, the disc's hairline and shadow come off the disc
+  // (menu.css, data-morph) and are drawn in the rim layer with the bridge's
+  // and the shape's hairlines, outside all three: one outline round the
+  // liquid, where the separate ones drew lines across its joins (and the
+  // disc's shadow fell on the glass running out of it).
+  const setRim = (on: boolean) => {
+    const r = rim();
+    if (r) r.g.style.visibility = on ? 'visible' : 'hidden';
+    refs.root.current?.toggleAttribute('data-morph', on);
+  };
   let B: Circle = { cx: 0, cy: 0, r: 10 };
   let T: Box = { top: 0, right: 0, bottom: 0, left: 0 };
   // The title's ink bottom and right end. Opening, the left edge holds until
@@ -180,6 +295,21 @@ function createEngine(refs: MorphRefs) {
     } else {
       gateY = gateX = -Infinity;
     }
+    // The rim layer's mask covers what the liquid can reach: the panel and
+    // its overshoot, the button, and the shadows round them.
+    const parts = rim();
+    if (parts) {
+      const x = Math.min(T.left, B.cx - B.r) - FILTER_PAD;
+      const y = Math.min(T.top, B.cy - B.r) - FILTER_PAD;
+      const w = Math.max(T.right, B.cx + B.r) + 40 + FILTER_PAD - x;
+      const h = T.bottom + 40 + FILTER_PAD - y;
+      for (const el of [parts.mask, parts.maskBack]) {
+        el.setAttribute('x', f2(x));
+        el.setAttribute('y', f2(y));
+        el.setAttribute('width', f2(w));
+        el.setAttribute('height', f2(h));
+      }
+    }
     const filter = refs.filter.current;
     if (filter) {
       // Sized once per morph for the largest the shape gets (the panel plus
@@ -193,8 +323,11 @@ function createEngine(refs: MorphRefs) {
 
   const hide = () => {
     if (refs.blob.current) refs.blob.current.style.visibility = 'hidden';
+    // Its parts set their own visibility, which a hidden svg doesn't override.
     if (refs.neckSvg.current) refs.neckSvg.current.style.visibility = 'hidden';
+    if (refs.neck.current) refs.neck.current.style.visibility = 'hidden';
     if (refs.content.current) refs.content.current.style.clipPath = '';
+    setRim(false);
   };
 
   const bumpButton = () => {
@@ -223,6 +356,8 @@ function createEngine(refs: MorphRefs) {
       refs.flood.current?.setAttribute('width', String(T.right - T.left));
       refs.flood.current?.setAttribute('height', String(T.bottom - T.top));
       refs.displace.current?.setAttribute('scale', String(REFRACT_SCALE));
+      refs.frost.current?.setAttribute('stdDeviation', String(MENU_FROST));
+      refs.saturate.current?.setAttribute('values', String(MENU_SATURATE));
     }
   };
 
@@ -253,7 +388,10 @@ function createEngine(refs: MorphRefs) {
     const left = lerp(B.cx - B.r, T.left, p.left);
     const right = lerp(B.cx + B.r, T.right, p.right);
     const top = lerp(B.cy - B.r, T.top, p.top);
-    const bottom = lerp(B.cy + B.r, T.bottom, p.bottom);
+    // Never flatter than it is wide (up to the disc's size): closing, the
+    // bottom edge caught up with the held top edge and the drop was squashed
+    // into a line under the button; now it stays a drop until it is drawn up.
+    const bottom = Math.max(lerp(B.cy + B.r, T.bottom, p.bottom), top + Math.min(right - left, 2 * B.r));
     const w = Math.max(right - left, 1);
     const ht = Math.max(bottom - top, 1);
     // Circle → 28px corners, capped so a narrow drop stays a capsule.
@@ -265,28 +403,34 @@ function createEngine(refs: MorphRefs) {
     blob.style.height = `${ht.toFixed(2)}px`;
     blob.style.borderRadius = `${radius.toFixed(2)}px`;
 
-    // The shape starts as an exact copy of the button laid over it, so the
-    // button itself seems to stretch; it keeps the button's grey until it has
-    // slid off the disc, then clears into glass as it opens up.
+    // The shape is the button's own glass drawn out of it: it starts on the
+    // disc in the disc's tint, edge and clear glass, and clears into the
+    // panel's frosted glass as it opens up. It is never drawn over the disc:
+    // both are see-through, and two layers of glass read as a brighter patch
+    // with a line across the button — so it is clipped round the disc, and
+    // runs on from the disc's edge as the disc itself stretching.
     const glass = smoothstep(0.12, 0.42, grow);
     if (refs.tint.current) refs.tint.current.style.opacity = (1 - glass).toFixed(3);
+    blob.style.backgroundColor = css(solidVeil ? veil : fade(veil, glass));
     blob.style.setProperty('--lgm-glass', glass.toFixed(3));
-    // The hairline seam comes in within the first frames, so the edge stays
-    // crisp while the grey clears (tied to the glass it went soft halfway);
-    // the top light follows the glass; the drop shadow ramps a touch later —
-    // a 40px shadow under a 30px drop is a smudge, not depth. Written whole
-    // from here, not as var()-driven colour maths in the stylesheet, so every
-    // engine gets a plain value. Full strength = the resting shadow in
-    // menu.css.
-    const seam = smoothstep(0.015, 0.12, grow);
-    const depth = smoothstep(0.08, 0.45, grow);
-    blob.style.boxShadow =
-      `inset 0 0 0 0.5px rgba(255,255,255,${(0.65 * glass).toFixed(3)}), ` +
-      `0 0 0 0.5px rgba(0,0,0,${(0.07 * seam).toFixed(3)}), ` +
-      `0 10px 36px rgba(0,0,0,${(0.1 * depth).toFixed(3)}), ` +
-      `0 2px 6px rgba(0,0,0,${(0.04 * depth).toFixed(3)})`;
+    const r1 = B.r * (1 + bump.value);
+    const dx = B.cx - left;
+    const dy = B.cy - top;
+    const onDisc = dx + r1 > 0 && dx - r1 < w && dy + r1 > 0 && dy - r1 < ht;
+    blob.style.clipPath = onDisc
+      ? `path(evenodd, '${roundRectPath(-CLIP_PAD, -CLIP_PAD, w + CLIP_PAD * 2, ht + CLIP_PAD * 2, 0)} ${circlePath(dx, dy, r1)}')`
+      : '';
+    // Written whole from here, not as var()-driven colour maths in the
+    // stylesheet, so every engine gets a plain value.
+    const moving = raf !== 0;
+    blob.style.boxShadow = edgeShadow(glass, !moving);
+    const beyond = Math.max(0, bottom - (B.cy + B.r), right - (B.cx + B.r), B.cx - B.r - left);
+    const shown = smoothstep(0, FADE_IN, beyond);
+    blob.style.opacity = shown.toFixed(3);
 
     if (root.hasAttribute('data-refract')) {
+      refs.frost.current?.setAttribute('stdDeviation', lerp(PILL_SOFTEN, MENU_FROST, glass).toFixed(2));
+      refs.saturate.current?.setAttribute('values', lerp(PILL_SATURATE, MENU_SATURATE, glass).toFixed(3));
       // The displacement map is built from a flood the size of the shape, so
       // the refracting rim follows the morph pixel for pixel (percentage
       // subregions do not resolve against the element box in a backdrop
@@ -312,8 +456,8 @@ function createEngine(refs: MorphRefs) {
     // back just before the panel is swallowed.
     const neckSvg = refs.neckSvg.current;
     const neck = refs.neck.current;
+    let neckD = '';
     if (neckSvg && neck) {
-      const r1 = B.r * (1 + bump.value);
       const r2 = Math.max(radius, 4);
       const minX = left + r2;
       const maxX = right - r2;
@@ -331,6 +475,7 @@ function createEngine(refs: MorphRefs) {
             )
           : null;
       if (ball && ball.waist >= NECK_MIN_WAIST) {
+        neckD = ball.d;
         neck.setAttribute('d', ball.d);
         const g = refs.neckGrad.current;
         if (g) {
@@ -339,13 +484,43 @@ function createEngine(refs: MorphRefs) {
           g.setAttribute('x2', c2.x.toFixed(1));
           g.setAttribute('y2', (c2.y - r2 * 0.4).toFixed(1));
         }
-        refs.neckFrom.current?.setAttribute('stop-color', btnColor);
-        refs.neckTo.current?.setAttribute('stop-color', mixRgb(glass));
-        neckSvg.style.visibility = 'visible';
+        // From the disc's tint to what the shape is filled with right now;
+        // drawn only between the two (both are see-through glass).
+        refs.neckFrom.current?.setAttribute('stop-color', css(btnColor));
+        refs.neckTo.current?.setAttribute(
+          'stop-color',
+          css(over(fade(btnColor, 1 - glass), solidVeil ? veil : fade(veil, glass))),
+        );
+        refs.neckClipDisc.current?.setAttribute('d', `${EVERYWHERE} ${circlePath(B.cx, B.cy, r1)}`);
+        refs.neckClipBlob.current?.setAttribute('d', `${EVERYWHERE} ${roundRectPath(left, top, w, ht, radius)}`);
+        neck.style.opacity = shown.toFixed(3);
+        neck.style.visibility = 'visible';
       } else {
-        neckSvg.style.visibility = 'hidden';
+        neck.style.visibility = 'hidden';
       }
+      neckSvg.style.visibility = 'visible';
     }
+
+    // One outline round the disc, the bridge and the shape (see setRim). The
+    // shape and the bridge count for as much as they are drawn (`shown`).
+    const r = rim();
+    if (r && moving) {
+      const blobD = roundRectPath(left, top, w, ht, radius);
+      const hair = (hairOf(glass) * shown).toFixed(3);
+      setCircle(r.maskDisc, B.cx, B.cy, r1);
+      r.maskNeck.setAttribute('d', neckD);
+      r.maskNeck.setAttribute('fill-opacity', shown.toFixed(3));
+      r.maskBlob.setAttribute('d', blobD);
+      r.maskBlob.setAttribute('fill-opacity', shown.toFixed(3));
+      setCircle(r.shadeNear, B.cx, B.cy + 1, r1);
+      setCircle(r.shadeFar, B.cx, B.cy + 4, r1);
+      setCircle(r.hairDisc, B.cx, B.cy, r1);
+      r.hairNeck.setAttribute('d', neckD);
+      r.hairNeck.setAttribute('stroke-opacity', hair);
+      r.hairBlob.setAttribute('d', blobD);
+      r.hairBlob.setAttribute('stroke-opacity', hair);
+    }
+    setRim(moving);
   };
 
   const tick = (now: number) => {
@@ -397,8 +572,8 @@ function createEngine(refs: MorphRefs) {
         e[k].velocity = 0;
       }
       bump.value = bump.velocity = 0;
-      render();
       raf = 0;
+      render();
       return;
     }
     raf = requestAnimationFrame(tick);
@@ -445,6 +620,9 @@ function createEngine(refs: MorphRefs) {
           blob.style.visibility = '';
           blob.style.setProperty('--lgm-glass', '1');
           blob.style.boxShadow = '';
+          blob.style.backgroundColor = '';
+          blob.style.clipPath = '';
+          blob.style.opacity = '';
           if (refs.tint.current) refs.tint.current.style.opacity = '0';
           blob.dataset.mode = 'fade';
           blob.toggleAttribute('data-open', open);
@@ -466,14 +644,17 @@ function createEngine(refs: MorphRefs) {
       setChevron(open);
       // Each opening reveals the rows afresh; closing drops them at once.
       setReveal(false);
-      if (open) {
-        // Match whatever state the button is drawn in (hover darkens it), so
-        // the copy laid over it is indistinguishable on the first frame.
-        const disc = refs.disc.current ?? refs.button.current;
-        if (disc) btnColor = getComputedStyle(disc).backgroundColor;
-        if (refs.tint.current) refs.tint.current.style.background = btnColor;
-        swallowed = false;
+      // Match whatever state the disc is drawn in (hover lightens it), so the
+      // glass running out of it, or back into it, is the same glass.
+      const disc = refs.disc.current ?? refs.button.current;
+      if (disc) btnColor = parseRgba(getComputedStyle(disc).backgroundColor, btnColor);
+      if (refs.tint.current) refs.tint.current.style.background = css(btnColor);
+      if (blob) {
+        blob.style.backgroundColor = '';
+        veil = parseRgba(getComputedStyle(blob).backgroundColor, veil);
+        solidVeil = window.matchMedia('(prefers-reduced-transparency: reduce)').matches;
       }
+      if (open) swallowed = false;
       run();
     },
     destroy() {

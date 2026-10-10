@@ -14,9 +14,10 @@ const RIM = 5;
 const STEP = 3;
 // How far the rim reaches out, per channel: dispersion.
 const BEND = { r: 54, g: 62, b: 70 };
-// Clear glass: the backdrop is only softened, and its colour lifted.
-const SOFTEN = 2.2;
-const SATURATE = 1.6;
+// Clear glass: the backdrop is only softened, and its colour lifted. The
+// menu's morph starts from these (the button disc's glass, useLiquidMorph).
+export const PILL_SOFTEN = 2.2;
+export const PILL_SATURATE = 1.6;
 const INVERT = '-1 0 0 0 1  -1 0 0 0 1  -1 0 0 0 1  0 0 0 1 0';
 const PAD = 32;
 
@@ -91,8 +92,8 @@ export function PillGlassFilter({ width, height, id = PILL_GLASS_FILTER_ID, scal
           <feColorMatrix in="dx" type="matrix" values="1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" result="mapX" />
           <feColorMatrix in="dy" type="matrix" values="0 0 0 0 0  1 0 0 0 0  0 0 0 0 0  0 0 0 1 0" result="mapY" />
           <feBlend in="mapX" in2="mapY" mode="lighten" result="map" />
-          <feGaussianBlur in="SourceGraphic" stdDeviation={SOFTEN} result="soft" />
-          <feColorMatrix in="soft" type="saturate" values={String(SATURATE)} result="glass" />
+          <feGaussianBlur in="SourceGraphic" stdDeviation={PILL_SOFTEN} result="soft" />
+          <feColorMatrix in="soft" type="saturate" values={String(PILL_SATURATE)} result="glass" />
           {channel('r')}
           {channel('g')}
           {channel('b')}

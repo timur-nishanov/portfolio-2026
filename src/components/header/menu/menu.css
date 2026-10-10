@@ -11,8 +11,6 @@
     'Helvetica Neue', Arial, sans-serif;
   --menu-title-ink: #08080a;
   --menu-ink: #151514;
-  --menu-btn: #e5e5e6;
-  --menu-btn-hover: #dcdcdd;
   /* Glass plate. The mockup's material is white 65% + #DDD colour-burn +
      #F7F7F7 darken over a σ8 frost; blend modes on children cannot reach a
      backdrop filter's output, but that stack is affine in the backdrop up to
@@ -170,8 +168,8 @@
   height: 20px;
 }
 
-/* The round button: a 20px #E5E5E6 disc as drawn, with a 44px invisible hit
-   area (Apple's minimum tap target). It reaches a few px under the title,
+/* The round button: a 20px glass disc, with a 44px invisible hit area
+   (Apple's minimum tap target). It reaches a few px under the title,
    which takes no pointer, so nothing is covered. No z-index (and no
    background) on the button itself: that would make it one stacking layer,
    and the liquid laid over the disc would also cover the chevron — it blinked
@@ -211,6 +209,14 @@
   .lgm-button:hover .lgm-button__disc {
     background-color: rgba(255, 255, 255, 0.72);
   }
+}
+/* While the glass runs out of the disc and back, its hairline and shadow are
+   drawn by useLiquidMorph with the rest of the liquid's outline (the rim layer
+   in the bridge's svg); only its inner lights stay on it. */
+.site-header[data-morph] .lgm-button__disc {
+  box-shadow:
+    inset 0 0.5px 0.5px rgba(255, 255, 255, 1),
+    inset 0 -0.5px 1px rgba(255, 255, 255, 0.6);
 }
 .lgm-button:focus-visible {
   outline: 2px solid var(--accent, #5b94f0);
@@ -260,9 +266,11 @@
 
 /* --- the glass blob --------------------------------------------------------
    One element morphs from the button disc into the panel; useLiquidMorph
-   writes its translate/size/radius every frame. Base layer = frost +
-   saturation + veil, which is all Safari and Firefox get; Chromium swaps the
-   frost for the refracting #lg-menu filter (data-refract on the header). */
+   writes its translate/size/radius every frame, and its veil, edge and clip:
+   it starts as the disc's own clear glass running out of it and clears into
+   the panel's frosted glass. Base layer = frost + saturation + veil, which is
+   all Safari and Firefox get; Chromium swaps the frost for the refracting
+   #lg-menu filter (data-refract on the header). */
 .lgm-blob {
   --lgm-glass: 1;
   position: absolute;
@@ -281,8 +289,8 @@
      an equally faint dark one outside, and a soft drop. The earlier rim (a
      dark 0.24 seam, a white top lip and a 15px white band at the bottom) read
      as a dark top edge and a washed-out bottom on a Retina screen. This is the
-     resting value; during the morph useLiquidMorph writes the same shadows
-     with their strength scaled, so the drop leaves the button flat like it. */
+     resting value; during the morph useLiquidMorph blends into it from the
+     disc's edge, so the drop leaves the button with the button's own edge. */
   box-shadow:
     inset 0 0 0 0.5px rgba(255, 255, 255, 0.65),
     0 0 0 0.5px rgba(0, 0, 0, 0.07),
@@ -304,12 +312,12 @@
   backdrop-filter: url(#lg-menu);
   -webkit-backdrop-filter: url(#lg-menu);
 }
-/* Starts as the button's grey; useLiquidMorph clears it as the drop opens. */
+/* The disc's tint (useLiquidMorph reads it off the disc), cleared as the
+   drop opens into the panel. */
 .lgm-blob__tint {
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: var(--menu-btn);
 }
 /* Reduced motion: no morph, the panel fades in place. */
 .lgm-blob[data-mode='fade'] {
@@ -333,7 +341,8 @@
   }
 }
 
-/* Liquid bridge between the button and the blob while they part. */
+/* Liquid bridge between the button and the blob while they part, and the
+   liquid's one outline while it moves (useLiquidMorph). */
 .lgm-neck {
   position: absolute;
   left: 0;
