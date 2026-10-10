@@ -1,7 +1,9 @@
 'use client';
 
-import { useLayoutEffect } from 'react';
+import { useId, useLayoutEffect, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 import type { CaseSlot } from '@/data/chumsCase';
+import { ButtonChevron } from '@/components/header/menu/icons';
 import { PhoneMockup } from '@/components/cases/PhoneMockup';
 import { MonitorMockup } from '@/components/showcase/MonitorMockup';
 
@@ -125,6 +127,45 @@ export function PhoneGallery({ slots }: { slots: CaseSlot[] }) {
  * all in place. Inside the case layer it waits for the layer's go (the hold
  * comes off once the page has grown out of the card).
  */
+/**
+ * A long passage kept to its first three lines, fading out under a soft
+ * veil, with "Read more" below it. It opens in place, the veil lifting as it
+ * goes, and closes again.
+ */
+export function More({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+  const id = useId();
+  const bodyRef = useRef<HTMLDivElement>(null);
+  const motion = useRef<Animation | null>(null);
+  const [open, setOpen] = useState(false);
+  const toggle = () => {
+    const body = bodyRef.current;
+    if (!body) return;
+    // From wherever it is (a second click mid-way turns it round) to the
+    // height the stylesheet gives the new state. max-height, so the
+    // stylesheet's own clamp doesn't cut a closing passage short at once.
+    const from = body.offsetHeight;
+    motion.current?.cancel();
+    flushSync(() => setOpen((o) => !o));
+    const to = body.offsetHeight;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    motion.current = body.animate([{ maxHeight: `${from}px` }, { maxHeight: `${to}px` }], {
+      duration: 460,
+      easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+    });
+  };
+  return (
+    <div className={`cp-more ${className}`} data-open={open ? '' : undefined}>
+      <div ref={bodyRef} id={id} className="cp-more__body">
+        {children}
+      </div>
+      <button type="button" className="cp-more__toggle" aria-expanded={open} aria-controls={id} onClick={toggle}>
+        {open ? 'Show less' : 'Read more'}
+        <ButtonChevron className="cp-more__chevron" />
+      </button>
+    </div>
+  );
+}
+
 export function useReveal(ref: React.RefObject<HTMLElement | null>) {
   useLayoutEffect(() => {
     const root = ref.current;

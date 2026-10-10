@@ -4,7 +4,7 @@ import { useRef } from 'react';
 import { chumsMedia as media } from '@/data/chumsCase';
 import { ButtonChevron } from '@/components/header/menu/icons';
 import { BackLink } from './BackLink';
-import { BeforeAfter, BeforeGalleryAfter, PhoneGallery, useReveal } from './blocks';
+import { BeforeAfter, BeforeGalleryAfter, More, PhoneGallery, useReveal } from './blocks';
 import type { ArticleProps } from './registry';
 
 // "6 steps to 1" never breaks across lines (as in the card's notes).
@@ -184,13 +184,15 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
         </div>
 
         <div className="cp-col">
-          <p className="cp-reveal">
-            I packaged the audit into one proposal. The founders and the PM approved it within a week. With one
-            developer, we had to cut. A full wallet redesign was the first to go: the wallet worked, the problem was
-            getting to it. Some interaction details went too. We rebuilt the client around the three rules and put the
-            new patterns into the design system instead of patching screens one by one. The first beta shipped three
-            months after approval, then went through several rounds of iteration.
-          </p>
+          <More className="cp-reveal">
+            <p>
+              I packaged the audit into one proposal. The founders and the PM approved it within a week. With one
+              developer, we had to cut. A full wallet redesign was the first to go: the wallet worked, the problem was
+              getting to it. Some interaction details went too. We rebuilt the client around the three rules and put the
+              new patterns into the design system instead of patching screens one by one. The first beta shipped three
+              months after approval, then went through several rounds of iteration.
+            </p>
+          </More>
         </div>
       </section>
 
@@ -206,13 +208,15 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
             another room in the chat list, set up by hand. It wasn’t clear how they related to Venom or why anyone
             should do them.
           </p>
-          <p className="cp-reveal">
-            The junior designer got the brief. Before drawing anything, we took it apart: wrote down how we understood
-            it, listed the open questions and synced with the PM. What problem are we solving? What does the user get at
-            the end? Do points live in Chums or on Venom’s side? Which metric should move? The PM had the idea but not
-            the answers, so we worked them out together. The way the system works is what we came up with. Only then did
-            we look at benchmarks.
-          </p>
+          <More className="cp-reveal">
+            <p>
+              The junior designer got the brief. Before drawing anything, we took it apart: wrote down how we understood
+              it, listed the open questions and synced with the PM. What problem are we solving? What does the user get
+              at the end? Do points live in Chums or on Venom’s side? Which metric should move? The PM had the idea but
+              not the answers, so we worked them out together. The way the system works is what we came up with. Only
+              then did we look at benchmarks.
+            </p>
+          </More>
         </div>
 
         {/* The brief, taken apart: text, so it can be edited. The same shapes
@@ -317,12 +321,14 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
         <h2 id="cp-differently" className="cp-h cp-reveal">
           What I’d do differently
         </h2>
-        <p className="cp-reveal">
-          I’d agree on success metrics with the PM before starting. For desktop: steps and time for the most common
-          actions, weekly active desktop users, and how many come back the next week. For rewards: the share of wallet
-          holders who open quests, how many start a quest after seeing the payout, how many finish, and how many make
-          their first top-up after one. Plus one guardrail: rewards farmed by bots and duplicate accounts.
-        </p>
+        <More className="cp-reveal">
+          <p>
+            I’d agree on success metrics with the PM before starting. For desktop: steps and time for the most common
+            actions, weekly active desktop users, and how many come back the next week. For rewards: the share of wallet
+            holders who open quests, how many start a quest after seeing the payout, how many finish, and how many make
+            their first top-up after one. Plus one guardrail: rewards farmed by bots and duplicate accounts.
+          </p>
+        </More>
       </section>
 
       <footer className="cp-end cp-col cp-reveal">
