@@ -1,14 +1,8 @@
 'use client';
 
-import { forwardRef, useEffect, useRef, useState } from 'react';
+import { forwardRef, useEffect, useState } from 'react';
 import { ButtonChevron } from '@/components/header/menu/icons';
-import { PillGlassFilter } from '@/components/header/menu/PillGlassFilter';
-import { canRefract } from '@/lib/refract';
 import { BackLink } from './BackLink';
-
-const FILTER_ID = 'lg-casebar';
-// The pill reaches this far past the row on each side, as the header's does.
-const PILL_PAD = 28;
 
 type Props = {
   title: string;
@@ -20,33 +14,23 @@ type Props = {
 
 /**
  * The case's top bar, where the site's header is: the round back button and
- * the case's title. Like the header, it sits on the page at the top and
- * comes back on a glass pill once there is content under it; it gets out of
+ * the case's title. It sits on the page at the top; once there is content
+ * under it, the top edge of the screen turns the page's colour behind it
+ * (case.css), so text goes under it rather than through it. It gets out of
  * the way while reading down and returns on the first scroll up.
  */
 export const CaseBar = forwardRef<HTMLElement, Props>(function CaseBar({ title, onBack, backHref, scrollerRef }, ref) {
-  const rowRef = useRef<HTMLDivElement>(null);
-  const [refract, setRefract] = useState(false);
-  const [pillW, setPillW] = useState(0);
   const [glass, setGlass] = useState(false);
   const [hidden, setHidden] = useState(false);
-
-  useEffect(() => setRefract(canRefract()), []);
-
-  useEffect(() => {
-    const row = rowRef.current;
-    if (!row) return;
-    const measure = () => setPillW(row.offsetWidth + PILL_PAD * 2);
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(row);
-    return () => ro.disconnect();
-  }, []);
+  const [gutter, setGutter] = useState(0);
 
   useEffect(() => {
     const el = scrollerRef?.current ?? null;
     const target: HTMLElement | Window = el ?? window;
     const y = () => (el ? el.scrollTop : window.scrollY);
+    // The layer's scrollbar is under the bar (the window's never is): the
+    // page-coloured edge stops short of it.
+    if (el) setGutter(el.offsetWidth - el.clientWidth);
     let last = y();
     const onScroll = () => {
       const now = y();
@@ -65,15 +49,13 @@ export const CaseBar = forwardRef<HTMLElement, Props>(function CaseBar({ title, 
     <header
       ref={ref}
       className="cp-bar"
-      data-refract={refract ? '' : undefined}
       data-glass={glass ? '' : undefined}
       data-hidden={hidden ? '' : undefined}
+      style={gutter ? ({ '--cp-gutter': `${gutter}px` } as React.CSSProperties) : undefined}
       // Keyboard focus brings it back wherever the page is.
       onFocus={() => setHidden(false)}
     >
-      {refract && pillW > 0 && <PillGlassFilter id={FILTER_ID} width={pillW} height={40} />}
-      <div ref={rowRef} className="cp-bar__row">
-        <span className="cp-bar__glass" aria-hidden="true" />
+      <div className="cp-bar__row">
         <BackLink onBack={onBack} backHref={backHref} className="cp-back" label="Back to all work">
           <span className="cp-back__disc glass-disc" aria-hidden="true" />
           <ButtonChevron className="cp-back__chevron cp-chevron-left" />
