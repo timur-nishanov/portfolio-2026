@@ -6,7 +6,7 @@ import { ChumsArticle } from './ChumsArticle';
 export type ArticleProps = { onBack?: () => void; backHref?: string };
 
 type CaseEntry = {
-  /** The bar's title and the tab's. */
+  /** The bar's title and the tab's, spelled as on the case's card. */
   title: string;
   Article: ComponentType<ArticleProps>;
 };
@@ -14,5 +14,5 @@ type CaseEntry = {
 /** The cases with a study, by showcase id. The card itself, and the case's
     address, come from the showcase data. */
 export const CASES: Record<string, CaseEntry> = {
-  chums: { title: 'Chums Messenger', Article: ChumsArticle },
+  chums: { title: 'Chums messenger', Article: ChumsArticle },
 };

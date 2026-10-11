@@ -13,6 +13,8 @@ const FADE_MS = 260; // reduced motion: a plain cross-fade
 // Pointing at the note holds it; once the pointer leaves, it stays at least
 // this long before it goes.
 const RESUME_MIN = 1200;
+// How long after a case over the page has gone the notes wait to go on.
+const CASE_LANDING = 600;
 
 // What animates as one piece: split on ordinary spaces only, so words tied
 // with a no-break space ("6 steps to 1.") stay one unbreakable unit.
@@ -31,8 +33,9 @@ type Props = { notes: string[]; className?: string };
  * Notes that take turns in one place. The block is anchored by its top edge
  * and never re-centres: a longer note only grows downward, and in the stacked
  * mobile layout an invisible copy of every note holds the tallest height, so
- * nothing below shifts. Runs only while on screen and the tab is visible, and
- * holds while a mouse points at it — someone reading shouldn't lose the line.
+ * nothing below shifts. Runs only while on screen and the tab is visible (a
+ * note already leaving still finishes), and holds while a mouse points at it —
+ * someone reading shouldn't lose the line.
  */
 export function RotatingNotes({ notes, className = '' }: Props) {
   const reduced = useReducedMotion();
@@ -49,8 +52,14 @@ export function RotatingNotes({ notes, className = '' }: Props) {
   useEffect(() => {
     const el = rootRef.current;
     if (!el) return;
+    const html = document.documentElement;
     let inView = false;
-    const update = () => setActive(inView && document.visibilityState === 'visible');
+    // A case open over the page (CaseLayer) hides the card, though it is
+    // still "in view" under it: the notes wait, and start again only once
+    // the card has landed and filled, so none changes as it comes back.
+    let covered = html.hasAttribute('data-case-open');
+    let uncover = 0;
+    const update = () => setActive(inView && !covered && document.visibilityState === 'visible');
     const io = new IntersectionObserver(
       ([e]) => {
         inView = e.isIntersecting;
@@ -59,15 +68,32 @@ export function RotatingNotes({ notes, className = '' }: Props) {
       { threshold: 0.25 },
     );
     io.observe(el);
+    const caseWatch = new MutationObserver(() => {
+      window.clearTimeout(uncover);
+      if (html.hasAttribute('data-case-open')) {
+        covered = true;
+        update();
+      } else {
+        uncover = window.setTimeout(() => {
+          covered = false;
+          update();
+        }, CASE_LANDING);
+      }
+    });
+    caseWatch.observe(html, { attributes: true, attributeFilter: ['data-case-open'] });
     document.addEventListener('visibilitychange', update);
     return () => {
       io.disconnect();
+      caseWatch.disconnect();
+      window.clearTimeout(uncover);
       document.removeEventListener('visibilitychange', update);
     };
   }, []);
 
-  // A note on its way out always finishes leaving; only a shown one is held.
-  const running = active && (phase === 'out' || !held);
+  // A note on its way out always finishes leaving, and the next one comes
+  // in, even under a case or off screen: the card never comes back with an
+  // empty column. Only a shown note is held.
+  const running = phase === 'out' || (active && !held);
 
   useEffect(() => {
     if (!running || notes.length < 2) return;

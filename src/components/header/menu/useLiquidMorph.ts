@@ -4,32 +4,30 @@ import { useEffect, useRef, type RefObject } from 'react';
 import { lerp } from '@/lib/lerp';
 import { zoomOf } from '@/lib/zoom';
 import { stepSpring, type SpringConfig, type SpringState } from '@/lib/spring';
-import { clamp01, metaball, smoothstep, springOf } from './liquid';
+import { smoothstep, springOf } from './liquid';
 import { MENU_FROST, MENU_SATURATE } from './MenuGlassFilter';
 import { PILL_SATURATE, PILL_SOFTEN } from './PillGlassFilter';
 
 export type MorphRefs = {
   /** Positioning context every rect below is measured in (the header). */
   root: RefObject<HTMLElement | null>;
+  /** The blend layer beside the header (SiteHeader): it draws the title, and
+      the chevron's second ink for when no glass is under it. */
+  blend: RefObject<HTMLElement | null>;
+  /** The bar's glass pill (shown over the cases, the menu open or not):
+      while enough of it is under the chevron, the chevron keeps its own ink. */
+  pill: RefObject<HTMLElement | null>;
   /** The title beside the button: the glass must not slide under it. */
   title: RefObject<HTMLElement | null>;
   button: RefObject<HTMLElement | null>;
-  /** The button's glass disc (its tint, hover included, is what the morph
-      starts from). */
+  /** The button's glass disc. The moving shape takes its place: the disc is
+      hidden from the frame the shape appears until the frame it lands back. */
   disc: RefObject<HTMLElement | null>;
   blob: RefObject<HTMLDivElement | null>;
   tint: RefObject<HTMLDivElement | null>;
   /** The menu content, laid out at the panel's resting rect — its box IS the
       morph's destination, so the CSS stays the single source of the layout. */
   content: RefObject<HTMLDivElement | null>;
-  neckSvg: RefObject<SVGSVGElement | null>;
-  neck: RefObject<SVGPathElement | null>;
-  neckFrom: RefObject<SVGStopElement | null>;
-  neckTo: RefObject<SVGStopElement | null>;
-  neckGrad: RefObject<SVGLinearGradientElement | null>;
-  /** Clip paths that keep the bridge off the disc and off the shape. */
-  neckClipDisc: RefObject<SVGPathElement | null>;
-  neckClipBlob: RefObject<SVGPathElement | null>;
   filter: RefObject<SVGFilterElement | null>;
   flood: RefObject<SVGFEFloodElement | null>;
   displace: RefObject<SVGFEDisplacementMapElement | null>;
@@ -49,23 +47,23 @@ const edge = (response: number, dampingRatio: number, delay = 0): EdgeMotion => 
 // both axes at once, as an iOS menu does: early on it is never more than
 // about twice as tall as it is wide (a fixed 40ms hold on the left edge made
 // it hang below the button as a 20px grey drip, 1:4, for five frames). The
-// top edge is quick, so the drop is below the title within ~3 frames, and
-// the left edge sets off the moment it is: gated on where the top edge is,
-// not on a timer, so the glass never slides under the title's last glyphs
-// (with any font, zoom or row width) and never waits longer than it must.
-// The far edges (bottom, left) are the bounciest, so the panel settles with
-// the small iOS overshoot away from the button.
+// top edge is quick: it is the edge that slides the plate out from under the
+// chevron, which is bare by the second frame, and the drop is below the title
+// within ~3 frames. The left edge sets off the moment it is: gated on where
+// the top edge is, not on a timer, so the glass never slides under the
+// title's last glyphs (with any font, zoom or row width) and never waits
+// longer than it must. The far edges (bottom, left) are the bounciest, so the
+// panel settles with the small iOS overshoot away from the button.
 // Closing is quicker and the side edge goes first, so the panel narrows into
-// a drop before it is drawn back up into the button — the top edge is gated
-// on the left edge being past the title, the mirror of the opening. The
-// closing springs are
-// deliberately a little underdamped: an edge is stopped dead when it reaches
-// the button (it never undershoots through it), so the would-be wobble never
-// shows — what it buys is a brisk arrival instead of a near-critical tail,
-// which left a grey nub sitting on the button for a tenth of a second before
-// the gulp. The whole close waits ~45ms first: the rows fade out in 70ms
-// (menu.css), so the shape never shrinks over live text — it cut words at
-// its moving edge for two frames.
+// a drop before it rises back under the chevron — the top edge is gated on
+// the left edge being past the title, the mirror of the opening. The closing
+// springs are deliberately a little underdamped: an edge is stopped dead on
+// the disc's rect (it never undershoots through it), so the would-be wobble
+// never shows — what it buys is a brisk arrival instead of a near-critical
+// tail, and the top edge, which has the farthest to go, is the briskest (at
+// 0.32s it crawled the last 2px over five frames). The whole close waits
+// ~45ms first: the rows fade out in 70ms (menu.css), so the shape never
+// shrinks over live text — it cut words at its moving edge for two frames.
 const OPEN: Record<Edge, EdgeMotion> = {
   top: edge(0.18, 0.9),
   right: edge(0.42, 0.8),
@@ -73,26 +71,20 @@ const OPEN: Record<Edge, EdgeMotion> = {
   left: edge(0.3, 0.74), // + the title gate (see tick)
 };
 const CLOSE: Record<Edge, EdgeMotion> = {
-  top: edge(0.32, 0.78, 0.06),
+  top: edge(0.24, 0.62, 0.06),
   right: edge(0.28, 0.8, 0.045),
   bottom: edge(0.32, 0.75, 0.06),
   left: edge(0.28, 0.8, 0.045),
 };
-// The button gulps when the drop comes back into it.
+// The disc swells a little (3–4%) as the drop lands back on it.
 const BUMP = springOf(0.3, 0.38);
-const BUMP_IN = 1.4;
-// How close (as edge progress) the returning shape must be to the button disc
-// before it counts as swallowed: ~7px on the long edge, a snap the gulp hides.
-const SWALLOW_AT = 0.02;
+const BUMP_IN = 1.0;
+// How close (px, on every side) the returning shape must be to the disc's
+// rect before it docks: under a quarter pixel, so swapping the shape for the
+// real disc in one frame cannot be seen.
+const DOCK_AT = 0.25;
 
 const PANEL_RADIUS = 28;
-// Gap (px) between the button and the panel's nearest corner at which the
-// liquid bridge lets go. The resting gap is ~17px, so the bridge always snaps
-// before the panel settles and never lingers as a stalk.
-const NECK_REACH = 13;
-// ...and it snaps sooner if it has thinned to this waist (px): drawn down to
-// nothing it read as a 1px diagonal scratch for 2–3 frames, not a liquid neck.
-const NECK_MIN_WAIST = 3.5;
 // The rows come in once the left edge has passed their text inset (px): with
 // the content parked at its final place behind a moving clip, words showed
 // cut at the edge ("andom", "areer") for a few frames.
@@ -101,13 +93,15 @@ const REVEAL_INSET = 15;
 // the filter region pad: frost tail (3σ) plus the farthest the rim samples.
 const REFRACT_SCALE = 110;
 const FILTER_PAD = 48;
-
-// How far past the disc (px) the shape reaches before it is fully drawn:
-// nearer, it is all but the disc itself, and what showed of it round the
-// disc was a sliver (a second rim under the button, a line, two ears).
-const FADE_IN = 6;
-// Room left round the shape by its clip (px): its drop shadow reaches 46.
-const CLIP_PAD = 80;
+// Over the cases the bar's pill stays under the chevron, open or closed, and
+// the chevron keeps its own ink on it: the blend ink all but vanished on the
+// full pill (~40/255 off it). But the pill fades in or out (menu.css, 260ms)
+// whenever the bar crosses the hero's edge, the menu open or not, so for a
+// moment the bare chevron sits on a part-faded pill. Over the black cards the
+// two inks read about equally well at two thirds of the pill's opacity (both
+// ~55 off it). So the chevron keeps its own ink while the pill is at least
+// this opaque, and switches at once: a crossfade between the two dims both.
+const PILL_INK_AT = 0.66;
 
 type Rgba = [number, number, number, number];
 // "rgb(…)" / "rgba(…)", as getComputedStyle hands colours back.
@@ -116,44 +110,25 @@ const parseRgba = (s: string, fallback: Rgba): Rgba => {
   return n && n.length >= 3 ? [n[0], n[1], n[2], n.length > 3 ? n[3] : 1] : fallback;
 };
 const fade = (c: Rgba, k: number): Rgba => [c[0], c[1], c[2], c[3] * k];
-// Straight-alpha "a over b".
-const over = (a: Rgba, b: Rgba): Rgba => {
-  const al = a[3] + b[3] * (1 - a[3]);
-  if (al < 1e-4) return [b[0], b[1], b[2], 0];
-  const mix = (i: number) => (a[i] * a[3] + b[i] * b[3] * (1 - a[3])) / al;
-  return [mix(0), mix(1), mix(2), al];
-};
 const css = (c: Rgba) => `rgba(${Math.round(c[0])}, ${Math.round(c[1])}, ${Math.round(c[2])}, ${c[3].toFixed(3)})`;
 
 const f2 = (v: number) => v.toFixed(2);
-const circlePath = (cx: number, cy: number, r: number) =>
-  `M${f2(cx - r)} ${f2(cy)}a${f2(r)} ${f2(r)} 0 1 0 ${f2(2 * r)} 0a${f2(r)} ${f2(r)} 0 1 0 ${f2(-2 * r)} 0Z`;
-const roundRectPath = (x: number, y: number, w: number, h: number, r: number) =>
-  `M${f2(x + r)} ${f2(y)}H${f2(x + w - r)}A${f2(r)} ${f2(r)} 0 0 1 ${f2(x + w)} ${f2(y + r)}` +
-  `V${f2(y + h - r)}A${f2(r)} ${f2(r)} 0 0 1 ${f2(x + w - r)} ${f2(y + h)}` +
-  `H${f2(x + r)}A${f2(r)} ${f2(r)} 0 0 1 ${f2(x)} ${f2(y + h - r)}` +
-  `V${f2(y + r)}A${f2(r)} ${f2(r)} 0 0 1 ${f2(x + r)} ${f2(y)}Z`;
-// Everything (as far as the header goes) but the shape after it, evenodd.
-const EVERYWHERE = 'M-10000 -10000H10000V10000H-10000Z';
-
-// The outer hairline's strength, the disc's to the panel's.
-const hairOf = (m: number) => lerp(0.1, 0.07, m);
 
 /**
  * The shape's edge, from the button disc's (.glass-disc, globals.css) at
  * m = 0 to the panel's resting one (menu.css) at m = 1, as one list of
  * layers so it blends: the disc's two inner lights give way to the panel's
- * hairline, the outer hair and both drops carry over and grow. While the
- * glass moves the outer hair is drawn with the disc's and the bridge's
- * instead, as one outline (the rim layer), so `hair` is off then.
+ * hairline, the outer hair and both drops carry over and grow. At m = 0 it is
+ * the disc's five shadows exactly, so the shape that replaces the disc on the
+ * first frame has the disc's own edge.
  */
-const edgeShadow = (m: number, hair: boolean) => {
+const edgeShadow = (m: number) => {
   const a = (v: number) => v.toFixed(3);
   return (
     `inset 0 0.5px 0.5px rgba(255,255,255,${a(1 - m)}), ` +
     `inset 0 -0.5px 1px rgba(255,255,255,${a(0.6 * (1 - m))}), ` +
     `inset 0 0 0 0.5px rgba(255,255,255,${a(0.65 * m)}), ` +
-    `0 0 0 0.5px rgba(0,0,0,${a(hair ? hairOf(m) : 0)}), ` +
+    `0 0 0 0.5px rgba(0,0,0,${a(lerp(0.1, 0.07, m))}), ` +
     `0 ${f2(lerp(1, 2, m))}px ${f2(lerp(3, 6, m))}px rgba(0,0,0,${a(lerp(0.1, 0.04, m))}), ` +
     `0 ${f2(lerp(4, 10, m))}px ${f2(lerp(10, 36, m))}px rgba(0,0,0,${a(lerp(0.05, 0.1, m))})`
   );
@@ -161,47 +136,6 @@ const edgeShadow = (m: number, hair: boolean) => {
 
 type Circle = { cx: number; cy: number; r: number };
 type Box = Record<Edge, number>;
-
-type Rim = {
-  g: SVGGElement;
-  mask: SVGMaskElement;
-  maskBack: SVGRectElement;
-  maskDisc: SVGCircleElement;
-  maskNeck: SVGPathElement;
-  maskBlob: SVGPathElement;
-  shadeNear: SVGCircleElement;
-  shadeFar: SVGCircleElement;
-  hairDisc: SVGCircleElement;
-  hairNeck: SVGPathElement;
-  hairBlob: SVGPathElement;
-};
-
-// The rim layer's parts, in the bridge's svg (SiteHeader).
-function findRim(svg: SVGSVGElement | null): Rim | null {
-  if (!svg) return null;
-  const q = <T extends Element>(k: string) => svg.querySelector<T>(`[data-rim="${k}"]`);
-  const mask = svg.querySelector<SVGMaskElement>('mask');
-  const rim = {
-    g: q<SVGGElement>('g'),
-    mask,
-    maskBack: mask?.querySelector<SVGRectElement>('rect') ?? null,
-    maskDisc: q<SVGCircleElement>('m-disc'),
-    maskNeck: q<SVGPathElement>('m-neck'),
-    maskBlob: q<SVGPathElement>('m-blob'),
-    shadeNear: q<SVGCircleElement>('shade-near'),
-    shadeFar: q<SVGCircleElement>('shade-far'),
-    hairDisc: q<SVGCircleElement>('r-disc'),
-    hairNeck: q<SVGPathElement>('r-neck'),
-    hairBlob: q<SVGPathElement>('r-blob'),
-  };
-  return Object.values(rim).every(Boolean) ? (rim as Rim) : null;
-}
-
-const setCircle = (el: SVGCircleElement, cx: number, cy: number, r: number) => {
-  el.setAttribute('cx', f2(cx));
-  el.setAttribute('cy', f2(cy));
-  el.setAttribute('r', f2(r));
-};
 
 function createEngine(refs: MorphRefs) {
   // Progress of each edge from the button (0) to the panel (1).
@@ -218,30 +152,29 @@ function createEngine(refs: MorphRefs) {
   let raf = 0;
   let last = 0;
   let reduced = false;
-  // Closed and absorbed into the button (nothing of the shape is drawn).
-  let swallowed = true;
+  // The real disc is under the chevron and the shape is hidden. Off from the
+  // toggle that opens the menu until the returning shape lands exactly on the
+  // disc's rect; render() writes both visibilities from it in one pass, so
+  // there is never a frame with both, or neither.
+  let docked = true;
   // The rows have been let in for this opening (see REVEAL_INSET).
   let revealed = false;
+  // This close calls off an opening whose rows never came in (a quick double
+  // click): there is nothing to fade out first, so it folds straight back.
+  let aborted = false;
+  // How much of the chevron is drawn in its own ink (on glass) rather than in
+  // the blend layer's (bare, over whatever the page shows); -1 = not yet set.
+  let ink = -1;
   // The disc's tint and the panel's veil (both read off the CSS per toggle,
   // hover and reduced transparency included).
   let btnColor: Rgba = [255, 255, 255, 0.3];
   let veil: Rgba = [247, 247, 247, 0.7];
   let solidVeil = false;
-  let rimCache: Rim | null = null;
-  const rim = () => (rimCache ??= findRim(refs.neckSvg.current));
-
-  // While the glass moves, the disc's hairline and shadow come off the disc
-  // (menu.css, data-morph) and are drawn in the rim layer with the bridge's
-  // and the shape's hairlines, outside all three: one outline round the
-  // liquid, where the separate ones drew lines across its joins (and the
-  // disc's shadow fell on the glass running out of it).
-  const setRim = (on: boolean) => {
-    const r = rim();
-    if (r) r.g.style.visibility = on ? 'visible' : 'hidden';
-    refs.root.current?.toggleAttribute('data-morph', on);
-  };
   let B: Circle = { cx: 0, cy: 0, r: 10 };
   let T: Box = { top: 0, right: 0, bottom: 0, left: 0 };
+  // How far (px) each edge travels between the disc and the panel, so edge
+  // progress can be read as a distance from the disc.
+  let SPAN: Box = { top: 0, right: 0, bottom: 0, left: 0 };
   // The title's ink bottom and right end. Opening, the left edge holds until
   // the top edge is below the title; closing, the top edge holds until the
   // left edge is past its end — either way the glass never slides under it.
@@ -253,6 +186,25 @@ function createEngine(refs: MorphRefs) {
     refs.content.current?.toggleAttribute('data-reveal', on);
   };
 
+  // The chevron has one glyph in each layer (menu.css): its own, drawn on the
+  // glass, and the blend layer's, which stays visible over the head and the
+  // dark cards when the glass has slid away from under it. 1 = all its own.
+  const setInk = (v: number) => {
+    if (Math.abs(v - ink) < 1e-3) return;
+    ink = v;
+    const s = v.toFixed(3);
+    refs.root.current?.style.setProperty('--plate-ink', s);
+    refs.blend.current?.style.setProperty('--plate-ink', s);
+  };
+
+  // The chevron flips (menu.css) the moment the menu is toggled, as the
+  // button's state; both glyphs follow the same attribute.
+  const setChevron = (up: boolean) => {
+    const dir = up ? 'up' : 'down';
+    if (refs.button.current) refs.button.current.dataset.chevron = dir;
+    if (refs.blend.current) refs.blend.current.dataset.chevron = dir;
+  };
+
   const measure = () => {
     const root = refs.root.current;
     const btn = refs.button.current;
@@ -260,10 +212,10 @@ function createEngine(refs: MorphRefs) {
     if (!root || !btn || !content) return;
     // Sub-pixel exact: the panel is centred with calc(50% − 103.5px) and the
     // button by flex, so both land on half pixels, which offsetLeft would
-    // round — and the copy laid over the button must cover it exactly. Rects
-    // are visual px, so the body zoom is divided back out (lib/zoom). The
-    // button's centre is read from its rect (its bump scale is centred, so the
-    // centre is unaffected) and its radius from layout.
+    // round — and the shape that replaces the disc must cover it exactly.
+    // Rects are visual px, so the body zoom is divided back out (lib/zoom).
+    // The button never scales (the bump is the disc's), so its rect is its
+    // layout box; the radius is read from layout.
     const z = zoomOf(root);
     const rr = root.getBoundingClientRect();
     const br = btn.getBoundingClientRect();
@@ -282,6 +234,12 @@ function createEngine(refs: MorphRefs) {
       right: (cr.right - rr.left) / z,
       bottom: (cr.bottom - rr.top) / z,
     };
+    SPAN = {
+      top: T.top - (B.cy - B.r),
+      bottom: T.bottom - (B.cy + B.r),
+      left: B.cx - B.r - T.left,
+      right: T.right - (B.cx + B.r),
+    };
     const title = refs.title.current;
     if (title) {
       // Line box minus the half-leading and a descent's worth: about the
@@ -295,21 +253,6 @@ function createEngine(refs: MorphRefs) {
     } else {
       gateY = gateX = -Infinity;
     }
-    // The rim layer's mask covers what the liquid can reach: the panel and
-    // its overshoot, the button, and the shadows round them.
-    const parts = rim();
-    if (parts) {
-      const x = Math.min(T.left, B.cx - B.r) - FILTER_PAD;
-      const y = Math.min(T.top, B.cy - B.r) - FILTER_PAD;
-      const w = Math.max(T.right, B.cx + B.r) + 40 + FILTER_PAD - x;
-      const h = T.bottom + 40 + FILTER_PAD - y;
-      for (const el of [parts.mask, parts.maskBack]) {
-        el.setAttribute('x', f2(x));
-        el.setAttribute('y', f2(y));
-        el.setAttribute('width', f2(w));
-        el.setAttribute('height', f2(h));
-      }
-    }
     const filter = refs.filter.current;
     if (filter) {
       // Sized once per morph for the largest the shape gets (the panel plus
@@ -321,25 +264,20 @@ function createEngine(refs: MorphRefs) {
     }
   };
 
+  // Safari and Firefox get the CSS frost (no data-refract), which the shape
+  // blends from the disc's to the panel's while it moves; '' leaves menu.css.
+  const setFrost = (blob: HTMLElement, value: string) => {
+    blob.style.setProperty('backdrop-filter', value);
+    blob.style.setProperty('-webkit-backdrop-filter', value);
+  };
+
   const hide = () => {
-    if (refs.blob.current) refs.blob.current.style.visibility = 'hidden';
-    // Its parts set their own visibility, which a hidden svg doesn't override.
-    if (refs.neckSvg.current) refs.neckSvg.current.style.visibility = 'hidden';
-    if (refs.neck.current) refs.neck.current.style.visibility = 'hidden';
+    const blob = refs.blob.current;
+    if (blob) {
+      blob.style.visibility = 'hidden';
+      setFrost(blob, '');
+    }
     if (refs.content.current) refs.content.current.style.clipPath = '';
-    setRim(false);
-  };
-
-  const bumpButton = () => {
-    const btn = refs.button.current;
-    if (btn) btn.style.transform = Math.abs(bump.value) > 5e-4 ? `scale(${(1 + bump.value).toFixed(4)})` : '';
-  };
-
-  // The chevron (drawn above the liquid, menu.css) crossfades to the new
-  // direction the moment the menu is toggled, as the button's state.
-  const setChevron = (up: boolean) => {
-    const btn = refs.button.current;
-    if (btn) btn.dataset.chevron = up ? 'up' : 'down';
   };
 
   // Reduced motion: the plate sits at the panel's resting rect and only
@@ -361,14 +299,43 @@ function createEngine(refs: MorphRefs) {
     }
   };
 
+  // Enough of the bar's pill is under the out-of-dock chevron for it to keep
+  // its own ink (see PILL_INK_AT).
+  const onPill = () => {
+    const pill = refs.pill.current;
+    return !docked && !!pill && parseFloat(getComputedStyle(pill).opacity) >= PILL_INK_AT;
+  };
+
   const render = () => {
     const blob = refs.blob.current;
     const root = refs.root.current;
+    const disc = refs.disc.current;
     if (!blob || !root) return;
     if (reduced) {
+      // Open, the chevron is bare once the disc has faded (menu.css times the
+      // swap), unless it sits on the pill.
+      const ownInk = docked || onPill();
       placeResting();
+      setInk(ownInk ? 1 : 0);
       return;
     }
+    // Reads first, so neither forces a style pass of its own. On its way back
+    // the glass takes on the disc's tint as it is right now, so a hover that
+    // ends (or starts) mid-flight lands in the right glass; and how much of
+    // the bar's pill is under the chevron (it fades at the hero's edge).
+    const returning = target === 0 && !docked && !!disc;
+    if (returning) btnColor = parseRgba(getComputedStyle(disc).backgroundColor, btnColor);
+    const pilled = onPill();
+    if (returning && refs.tint.current) refs.tint.current.style.background = css(btnColor);
+    // The swell is the disc's alone: the chevron and the hit area never move.
+    if (disc) disc.style.transform = Math.abs(bump.value) > 5e-4 ? `scale(${(1 + bump.value).toFixed(4)})` : '';
+    if (docked) {
+      hide();
+      if (disc) disc.style.visibility = '';
+      setInk(1);
+      return;
+    }
+
     const p = {
       top: Math.max(0, e.top.value),
       right: Math.max(0, e.right.value),
@@ -376,57 +343,41 @@ function createEngine(refs: MorphRefs) {
       left: Math.max(0, e.left.value),
     };
     const grow = Math.min(p.top, p.right, p.bottom, p.left);
-    bumpButton();
-    if (target === 0 && swallowed) {
-      hide();
-      return;
-    }
-
-    // Edges interpolate from the button circle to the panel rect. Past 1 they
-    // keep going, so an overshoot swells the panel away from the button — the
-    // far edges most — like a spring anchored at its source.
-    const left = lerp(B.cx - B.r, T.left, p.left);
-    const right = lerp(B.cx + B.r, T.right, p.right);
-    const top = lerp(B.cy - B.r, T.top, p.top);
-    // Never flatter than it is wide (up to the disc's size): closing, the
-    // bottom edge caught up with the held top edge and the drop was squashed
-    // into a line under the button; now it stays a drop until it is drawn up.
-    const bottom = Math.max(lerp(B.cy + B.r, T.bottom, p.bottom), top + Math.min(right - left, 2 * B.r));
+    // Edges interpolate from the disc to the panel rect. Past 1 they keep
+    // going, so an overshoot swells the panel away from the button — the far
+    // edges most — like a spring anchored at its source. Reopened while the
+    // disc is still swelling from the last landing, the shape starts from
+    // the disc at the size it is drawn.
+    const r0 = B.r * (1 + bump.value);
+    const left = lerp(B.cx - r0, T.left, p.left);
+    const right = lerp(B.cx + r0, T.right, p.right);
+    const top = lerp(B.cy - r0, T.top, p.top);
+    // Never flatter than it is wide (up to the disc's size): opening, the
+    // plate leaves the chevron as a 20px capsule, not a sliver squeezed
+    // between the quick top edge and the slower bottom; closing, it stays a
+    // round drop until it lands as the disc.
+    const bottom = Math.max(lerp(B.cy + r0, T.bottom, p.bottom), top + Math.min(right - left, 2 * r0));
     const w = Math.max(right - left, 1);
     const ht = Math.max(bottom - top, 1);
     // Circle → 28px corners, capped so a narrow drop stays a capsule.
-    const radius = Math.min(lerp(B.r, PANEL_RADIUS, smoothstep(0, 0.55, grow)), w / 2, ht / 2);
+    const radius = Math.min(lerp(r0, PANEL_RADIUS, smoothstep(0, 0.55, grow)), w / 2, ht / 2);
 
     blob.style.visibility = 'visible';
+    if (disc) disc.style.visibility = 'hidden';
     blob.style.transform = `translate(${left.toFixed(2)}px, ${top.toFixed(2)}px)`;
     blob.style.width = `${w.toFixed(2)}px`;
     blob.style.height = `${ht.toFixed(2)}px`;
     blob.style.borderRadius = `${radius.toFixed(2)}px`;
 
-    // The shape is the button's own glass drawn out of it: it starts on the
-    // disc in the disc's tint, edge and clear glass, and clears into the
-    // panel's frosted glass as it opens up. It is never drawn over the disc:
-    // both are see-through, and two layers of glass read as a brighter patch
-    // with a line across the button — so it is clipped round the disc, and
-    // runs on from the disc's edge as the disc itself stretching.
+    // The shape is the disc itself on the move: it starts in the disc's tint,
+    // edge, sheen and clear glass, and clears into the panel's frosted glass
+    // as it opens up. Written whole from here, not as var()-driven colour
+    // maths in the stylesheet, so every engine gets a plain value.
     const glass = smoothstep(0.12, 0.42, grow);
     if (refs.tint.current) refs.tint.current.style.opacity = (1 - glass).toFixed(3);
     blob.style.backgroundColor = css(solidVeil ? veil : fade(veil, glass));
     blob.style.setProperty('--lgm-glass', glass.toFixed(3));
-    const r1 = B.r * (1 + bump.value);
-    const dx = B.cx - left;
-    const dy = B.cy - top;
-    const onDisc = dx + r1 > 0 && dx - r1 < w && dy + r1 > 0 && dy - r1 < ht;
-    blob.style.clipPath = onDisc
-      ? `path(evenodd, '${roundRectPath(-CLIP_PAD, -CLIP_PAD, w + CLIP_PAD * 2, ht + CLIP_PAD * 2, 0)} ${circlePath(dx, dy, r1)}')`
-      : '';
-    // Written whole from here, not as var()-driven colour maths in the
-    // stylesheet, so every engine gets a plain value.
-    const moving = raf !== 0;
-    blob.style.boxShadow = edgeShadow(glass, !moving);
-    const beyond = Math.max(0, bottom - (B.cy + B.r), right - (B.cx + B.r), B.cx - B.r - left);
-    const shown = smoothstep(0, FADE_IN, beyond);
-    blob.style.opacity = shown.toFixed(3);
+    blob.style.boxShadow = edgeShadow(glass);
 
     if (root.hasAttribute('data-refract')) {
       refs.frost.current?.setAttribute('stdDeviation', lerp(PILL_SOFTEN, MENU_FROST, glass).toFixed(2));
@@ -438,6 +389,10 @@ function createEngine(refs: MorphRefs) {
       refs.flood.current?.setAttribute('width', w.toFixed(1));
       refs.flood.current?.setAttribute('height', ht.toFixed(1));
       refs.displace.current?.setAttribute('scale', (REFRACT_SCALE * smoothstep(40, 150, Math.min(w, ht))).toFixed(1));
+    } else if (!solidVeil) {
+      // The disc's blur(6px) saturate(170%) to the panel's (menu.css).
+      const frost = `blur(${f2(lerp(6, 8, glass))}px) saturate(${lerp(170, 120, glass).toFixed(0)}%)`;
+      setFrost(blob, glass < 1 ? frost : '');
     }
 
     const content = refs.content.current;
@@ -450,77 +405,12 @@ function createEngine(refs: MorphRefs) {
     // glass has passed their text inset, so no word is ever seen cut off.
     if (target === 1 && !revealed && left <= T.left + REVEAL_INSET) setReveal(true);
 
-    // Liquid bridge between the button and the nearest top corner of the
-    // shape. Geometric, not timed: it exists while the two are within reach
-    // and thins as they part, so opening pinches it off and closing grows it
-    // back just before the panel is swallowed.
-    const neckSvg = refs.neckSvg.current;
-    const neck = refs.neck.current;
-    let neckD = '';
-    if (neckSvg && neck) {
-      const r2 = Math.max(radius, 4);
-      const minX = left + r2;
-      const maxX = right - r2;
-      const c2x = minX <= maxX ? Math.min(Math.max(B.cx, minX), maxX) : (left + right) / 2;
-      const c2 = { x: c2x, y: top + r2 };
-      const gap = Math.hypot(c2.x - B.cx, c2.y - B.cy) - r1 - r2;
-      const ball =
-        gap < NECK_REACH
-          ? metaball(
-              { x: B.cx, y: B.cy },
-              r1,
-              c2,
-              r2,
-              0.5 * Math.pow(clamp01(1 - Math.max(gap, 0) / NECK_REACH), 0.75),
-            )
-          : null;
-      if (ball && ball.waist >= NECK_MIN_WAIST) {
-        neckD = ball.d;
-        neck.setAttribute('d', ball.d);
-        const g = refs.neckGrad.current;
-        if (g) {
-          g.setAttribute('x1', B.cx.toFixed(1));
-          g.setAttribute('y1', (B.cy + r1 * 0.4).toFixed(1));
-          g.setAttribute('x2', c2.x.toFixed(1));
-          g.setAttribute('y2', (c2.y - r2 * 0.4).toFixed(1));
-        }
-        // From the disc's tint to what the shape is filled with right now;
-        // drawn only between the two (both are see-through glass).
-        refs.neckFrom.current?.setAttribute('stop-color', css(btnColor));
-        refs.neckTo.current?.setAttribute(
-          'stop-color',
-          css(over(fade(btnColor, 1 - glass), solidVeil ? veil : fade(veil, glass))),
-        );
-        refs.neckClipDisc.current?.setAttribute('d', `${EVERYWHERE} ${circlePath(B.cx, B.cy, r1)}`);
-        refs.neckClipBlob.current?.setAttribute('d', `${EVERYWHERE} ${roundRectPath(left, top, w, ht, radius)}`);
-        neck.style.opacity = shown.toFixed(3);
-        neck.style.visibility = 'visible';
-      } else {
-        neck.style.visibility = 'hidden';
-      }
-      neckSvg.style.visibility = 'visible';
-    }
-
-    // One outline round the disc, the bridge and the shape (see setRim). The
-    // shape and the bridge count for as much as they are drawn (`shown`).
-    const r = rim();
-    if (r && moving) {
-      const blobD = roundRectPath(left, top, w, ht, radius);
-      const hair = (hairOf(glass) * shown).toFixed(3);
-      setCircle(r.maskDisc, B.cx, B.cy, r1);
-      r.maskNeck.setAttribute('d', neckD);
-      r.maskNeck.setAttribute('fill-opacity', shown.toFixed(3));
-      r.maskBlob.setAttribute('d', blobD);
-      r.maskBlob.setAttribute('fill-opacity', shown.toFixed(3));
-      setCircle(r.shadeNear, B.cx, B.cy + 1, r1);
-      setCircle(r.shadeFar, B.cx, B.cy + 4, r1);
-      setCircle(r.hairDisc, B.cx, B.cy, r1);
-      r.hairNeck.setAttribute('d', neckD);
-      r.hairNeck.setAttribute('stroke-opacity', hair);
-      r.hairBlob.setAttribute('d', blobD);
-      r.hairBlob.setAttribute('stroke-opacity', hair);
-    }
-    setRim(moving);
+    // The chevron keeps its own ink while glass is under it and hands over to
+    // the blend layer's as the shape's top edge slides down past it (and back
+    // as the returning drop rises under it) — unless it sits on the pill, which
+    // is glass too (see PILL_INK_AT). Over the light page the two inks are the
+    // same colour, so only over dark content is there anything to see.
+    setInk(pilled ? 1 : 1 - smoothstep(B.cy - 3, B.cy + 4, top));
   };
 
   const tick = (now: number) => {
@@ -543,23 +433,30 @@ function createEngine(refs: MorphRefs) {
       const pastTitle = leftX >= gateX - 2 || e.left.value <= 0.05;
       for (const k of EDGES) {
         // Until its delay has passed an edge keeps chasing the old target, so
-        // a reversal mid-flight never snaps.
-        let go = since >= motion[k].delay;
+        // a reversal mid-flight never snaps. A close that calls off an opening
+        // has no rows to wait for: every edge turns back at once (keeping its
+        // speed, so nothing snaps), and the top edge, while the title holds
+        // it, brakes where it is instead of carrying on towards the panel — an
+        // empty slab dropped below the bar, and the side edge, chasing the open
+        // panel unchecked by its own gate, slid under the title.
+        let go = aborted || since >= motion[k].delay;
         if (target === 1 && k === 'left' && !belowTitle) go = false;
         if (target === 0 && k === 'top' && !pastTitle) go = false;
-        Object.assign(e[k], stepSpring(e[k], go ? target : previous, motion[k].spring, dt / steps));
+        const to = go ? target : aborted ? e[k].value : previous;
+        Object.assign(e[k], stepSpring(e[k], to, motion[k].spring, dt / steps));
+        // Closing, an edge stops dead on the disc's rect instead of
+        // overshooting through it, so the drop lands exactly on the disc.
+        if (target === 0 && e[k].value < 0) e[k].value = e[k].velocity = 0;
       }
       Object.assign(bump, stepSpring(bump, 0, BUMP, dt / steps));
     }
-    if (target === 0) {
-      // Back on the button: the shape is dropped (it is the button's double
-      // by now, so nothing pops), and the button takes the leftover momentum
-      // as a small gulp.
-      for (const k of EDGES) if (e[k].value < 0) e[k].value = e[k].velocity = 0;
-      if (!swallowed && EDGES.every((k) => e[k].value < SWALLOW_AT)) {
-        swallowed = true;
-        bump.velocity += BUMP_IN;
-      }
+    // Landed: the shape is dropped and the real disc shown in the same render
+    // (it is the disc's exact double by now, so nothing pops), and the disc
+    // takes the leftover momentum as a small swell.
+    if (target === 0 && !docked && EDGES.every((k) => Math.abs(e[k].value * SPAN[k]) < DOCK_AT)) {
+      for (const k of EDGES) e[k].value = e[k].velocity = 0;
+      docked = true;
+      bump.velocity += BUMP_IN;
     }
     render();
     const rest =
@@ -593,14 +490,35 @@ function createEngine(refs: MorphRefs) {
   const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(onResize) : null;
   if (refs.content.current) ro?.observe(refs.content.current);
 
+  // The pill can fade in or out under the open menu's chevron (the bar
+  // crossing the hero's edge) with nothing else moving: the ink follows it
+  // frame by frame until the fade is over. While the shape moves, its own
+  // frames already do.
+  let pillRaf = 0;
+  const followPill = () => {
+    pillRaf = 0;
+    if (docked) return;
+    if (!raf) render();
+    if (refs.pill.current?.getAnimations().length) pillRaf = requestAnimationFrame(followPill);
+  };
+  const watchPill = () => {
+    if (!pillRaf && !docked) pillRaf = requestAnimationFrame(followPill);
+  };
+  const pill = refs.pill.current;
+  pill?.addEventListener('transitionrun', watchPill);
+
   return {
     set(open: boolean, isReduced: boolean) {
       const next = open ? 1 : 0;
       measure();
       const blob = refs.blob.current;
+      const disc = refs.disc.current;
       if (isReduced) {
         // Reduced motion: no shape change at all — the panel simply fades in
-        // and out in place (CSS, data-mode="fade").
+        // and out in place (CSS, data-mode="fade"), the disc fades out from
+        // under the chevron as it does, and the chevron's ink swaps once the
+        // disc has faded enough (data-menu-fade), so the open state is bare
+        // here too — on the pill, it keeps its own ink, as it does in motion.
         reduced = true;
         cancelAnimationFrame(raf);
         raf = 0;
@@ -610,28 +528,39 @@ function createEngine(refs: MorphRefs) {
           e[k].velocity = 0;
         }
         bump.value = bump.velocity = 0;
-        swallowed = !open;
+        docked = !open;
         hide();
-        bumpButton();
+        refs.root.current?.toggleAttribute('data-menu-fade', true);
+        if (disc) {
+          disc.style.transform = '';
+          disc.style.visibility = '';
+          disc.style.opacity = open ? '0' : '';
+        }
+        // The plate at the panel's rect and the ink (render), then the flip:
+        // the ink and the flip land in one style pass, as menu.css times the
+        // swap by where the chevron is going.
+        render();
         setChevron(open);
         setReveal(open);
-        placeResting();
+        watchPill();
         if (blob) {
           blob.style.visibility = '';
           blob.style.setProperty('--lgm-glass', '1');
           blob.style.boxShadow = '';
           blob.style.backgroundColor = '';
-          blob.style.clipPath = '';
-          blob.style.opacity = '';
           if (refs.tint.current) refs.tint.current.style.opacity = '0';
           blob.dataset.mode = 'fade';
           blob.toggleAttribute('data-open', open);
         }
         return;
       }
-      if (reduced && blob) {
-        delete blob.dataset.mode;
-        blob.removeAttribute('data-open');
+      if (reduced) {
+        if (blob) {
+          delete blob.dataset.mode;
+          blob.removeAttribute('data-open');
+        }
+        refs.root.current?.removeAttribute('data-menu-fade');
+        if (disc) disc.style.opacity = '';
       }
       reduced = false;
       if (next === target && !raf) {
@@ -642,11 +571,12 @@ function createEngine(refs: MorphRefs) {
       target = next;
       since = 0;
       setChevron(open);
+      // Read before the rows are dropped below, which every toggle does.
+      aborted = !open && !revealed;
       // Each opening reveals the rows afresh; closing drops them at once.
       setReveal(false);
       // Match whatever state the disc is drawn in (hover lightens it), so the
-      // glass running out of it, or back into it, is the same glass.
-      const disc = refs.disc.current ?? refs.button.current;
+      // glass that takes its place is the same glass.
       if (disc) btnColor = parseRgba(getComputedStyle(disc).backgroundColor, btnColor);
       if (refs.tint.current) refs.tint.current.style.background = css(btnColor);
       if (blob) {
@@ -654,20 +584,26 @@ function createEngine(refs: MorphRefs) {
         veil = parseRgba(getComputedStyle(blob).backgroundColor, veil);
         solidVeil = window.matchMedia('(prefers-reduced-transparency: reduce)').matches;
       }
-      if (open) swallowed = false;
+      if (open) docked = false;
+      // Drawn now, not on the next animation frame: the first frame the
+      // browser paints after the press is the shape lying exactly on the
+      // disc, with the disc hidden under it, and nothing has moved yet.
+      render();
       run();
     },
     destroy() {
       cancelAnimationFrame(raf);
-      raf = 0;
+      cancelAnimationFrame(pillRaf);
+      raf = pillRaf = 0;
       window.removeEventListener('resize', onResize);
+      pill?.removeEventListener('transitionrun', watchPill);
       ro?.disconnect();
     },
   };
 }
 
 /**
- * Drives the button → panel morph imperatively (rAF + springs) so a toggle
+ * Drives the disc → panel morph imperatively (rAF + springs) so a toggle
  * mid-flight reverses from the current shape and velocity, and React never
  * re-renders per frame.
  */

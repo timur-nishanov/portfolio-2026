@@ -39,10 +39,10 @@
 
 /* Title + button. Row centred on the page; vertical centre at y≈31.
    Stacking inside the header (no z-index on the row or the button, so their
-   children interleave with the morph layers): bridge 1 < button disc 2 <
-   blob 3 < title, button chevron and menu content 4. The blob starts *over*
-   the disc — the button itself appears to stretch into the panel — while the
-   title and the chevron stay on top of it. */
+   children interleave with the morph layers): button disc 2 < blob 3 <
+   title, button chevron, focus ring and menu content 4. The blob takes the
+   disc's place on the disc's own rect — the disc itself appears to slip down
+   into the panel — while the title and the chevron stay on top of it. */
 .site-header__row {
   display: flex;
   align-items: center;
@@ -82,8 +82,9 @@
 /* The glass pill behind the title and the button, shown only over the
    cases (data-glass, SiteHeader) — over the hero they sit on the page. A
    frosted veil with the menu panel's rim and top sheen; it rises in with the
-   bar and fades away when the menu opens (the panel takes over). Width: the
-   title, the 8px gap, the 20px button, and 14px of air each side. */
+   bar and stays while the menu is open, as the title row's backing (the disc
+   still leaves the chevron bare). Width: the title, the 8px gap, the 20px
+   button, and 14px of air each side. */
 .site-header__glass {
   position: absolute;
   left: 50%;
@@ -167,14 +168,21 @@
   width: 20px;
   height: 20px;
 }
+/* In the blend layer the slot holds the chevron's second ink, centred
+   exactly as the button centres its own. */
+.site-header--blend .site-header__button-slot {
+  display: grid;
+  place-items: center;
+}
 
 /* The round button: a 20px glass disc, with a 44px invisible hit area
    (Apple's minimum tap target). It reaches a few px under the title,
-   which takes no pointer, so nothing is covered. No z-index (and no
-   background) on the button itself: that would make it one stacking layer,
-   and the liquid laid over the disc would also cover the chevron — it blinked
-   out for ~4 frames on open and 3 on close instead of staying put, as an iOS
-   button's symbol does while its glass morphs. */
+   which takes no pointer, so nothing is covered. The hit area stays when
+   the open menu leaves the chevron bare: a 9×5 glyph alone is a tiny target.
+   No z-index (and no background) on the button itself: that would make it
+   one stacking layer, and the glass moving over the button would also cover
+   the chevron — it blinked out for ~4 frames on open and 3 on close instead
+   of staying put, as an iOS button's symbol does while its glass morphs. */
 .lgm-button {
   position: relative;
   flex: none;
@@ -190,7 +198,6 @@
   cursor: pointer;
   pointer-events: auto;
   -webkit-tap-highlight-color: transparent;
-  transform-origin: 50% 50%;
 }
 .lgm-button::before {
   content: '';
@@ -198,7 +205,9 @@
   inset: -12px;
   border-radius: 50%;
 }
-/* The disc is glass (.glass-disc, globals.css), like the menu it opens. */
+/* The disc is glass (.glass-disc, globals.css), like the menu it opens.
+   useLiquidMorph hides it while the shape that takes its place is out, and
+   swells it a little when the shape lands back on it. */
 .lgm-button__disc {
   position: absolute;
   inset: 0;
@@ -210,67 +219,133 @@
     background-color: rgba(255, 255, 255, 0.72);
   }
 }
-/* While the glass runs out of the disc and back, its hairline and shadow are
-   drawn by useLiquidMorph with the rest of the liquid's outline (the rim layer
-   in the bridge's svg); only its inner lights stay on it. */
-.site-header[data-morph] .lgm-button__disc {
-  box-shadow:
-    inset 0 0.5px 0.5px rgba(255, 255, 255, 1),
-    inset 0 -0.5px 1px rgba(255, 255, 255, 0.6);
+/* Reduced transparency: the disc is solid (globals.css), so its hover is
+   solid too. The translucent white let dark content through (the disc went
+   darker on hover, not lighter), and the shape that takes its place, tinted
+   with it on the solid panel colour, came out white for the whole flight. */
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-transparency: reduce) {
+  .lgm-button:hover .lgm-button__disc {
+    background-color: #f6f6f7;
+  }
 }
+/* The focus ring is drawn above the glass (z 4), not as the button's
+   outline, which is painted under it: on an Escape close focus comes back
+   to the button while the panel is still folding over it. */
 .lgm-button:focus-visible {
-  outline: 2px solid var(--accent, #5b94f0);
-  outline-offset: 3px;
-  border-radius: 50%;
+  outline: none;
 }
-/* Drawn pointing up; closed = down. Two copies, no rotation: a 9px chevron
-   turning through its side reads as a glyph glitch. The old one fades out
-   first and the new one in just after, so the two never overlap (half and
-   half they drew an "×"). The swap follows data-chevron, which useLiquidMorph
-   sets the moment the menu is toggled. */
-.lgm-button__chevron {
+.lgm-button::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  z-index: 4;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px var(--accent, #5b94f0);
+  opacity: 0;
+  pointer-events: none;
+}
+.lgm-button:focus-visible::after {
+  opacity: 1;
+}
+
+/* The chevron: drawn pointing up; closed = down. One glyph, flipped with
+   scaleY, so it passes through a flat line — never through its side (a 9px
+   chevron turning reads as a glyph glitch), and never as two crossfading
+   copies, which drew an "×" halfway and left the bare chevron all but empty
+   for a few frames. The flip follows data-chevron, which useLiquidMorph sets
+   the moment the menu is toggled.
+   It is drawn twice, in two inks: its own (.lgm-chev, on the glass), and in
+   the blend layer (.hb-chev: drawn #242426 and inverted, then blended by
+   difference like the title, which lands on #1c1c1e over the light page and
+   turns light over the head and the dark cards). useLiquidMorph hands over
+   between the two (--plate-ink) as the glass slides away from under the
+   chevron and back, so the bare chevron of the open menu never vanishes. */
+.lgm-chev {
   position: relative;
   z-index: 4;
+  opacity: var(--plate-ink, 1);
+}
+.hb-chev {
+  color: #242426;
+  filter: invert(1);
+  opacity: calc(1 - var(--plate-ink, 1));
+}
+.lgm-chev,
+.hb-chev {
   grid-area: 1 / 1;
   display: block;
   pointer-events: none;
+  transform: translateY(-0.5px) scaleY(-1);
+  transition: transform 220ms cubic-bezier(0.65, 0, 0.35, 1);
 }
-/* entering: as the other is all but gone */
-.lgm-button__chevron--down,
-.lgm-button[data-chevron='up'] .lgm-button__chevron--up {
-  opacity: 1;
+.lgm-button[data-chevron='up'] .lgm-chev,
+.site-header--blend[data-chevron='up'] .hb-chev {
+  transform: translateY(-0.5px) scaleY(1);
+}
+/* Open, nothing comes back under the chevron on hover (the disc's hover is
+   the closed state's): the glyph nudges up instead, and dips when pressed,
+   at full contrast — dimming it would not read under difference. On the
+   inner svg, so it never fights the flip. */
+.lgm-chev > svg,
+.hb-chev > svg {
+  display: block;
+  transition: transform 160ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@media (hover: hover) and (pointer: fine) {
+  .lgm-button[aria-expanded='true']:hover .lgm-chev > svg,
+  .site-header:has(.lgm-button[aria-expanded='true']:hover) + .site-header--blend .hb-chev > svg {
+    transform: translateY(-1px);
+  }
+}
+.lgm-button[aria-expanded='true']:active .lgm-chev > svg,
+.site-header:has(.lgm-button[aria-expanded='true']:active) + .site-header--blend .hb-chev > svg {
+  transform: scale(0.88);
+  transition-duration: 80ms;
+}
+/* Reduced motion (useLiquidMorph): no morph, the disc fades out from under
+   the chevron as the panel fades in, and back as it fades out. */
+.site-header[data-menu-fade] .lgm-button__disc {
   transition:
-    opacity 100ms ease 40ms,
-    transform 170ms ease 40ms;
+    opacity 160ms ease,
+    background-color 160ms ease;
 }
-/* leaving: at once */
-.lgm-button__chevron--up,
-.lgm-button[data-chevron='up'] .lgm-button__chevron--down {
-  opacity: 0;
-  transition:
-    opacity 60ms ease-out,
-    transform 120ms ease;
+/* The chevron's two inks swap at once, never crossfade: over dark content
+   the fading disc passes through a mid grey that the blend ink all but
+   matches while the dark ink is already faint, and the glyph went. Opening,
+   the light ink takes over once the disc has faded enough (80ms); closing,
+   the dark ink comes back as soon as the disc is light enough (35ms). Keyed
+   on where the chevron is going, which flips in the same pass as the ink.
+   On the pill there is nothing to swap: the chevron keeps its own ink. */
+.site-header[data-menu-fade] .lgm-button[data-chevron='up'] .lgm-chev,
+.site-header[data-menu-fade] + .site-header--blend[data-chevron='up'] .hb-chev {
+  transition: opacity 0s linear 80ms;
 }
-.lgm-button__chevron--down {
-  transform: rotate(180deg) translateY(0.5px);
+.site-header[data-menu-fade] .lgm-button[data-chevron='down'] .lgm-chev,
+.site-header[data-menu-fade] + .site-header--blend[data-chevron='down'] .hb-chev {
+  transition: opacity 0s linear 35ms;
 }
-.lgm-button__chevron--up {
-  transform: translateY(1.5px);
-}
-.lgm-button[data-chevron='up'] .lgm-button__chevron--down {
-  transform: rotate(180deg) translateY(2px);
-}
-.lgm-button[data-chevron='up'] .lgm-button__chevron--up {
-  transform: translateY(-0.5px);
+
+/* Forced colors (high contrast): the blend layer's copy is inverted and
+   blended by difference, which turns the forced CanvasText into Canvas —
+   black on black in a dark theme — and an SVG gets no backplate, so the
+   open menu had no chevron at all. Here it stays in its own system ink. */
+@media (forced-colors: active) {
+  .lgm-chev {
+    opacity: 1;
+  }
+  .hb-chev {
+    display: none;
+  }
 }
 
 /* --- the glass blob --------------------------------------------------------
    One element morphs from the button disc into the panel; useLiquidMorph
-   writes its translate/size/radius every frame, and its veil, edge and clip:
-   it starts as the disc's own clear glass running out of it and clears into
-   the panel's frosted glass. Base layer = frost + saturation + veil, which is
-   all Safari and Firefox get; Chromium swaps the frost for the refracting
-   #lg-menu filter (data-refract on the header). */
+   writes its translate/size/radius every frame, and its veil, edge and frost:
+   it takes the disc's place as an exact copy of the disc (which is hidden
+   meanwhile) and clears into the panel's frosted glass as it opens. Base
+   layer = frost + saturation + veil, which is all Safari and Firefox get;
+   Chromium swaps the frost for the refracting #lg-menu filter (data-refract
+   on the header). */
 .lgm-blob {
   --lgm-glass: 1;
   position: absolute;
@@ -297,15 +372,17 @@
     0 10px 36px 0 rgba(0, 0, 0, 0.1),
     0 2px 6px 0 rgba(0, 0, 0, 0.04);
 }
-/* A soft sheen under the top edge only — no band along the bottom. */
+/* A soft sheen under the top edge only — no band along the bottom. One
+   sheen for every size: on the 20px drop it is the disc's own gradient
+   (0.45 → 0 at 70%), so the first frame matches the disc; on the panel it
+   runs 14px down. */
 .lgm-blob::after {
   content: '';
   position: absolute;
   inset: 0;
   z-index: 1;
   border-radius: inherit;
-  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.45) 0, rgba(255, 255, 255, 0) 12px);
-  opacity: var(--lgm-glass);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.45) 0, rgba(255, 255, 255, 0) min(70%, 14px));
   pointer-events: none;
 }
 .site-header[data-refract] .lgm-blob {
@@ -339,20 +416,10 @@
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
   }
-}
-
-/* Liquid bridge between the button and the blob while they part, and the
-   liquid's one outline while it moves (useLiquidMorph). */
-.lgm-neck {
-  position: absolute;
-  left: 0;
-  top: 0;
-  z-index: 1;
-  width: 100%;
-  height: 160px;
-  overflow: visible;
-  visibility: hidden;
-  pointer-events: none;
+  /* The disc has no sheen here, so the shape's comes in with the panel. */
+  .lgm-blob::after {
+    opacity: var(--lgm-glass);
+  }
 }
 
 /* --- menu content ----------------------------------------------------------
@@ -565,10 +632,14 @@
     transform: none;
     transition: opacity 140ms ease;
   }
+  /* The chevron flips at once (its inks still swap on the disc's fade,
+     data-menu-fade). */
   .lgm-highlight,
   .lgm-item__trail > svg,
-  .site-header .lgm-button .lgm-button__chevron,
-  .site-header .lgm-button[data-chevron] .lgm-button__chevron {
+  .site-header .lgm-chev,
+  .site-header--blend .hb-chev,
+  .lgm-chev > svg,
+  .hb-chev > svg {
     transition: none;
   }
 }

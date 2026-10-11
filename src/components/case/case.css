@@ -1,9 +1,11 @@
 /* ===========================================================================
    The case study (CaseLayer over the page, CasePage on its own). In the
-   page's own language and nothing more: SF Pro in the two styles the home
-   page uses — the cards' 20px titles and the notes' 15px — on the warm
-   off-white, with the cards' grey for media. One narrow column of text on
-   the centre line; media run wider than it, on the same line.
+   page's own language: SF Pro at weight 400 on the warm off-white, with the
+   cards' grey for media. Four sizes and no more, the same on every screen —
+   28 for the opening line and the chapters, 20 for the lead and sub-heads
+   (the cards' titles), 17 for reading, 15 for labels (the cards' notes). One
+   narrow column of text with a single left edge; media run wider than it,
+   on the same centre line.
    =========================================================================== */
 
 .cp,
@@ -11,14 +13,18 @@
 .cp-bar {
   --cp-ink: var(--ink-strong, #08080a);
   --cp-text: rgba(8, 8, 10, 0.8); /* running text: a step softer than headings */
-  --cp-grey: #ababab; /* the page's secondary grey: labels, captions */
+  --cp-mute: rgba(8, 8, 10, 0.56); /* sentences in the small type: captions, the studio note */
+  --cp-grey: #ababab; /* the page's secondary grey: only labels of a word or three */
   --cp-hair: rgba(8, 8, 10, 0.08);
   --cp-card: #e6e6e7;
   --cp-col: 560px; /* the about block's measure */
-  --cp-wide: 880px; /* media: half as wide again as the text */
-  --cp-chapter: 120px; /* between chapters */
-  --cp-step: 64px; /* text to media and back */
+  --cp-wide: 1200px; /* media: one width for every figure */
+  --cp-chapter: 128px; /* between chapters, and around the way back */
+  --cp-step: 48px; /* text to media, figure to figure */
+  --cp-inner: 16px; /* between the parts of one figure */
   --cp-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  /* What isn't set in one of the four sizes takes the reading one. */
+  font-size: 17px;
 }
 
 /* --- the layer ------------------------------------------------------------ */
@@ -31,6 +37,14 @@
   z-index: 70;
   width: calc(100vw / var(--site-zoom, 1));
   height: 100%;
+}
+/* A blank page under the card's surface, so the surface grows over nothing:
+   not over the header, the next card's edge or the page around it
+   (CaseLayer fades it in and out). */
+.cp__veil {
+  position: absolute;
+  inset: 0;
+  background: var(--bg, #f7f7f5);
 }
 /* The card's surface, grown into the page (CaseLayer animates it out of
    the card and back). */
@@ -61,29 +75,18 @@
   min-height: 100svh;
   background: var(--bg, #f7f7f5);
 }
-/* The case's name on its way between the card and the bar (CaseLayer). */
-.cp-fly {
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: 4;
-  visibility: hidden;
-  margin: 0;
-  font: 400 20px/1.32 var(--font-sf);
-  letter-spacing: 0;
-  color: var(--cp-ink);
-  white-space: nowrap;
-  pointer-events: none;
-}
-.cp-fly__to {
-  position: absolute;
-  top: 0;
-  left: 0;
+/* Nothing in the case changes size on its own (the media have their sizes
+   up front), so the browser has nothing to keep in place: a Read more
+   folding up above the screen moves the page as it should, and its button
+   is brought back by script (ReadMore). */
+.cp__scroll,
+.cp-page {
+  overflow-anchor: none;
 }
 
 /* --- the bar -------------------------------------------------------------- */
 /* Where the site's header row is: same line (centre at 31px), same type,
-   the same 20px glass disc, the same pill over content. */
+   the same 20px glass disc. */
 .cp-bar {
   position: fixed;
   top: 0;
@@ -96,11 +99,37 @@
   pointer-events: none;
   transition: transform 650ms cubic-bezier(0.22, 1, 0.36, 1);
 }
-.cp-page .cp-bar {
-  z-index: 60;
-}
 .cp-bar[data-hidden] {
   transform: translateY(-96px);
+}
+/* Over content, the top edge of the screen turns the page's colour, solid
+   behind the row and fading out under it, and the text simply goes under it:
+   never seen through glass, so never bent or smeared. It stops short of the
+   case's own scrollbar (CaseBar measures it), and goes up with the bar. */
+.cp-bar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: var(--cp-gutter, 0px);
+  height: 88px;
+  z-index: -1;
+  background: linear-gradient(
+    to bottom,
+    var(--bg, #f7f7f5) 0,
+    var(--bg, #f7f7f5) 54px,
+    rgba(247, 247, 245, 0.8) 66px,
+    rgba(247, 247, 245, 0) 88px
+  );
+  opacity: 0;
+  transition: opacity 200ms ease;
+  pointer-events: none;
+}
+/* It comes in from the first pixel of scroll, and fast: a quick first scroll
+   brings the opening line up to the row within a few frames. */
+.cp-bar[data-glass]::before {
+  opacity: 1;
+  transition-duration: 80ms;
 }
 .cp-bar__row {
   position: relative;
@@ -119,80 +148,6 @@
   user-select: none;
   -webkit-user-select: none;
 }
-.cp-bar__glass {
-  position: absolute;
-  inset: -7px -28px;
-  border-radius: 999px;
-  background: rgba(247, 247, 247, 0.55);
-  backdrop-filter: blur(14px) saturate(160%);
-  -webkit-backdrop-filter: blur(14px) saturate(160%);
-  box-shadow:
-    inset 0 0 0 0.5px rgba(255, 255, 255, 0.65),
-    0 0 0 0.5px rgba(0, 0, 0, 0.07),
-    0 8px 28px rgba(0, 0, 0, 0.08),
-    0 1px 4px rgba(0, 0, 0, 0.04);
-  opacity: 0;
-  transform: scale(0.94);
-  transition:
-    opacity 260ms ease,
-    transform 420ms cubic-bezier(0.22, 1, 0.36, 1);
-  pointer-events: none;
-}
-.cp-bar__glass::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.5) 0, rgba(255, 255, 255, 0) 12px);
-}
-.cp-bar[data-glass] .cp-bar__glass {
-  opacity: 1;
-  transform: none;
-}
-/* Chromium: the header pill's liquid glass (PillGlassFilter, #lg-casebar). */
-.cp-bar[data-refract] .cp-bar__glass {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.2));
-  backdrop-filter: url(#lg-casebar);
-  -webkit-backdrop-filter: url(#lg-casebar);
-  box-shadow:
-    inset 0 1px 0.5px rgba(255, 255, 255, 0.95),
-    inset 0 -1px 1px rgba(255, 255, 255, 0.55),
-    inset 0 -10px 18px -12px rgba(0, 0, 0, 0.07),
-    0 0 0 0.5px rgba(0, 0, 0, 0.08),
-    0 6px 20px rgba(0, 0, 0, 0.08),
-    0 1px 3px rgba(0, 0, 0, 0.05);
-}
-.cp-bar[data-refract] .cp-bar__glass::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1px;
-  background: linear-gradient(
-    120deg,
-    rgba(255, 255, 255, 1) 0%,
-    rgba(255, 255, 255, 0.35) 30%,
-    rgba(0, 0, 0, 0.07) 62%,
-    rgba(255, 255, 255, 0.75) 100%
-  );
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
-}
-.cp-bar[data-refract] .cp-bar__glass::after {
-  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.45) 0, rgba(255, 255, 255, 0) 40%);
-}
-@media (prefers-reduced-transparency: reduce) {
-  .cp-bar__glass,
-  .cp-bar[data-refract] .cp-bar__glass {
-    background: #f1f1f0;
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-  }
-}
 
 /* The back button: the header's 20px disc and chevron, pointing back, with
    a 44px hit area. */
@@ -207,6 +162,7 @@
   border: 0;
   border-radius: 50%;
   background: none;
+  font: inherit;
   color: #1c1c1e;
   cursor: pointer;
   pointer-events: auto;
@@ -249,14 +205,11 @@
 }
 
 /* --- the article ---------------------------------------------------------- */
+/* The reading size is the article's own; everything else is one of three
+   other sizes, set where it is used. */
 .cp-article {
   padding: 0 20px;
-  font-family: var(--font-sf);
-  font-size: 20px;
-  font-weight: 400;
-  /* Room between the lines for reading on: the cards' 1.32 is for a line or
-     two, and at length it packed the text into a grey block. */
-  line-height: 1.5;
+  font: 400 17px/26px var(--font-sf);
   letter-spacing: 0;
   color: var(--cp-text);
 }
@@ -270,10 +223,65 @@
 :where(.cp-article) :where(h2, h3) {
   font: inherit;
 }
-.cp-article p,
-.cp-article li,
-.cp-article dd {
+.cp-article :where(p, li, dd) {
   text-wrap: pretty;
+}
+
+/* The four sizes. 28: the opening line and the chapters' headings. */
+.cp-hero,
+.cp-h {
+  font-size: 28px;
+  line-height: 34px;
+  letter-spacing: -0.01em;
+  color: var(--cp-ink);
+  text-wrap: balance;
+}
+/* 20: the lead, and the few sub-heads (the rules, the three moments). */
+.cp-lead,
+.cp-rule__title,
+.cp-moment__q,
+.cp-end__link {
+  font-size: 20px;
+  line-height: 28px;
+  letter-spacing: 0;
+  color: var(--cp-ink);
+}
+.cp-rule__title,
+.cp-moment__q {
+  text-wrap: balance;
+}
+/* 17 is the article's. A paragraph's lead-in ("Concept:") is in full ink. */
+.cp-runin {
+  color: var(--cp-ink);
+}
+/* 15: labels, facts, captions, notes. In the page's grey only when it is a
+   word or three; sentences are darker, to be read. */
+.cp-label,
+.cp-meta,
+.cp-note,
+.cp-cap,
+.cp-toggle,
+.cp-rule__no,
+.cp-card__label,
+.cp-moment__label,
+.cp-ph__hint {
+  font-size: 15px;
+  line-height: 20px;
+  letter-spacing: 0.2px;
+  font-feature-settings:
+    'liga' off,
+    'clig' off;
+}
+.cp-label,
+.cp-meta dt,
+.cp-rule__no,
+.cp-card__label,
+.cp-moment__label {
+  color: var(--cp-grey);
+}
+.cp-note,
+.cp-cap {
+  color: var(--cp-mute);
 }
 
 /* The column, and the wider band for media, on one centre line. */
@@ -287,211 +295,149 @@
   margin-left: auto;
   margin-right: auto;
 }
+/* One step between pieces of text: heading to text, paragraph to paragraph. */
 .cp-col > * + * {
-  margin-top: 24px;
+  margin-top: 16px;
 }
-
-/* The two styles. Headings are the text's own size, in full ink; labels and
-   captions are the notes' style, in the page's grey. */
-.cp-h,
-.cp-lead,
-.cp-rule__title,
-.cp-panel__title {
-  color: var(--cp-ink);
-  line-height: 1.32;
-  text-wrap: balance;
+.cp-col > .cp-label + * {
+  margin-top: 8px;
 }
-.cp-lead {
-  line-height: 1.45;
-  text-wrap: pretty;
-}
-.cp-label,
-.cp-cap,
-.cp-note,
-.cp-facts,
-.cp-moment__label,
-.cp-panel__sub,
-.cp-panel__list,
-.cp-rule-no {
-  font-size: 15px;
-  line-height: 18px;
-  letter-spacing: 0.2px;
-  font-feature-settings:
-    'liga' off,
-    'clig' off;
-}
-.cp-label,
-.cp-cap,
-.cp-note,
-.cp-moment__label,
-.cp-panel__sub {
-  color: var(--cp-grey);
-}
-.cp-label,
-.cp-moment__label {
-  display: block;
+/* A hidden region carries its step inside it (below). */
+.cp-col > .cp-fold {
+  margin-top: 0;
 }
 
 /* --- overview ------------------------------------------------------------- */
 .cp-intro {
-  padding-top: 160px;
+  padding-top: 128px;
 }
-.cp-intro > .cp-part,
-.cp-intro > .cp-facts {
-  margin-top: 72px;
-}
-.cp-part > * + * {
-  margin-top: 24px;
-}
-.cp-part > .cp-label + * {
-  margin-top: 8px;
+.cp-intro > .cp-meta {
+  margin-top: 48px;
 }
 
-/* Bullets: small grey dots hung just outside the text, so it keeps its edge. */
-.cp-list li {
-  position: relative;
-}
-.cp-list li + li {
-  margin-top: 10px;
-}
-.cp-list li::before {
-  content: '';
-  position: absolute;
-  left: -18px;
-  top: calc(0.75em - 2px);
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: var(--cp-grey);
-}
-
-/* The facts: a small ruled table. */
-.cp-facts {
+/* The facts: two by two under a hairline, a grey label over its lines. */
+.cp-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--cp-hair);
   color: var(--ink-menu, #151514);
 }
-.cp-fact {
-  display: grid;
-  grid-template-columns: 112px minmax(0, 1fr);
-  column-gap: 16px;
-  padding: 14px 0 15px;
-  border-top: 1px solid var(--cp-hair);
-}
-.cp-fact:last-child {
-  border-bottom: 1px solid var(--cp-hair);
-}
-.cp-fact dd {
-  line-height: 22px;
-}
-.cp-lines li + li {
+.cp-meta dd {
   margin-top: 4px;
 }
-.cp-intro > .cp-note {
-  margin-top: 14px;
+.cp-meta li + li {
+  margin-top: 4px;
 }
 
 /* --- chapters ------------------------------------------------------------- */
 .cp-chapter {
   margin-top: var(--cp-chapter);
 }
-.cp-chapter > * + * {
+.cp-chapter > * + .cp-wide {
   margin-top: var(--cp-step);
 }
-.cp-h + * {
-  margin-top: 12px;
-}
 
-/* The three rules: a numbered list, the numbers hung in the margin in grey
-   like the bullets' dots, each rule's name in ink with its changes below. */
-.cp-rules {
-  counter-reset: rule;
-  margin-top: 32px;
-}
-.cp-rule {
+/* Bullets: small grey dots inside the column, so nothing hangs out of it. */
+.cp-list li {
   position: relative;
-  counter-increment: rule;
+  padding-left: 16px;
 }
-.cp-rule + .cp-rule {
-  margin-top: 28px;
-}
-.cp-rule::before {
-  content: counter(rule);
-  position: absolute;
-  left: -28px;
-  top: 0;
-  line-height: 1.32;
-  color: var(--cp-grey);
-  font-variant-numeric: tabular-nums;
-}
-.cp-rule__title + .cp-list {
+.cp-list li + li {
   margin-top: 8px;
 }
-
-/* A long passage kept to its first three lines (More), the last of them
-   fading under a veil of the page's colour; "Read more" below, in the notes'
-   style. Open, the veil lifts and the passage runs its full height. */
-.cp-more__body {
-  position: relative;
-  overflow: hidden;
-  max-height: 4.5em;
-}
-.cp-more[data-open] .cp-more__body {
-  max-height: none;
-}
-.cp-more__body::after {
+.cp-list li::before {
   content: '';
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 3em;
-  background: linear-gradient(to bottom, rgba(247, 247, 245, 0), var(--bg, #f7f7f5) 85%);
-  pointer-events: none;
-  transition: opacity 360ms var(--cp-ease);
+  left: 2px;
+  top: 11px;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--cp-grey);
 }
-.cp-more[data-open] .cp-more__body::after {
-  opacity: 0;
+
+/* The three rules: ruled rows, each a grey number and the rule's name, with
+   what it changed opening under the name. */
+.cp-col > .cp-rules {
+  margin-top: 24px;
 }
-.cp-more__toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  margin: 6px 0 0 -6px;
-  padding: 6px;
-  border: 0;
-  border-radius: 8px;
-  background: none;
-  font-family: inherit;
-  font-size: 15px;
-  line-height: 18px;
-  letter-spacing: 0.2px;
-  color: var(--cp-grey);
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  transition: color 160ms ease;
+.cp-rule {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  align-items: baseline;
+  padding: 16px 0;
+  border-top: 1px solid var(--cp-hair);
 }
-.cp-more__chevron {
-  transform: rotate(180deg);
-  transition: transform 360ms var(--cp-ease);
+.cp-rule:last-child {
+  border-bottom: 1px solid var(--cp-hair);
 }
-.cp-more[data-open] .cp-more__chevron {
-  transform: none;
-}
-@media (hover: hover) and (pointer: fine) {
-  .cp-more__toggle:hover {
-    color: var(--cp-ink);
-  }
-}
-.cp-more__toggle:focus-visible {
-  outline: 2px solid var(--accent, #5b94f0);
-  outline-offset: 0;
+.cp-rule__no {
+  font-variant-numeric: tabular-nums;
 }
 
 /* Where it landed: three short paragraphs, each led by its subject. */
 .cp-outcomes li + li {
   margin-top: 16px;
 }
-.cp-outcomes__lead {
-  color: var(--cp-ink);
+
+/* --- read more ------------------------------------------------------------ */
+/* A hidden region (Fold): its own step of room sits inside it, so closed it
+   takes none. Under a rule's name it is closer, as the name's own. */
+.cp-fold {
+  overflow: hidden;
+}
+/* Focused only from script (ReadMore), to take a keyboard reader into it. */
+.cp-fold:focus {
+  outline: none;
+}
+.cp-fold__inner {
+  padding-top: 16px;
+}
+.cp-fold__inner > * + * {
+  margin-top: 16px;
+}
+.cp-rule .cp-fold__inner {
+  padding-top: 8px;
+}
+
+/* The toggle: the small type in the text's ink, its words on the column's
+   edge and 16px under the last line, its padding only a bigger target. */
+.cp-toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: max-content;
+  margin: 0 0 -6px -6px;
+  padding: 6px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  font-family: inherit;
+  color: var(--cp-text);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 160ms ease;
+}
+.cp-col > .cp-toggle {
+  margin-top: 10px;
+}
+.cp-toggle__chevron {
+  transform: rotate(180deg);
+  transition: transform 360ms var(--cp-ease);
+}
+.cp-toggle[aria-expanded='true'] .cp-toggle__chevron {
+  transform: none;
+}
+@media (hover: hover) and (pointer: fine) {
+  .cp-toggle:hover {
+    color: var(--cp-ink);
+  }
+}
+.cp-toggle:focus-visible {
+  outline: 2px solid var(--accent, #5b94f0);
+  outline-offset: 0;
 }
 
 /* --- media ---------------------------------------------------------------- */
@@ -511,32 +457,35 @@
   top: 18px;
   left: 20px;
   z-index: 1;
-  font-size: 15px;
-  line-height: 18px;
-  letter-spacing: 0.2px;
-  color: var(--cp-grey);
 }
 .cp-card__label[data-after] {
   color: var(--cp-ink);
 }
+/* Before and after: two tall cards, their phones as big as the screen
+   allows. */
 .cp-pair {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
+  gap: var(--cp-inner);
 }
 .cp-card--half {
-  aspect-ratio: 4 / 5;
+  height: clamp(440px, calc(100svh - 180px), 720px);
 }
-.cp-card--wide {
+/* A wide card keeps the band's whole width (a height cap would otherwise
+   narrow it through its ratio) and gives way in height on short screens. */
+.cp-card--wide,
+.cp-card--gallery {
+  width: 100%;
   aspect-ratio: 16 / 10;
+  max-height: calc(100svh - 160px);
 }
 .cp-desk > * + * {
-  margin-top: 8px;
+  margin-top: var(--cp-inner);
 }
 .cp-strip {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
+  gap: var(--cp-inner);
 }
 .cp-card--small {
   aspect-ratio: 4 / 3;
@@ -546,18 +495,17 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 4%;
-  aspect-ratio: 16 / 10;
+  gap: var(--cp-inner);
 }
 .cp-gallery__item {
   display: grid;
   place-items: center;
   height: 100%;
 }
-/* Captions keep to the text's left edge, even under wider media. */
+/* Captions keep to the text's left edge, even under the wider media. */
 .cp-cap {
   max-width: var(--cp-col);
-  margin: 12px auto 0;
+  margin: 16px auto 0;
 }
 
 /* What fills a card. A phone (the page's iPhone frame or its stand-in) is
@@ -600,7 +548,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 8px;
   padding: 12px;
   background: rgba(255, 255, 255, 0.42);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.6);
@@ -614,9 +562,6 @@
 }
 .cp-ph__hint {
   max-width: 20ch;
-  font-size: 15px;
-  line-height: 18px;
-  letter-spacing: 0.2px;
   color: var(--cp-grey);
   text-wrap: balance;
 }
@@ -638,108 +583,56 @@
   border-color: transparent transparent transparent rgba(8, 8, 10, 0.3);
 }
 
-/* --- the brief, taken apart ----------------------------------------------- */
-/* Outline for what came in, ink for what we made of it — as the circles. */
-.cp-brief__cols {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
-.cp-panel {
-  padding: 32px 32px 28px;
-  border-radius: 24px;
-  box-shadow: inset 0 0 0 1px var(--cp-hair);
-}
-.cp-panel--ink {
-  background: var(--ink-menu, #151514);
-  box-shadow: none;
-}
-.cp-panel--ink .cp-panel__title {
-  color: #f7f7f5;
-}
-.cp-panel__sub {
-  margin-top: 4px;
-}
-.cp-panel--ink .cp-panel__sub {
-  color: rgba(247, 247, 245, 0.5);
-}
-.cp-panel__list {
-  margin-top: 24px;
-  color: var(--ink-menu, #151514);
-}
-.cp-panel--ink .cp-panel__list {
-  color: rgba(247, 247, 245, 0.88);
-}
-.cp-panel__list li {
-  padding: 12px 0 13px;
-  border-top: 1px solid var(--cp-hair);
-}
-.cp-panel--ink .cp-panel__list li {
-  border-top-color: rgba(247, 247, 245, 0.12);
-}
-
 /* --- the three moments ---------------------------------------------------- */
-/* Three circles in a row, just overlapping: outlines for the first two, ink
-   for the one that became the constraint. */
+/* Three equal tiles, in the order they happen: outlines for the first two,
+   ink for the one that became the constraint. */
 .cp-moments {
-  --d: min(300px, calc((100vw - 40px) / 2.86));
-  display: flex;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--cp-inner);
 }
 .cp-moment {
-  position: relative;
-  display: flex;
-  flex: none;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 12px;
-  width: var(--d);
-  height: var(--d);
-  padding: calc(var(--d) * 0.3) calc(var(--d) * 0.12) 0;
-  border-radius: 50%;
+  padding: 24px 24px 28px;
+  border-radius: 24px;
   box-shadow: inset 0 0 0 1px rgba(8, 8, 10, 0.14);
-  text-align: center;
-}
-.cp-moment + .cp-moment {
-  margin-left: calc(var(--d) * -0.07);
 }
 .cp-moment--key {
   background: var(--ink-menu, #151514);
   box-shadow: none;
 }
+.cp-moment__label {
+  display: block;
+}
 .cp-moment__q {
-  color: var(--cp-ink);
-  line-height: 1.32;
-  text-wrap: balance;
+  margin-top: 24px;
 }
 .cp-moment__q::first-letter {
   text-transform: uppercase;
 }
-.cp-moment--key .cp-moment__q {
-  color: #f7f7f5;
-}
 .cp-moment--key .cp-moment__label {
   color: rgba(247, 247, 245, 0.5);
 }
+.cp-moment--key .cp-moment__q {
+  color: #f7f7f5;
+}
 
 /* --- the end -------------------------------------------------------------- */
+/* The way back, at the column's edge like the rest; its padding is only a
+   bigger target and takes no room. */
 .cp-end {
   display: flex;
-  justify-content: center;
   margin-top: var(--cp-chapter);
-  padding-bottom: 168px;
+  padding-bottom: var(--cp-chapter);
 }
 .cp-end__link {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  margin: -10px -12px;
   padding: 10px 12px;
   border: 0;
   background: none;
-  font: inherit;
-  line-height: 1.32;
-  color: var(--cp-ink);
+  font-family: inherit;
   text-decoration: none;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
@@ -764,20 +657,44 @@
 }
 
 /* --- coming in ------------------------------------------------------------ */
-/* Out of a blur, as the notes on the page's cards come in; blocks that
-   arrive together follow one another (useReveal). Armed by script, so
-   without it everything is simply there. */
+/* Further down, blocks come out of a light blur as they are reached, a touch
+   after one another (useReveal). Armed by script, so without it everything
+   is simply there. */
 .cp-reveal {
   transition:
-    opacity 520ms var(--cp-ease),
-    filter 640ms var(--cp-ease),
-    transform 640ms var(--cp-ease);
-  transition-delay: calc(var(--stagger, 0) * 60ms);
+    opacity 400ms var(--cp-ease),
+    transform 400ms var(--cp-ease),
+    filter 400ms var(--cp-ease);
+  transition-delay: calc(var(--stagger, 0) * 40ms);
 }
 .cp-armed .cp-reveal:not(.is-in) {
   opacity: 0;
-  filter: blur(8px);
-  transform: translateY(12px);
+  transform: translateY(10px);
+  filter: blur(4px);
+}
+/* The first screen arrives with the page grown out of the card, all at
+   once and sharp: blurred text over a surface still settling read as a
+   smear. Its blur drops at once, while it is still unseen. */
+.cp-reveal.is-first {
+  transition:
+    opacity 320ms var(--cp-ease),
+    transform 320ms var(--cp-ease);
+  transition-delay: 0ms;
+}
+/* The Read more button comes in the same way, and keeps its hover colour's
+   own quick change, never held back by the stagger. */
+.cp-toggle.cp-reveal {
+  transition:
+    opacity 400ms var(--cp-ease) calc(var(--stagger, 0) * 40ms),
+    transform 400ms var(--cp-ease) calc(var(--stagger, 0) * 40ms),
+    filter 400ms var(--cp-ease) calc(var(--stagger, 0) * 40ms),
+    color 160ms ease;
+}
+.cp-toggle.cp-reveal.is-first {
+  transition:
+    opacity 320ms var(--cp-ease),
+    transform 320ms var(--cp-ease),
+    color 160ms ease;
 }
 /* The case's own page arrives the same way: the bar first. */
 @keyframes cp-bar-in {
@@ -794,72 +711,54 @@
 @media (max-width: 899px) {
   .cp,
   .cp-page {
-    --cp-chapter: 88px;
-    --cp-step: 40px;
+    --cp-chapter: 96px;
+    --cp-step: 32px;
+    --cp-inner: 8px;
   }
-  /* A phone's column takes the text a step smaller, so a line still holds
-     a phrase. */
-  .cp-article {
-    padding: 0 20px;
-    font-size: 18px;
-  }
+  /* The media reach to the home cards' 12px edges. */
   .cp-wide {
     margin-left: -8px;
     margin-right: -8px;
   }
   .cp-intro {
-    padding-top: 112px;
+    padding-top: 96px;
   }
-  .cp-intro > .cp-part,
-  .cp-intro > .cp-facts {
-    margin-top: 56px;
+  .cp-intro > .cp-meta {
+    margin-top: 32px;
   }
-  /* The rule numbers come inside, like the dots. */
-  .cp-rule {
-    padding-left: 22px;
-  }
-  .cp-rule::before {
-    left: 0;
-  }
-  /* No room to hang the dots: they move inside the text. */
-  .cp-list li {
-    padding-left: 16px;
-  }
-  .cp-list li::before {
-    left: 1px;
-  }
-  .cp-fact {
-    grid-template-columns: 88px minmax(0, 1fr);
-    column-gap: 12px;
+  /* A phone's column has no room for a second large size: the lead reads
+     at the text's size, in full ink. */
+  .cp-lead {
+    font-size: 17px;
+    line-height: 26px;
   }
   .cp-card {
     border-radius: 20px;
-  }
-  .cp-pair {
-    gap: 8px;
-  }
-  .cp-card--half {
-    aspect-ratio: 9 / 14;
-  }
-  .cp-card--wide {
-    aspect-ratio: 4 / 3;
   }
   .cp-card__label {
     top: 12px;
     left: 14px;
   }
+  /* Still side by side, the phones clear of the corner labels. */
+  .cp-card--half {
+    height: auto;
+    aspect-ratio: 9 / 16;
+  }
   .cp-card--half .cp-frame--phone,
   .cp-card--half .cp-ph--phone {
-    height: min(72cqh, 80cqw * 2710 / 1310);
-    margin-top: 12px;
+    margin-top: 24px;
   }
+  .cp-card--wide {
+    aspect-ratio: 4 / 3;
+    max-height: none;
+  }
+  /* Back on the text's edge from the media's. */
   .cp-cap {
-    padding: 0 8px;
+    max-width: min(var(--cp-col), calc(100% - 16px));
   }
   /* One screenshot large, two below it. */
   .cp-strip {
     grid-template-columns: 1fr 1fr;
-    gap: 8px;
   }
   .cp-strip > :first-child {
     grid-column: 1 / -1;
@@ -871,38 +770,27 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     aspect-ratio: 4 / 7;
-    gap: 0;
+    max-height: none;
     padding: 4% 0;
   }
   .cp-gallery__item .cp-frame--phone,
   .cp-gallery__item .cp-ph--phone {
     height: min(44cqh, 40cqw * 2710 / 1310);
   }
-  .cp-brief__cols {
-    grid-template-columns: 1fr;
-    gap: 8px;
-  }
-  .cp-panel {
-    padding: 24px 22px 20px;
-    border-radius: 20px;
-  }
   .cp-moments {
-    --d: min(80vw, 320px);
-    flex-direction: column;
-    align-items: center;
+    grid-template-columns: 1fr;
   }
-  .cp-moment + .cp-moment {
-    margin-left: 0;
-    margin-top: calc(var(--d) * -0.07);
-  }
-  .cp-end {
-    padding-bottom: 120px;
+  .cp-moment {
+    padding: 20px;
+    border-radius: 20px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .cp-bar,
+  .cp-bar::before,
   .cp-back__disc,
+  .cp-toggle__chevron,
   .cp-end__disc {
     transition: none;
   }

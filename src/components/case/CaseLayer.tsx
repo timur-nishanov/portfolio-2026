@@ -1,12 +1,13 @@
 'use client';
 
 import Lenis from 'lenis';
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { showcase } from '@/data/showcase';
 import { useSmoothScroll } from '@/components/providers/SmoothScrollProvider';
 import { zoomOf } from '@/lib/zoom';
 import { CaseBar } from './CaseBar';
+import { CaseScroll } from './blocks';
 import { CASES } from './registry';
 import { onOpenCase } from './caseStore';
 import './case.css';
@@ -15,28 +16,44 @@ import './case.css';
 // gathers, moves, and lands long and soft. It folds back on a balanced one,
 // so it lands briskly and the card fills again without a wait.
 const GROW = 'cubic-bezier(0.2, 0, 0, 1)';
-const FOLD = 'cubic-bezier(0.4, 0, 0.2, 1)';
+const FOLD_CURVE = [0.4, 0, 0.2, 1] as const;
+const FOLD = `cubic-bezier(${FOLD_CURVE.join(', ')})`;
 // Fades clear quickly and have no hard end; a hand-over between two layers
 // eases in and out.
 const FADE = 'cubic-bezier(0, 0, 0.2, 1)';
 const SWAP = 'cubic-bezier(0.4, 0, 0.2, 1)';
 const SETTLE = 'cubic-bezier(0.22, 1, 0.36, 1)';
 
-// The choreography, in ms. In: the card's contents fade where they are —
-// only fade: blurred and swelling, under a surface fading in over them, they
-// went muddy — and once they are all but gone the surface takes over from
-// the card, whole and at once (the same grey in the same place, so the
-// hand-over doesn't show), and grows into the page, turning its colour on
-// the way; the case comes in as it opens.
-const IN = { clear: 180, surfaceAt: 150, grow: 520, contentAt: 300 };
-// Out: the case fades, the surface folds back into the card and lets go of
-// it as it lands: the card under it is the same grey, so all that comes
-// through is the card's contents, with no moment of an empty card.
-const OUT = { clear: 160, foldAt: 60, fold: 460, lift: 200, refill: 240 };
+// The choreography, in ms. The card becomes the page, and its grey surface
+// alone carries over: nothing travels on its own. In: the card's contents
+// fade where they are; the surface takes over from the card, whole and at
+// once (the same grey in the same place, so the hand-over doesn't show),
+// grows into the page and turns the page's colour well before it has done
+// growing, over a blank page (the veil); the case comes in on it as one.
+const IN = { clear: 120, surfaceAt: 90, grow: 500, color: 360, veil: 160, contentAt: 300, barAt: 320, arrive: 320 };
+// Out: the case fades, the veil lifts off the page around it, and the
+// surface folds back into the card, turning the card's grey on the way. Once
+// it has all but landed (within a pixel of the card, at 9/10 of the fold:
+// settled = 436) it steps off it, unseen (same box, same grey), and the card
+// fills again at once.
+const OUT = { clear: 140, foldAt: 40, fold: 440, colorAt: 140, veilAt: 140, veil: 280, refill: 200 };
+// Without a card to grow out of or fold into (it is off screen), the page
+// fades in and out over the page where it is.
+const BARE = { in: 240, contentAt: 160, barAt: 180, outAt: 60, out: 280 };
+
+// The header's glass refracts only while nothing over it is translucent: a
+// faded ancestor becomes its backdrop root, so the pill goes flat and its
+// disc grey until the fade ends, then snaps back. So the header fades leaf by
+// leaf — the glass layers themselves, and the blend layer (no glass in it)
+// whole — each from and back to its own resting level.
+const HEADER_LAYERS = '.site-header__glass, .lgm-button__disc, .lgm-chev, .site-header--blend';
+// The bottom of the header's row, its glass and edge included (px).
+const HEADER_ROW = 56;
 
 type Opened = { id: string; card: HTMLElement | null; seq: number };
 type CaseState = { case?: string; layer?: string } | null;
-type Rect = { top: number; right: number; bottom: number; left: number; radius: number };
+/** A box inside the layer, by its insets, with its top and bottom corners. */
+type Rect = { top: number; right: number; bottom: number; left: number; radius: number; foot: number };
 
 // Marks the history entries this page load put there itself. A case's
 // address can also be an entry of its standalone page (reached by a reload,
@@ -73,72 +90,43 @@ function cardSeen(card: HTMLElement | null): card is HTMLElement {
 function cardBox(card: HTMLElement | null, layer: HTMLElement): Rect | null {
   if (!cardSeen(card)) return null;
   const r = card.getBoundingClientRect();
+  // The next card slides over this one (the cards stack): only the part
+  // above it is this card's to grow out of and fold back into, so the
+  // surface never paints over a card in front of it. Cut off there, its
+  // bottom corners are square: that edge is where the card goes under.
+  const next = card.nextElementSibling;
+  const seen = next?.classList.contains('cs-card') ? Math.min(r.bottom, next.getBoundingClientRect().top) : r.bottom;
   const z = zoomOf(layer);
   const w = layer.clientWidth;
   const h = layer.clientHeight;
   // The corner as drawn, scaled with the card when it is receding.
   const radius = (parseFloat(getComputedStyle(card).borderTopLeftRadius) || 0) * (r.width / z / card.offsetWidth);
-  return { top: r.top / z, right: w - r.right / z, bottom: h - r.bottom / z, left: r.left / z, radius };
+  const foot = seen < r.bottom ? 0 : radius;
+  return { top: r.top / z, right: w - r.right / z, bottom: h - seen / z, left: r.left / z, radius, foot };
 }
 
-const inset = (b: Rect) => `inset(${b.top}px ${b.right}px ${b.bottom}px ${b.left}px round ${b.radius}px)`;
+const inset = (b: Rect) =>
+  `inset(${b.top}px ${b.right}px ${b.bottom}px ${b.left}px round ${b.radius}px ${b.radius}px ${b.foot}px ${b.foot}px)`;
 const FULL = 'inset(0px 0px 0px 0px round 0px)';
+
+/** When, as a share of its time, the fold has gone a share p of its way:
+    the easing curve's x where its y is p, found by halving (y only rises). */
+function foldTimeAt(p: number) {
+  const [x1, y1, x2, y2] = FOLD_CURVE;
+  const at = (a: number, b: number, u: number) => 3 * a * u * (1 - u) ** 2 + 3 * b * u * u * (1 - u) + u ** 3;
+  let lo = 0;
+  let hi = 1;
+  for (let i = 0; i < 20; i++) {
+    const u = (lo + hi) / 2;
+    if (at(y1, y2, u) < p) lo = u;
+    else hi = u;
+  }
+  return at(x1, x2, (lo + hi) / 2);
+}
 
 /** What fades on the card: everything but its link, which draws nothing. */
 const cardParts = (card: HTMLElement | null) =>
   card ? Array.from(card.children).filter((el) => !el.classList.contains('cs-card__link')) : [];
-
-const onScreen = (el: HTMLElement | null | undefined): el is HTMLElement => {
-  const r = el?.getBoundingClientRect();
-  return !!r && r.width > 0 && r.bottom > 0 && r.top < window.innerHeight;
-};
-
-/**
- * The one thing that carries over: the case's name. It travels between the
- * card's title and the bar's — the same 20px type in both, so it only moves,
- * never scales — in a stand-in (the layer's .cp-fly) laid over both. The
- * two titles are worded a touch differently ("Chums messenger" on the card,
- * "Chums Messenger" on the page), so the stand-in changes its wording early
- * on, while it is moving fast, and arrives as the very text it lands on: it
- * hands over without a crossfade. Visible only while the flight runs.
- */
-function flyTitle(
-  fly: HTMLElement,
-  from: { rect: DOMRect; text: string | null },
-  to: HTMLElement,
-  layer: HTMLElement,
-  duration: number,
-) {
-  const z = zoomOf(layer);
-  const a = from.rect;
-  const b = to.getBoundingClientRect();
-  const start = document.createElement('span');
-  const end = document.createElement('span');
-  start.textContent = from.text;
-  end.textContent = to.textContent;
-  end.className = 'cp-fly__to';
-  fly.replaceChildren(start, end);
-  fly.style.left = `${a.left / z}px`;
-  fly.style.top = `${a.top / z}px`;
-  const swap = [0, 0.22, 0.34, 1];
-  return [
-    fly.animate(
-      [
-        { transform: 'translate(0px, 0px)', visibility: 'visible' },
-        { transform: `translate(${(b.left - a.left) / z}px, ${(b.top - a.top) / z}px)`, visibility: 'visible' },
-      ],
-      { duration, easing: GROW },
-    ),
-    start.animate(
-      swap.map((offset, i) => ({ offset, opacity: i < 2 ? 1 : 0 })),
-      { duration },
-    ),
-    end.animate(
-      swap.map((offset, i) => ({ offset, opacity: i < 2 ? 0 : 1 })),
-      { duration },
-    ),
-  ];
-}
 
 /**
  * A case opens over the page, as a page of its own: its address in the bar,
@@ -161,14 +149,13 @@ export function CaseLayer() {
   const running = useRef<Animation[]>([]);
   const melted = useRef<Animation[]>([]);
   const headerFade = useRef<Animation[]>([]);
-  const openTimers = useRef<number[]>([]);
   const lenisRef = useRef<Lenis | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const surfaceRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const barRef = useRef<HTMLElement>(null);
-  const flyRef = useRef<HTMLDivElement>(null);
+  const veilRef = useRef<HTMLDivElement>(null);
 
   const begin = useCallback((id: string, card: HTMLElement | null) => {
     if (openedRef.current || !CASES[id]) return;
@@ -200,30 +187,38 @@ export function CaseLayer() {
     // A close can come while the way in is still running: everything sets
     // off back from wherever it has got to, never from the end of the way in.
     const card = o.card?.isConnected ? o.card : null;
-    const fly = flyRef.current;
-    const back = barRef.current?.querySelector<HTMLElement>('.cp-back');
-    const barTitle = barRef.current?.querySelector<HTMLElement>('.cp-bar__title');
-    const cardTitle = card?.querySelector<HTMLElement>('.cs-card__title');
+    const bar = barRef.current;
+    const row = bar?.querySelector<HTMLElement>('.cp-bar__row');
+    const veil = veilRef.current;
+    const scroller = scrollRef.current;
     const parts = cardParts(card);
+    const headerLayers = Array.from(document.querySelectorAll(HEADER_LAYERS));
     const now = (el: Element | null | undefined) => (el ? getComputedStyle(el) : null);
     const surfaceNow = now(surface)!;
     const was = {
       clipPath: surfaceNow.clipPath === 'none' ? FULL : surfaceNow.clipPath,
       backgroundColor: surfaceNow.backgroundColor,
       opacity: surfaceNow.opacity,
-      fly: fly && now(fly)?.visibility === 'visible' ? fly.getBoundingClientRect() : null,
-      back: now(back)?.opacity ?? '1',
-      title: now(barTitle)?.opacity ?? '1',
-      header: now(document.querySelector('.site-header'))?.opacity ?? '0',
+      row: now(row)?.opacity ?? '1',
+      rowScale: now(row)?.scale ?? 'none',
+      bar: now(bar)?.opacity ?? '1',
+      scroll: now(scroller)?.opacity ?? '1',
+      veil: now(veil)?.opacity ?? '1',
+      header: headerLayers.map((el) => getComputedStyle(el).opacity),
       parts: parts.map((el) => getComputedStyle(el).opacity),
     };
-    openTimers.current.forEach((t) => window.clearTimeout(t));
-    openTimers.current = [];
     running.current.forEach((a) => a.cancel());
     running.current = [];
     melted.current.forEach((a) => a.cancel());
     melted.current = [];
+    // Whatever the way in had got to stays as it is, written in, so nothing
+    // jumps as its animations go.
     surface.style.opacity = was.opacity;
+    if (veil) veil.style.opacity = was.veil;
+    if (row) {
+      row.style.opacity = was.row;
+      row.style.scale = was.rowScale;
+    }
     // Nothing takes the pointer or the wheel while it goes, and the case's
     // own glide stops where it is.
     root.style.pointerEvents = 'none';
@@ -236,101 +231,109 @@ export function CaseLayer() {
       .catch(() => {});
     const out = (el: Element | null | undefined, frames: Keyframe[], opts: KeyframeAnimationOptions) =>
       el?.animate(frames, { fill: 'forwards', ...opts });
+    // The site's header comes back where the bar was: each of its layers
+    // from where it had got to, to its own resting level.
+    const headerBack = (delay: number, duration: number, easing = 'ease-out') => {
+      headerFade.current.forEach((a) => a.cancel());
+      headerFade.current = headerLayers.map((el, i) =>
+        el.animate([{ opacity: was.header[i], offset: 0 }], { duration, delay, easing, fill: 'backwards' }),
+      );
+    };
     let done: Animation | undefined;
 
     if (reducedMotion()) {
-      if (cardTitle) cardTitle.style.opacity = '';
       done = out(root, [{ opacity: 1 }, { opacity: 0 }], { duration: 220, easing: 'ease' });
     } else {
-      // The case fades first, the bar with it.
-      out(scrollRef.current, [{ opacity: 1 }, { opacity: 0 }], { duration: OUT.clear, easing: FADE });
-      out(back, [{ opacity: was.back }, { opacity: 0 }], { duration: OUT.clear, easing: FADE });
-      out(barRef.current?.querySelector('.cp-bar__glass'), [{ opacity: 1 }, { opacity: 0 }], {
-        duration: OUT.clear,
-        easing: FADE,
-      });
+      // The case fades first, the whole bar with it.
+      out(scroller, [{ opacity: was.scroll }, { opacity: 0 }], { duration: OUT.clear, easing: FADE });
+      out(bar, [{ opacity: was.bar }, { opacity: 0 }], { duration: OUT.clear, easing: FADE });
       const box = cardBox(card, root);
-      // Closed before the surface had taken over from the card: there is
-      // nothing to fold, the card is still there under it.
-      const fold = !!box && Number(was.opacity) > 0.5;
-      // The name flies back into the card — from the bar, or from wherever
-      // it was still on its way up — landing as the card does, where the
-      // card's own title takes over from it. Closed before the surface took
-      // over, it was still near the card: it goes back as the card fills.
-      const from =
-        was.fly ??
-        (barTitle && Number(was.title) > 0.5 && onScreen(barTitle) ? barTitle.getBoundingClientRect() : null);
-      const homing = fold ? OUT.foldAt + OUT.fold : OUT.refill;
-      const flies = !!box && !!fly && !!from && !!cardTitle && (fold || !!was.fly);
-      if (flies && fly && from && cardTitle) {
-        const [flight] = flyTitle(fly, { rect: from, text: barTitle?.textContent ?? null }, cardTitle, root, homing);
-        if (barTitle) barTitle.style.visibility = 'hidden';
-        flight.finished.then(
-          () => {
-            cardTitle.style.opacity = '';
-          },
-          () => {},
-        );
-      } else {
-        if (cardTitle) cardTitle.style.opacity = '';
-        out(barTitle, [{ opacity: was.title }, { opacity: 0 }], { duration: OUT.clear, easing: FADE });
-      }
-      // The site's header comes back where the bar was, once the bar has
-      // gone.
-      headerFade.current.forEach((a) => a.cancel());
-      headerFade.current = Array.from(document.querySelectorAll('.site-header'), (h) =>
-        h.animate([{ opacity: was.header }, { opacity: 1 }], {
-          duration: 280,
-          delay: Number(was.header) > 0.5 ? 0 : OUT.clear,
-          easing: 'ease-out',
-          fill: 'backwards',
-        }),
-      );
-      if (box && card && fold) {
-        // Then the page folds back into the card...
-        const landing = OUT.foldAt + OUT.fold;
+      if (box && card && Number(was.opacity) > 0.5) {
+        // Then the page folds back into the card, turning its grey, while
+        // the page comes back around it...
+        const settled = OUT.foldAt + Math.round(OUT.fold * 0.9);
+        out(surface, [{ clipPath: was.clipPath }, { clipPath: inset(box) }], {
+          duration: OUT.fold,
+          delay: OUT.foldAt,
+          easing: FOLD,
+          fill: 'both',
+        });
         out(
           surface,
-          [
-            { clipPath: was.clipPath, backgroundColor: was.backgroundColor },
-            { clipPath: inset(box), backgroundColor: getComputedStyle(card).backgroundColor },
-          ],
-          { duration: OUT.fold, delay: OUT.foldAt, easing: FOLD, fill: 'both' },
+          [{ backgroundColor: was.backgroundColor }, { backgroundColor: getComputedStyle(card).backgroundColor }],
+          { duration: settled - OUT.colorAt, delay: OUT.colorAt, easing: SWAP, fill: 'both' },
         );
-        // ...and lets go of it as it lands. The card's contents are whole
-        // again under it by then, so they come through as it clears.
-        out(surface, [{ opacity: was.opacity }, { opacity: 0 }], {
-          duration: OUT.lift,
-          delay: landing - OUT.lift,
-          easing: SWAP,
+        out(veil, [{ opacity: was.veil }, { opacity: 0 }], {
+          duration: OUT.veil,
+          delay: OUT.veilAt,
+          easing: FADE,
+          fill: 'both',
         });
+        // ...all but lands on it and steps off it, unseen: the card under it
+        // is the same grey in the same place. Then it fills again at once.
+        out(surface, [{ opacity: 0 }, { opacity: 0 }], { duration: OUT.refill, delay: settled });
         melted.current = parts.map((el, i) =>
-          el.animate([{ opacity: was.parts[i] }, { opacity: was.parts[i] }], { duration: landing - OUT.lift }),
+          el.animate([{ opacity: was.parts[i] }, { opacity: 1 }], {
+            duration: OUT.refill,
+            delay: settled,
+            easing: FADE,
+            fill: 'backwards',
+          }),
         );
-        done = surface.animate([{}, {}], { duration: landing });
+        // The header is under the veil and comes back as it lifts, but only
+        // once the surface's top edge, folding down, has cleared the header's
+        // row: before that the edge would cut through it. Where the card
+        // itself is under the row (on a phone its title sits under the pill),
+        // the header waits until the card has filled. Over a veil that was
+        // already thinning (closed on the way in) it fades in with it.
+        const fromTop = parseFloat(was.clipPath.slice('inset('.length)) || 0;
+        const cleared = OUT.foldAt + OUT.fold * foldTimeAt((HEADER_ROW - fromTop) / (box.top - fromTop));
+        const clear = fromTop >= HEADER_ROW ? OUT.veilAt : Math.max(OUT.veilAt, cleared);
+        const lifted = OUT.veilAt + OUT.veil;
+        if (window.matchMedia('(max-width: 899px)').matches || box.top < HEADER_ROW) headerBack(settled + 120, 240);
+        else if (Number(was.veil) > 0.95) headerBack(clear, Math.max(lifted - clear, 160));
+        else headerBack(OUT.veilAt, OUT.veil);
+        done = surface.animate([{}, {}], { duration: settled + OUT.refill });
       } else if (box && card) {
         // Closed before the surface had taken over: the card is still there
         // under it, and its contents just come back in.
         melted.current = parts.map((el, i) =>
           el.animate([{ opacity: was.parts[i] }, { opacity: 1 }], { duration: OUT.refill, easing: FADE }),
         );
-        done = surface.animate([{}, {}], { duration: flies ? homing : 0 });
+        out(veil, [{ opacity: was.veil }, { opacity: 0 }], { duration: 160, easing: FADE });
+        headerBack(0, OUT.refill);
+        done = surface.animate([{}, {}], { duration: OUT.refill });
       } else {
         // No card to fold into: the page just lets go, and the card (if it
         // had faded at all) comes back where it is.
         melted.current = parts.map((el, i) =>
           el.animate([{ opacity: was.parts[i] }, { opacity: 1 }], { duration: OUT.refill, easing: FADE }),
         );
-        done = out(surface, [{ opacity: was.opacity }, { opacity: 0 }], {
-          duration: 360,
-          delay: OUT.foldAt,
-          easing: 'ease',
-        });
+        const away = { duration: BARE.out, delay: BARE.outAt, easing: 'ease' };
+        out(surface, [{ opacity: was.opacity }, { opacity: 0 }], away);
+        out(veil, [{ opacity: was.veil }, { opacity: 0 }], away);
+        headerBack(BARE.outAt, OUT.veil);
+        done = surface.animate([{}, {}], { duration: BARE.outAt + BARE.out });
       }
     }
     if (done) done.finished.then(finish, finish);
     else finish();
   }, [begin]);
+
+  // The case's own scroll, read and set at once, for a Read more keeping its
+  // button in view frame by frame as its regions fold.
+  const caseScroll = useMemo(
+    () => ({
+      get: () => lenisRef.current?.animatedScroll ?? scrollRef.current?.scrollTop ?? 0,
+      set: (y: number) => {
+        const lenis = lenisRef.current;
+        const scroller = scrollRef.current;
+        if (lenis) lenis.scrollTo(y, { immediate: true, force: true });
+        else if (scroller) scroller.scrollTop = y;
+      },
+    }),
+    [],
+  );
 
   // Back, the bar's button, the end of the case, Escape: the browser's own
   // back where the case put itself in the history, so its forward still works.
@@ -412,10 +415,9 @@ export function CaseLayer() {
     }
     const title = document.title;
     document.title = `${CASES[opened.id].title} · Timur Nishanov`;
-    let flownTitle: HTMLElement | null = null;
 
-    // The case's blocks wait under the hold (useReveal) until the surface is
-    // most of the way out, then come out of the blur in turn.
+    // The case's blocks wait under the hold (useReveal) until the surface has
+    // all but turned the page's colour, then the first screen comes in as one.
     const release = () => root.removeAttribute('data-hold');
     const anims: Animation[] = [];
     let cancelGo = () => {};
@@ -431,14 +433,17 @@ export function CaseLayer() {
     } else {
       const box = cardBox(card, root);
       const page = getComputedStyle(surface).backgroundColor;
+      const veil = veilRef.current;
+      let contentAt = IN.contentAt;
+      let barAt = IN.barAt;
       if (box && card) {
-        // The card's contents fade, where they are.
+        // The card's contents fade, where they are, its title with them.
         melted.current = cardParts(card).map((el) =>
           el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: IN.clear, easing: FADE, fill: 'forwards' }),
         );
         // Its surface takes over from the card, whole and at once, once the
-        // card is its own grey under it — the same colour in the same place,
-        // so the hand-over doesn't show — and grows.
+        // card is all but bare — the same grey in the same place, so the
+        // hand-over doesn't show — and grows.
         const grey = getComputedStyle(card).backgroundColor;
         add(surface, [{ opacity: 0 }, { opacity: 1 }], {
           duration: IN.surfaceAt,
@@ -451,58 +456,54 @@ export function CaseLayer() {
           easing: GROW,
           fill: 'backwards',
         });
-        // The colour turns evenly over the whole way, not with the size's
-        // early rush: across the whole screen that read as a flash.
+        // The colour is turned well before the size has settled: the long
+        // tail of the growth is then page on page, and can't be seen, and
+        // the case comes in on its final colour rather than through a grey
+        // fog.
         add(surface, [{ backgroundColor: grey }, { backgroundColor: page }], {
-          duration: IN.grow,
+          duration: IN.color,
           delay: IN.surfaceAt,
           easing: SWAP,
+          fill: 'backwards',
+        });
+        // Under it the page goes blank: no header, no edge of the next card.
+        add(veil, [{ opacity: 0 }, { opacity: 1 }], {
+          duration: IN.veil,
+          delay: IN.surfaceAt,
+          easing: FADE,
           fill: 'backwards',
         });
       } else {
         // No card to grow out of (reopened with the page elsewhere): the
         // page simply arrives.
-        add(surface, [{ opacity: 0 }, { opacity: 1 }], { duration: 320, easing: 'ease', fill: 'backwards' });
+        add(surface, [{ opacity: 0 }, { opacity: 1 }], { duration: BARE.in, easing: 'ease', fill: 'backwards' });
+        add(veil, [{ opacity: 0 }, { opacity: 1 }], { duration: BARE.in, easing: 'ease', fill: 'backwards' });
+        contentAt = BARE.contentAt;
+        barAt = BARE.barAt;
       }
-      // The bar is glass: its button scales in from a touch smaller rather
-      // than out of a blur, which would empty its backdrop. Its title is the
-      // card's, flown up from the card where there was one to fly from.
-      const back = barRef.current?.querySelector<HTMLElement>('.cp-back');
-      const barTitle = barRef.current?.querySelector<HTMLElement>('.cp-bar__title');
-      const cardTitle = card?.querySelector<HTMLElement>('.cs-card__title');
-      const fly = flyRef.current;
-      const arrive = (el: HTMLElement | null | undefined, delay: number) =>
-        add(
-          el,
-          [
-            { opacity: 0, scale: '0.96' },
-            { opacity: 1, scale: '1' },
-          ],
-          { duration: 420, delay, easing: SETTLE, fill: 'backwards' },
-        );
-      arrive(back, IN.contentAt + 40);
-      // The site's header steps aside at once, so the name flies up into an
-      // empty top and lands where the header was.
-      headerFade.current = Array.from(document.querySelectorAll('.site-header'), (h) =>
-        h.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 160, easing: 'ease-out', fill: 'forwards' }),
+      // The bar's back button and title arrive as one, from a touch smaller.
+      add(
+        barRef.current?.querySelector('.cp-bar__row'),
+        [
+          { opacity: 0, scale: '0.96' },
+          { opacity: 1, scale: '1' },
+        ],
+        { duration: IN.arrive, delay: barAt, easing: SETTLE, fill: 'backwards' },
       );
-      if (box && fly && barTitle && onScreen(cardTitle) && cardSeen(card)) {
-        flownTitle = cardTitle;
-        cardTitle.style.opacity = '0';
-        anims.push(
-          ...flyTitle(
-            fly,
-            { rect: cardTitle.getBoundingClientRect(), text: cardTitle.textContent },
-            barTitle,
-            root,
-            IN.grow,
-          ),
-        );
-        // The bar's own title waits under it and takes over as it lands.
-        add(barTitle, [{ opacity: 0 }, { opacity: 0 }], { duration: IN.grow });
-      } else {
-        arrive(barTitle, IN.contentAt + 40);
-      }
+      // The site's header steps aside with the card's contents, each layer
+      // from its own resting level (a pill that isn't shown stays unshown).
+      headerFade.current = Array.from(document.querySelectorAll(HEADER_LAYERS), (el) =>
+        el.animate([{ opacity: 0 }], { duration: IN.clear, easing: FADE, fill: 'forwards' }),
+      );
+      // The content's go, and the card's video stopping (it has nothing to
+      // show while the case is over it), are timed on the animations' own
+      // clock: they only get their start time on the frame after play(),
+      // which on a first open can land well after a timer would have run.
+      add(surface, [{}, {}], { duration: contentAt })?.finished.then(release, () => {});
+      add(surface, [{}, {}], { duration: IN.clear })?.finished.then(
+        () => pageVideo?.pause(),
+        () => {},
+      );
       // Everything waits for the case's first frame to be on screen: laying
       // the case out the first time is the heaviest moment of the way in,
       // and an animation started under it would have run its first frames
@@ -513,11 +514,6 @@ export function CaseLayer() {
         go = requestAnimationFrame(() => {
           if (closing.current) return; // closed before it set off: nothing to start
           held.forEach((a) => a.play());
-          openTimers.current.push(
-            window.setTimeout(release, IN.contentAt),
-            // The card's video has nothing to show while the case is over it.
-            window.setTimeout(() => pageVideo?.pause(), IN.clear),
-          );
         });
       });
       cancelGo = () => cancelAnimationFrame(go);
@@ -558,8 +554,6 @@ export function CaseLayer() {
     return () => {
       scroller.removeEventListener('keydown', onTab);
       cancelGo();
-      openTimers.current.forEach((t) => window.clearTimeout(t));
-      openTimers.current = [];
       cancelAnimationFrame(raf);
       lenis?.destroy();
       lenisRef.current = null;
@@ -568,7 +562,6 @@ export function CaseLayer() {
       setPaused(false);
       inert.forEach((el) => el.removeAttribute('inert'));
       document.title = title;
-      if (flownTitle) flownTitle.style.opacity = '';
       // Unless a close has already brought the header back.
       headerFade.current.forEach((a) => {
         if (a.effect?.getTiming().fill === 'forwards') a.cancel();
@@ -607,6 +600,7 @@ export function CaseLayer() {
       aria-label={`${entry.title} case study`}
       data-hold=""
     >
+      <div ref={veilRef} className="cp__veil" />
       <div ref={surfaceRef} className="cp__surface" />
       {/* First in the tab order, though drawn over the case. */}
       <CaseBar ref={barRef} title={entry.title} onBack={requestClose} scrollerRef={scrollRef} />
@@ -614,10 +608,11 @@ export function CaseLayer() {
           the case's own instance runs it. */}
       <div ref={scrollRef} className="cp__scroll" data-lenis-prevent tabIndex={-1}>
         <div ref={contentRef} className="cp__content">
-          <Article onBack={requestClose} />
+          <CaseScroll.Provider value={caseScroll}>
+            <Article onBack={requestClose} />
+          </CaseScroll.Provider>
         </div>
       </div>
-      <div ref={flyRef} className="cp-fly" aria-hidden="true" />
     </div>,
     document.body,
   );
