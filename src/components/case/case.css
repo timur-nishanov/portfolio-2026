@@ -125,8 +125,11 @@
   transition: opacity 200ms ease;
   pointer-events: none;
 }
+/* It comes in from the first pixel of scroll, and fast: a quick first scroll
+   brings the opening line up to the row within a few frames. */
 .cp-bar[data-glass]::before {
   opacity: 1;
+  transition-duration: 80ms;
 }
 .cp-bar__row {
   position: relative;
@@ -384,6 +387,10 @@
    takes none. Under a rule's name it is closer, as the name's own. */
 .cp-fold {
   overflow: hidden;
+}
+/* Focused only from script (ReadMore), to take a keyboard reader into it. */
+.cp-fold:focus {
+  outline: none;
 }
 .cp-fold__inner {
   padding-top: 16px;
@@ -674,6 +681,21 @@
     transform 320ms var(--cp-ease);
   transition-delay: 0ms;
 }
+/* The Read more button comes in the same way, and keeps its hover colour's
+   own quick change, never held back by the stagger. */
+.cp-toggle.cp-reveal {
+  transition:
+    opacity 400ms var(--cp-ease) calc(var(--stagger, 0) * 40ms),
+    transform 400ms var(--cp-ease) calc(var(--stagger, 0) * 40ms),
+    filter 400ms var(--cp-ease) calc(var(--stagger, 0) * 40ms),
+    color 160ms ease;
+}
+.cp-toggle.cp-reveal.is-first {
+  transition:
+    opacity 320ms var(--cp-ease),
+    transform 320ms var(--cp-ease),
+    color 160ms ease;
+}
 /* The case's own page arrives the same way: the bar first. */
 @keyframes cp-bar-in {
   from {
@@ -768,6 +790,7 @@
   .cp-bar,
   .cp-bar::before,
   .cp-back__disc,
+  .cp-toggle__chevron,
   .cp-end__disc {
     transition: none;
   }

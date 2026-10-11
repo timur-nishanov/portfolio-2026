@@ -33,8 +33,9 @@ type Props = { notes: string[]; className?: string };
  * Notes that take turns in one place. The block is anchored by its top edge
  * and never re-centres: a longer note only grows downward, and in the stacked
  * mobile layout an invisible copy of every note holds the tallest height, so
- * nothing below shifts. Runs only while on screen and the tab is visible, and
- * holds while a mouse points at it — someone reading shouldn't lose the line.
+ * nothing below shifts. Runs only while on screen and the tab is visible (a
+ * note already leaving still finishes), and holds while a mouse points at it —
+ * someone reading shouldn't lose the line.
  */
 export function RotatingNotes({ notes, className = '' }: Props) {
   const reduced = useReducedMotion();
@@ -89,8 +90,10 @@ export function RotatingNotes({ notes, className = '' }: Props) {
     };
   }, []);
 
-  // A note on its way out always finishes leaving; only a shown one is held.
-  const running = active && (phase === 'out' || !held);
+  // A note on its way out always finishes leaving, and the next one comes
+  // in, even under a case or off screen: the card never comes back with an
+  // empty column. Only a shown note is held.
+  const running = phase === 'out' || (active && !held);
 
   useEffect(() => {
     if (!running || notes.length < 2) return;

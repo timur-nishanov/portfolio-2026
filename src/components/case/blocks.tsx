@@ -121,10 +121,10 @@ export function PhoneGallery({ slots }: { slots: CaseSlot[] }) {
 
 /* --- Read more ------------------------------------------------------------ */
 
-/** How the case scrolls by a distance: the layer's own smooth scroll
-    (CaseLayer provides it). Without it, the case is its own page and the
-    page's smooth scroll does it. */
-export const CaseScroll = createContext<((by: number) => void) | null>(null);
+/** Where the case is scrolled to, read and set at once: the layer's own
+    scroll (CaseLayer provides it). Without it, the case is its own page and
+    the page's scroll is used. */
+export const CaseScroll = createContext<{ get(): number; set(y: number): void } | null>(null);
 
 type ChapterState = { open: boolean; toggle: () => void; register: (id: string) => () => void; ids: string };
 const ChapterContext = createContext<ChapterState | null>(null);
@@ -222,8 +222,10 @@ export function Fold({ children }: { children: React.ReactNode }) {
     }
   }, [open]);
 
+  // Focusable from script only: opened from the keyboard, the reader is
+  // taken into it (ReadMore).
   return (
-    <div ref={ref} id={id} className="cp-fold" hidden>
+    <div ref={ref} id={id} className="cp-fold" tabIndex={-1} hidden>
       <div ref={innerRef} className="cp-fold__inner">
         {children}
       </div>
@@ -238,24 +240,42 @@ export function Fold({ children }: { children: React.ReactNode }) {
 export function ReadMore({ className = '' }: { className?: string }) {
   const chapter = useContext(ChapterContext);
   const caseScroll = useContext(CaseScroll);
-  const { scrollTo } = useSmoothScroll();
+  const { jumpTo } = useSmoothScroll();
   const ref = useRef<HTMLButtonElement>(null);
   if (!chapter) return null;
   const { open, toggle, ids } = chapter;
-  const onClick = () => {
+  const onClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     const button = ref.current;
+    const regions = ids
+      .split(' ')
+      .map((id) => document.getElementById(id))
+      .filter((el): el is HTMLElement => !!el);
     // Folding up a long passage from below would leave the button above the
-    // screen, and the reader lost: it comes back down to just under the bar,
-    // scrolling as the regions fold.
+    // screen, and the reader lost: it comes back down to just under the bar.
+    // The scroll follows the regions' height as it is drawn, frame by frame,
+    // so the button only ever moves one way, never swung past and back.
     if (open && button) {
-      const folded = ids.split(' ').reduce((sum, id) => sum + (document.getElementById(id)?.offsetHeight ?? 0), 0);
+      const folded = regions.reduce((sum, el) => sum + el.offsetHeight, 0);
       const top = button.getBoundingClientRect().top / zoomOf(button) - folded;
-      if (top < 96) {
+      if (top < 96 && folded > 0) {
         const by = top - 120;
-        if (caseScroll) caseScroll(by);
-        else scrollTo(window.scrollY + by, { offset: 0, duration: 0.45 });
+        const from = caseScroll ? caseScroll.get() : window.scrollY;
+        const scrollTo = caseScroll ? caseScroll.set : jumpTo;
+        const follow = () => {
+          // Opened again mid-way: the scroll is left where it has got to.
+          if (button.getAttribute('aria-expanded') === 'true') return;
+          const left = regions.reduce((sum, el) => sum + (el.hidden ? 0 : el.offsetHeight), 0);
+          const gone = Math.min(1, Math.max(0, 1 - left / folded));
+          scrollTo(from + by * gone);
+          if (gone < 1) requestAnimationFrame(follow);
+        };
+        requestAnimationFrame(follow);
       }
     }
+    // Opened from the keyboard or a screen reader (no pointer: detail 0),
+    // the reader is taken on into the text that has just opened, the view
+    // left where it is.
+    if (!open && e.detail === 0) requestAnimationFrame(() => regions[0]?.focus({ preventScroll: true }));
     toggle();
   };
   return (
@@ -313,11 +333,11 @@ export function useReveal(ref: React.RefObject<HTMLElement | null>) {
       if (!raf && pending.length) raf = requestAnimationFrame(() => sweep());
     };
     // On the case's own page the text is already on screen from the server:
-    // what is in view stays as it is, only what is further down waits.
+    // all that is in view stays as it is (down to the screen's very bottom,
+    // or what was just seen would vanish), only what is further down waits.
     if (!hold) {
-      const line = window.innerHeight * 0.92;
       pending = pending.filter((el) => {
-        if (el.getBoundingClientRect().top >= line) return true;
+        if (el.getBoundingClientRect().top >= window.innerHeight) return true;
         el.classList.add('is-in');
         return false;
       });
@@ -339,8 +359,13 @@ export function useReveal(ref: React.RefObject<HTMLElement | null>) {
     }
     target.addEventListener('scroll', schedule, { passive: true });
     window.addEventListener('resize', schedule);
+    // A Read more folding up brings the blocks under it up the screen
+    // without a scroll.
+    const grow = new ResizeObserver(schedule);
+    grow.observe(root);
     return () => {
       watch?.disconnect();
+      grow.disconnect();
       cancelAnimationFrame(raf);
       target.removeEventListener('scroll', schedule);
       window.removeEventListener('resize', schedule);

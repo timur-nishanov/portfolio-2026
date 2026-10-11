@@ -1,6 +1,6 @@
 'use client';
 
-import { forwardRef, useEffect, useState } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { ButtonChevron } from '@/components/header/menu/icons';
 import { BackLink } from './BackLink';
 
@@ -20,7 +20,8 @@ type Props = {
  * the way while reading down and returns on the first scroll up.
  */
 export const CaseBar = forwardRef<HTMLElement, Props>(function CaseBar({ title, onBack, backHref, scrollerRef }, ref) {
-  const [glass, setGlass] = useState(false);
+  const barRef = useRef<HTMLElement>(null);
+  useImperativeHandle(ref, () => barRef.current as HTMLElement);
   const [hidden, setHidden] = useState(false);
   const [gutter, setGutter] = useState(0);
 
@@ -34,7 +35,9 @@ export const CaseBar = forwardRef<HTMLElement, Props>(function CaseBar({ title, 
     let last = y();
     const onScroll = () => {
       const now = y();
-      setGlass(now > 24);
+      // Written on the bar at once rather than through a render, so the
+      // edge starts coming in on the very frame the page first moves.
+      barRef.current?.toggleAttribute('data-glass', now > 0);
       if (now < 120) setHidden(false);
       else if (now > last + 2) setHidden(true);
       else if (now < last - 2) setHidden(false);
@@ -47,9 +50,8 @@ export const CaseBar = forwardRef<HTMLElement, Props>(function CaseBar({ title, 
 
   return (
     <header
-      ref={ref}
+      ref={barRef}
       className="cp-bar"
-      data-glass={glass ? '' : undefined}
       data-hidden={hidden ? '' : undefined}
       style={gutter ? ({ '--cp-gutter': `${gutter}px` } as React.CSSProperties) : undefined}
       // Keyboard focus brings it back wherever the page is.
