@@ -1,22 +1,22 @@
 'use client';
 
 import { useRef } from 'react';
-import { chumsMedia as media } from '@/data/chumsCase';
-import { ButtonChevron } from '@/components/header/menu/icons';
+import { chumsLinks, chumsMedia as media } from '@/data/chumsCase';
+import { ButtonChevron, RowChevron } from '@/components/header/menu/icons';
 import { BackLink } from './BackLink';
-import { BeforeAfter, BeforeGalleryAfter, Chapter, Fold, PhoneGallery, ReadMore, useReveal } from './blocks';
+import { BeforeAfter, Chapter, DesktopCompare, Fold, Orb, PhoneRow, ReadMore, useReveal } from './blocks';
 import type { ArticleProps } from './registry';
 
 // "6 steps to 1" never breaks across lines (as in the card's notes). The
 // compound words below are tied with non-breaking hyphens (&#8209;) for the
 // same reason: on a phone "top-up" broke as "top-/up".
-const SIX_TO_ONE = '6 steps to 1';
+const SIX_TO_ONE = '6 steps to 1';
 
 /**
  * The Chums case study. One narrow column of text with a single left edge,
  * in four sizes, and the media running wider than it on the same centre line.
  * Every chapter shows its problem and what was done; how it was done waits
- * behind one "Read more".
+ * behind one "Read more". A hairline only between the big parts.
  */
 export function ChumsArticle({ onBack, backHref }: ArticleProps) {
   const ref = useRef<HTMLElement>(null);
@@ -30,93 +30,71 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
             bar is the page's h1. */}
         <p className="cp-hero cp-reveal">The tech worked. Getting to it didn’t.</p>
         <p className="cp-lead cp-reveal">
-          I led design at Chums, a messenger built on the open Matrix protocol, with tokens, NFTs, domains and dApps
-          inside the chat. It already had 32k+ wallets and more than $200k in user balances. My job was not to add
-          features. It was to make what already existed easy to find and use.
+          I led design at Chums, a messenger with a crypto wallet built into the chat. My job wasn’t to add features.
+          It was to make the ones already there easy to find and use.
         </p>
 
-        {/* The facts, two by two under a hairline, in the notes' type. One
-            block, so the hairline comes in with them. */}
-        <dl className="cp-meta cp-reveal">
+        {/* The product's scale in three numbers, then the facts, a line each. */}
+        <dl className="cp-stats cp-reveal">
           <div>
-            <dt>Product</dt>
-            <dd>
-              <ul>
-                <li>Messenger + Web3 wallet, desktop and mobile</li>
-                <li>10k downloads</li>
-                <li>32k+ wallets (one user can hold several)</li>
-                <li>$200k+ in user balances</li>
-              </ul>
-            </dd>
+            <dt>Downloads</dt>
+            <dd>10k</dd>
           </div>
+          <div>
+            <dt>Wallets</dt>
+            <dd>32k+</dd>
+          </div>
+          <div>
+            <dt>User balances</dt>
+            <dd>$200k+</dd>
+          </div>
+        </dl>
+        <dl className="cp-facts cp-reveal">
           <div>
             <dt>Goal</dt>
-            <dd>Get more people to use the wallet inside the chat and top it up.</dd>
+            <dd>Grow wallet use and top&#8209;ups</dd>
           </div>
           <div>
-            <dt>Timeline</dt>
-            <dd>
-              <ul>
-                <li>Concept in 2024</li>
-                <li>Design lead in 2025</li>
-              </ul>
-            </dd>
+            <dt>Role</dt>
+            <dd>Design lead, mentoring a junior designer</dd>
           </div>
           <div>
             <dt>Team</dt>
-            <dd>
-              <ul>
-                <li>Founders</li>
-                <li>Product Manager</li>
-                <li>Art Director</li>
-                <li>1 developer</li>
-                <li>Me, Senior Product Designer and design lead, with a junior designer I mentored day to day</li>
-              </ul>
-            </dd>
+            <dd>Founders, PM, art director, 1&nbsp;developer</dd>
+          </div>
+          <div>
+            <dt>Timeline</dt>
+            <dd>2024–2025</dd>
           </div>
         </dl>
-        <p className="cp-note cp-reveal">
-          Chums was a client of the studio I worked at. I led its design alongside other studio projects.
-        </p>
       </div>
+
+      <hr className="cp-divider cp-reveal" />
 
       {/* --- the concept --------------------------------------------------- */}
       <Chapter aria-labelledby="cp-concept">
         <div className="cp-col">
-          <p className="cp-label cp-reveal">Concept</p>
           <h2 id="cp-concept" className="cp-h cp-reveal">
             Give Chums its own look and flow
           </h2>
           <p className="cp-reveal">
-            The app looked like any other messenger. You picked a server once at sign&#8209;in, so moving between
-            communities was slow. In early 2024 I designed a new concept for Chums: the key mobile screens and the Web3
-            entry points.
+            Chums looked like any other messenger, and moving between communities was slow: you picked a server once,
+            at sign&#8209;in. In early 2024 I designed a new concept for the key screens.
           </p>
           <Fold>
             <p>
-              I explored a few directions, we picked one together, and I refined it. The art director reviewed the work
-              a couple of times.
-            </p>
-            <p>
-              On Matrix every community can have its own server, so switching servers is a core action. And the wallet
-              is the reason Chums exists. The concept changed four things:
+              Chums runs on Matrix, where every community can have its own server, so switching servers is a core
+              action. The concept changed four things:
             </p>
             <ul className="cp-list">
-              <li>Servers sit in a row at the top, like stories. Switching takes one tap.</li>
-              <li>
-                Signing in to a new server happens in a sheet over the chat list, with your accounts ready to pick.
-              </li>
-              <li>
-                Direct messages and server spaces are clearly separated. You always know where a conversation lives.
-              </li>
-              <li>
-                Sending coins sits in the attachment menu, next to photos and files. Money is part of the conversation,
-                not a separate app.
-              </li>
+              <li>Servers sit in a row at the top, like stories. One tap to switch.</li>
+              <li>Signing in to a new server is a sheet over the chat list.</li>
+              <li>Direct messages and server spaces are clearly apart.</li>
+              <li>Sending coins sits in the attachment menu, next to photos and files.</li>
             </ul>
             <p>
-              The founders liked the concept. When the product’s designer left, they asked me to lead design, with a
-              junior designer to mentor.
+              The founders liked it. When the product’s designer left, they asked me to lead design, with a junior
+              designer to mentor.
             </p>
           </Fold>
           <ReadMore className="cp-reveal" />
@@ -127,16 +105,17 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
         </div>
       </Chapter>
 
+      <hr className="cp-divider cp-reveal" />
+
       {/* --- desktop ------------------------------------------------------- */}
       <Chapter aria-labelledby="cp-desktop">
         <div className="cp-col">
-          <p className="cp-label cp-reveal">Desktop</p>
           <h2 id="cp-desktop" className="cp-h cp-reveal">
-            Treat the desktop client as one product problem
+            Make desktop feel like desktop
           </h2>
           <p className="cp-reveal">
-            The desktop client was a mobile layout stretched across a big window. It broke on resize, and simple actions
-            covered the whole conversation. We treated the client as one problem and turned the fixes into three rules.
+            The desktop app was the mobile layout stretched across a big window. It broke on resize, and simple actions
+            covered the whole chat. Instead of fifty tickets, we treated it as one problem with three rules:
           </p>
 
           {/* The rules are the idea itself, so their names stay; what each
@@ -145,188 +124,160 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
             <li className="cp-rule cp-reveal">
               <span className="cp-rule__no">1</span>
               <div>
-                <h3 className="cp-rule__title">Keep the conversation in view</h3>
+                <h3 className="cp-rule__title">Keep the chat in view</h3>
                 <Fold>
-                  <ul className="cp-list">
-                    <li>
-                      Replaced the full&#8209;screen contact picker with a compact modal. The chat stays in context.
-                    </li>
-                    <li>Replaced the full&#8209;width emoji panel with a compact popover.</li>
-                  </ul>
+                  <p>The contact picker and the emoji panel became small popovers instead of full&#8209;screen panels.</p>
                 </Fold>
               </div>
             </li>
             <li className="cp-rule cp-reveal">
               <span className="cp-rule__no">2</span>
               <div>
-                <h3 className="cp-rule__title">Design for a pointer and a resizable window</h3>
+                <h3 className="cp-rule__title">Build for a mouse and a resizable window</h3>
                 <Fold>
-                  <ul className="cp-list">
-                    <li>Defined how panels resize, collapse and adapt to window size.</li>
-                    <li>
-                      Added drag&#8209;and&#8209;drop and native context menus. Attaching a file went from {SIX_TO_ONE}.
-                    </li>
-                    <li>Softened outgoing message bubbles. On a wide screen they were too loud.</li>
-                    <li>Rebuilt the wallet screens for desktop. They had been stretched straight from mobile.</li>
-                  </ul>
+                  <p>
+                    Panels resize and collapse with the window. Drag&#8209;and&#8209;drop and right&#8209;click menus
+                    cut attaching a file from {SIX_TO_ONE}. Message bubbles got calmer, and the wallet screens were
+                    rebuilt for desktop.
+                  </p>
                 </Fold>
               </div>
             </li>
             <li className="cp-rule cp-reveal">
               <span className="cp-rule__no">3</span>
               <div>
-                <h3 className="cp-rule__title">Explain anything that can cost people their money</h3>
+                <h3 className="cp-rule__title">Explain anything that can cost money</h3>
                 <Fold>
-                  <ul className="cp-list">
-                    <li>
-                      Turned an unexplained recovery&#8209;key form into a guided onboarding step. The key is how you
-                      get back into your account and your wallet after losing a device. The old form never said so.
-                    </li>
-                  </ul>
+                  <p>
+                    The recovery key is the only way back into your account and wallet after losing a device. The old
+                    form never said so. Now it’s a guided step.
+                  </p>
                 </Fold>
               </div>
             </li>
           </ol>
           <Fold>
             <p>
-              Desktop problems came from two audits, the PM’s and mine. By May 2025, desktop was the most obvious
-              problem in both audits. We didn’t file fifty tickets.
-            </p>
-            <p>
-              I packaged the audit into one proposal. The founders and the PM approved it within a week. With one
-              developer, we had to cut. A full wallet redesign was the first to go: the wallet worked, the problem was
-              getting to it. Some interaction details went too. We rebuilt the client around the three rules and put the
-              new patterns into the design system instead of patching screens one by one. The first beta shipped three
-              months after approval, then went through several rounds of iteration.
+              The founders and the PM approved the plan within a week. With one developer we had to cut, and a full
+              wallet redesign went first: the wallet worked, getting to it didn’t. The first beta shipped three months
+              later.
             </p>
           </Fold>
           <ReadMore className="cp-reveal" />
         </div>
 
         <div className="cp-wide">
-          <BeforeGalleryAfter before={media.desktop.before} after={media.desktop.after} />
+          <DesktopCompare main={media.desktop.main} rows={media.desktop.rows} />
         </div>
       </Chapter>
+
+      <hr className="cp-divider cp-reveal" />
 
       {/* --- rewards ------------------------------------------------------- */}
       <Chapter aria-labelledby="cp-rewards">
         <div className="cp-col">
-          <p className="cp-label cp-reveal">Rewards</p>
           <h2 id="cp-rewards" className="cp-h cp-reveal">
-            Make Web3 rewards easier to find and understand
+            Make rewards easy to find and understand
           </h2>
           <p className="cp-reveal">
-            Quests and wallet rewards were rough and hard to find. Nobody could see the payout before starting. We built
-            the flow around a clear entry point, reward amounts shown up front, visible progress and rules explained
-            inside the flow.
+            Quests and wallet rewards were buried in the chat list, and nobody could see the payout before starting.
           </p>
-          {/* Last in it, the passage whose colon points at the moments. */}
           <Fold>
             <p>
-              The PM came with an idea: XP for messenger actions, like creating a room, plus time&#8209;limited quests
-              from Venom, a blockchain network Chums worked with, all in one achievement system. The existing quests
-              were just another room in the chat list, set up by hand. It wasn’t clear how they related to Venom or why
-              anyone should do them.
+              The PM came with XP for messenger actions plus time&#8209;limited quests from Venom, a blockchain network
+              Chums worked with. The old quests were just a room in the chat list, set up by hand.
             </p>
             <p>
-              The junior designer got the brief. Before drawing anything, we took it apart: wrote down how we understood
-              it, listed the open questions and synced with the PM.
-            </p>
-            <ul className="cp-list">
-              <li>What problem are we solving?</li>
-              <li>What does the user get at the end?</li>
-              <li>Do points live in Chums or on Venom’s side?</li>
-              <li>Is there an agreement with Venom to host their quests?</li>
-              <li>Which metric should move: retention, top&#8209;ups or something else?</li>
-              <li>Where do rooms come from, and who creates them?</li>
-            </ul>
-            <p>
-              The PM had the idea but not the answers, so we worked them out together. The way the system works is what
-              we came up with. Only then did we look at benchmarks.
-            </p>
-            <p>
-              Rewards exist to get people to top up their wallets. If you can’t see what a top&#8209;up gets you, you
-              don’t make one. A task can be simple and the reward valuable, but it doesn’t matter if people have to
-              start before they know the payoff.
-            </p>
-            <p>
-              We studied Matrix clients, Telegram (especially on desktop), Discord and Family. Instead of comparing
-              feature lists, we looked at three moments where quests and rewards either work or fall apart:
+              Before drawing anything, the junior designer and I took the brief apart with the PM: what problem we
+              solve, what people get at the end, where the points live and which metric should move.
             </p>
           </Fold>
+          <p className="cp-reveal">
+            We looked at how Telegram, Discord and Family handle three moments where rewards work or fall apart.
+          </p>
           <ReadMore className="cp-reveal" />
         </div>
 
-        {/* Three equal tiles in a row, in the order they happen: outlines
-            for the first two, ink for the one that became the constraint. */}
-        <figure className="cp-wide">
-          <ol className="cp-moments">
-            <li className="cp-moment cp-reveal">
-              <span className="cp-moment__label">Discovery</span>
-              <span className="sr-only"> — </span>
-              <p className="cp-moment__q">can users find the feature without being told where it is?</p>
-            </li>
-            <li className="cp-moment cp-reveal">
-              <span className="cp-moment__label">Comprehension</span>
-              <span className="sr-only"> — </span>
-              <p className="cp-moment__q">can they understand the rules inside the flow?</p>
-            </li>
-            <li className="cp-moment cp-moment--key cp-reveal">
-              <span className="cp-moment__label">Payout visibility</span>
-              <span className="sr-only"> — </span>
-              <p className="cp-moment__q">do they know what they’ll get before committing?</p>
-            </li>
+        {/* The three moments, in the order they happen. */}
+        <div className="cp-wide">
+          <ol className="cp-orbs">
+            <Orb label="Discovery">Can people find it without being told where?</Orb>
+            <Orb label="Comprehension">Do they get the rules inside the flow?</Orb>
+            <Orb label="Payout visibility">Do they know what they’ll get before they start?</Orb>
           </ol>
-          <figcaption className="cp-cap cp-reveal">The third one became our main constraint.</figcaption>
-        </figure>
+        </div>
 
-        <figure className="cp-wide">
-          <PhoneGallery slots={media.rewards} />
-          <figcaption className="cp-cap cp-reveal">
-            The junior designer produced the screens. I directed the work and pointed out where things could be clearer
-            and cleaner.
-          </figcaption>
-        </figure>
+        <div className="cp-col">
+          <p className="cp-reveal">
+            Payout visibility mattered most, so the flow shows the reward up front, keeps progress in view and explains
+            the rules in place. The junior designer drew the screens; I directed the work.
+          </p>
+        </div>
+
+        <div className="cp-wide">
+          <PhoneRow slots={media.rewards} />
+        </div>
       </Chapter>
+
+      <hr className="cp-divider cp-reveal" />
 
       {/* --- outcome ------------------------------------------------------- */}
       <section className="cp-chapter cp-col" aria-labelledby="cp-landed">
         <h2 id="cp-landed" className="cp-h cp-reveal">
           Where it landed
         </h2>
-        <ul className="cp-outcomes">
+        <ul className="cp-results">
           <li className="cp-reveal">
-            <span className="cp-runin">Concept:</span> not shipped as one release. We moved the product toward it piece
-            by piece, like smaller avatars in the chat list and the rebuilt desktop.
+            <h3 className="cp-result__title">Concept</h3>
+            <p>Not shipped as one release. The product moved toward it piece by piece.</p>
           </li>
           <li className="cp-reveal">
-            <span className="cp-runin">Desktop:</span> approved in a week, in beta three months later. Attaching a file
-            went from {SIX_TO_ONE}. The responsive rules and desktop patterns live in the design system now.
+            <h3 className="cp-result__title">Desktop</h3>
+            <p>Approved in a week, in beta three months later. Attaching a file went from {SIX_TO_ONE}.</p>
           </li>
           <li className="cp-reveal">
-            <span className="cp-runin">Rewards:</span> approved and handed to development before I left the studio in
-            January 2026.
+            <h3 className="cp-result__title">Rewards</h3>
+            <p>Approved and handed to development before I left in January 2026.</p>
           </li>
         </ul>
       </section>
 
-      {/* Short enough to read whole: its leads mirror the outcomes above. */}
       <section className="cp-chapter cp-col" aria-labelledby="cp-differently">
         <h2 id="cp-differently" className="cp-h cp-reveal">
           What I’d do differently
         </h2>
-        <p className="cp-reveal">I’d agree on success metrics with the PM before starting.</p>
-        <p className="cp-reveal">
-          <span className="cp-runin">For desktop:</span> steps and time for the most common actions, weekly active
-          desktop users, and how many come back the next week.
-        </p>
-        <p className="cp-reveal">
-          <span className="cp-runin">For rewards:</span> the share of wallet holders who open quests, how many start a
-          quest after seeing the payout, how many finish, and how many make their first top&#8209;up after one.
-        </p>
-        <p className="cp-reveal">
-          <span className="cp-runin">Plus one guardrail:</span> rewards farmed by bots and duplicate accounts.
-        </p>
+        <p className="cp-reveal">Agree on success metrics with the PM before starting:</p>
+        <ul className="cp-list cp-reveal">
+          <li>
+            <span className="cp-runin">Desktop:</span> steps and time for common actions, and weekly active users.
+          </li>
+          <li>
+            <span className="cp-runin">Rewards:</span> how many people open quests, start one, finish it and
+            top&nbsp;up.
+          </li>
+          <li>
+            <span className="cp-runin">Guardrail:</span> rewards farmed by bots and duplicate accounts.
+          </li>
+        </ul>
+      </section>
+
+      {/* --- where to get it ----------------------------------------------- */}
+      <section className="cp-chapter cp-col" aria-labelledby="cp-links">
+        <h2 id="cp-links" className="cp-h cp-reveal">
+          Links
+        </h2>
+        <ul className="cp-links">
+          {chumsLinks.map((link) => (
+            <li key={link.href} className="cp-reveal">
+              <a className="cp-link" href={link.href} target="_blank" rel="noopener noreferrer">
+                {/* eslint-disable-next-line @next/next/no-img-element -- a static export: next/image adds nothing here */}
+                <img className="cp-link__icon" src={link.icon} alt="" width={28} height={28} />
+                <span>{link.label}</span>
+                <RowChevron className="cp-link__chevron" />
+              </a>
+            </li>
+          ))}
+        </ul>
       </section>
 
       <footer className="cp-end cp-col cp-reveal">

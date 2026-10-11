@@ -4,118 +4,141 @@ import { createContext, useCallback, useContext, useId, useLayoutEffect, useMemo
 import type { CaseSlot } from '@/data/chumsCase';
 import { ButtonChevron } from '@/components/header/menu/icons';
 import { PhoneMockup } from '@/components/cases/PhoneMockup';
-import { MonitorMockup } from '@/components/showcase/MonitorMockup';
 import { useSmoothScroll } from '@/components/providers/SmoothScrollProvider';
+import { useMagnetic } from '@/hooks/useMagnetic';
+import { useCanHover } from '@/hooks/useMediaQuery';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { zoomOf } from '@/lib/zoom';
 
-type Frame = 'phone' | 'desktop';
+type Pair = { before: CaseSlot; after: CaseSlot };
 
 const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-/**
- * A slot's contents: the file in its device once there is one, until then a
- * quiet stand-in of the same shape, with what goes there written on it.
- */
-export function Screen({ slot, frame }: { slot: CaseSlot; frame: Frame }) {
-  if (!slot.src) {
-    return (
-      <div className={`cp-ph cp-ph--${frame}`} aria-hidden="true">
-        {slot.kind === 'video' && <span className="cp-ph__play" />}
-        <span className="cp-ph__hint">{slot.hint}</span>
-      </div>
-    );
-  }
-  const screen = { framed: true, type: slot.kind, src: slot.src, poster: slot.poster, alt: slot.alt };
-  if (frame === 'phone') {
-    return (
-      <div className="cp-frame cp-frame--phone">
-        <PhoneMockup phone={screen} />
-      </div>
-    );
-  }
-  if (slot.kind === 'video') {
-    return (
-      <div className="cp-frame cp-frame--imac">
-        <MonitorMockup screen={screen} />
-      </div>
-    );
-  }
+/** A file's shape, for the CSS that sizes it (--ar), so its room is kept
+    before it arrives. */
+const shape = (slot: CaseSlot) =>
+  ({ '--ar': slot.w && slot.h ? slot.w / slot.h : 16 / 10 }) as React.CSSProperties;
+
+/** A phone's screen: the file in the page's iPhone frame once there is one,
+    until then a quiet stand-in of the same shape. */
+function PhoneScreen({ slot }: { slot: CaseSlot }) {
+  if (!slot.src) return <div className="cp-ph cp-ph--phone" aria-hidden="true" />;
   return (
-    <div className="cp-frame cp-frame--shot">
-      {/* eslint-disable-next-line @next/next/no-img-element -- a static export: next/image adds nothing here */}
-      <img src={slot.src} alt={slot.alt} loading="lazy" decoding="async" />
+    <div className="cp-frame--phone">
+      <PhoneMockup phone={{ framed: true, type: slot.kind, src: slot.src, poster: slot.poster, alt: slot.alt }} />
     </div>
+  );
+}
+
+/** A screenshot at its own shape, or its stand-in until the file is in. */
+function Shot({ slot }: { slot: CaseSlot }) {
+  if (!slot.src || slot.kind !== 'image') return <div className="cp-shot cp-ph" style={shape(slot)} aria-hidden="true" />;
+  return (
+    // eslint-disable-next-line @next/next/no-img-element -- a static export: next/image adds nothing here
+    <img
+      className="cp-shot"
+      style={shape(slot)}
+      src={slot.src}
+      alt={slot.alt}
+      width={slot.w}
+      height={slot.h}
+      loading="lazy"
+      decoding="async"
+    />
   );
 }
 
 /** A grey card like the ones on the page, holding one screen, with what it
     shows written in its corner (After in ink, Before in grey). */
-function MediaCard({
-  slot,
-  frame,
-  className = '',
-  label,
-}: {
-  slot: CaseSlot;
-  frame: Frame;
-  className?: string;
-  label?: 'Before' | 'After';
-}) {
+function Card({ label, className = '', children }: { label: 'Before' | 'After'; className?: string; children: React.ReactNode }) {
   return (
     <div className={`cp-card ${className}`}>
-      {label && (
-        <span className="cp-card__label" data-after={label === 'After' ? '' : undefined}>
-          {label}
-        </span>
-      )}
-      <Screen slot={slot} frame={frame} />
+      <span className="cp-card__label" data-after={label === 'After' ? '' : undefined}>
+        {label}
+      </span>
+      {children}
     </div>
   );
 }
 
-/** Two screens side by side, the same action before and after. */
-export function BeforeAfter({ before, after }: { before: CaseSlot; after: CaseSlot }) {
+/** Two phones side by side, the same action before and after. */
+export function BeforeAfter({ before, after }: Pair) {
   return (
     <div className="cp-pair cp-reveal">
-      <MediaCard slot={before} frame="phone" className="cp-card--half" label="Before" />
-      <MediaCard slot={after} frame="phone" className="cp-card--half" label="After" />
+      <Card label="Before" className="cp-card--phone">
+        <PhoneScreen slot={before} />
+      </Card>
+      <Card label="After" className="cp-card--phone">
+        <PhoneScreen slot={after} />
+      </Card>
     </div>
   );
 }
 
-/** Before as a strip of screenshots, after as one large recording: the two
-    sides are different media, so they don't pretend to be a pair. */
-export function BeforeGalleryAfter({ before, after }: { before: CaseSlot[]; after: CaseSlot }) {
+/** The desktop app before and after: one screen large, before over after,
+    then smaller pairs, before on the left. */
+export function DesktopCompare({ main, rows }: { main: Pair; rows: Pair[] }) {
   return (
-    <div className="cp-desk">
-      <div className="cp-strip cp-reveal">
-        {before.map((slot, i) => (
-          <MediaCard
-            key={i}
-            slot={slot}
-            frame="desktop"
-            className="cp-card--small"
-            label={i === 0 ? 'Before' : undefined}
-          />
-        ))}
-      </div>
-      <div className="cp-reveal">
-        <MediaCard slot={after} frame="desktop" className="cp-card--wide" label="After" />
-      </div>
-    </div>
-  );
-}
-
-/** Several phone screens on one card. */
-export function PhoneGallery({ slots }: { slots: CaseSlot[] }) {
-  return (
-    <div className="cp-card cp-card--gallery cp-reveal">
-      {slots.map((slot, i) => (
-        <div key={i} className="cp-gallery__item">
-          <Screen slot={slot} frame="phone" />
+    <div className="cp-compare">
+      <Card label="Before" className="cp-card--large cp-reveal">
+        <Shot slot={main.before} />
+      </Card>
+      <Card label="After" className="cp-card--large cp-reveal">
+        <Shot slot={main.after} />
+      </Card>
+      {rows.map((row, i) => (
+        <div key={i} className="cp-pair cp-reveal">
+          <Card label="Before" className="cp-card--shot">
+            <Shot slot={row.before} />
+          </Card>
+          <Card label="After" className="cp-card--shot">
+            <Shot slot={row.after} />
+          </Card>
         </div>
       ))}
     </div>
+  );
+}
+
+/** Phone screens in a row, without a card behind them: the screens alone,
+    all one height whatever their own (each takes width by its shape). */
+export function PhoneRow({ slots }: { slots: CaseSlot[] }) {
+  return (
+    <div className="cp-phones cp-reveal">
+      {slots.map((slot, i) => (
+        <div key={i} className="cp-phone" style={shape(slot)}>
+          <Shot slot={slot} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* --- the glass spheres ----------------------------------------------------- */
+
+/**
+ * One point in a glass sphere that leans a touch toward the cursor. Three
+ * boxes, one job each: the slot stays put and is measured, the middle one
+ * comes in (useReveal), the sphere carries the pull, so a nudge is never
+ * eased over the reveal's transition.
+ */
+export function Orb({ label, children }: { label: string; children: React.ReactNode }) {
+  const slotRef = useRef<HTMLLIElement>(null);
+  const ballRef = useRef<HTMLDivElement>(null);
+  const canHover = useCanHover();
+  const reduced = useReducedMotion();
+  // Faint on purpose: the spheres lean, they don't chase.
+  useMagnetic(slotRef, [{ ref: ballRef, factor: 0.045, max: 12 }], canHover && !reduced);
+  return (
+    <li ref={slotRef} className="cp-orb-slot">
+      <div className="cp-reveal">
+        <div ref={ballRef} className="cp-orb">
+          <span className="cp-orb__label">{label}</span>
+          <span className="sr-only"> — </span>
+          <p className="cp-orb__q">{children}</p>
+        </div>
+      </div>
+    </li>
   );
 }
 
