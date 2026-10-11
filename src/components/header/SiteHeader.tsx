@@ -22,8 +22,9 @@ const IDLE_HIDE_MS = 5000;
 /**
  * First-screen header: the title, and a round button that opens the menu as
  * an iOS-style liquid-glass panel. The panel is not faded in on top of the
- * page — it pours out of the button (see useLiquidMorph) and folds back into
- * it on close.
+ * page — the button's glass disc slips down into it and becomes it (see
+ * useLiquidMorph), leaving the chevron bare while the menu is open; on close
+ * the panel folds back into a disc under the chevron.
  */
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
@@ -38,19 +39,14 @@ export function SiteHeader() {
   const openedBy = useRef<'keyboard' | 'pointer'>('pointer');
   const [refs] = useState<MorphRefs>(() => ({
     root: createRef<HTMLElement>(),
+    blend: createRef<HTMLElement>(),
+    pill: createRef<HTMLElement>(),
     title: createRef<HTMLElement>(),
     button: createRef<HTMLElement>(),
     disc: createRef<HTMLElement>(),
     blob: createRef<HTMLDivElement>(),
     tint: createRef<HTMLDivElement>(),
     content: createRef<HTMLDivElement>(),
-    neckSvg: createRef<SVGSVGElement>(),
-    neck: createRef<SVGPathElement>(),
-    neckFrom: createRef<SVGStopElement>(),
-    neckTo: createRef<SVGStopElement>(),
-    neckGrad: createRef<SVGLinearGradientElement>(),
-    neckClipDisc: createRef<SVGPathElement>(),
-    neckClipBlob: createRef<SVGPathElement>(),
     filter: createRef<SVGFilterElement>(),
     flood: createRef<SVGFEFloodElement>(),
     displace: createRef<SVGFEDisplacementMapElement>(),
@@ -205,60 +201,11 @@ export function SiteHeader() {
         {/* The pill: the title, the 8px gap, the 20px button, 28px each side. */}
         {refract && <PillGlassFilter width={pillW + 84} height={40} />}
 
-        {/* The bridge is drawn in header space (no viewBox: 1 unit = 1px),
-          and with it, while the glass moves, the one outline of the disc, the
-          bridge and the shape together (useLiquidMorph). */}
-        <svg ref={refs.neckSvg} className="lgm-neck" aria-hidden="true" focusable="false">
-          <defs>
-            <linearGradient ref={refs.neckGrad} id="lgm-neck-fill" gradientUnits="userSpaceOnUse">
-              <stop ref={refs.neckFrom} offset="0.25" stopColor="rgba(255,255,255,0.3)" />
-              <stop ref={refs.neckTo} offset="1" stopColor="rgba(247,247,247,0.7)" />
-            </linearGradient>
-            {/* Everything but the disc, and everything but the shape: both
-                are see-through glass, so the bridge runs only between them. */}
-            <clipPath id="lgm-neck-off-disc">
-              <path ref={refs.neckClipDisc} clipRule="evenodd" />
-            </clipPath>
-            <clipPath id="lgm-neck-off-blob">
-              <path ref={refs.neckClipBlob} clipRule="evenodd" />
-            </clipPath>
-            {/* Outside the liquid: the disc, the bridge and the shape as one. */}
-            {/* Region and backdrop sized from JS to the morph's reach. */}
-            <mask id="lgm-off-glass" maskUnits="userSpaceOnUse" x="0" y="0" width="0" height="0">
-              <rect fill="#fff" />
-              <circle data-rim="m-disc" fill="#000" />
-              <path data-rim="m-neck" fill="#000" />
-              <path data-rim="m-blob" fill="#000" />
-            </mask>
-            <filter id="lgm-shade-near" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur stdDeviation="1.5" />
-            </filter>
-            <filter id="lgm-shade-far" x="-100%" y="-100%" width="300%" height="300%">
-              <feGaussianBlur stdDeviation="5" />
-            </filter>
-          </defs>
-          <g clipPath="url(#lgm-neck-off-disc)">
-            <g clipPath="url(#lgm-neck-off-blob)">
-              <path ref={refs.neck} fill="url(#lgm-neck-fill)" />
-            </g>
-          </g>
-          {/* The disc's own hairline and shadow (.glass-disc), and the hairline
-              of the bridge and the shape, drawn only outside the three: no
-              rim across the joins, no shadow of the disc on the glass. */}
-          <g data-rim="g" mask="url(#lgm-off-glass)">
-            <circle data-rim="shade-near" fill="#000" fillOpacity="0.1" filter="url(#lgm-shade-near)" />
-            <circle data-rim="shade-far" fill="#000" fillOpacity="0.05" filter="url(#lgm-shade-far)" />
-            <circle data-rim="r-disc" fill="none" stroke="#000" strokeOpacity="0.1" strokeWidth="1" />
-            <path data-rim="r-neck" fill="none" stroke="#000" strokeWidth="1" />
-            <path data-rim="r-blob" fill="none" stroke="#000" strokeWidth="1" />
-          </g>
-        </svg>
-
         <div ref={refs.blob} className="lgm-blob" aria-hidden="true">
           <div ref={refs.tint} className="lgm-blob__tint" />
         </div>
 
-        <span className="site-header__glass" aria-hidden="true" />
+        <span ref={refs.pill} className="site-header__glass" aria-hidden="true" />
 
         <div className="site-header__row">
           {/* data-blood-keepout: the head's blood stays off the title and the
@@ -307,12 +254,13 @@ export function SiteHeader() {
               if (window.scrollY >= 120) armIdle();
             }}
           >
-            {/* Disc and glyphs are separate layers so the liquid (which starts
-              as a copy of the disc laid over it) runs between them: the
-              chevron stays on top while the button stretches. */}
+            {/* Disc and glyph are separate layers: the disc is hidden while
+              the shape that takes its place moves (useLiquidMorph), and the
+              chevron stays on top of it, bare once the shape has gone. */}
             <span ref={refs.disc} className="lgm-button__disc glass-disc" aria-hidden="true" />
-            <ButtonChevron className="lgm-button__chevron lgm-button__chevron--down" />
-            <ButtonChevron className="lgm-button__chevron lgm-button__chevron--up" />
+            <span className="lgm-chev" aria-hidden="true">
+              <ButtonChevron />
+            </span>
           </button>
         </div>
 
@@ -329,11 +277,22 @@ export function SiteHeader() {
         over the head and anything dark that scrolls under it. A layer of its
         own because the header is a stacking context — inside it the blend
         would only see the header's own transparent backdrop. Same row as
-        above (the spacer stands in for the button), same hide-on-scroll. */}
-      <div className="site-header site-header--blend" data-hidden={hidden && !open ? '' : undefined}>
+        above, same hide-on-scroll. The slot stands in for the button and
+        holds the chevron's second ink, which takes over while no glass is
+        under the chevron (useLiquidMorph): the bare chevron of the open menu
+        stays visible over the head and the dark cards. */}
+      <div
+        ref={refs.blend as React.RefObject<HTMLDivElement | null>}
+        className="site-header site-header--blend"
+        data-hidden={hidden && !open ? '' : undefined}
+      >
         <div className="site-header__row">
           <p className="site-title">{menuTitle}</p>
-          <span className="site-header__button-slot" aria-hidden="true" />
+          <span className="site-header__button-slot" aria-hidden="true">
+            <span className="hb-chev">
+              <ButtonChevron />
+            </span>
+          </span>
         </div>
       </div>
     </>
