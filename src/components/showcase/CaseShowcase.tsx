@@ -118,10 +118,17 @@ export function CaseShowcase() {
             put(i, 'transform', settle[i] > 0.05 ? `translateY(${settle[i].toFixed(2)}px)` : '');
             put(i, 'filter', '');
             put(i, 'opacity', '');
+            put(i, 'will-change', '');
           } else {
             if (!reduced) {
               rise[i] = COVERED_RISE * p;
               put(i, 'transform', `translateY(${(settle[i] - rise[i]).toFixed(2)}px) scale(${1 - COVERED_SCALE * p})`);
+              // A new scale every frame had the card drawn over again at it,
+              // every frame, all the way down. Once it is a pixel out of
+              // focus the drawing at full size, scaled, can't be told apart,
+              // so from there it is drawn once and only scaled; before that
+              // (sharp, close to full size) it is still drawn at its scale.
+              put(i, 'will-change', COVERED_BLUR * p >= 1 ? 'transform' : '');
               put(
                 i,
                 'filter',

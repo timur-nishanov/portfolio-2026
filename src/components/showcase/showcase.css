@@ -30,16 +30,47 @@
   height: clamp(460px, calc((100vw - 40px) * 736 / 1400), calc(100svh / var(--site-zoom, 1) - 40px));
   height: clamp(460px, calc(100cqw * 736 / 1400), calc(100svh / var(--site-zoom, 1) - 40px));
   transform-origin: 50% 0;
-  /* --lift (0..1, CaseShowcase): while this card slides over another, a
-     crisp light edge along its top parts the two — no cast shadow, which
-     read as a grey smear on the grey cards. The card beneath also dims a
-     touch as it recedes (CaseShowcase). */
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, calc(0.9 * var(--lift, 0)));
   border-radius: 24px;
   background: #e6e6e7;
   /* The card will open its case study, and the chip by the arrow says so; a
      hand on top of it would only crowd the chip. */
   cursor: default;
+}
+/* --lift (0..1, CaseShowcase): while this card slides over another, a crisp
+   light edge along its top parts the two — no cast shadow, which read as a
+   grey smear on the grey cards. The card beneath also dims a touch as it
+   recedes (CaseShowcase).
+   It changes every frame of the slide, so it is made cheap to change: not
+   inherited, a new value restyles the card alone instead of everything in it
+   (only the edge takes it, on purpose); and the edge is a layer of its own
+   that only fades, where drawn on the card every step of the slide had the
+   whole card repainted. */
+@property --lift {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 0;
+}
+/* The edge: the top of the card, down past the corners' curve (the edge never
+   reaches lower), with the card's own corners, so it draws the same line.
+   Nothing the card holds reaches up there but the chip, so it sits over the
+   rest (and the link, which draws nothing) and under the notes and the chip;
+   over everything else, it leaves the card's own layers as they were. */
+.cs-card::after {
+  --lift: inherit;
+  content: '';
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 26px;
+  border-radius: inherit;
+  border-bottom-right-radius: 0;
+  border-bottom-left-radius: 0;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  opacity: var(--lift, 0);
+  pointer-events: none;
+  will-change: opacity;
 }
 /* Air between cards: the next one shows below a parked card with a clear
    gap, and the gap also absorbs the ~22px a card trails by as it glides
@@ -70,6 +101,7 @@
 .cs-card:has(.cs-card__notes:hover) .cs-chip__dot {
   opacity: 0;
   transform: scale(0.4);
+  visibility: hidden;
 }
 
 .cs-card__head {
@@ -287,13 +319,20 @@
   color: #1c1c1e;
   opacity: 0;
   transform: scale(0.4);
+  /* Hidden, not only transparent, while it is off: a transparent disc still
+     ran its glass (a backdrop filter, reading and bending what lies behind
+     it) every frame on every card. Visibility turns at the very start of the
+     fade in and the very end of the fade out, so the disc looks the same. */
+  visibility: hidden;
   transition:
     opacity 160ms ease,
-    transform 260ms cubic-bezier(0.3, 1.4, 0.5, 1);
+    transform 260ms cubic-bezier(0.3, 1.4, 0.5, 1),
+    visibility 160ms;
 }
 .cs-chip[data-on] .cs-chip__dot {
   opacity: 1;
   transform: scale(1);
+  visibility: visible;
 }
 .cs-chip[data-on][data-down] .cs-chip__dot {
   transform: scale(0.86);
