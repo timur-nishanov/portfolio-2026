@@ -3,41 +3,57 @@
 import { createContext, useCallback, useContext, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { CaseSlot } from '@/data/chumsCase';
 import { ButtonChevron } from '@/components/header/menu/icons';
-import { PhoneMockup } from '@/components/cases/PhoneMockup';
 import { useSmoothScroll } from '@/components/providers/SmoothScrollProvider';
+import { useLazyVideo } from '@/hooks/useLazyVideo';
 import { useMagnetic } from '@/hooks/useMagnetic';
 import { useCanHover } from '@/hooks/useMediaQuery';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { zoomOf } from '@/lib/zoom';
 
 type Pair = { before: CaseSlot; after: CaseSlot };
+type Frame = 'phone' | 'desktop';
 
 const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-/** A file's shape, for the CSS that sizes it (--ar), so its room is kept
-    before it arrives. */
-const shape = (slot: CaseSlot) =>
-  ({ '--ar': slot.w && slot.h ? slot.w / slot.h : 16 / 10 }) as React.CSSProperties;
+/** A screen's shape, for the CSS that sizes it (--ar): the file's own once it
+    is known, so its room is kept before it arrives; until then a phone's or a
+    desktop window's. */
+const shape = (slot: CaseSlot, frame: Frame) =>
+  ({
+    '--ar': slot.w && slot.h ? slot.w / slot.h : frame === 'phone' ? 9 / 19.5 : 16 / 10,
+  }) as React.CSSProperties;
 
-/** A phone's screen: the file in the page's iPhone frame once there is one,
-    until then a quiet stand-in of the same shape. */
-function PhoneScreen({ slot }: { slot: CaseSlot }) {
-  if (!slot.src) return <div className="cp-ph cp-ph--phone" aria-hidden="true" />;
+function Clip({ slot, className, style }: { slot: CaseSlot; className: string; style: React.CSSProperties }) {
+  const ref = useLazyVideo(slot.src ?? '', slot.poster);
   return (
-    <div className="cp-frame--phone">
-      <PhoneMockup phone={{ framed: true, type: slot.kind, src: slot.src, poster: slot.poster, alt: slot.alt }} />
-    </div>
+    <video
+      ref={ref}
+      className={className}
+      style={style}
+      width={slot.w}
+      height={slot.h}
+      autoPlay
+      muted
+      loop
+      playsInline
+      preload="none"
+      aria-label={slot.alt}
+    />
   );
 }
 
-/** A screenshot at its own shape, or its stand-in until the file is in. */
-function Shot({ slot }: { slot: CaseSlot }) {
-  if (!slot.src || slot.kind !== 'image') return <div className="cp-shot cp-ph" style={shape(slot)} aria-hidden="true" />;
+/** One screen, as it is: no device around it, a phone's corners or a
+    window's. Until its file is in, a lighter shape of the same size. */
+function Shot({ slot, frame }: { slot: CaseSlot; frame: Frame }) {
+  const className = `cp-shot cp-shot--${frame}`;
+  const style = shape(slot, frame);
+  if (!slot.src) return <div className={`${className} cp-ph`} style={style} role="img" aria-label={slot.alt} />;
+  if (slot.kind === 'video') return <Clip slot={slot} className={className} style={style} />;
   return (
     // eslint-disable-next-line @next/next/no-img-element -- a static export: next/image adds nothing here
     <img
-      className="cp-shot"
-      style={shape(slot)}
+      className={className}
+      style={style}
       src={slot.src}
       alt={slot.alt}
       width={slot.w}
@@ -48,69 +64,41 @@ function Shot({ slot }: { slot: CaseSlot }) {
   );
 }
 
-/** A grey card like the ones on the page, holding one screen, with what it
-    shows written in its corner (After in ink, Before in grey). */
-function Card({ label, className = '', children }: { label: 'Before' | 'After'; className?: string; children: React.ReactNode }) {
+/** A grey card like the ones on the page, with what it shows written in its
+    corner when it is one side of a comparison. */
+function Card({ label, className = '', children }: { label?: 'Before' | 'After'; className?: string; children: React.ReactNode }) {
   return (
     <div className={`cp-card ${className}`}>
-      <span className="cp-card__label" data-after={label === 'After' ? '' : undefined}>
-        {label}
-      </span>
+      {label && <span className="cp-card__label">{label}</span>}
       {children}
     </div>
   );
 }
 
-/** Two phones side by side, the same action before and after. */
-export function BeforeAfter({ before, after }: Pair) {
+/** Two cards side by side, the same thing before and after. */
+export function BeforeAfter({ before, after, frame }: Pair & { frame: Frame }) {
   return (
-    <div className="cp-pair cp-reveal">
-      <Card label="Before" className="cp-card--phone">
-        <PhoneScreen slot={before} />
+    <div className={`cp-pair cp-pair--${frame} cp-reveal`}>
+      <Card label="Before">
+        <Shot slot={before} frame={frame} />
       </Card>
-      <Card label="After" className="cp-card--phone">
-        <PhoneScreen slot={after} />
+      <Card label="After">
+        <Shot slot={after} frame={frame} />
       </Card>
     </div>
   );
 }
 
-/** The desktop app before and after: one screen large, before over after,
-    then smaller pairs, before on the left. */
-export function DesktopCompare({ main, rows }: { main: Pair; rows: Pair[] }) {
+/** One wide card: a desktop screen, or several phones in a row. */
+export function Plate({ slots, frame }: { slots: CaseSlot[]; frame: Frame }) {
   return (
-    <div className="cp-compare">
-      <Card label="Before" className="cp-card--large cp-reveal">
-        <Shot slot={main.before} />
-      </Card>
-      <Card label="After" className="cp-card--large cp-reveal">
-        <Shot slot={main.after} />
-      </Card>
-      {rows.map((row, i) => (
-        <div key={i} className="cp-pair cp-reveal">
-          <Card label="Before" className="cp-card--shot">
-            <Shot slot={row.before} />
-          </Card>
-          <Card label="After" className="cp-card--shot">
-            <Shot slot={row.after} />
-          </Card>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-/** Phone screens in a row, without a card behind them: the screens alone,
-    all one height whatever their own (each takes width by its shape). */
-export function PhoneRow({ slots }: { slots: CaseSlot[] }) {
-  return (
-    <div className="cp-phones cp-reveal">
-      {slots.map((slot, i) => (
-        <div key={i} className="cp-phone" style={shape(slot)}>
-          <Shot slot={slot} />
-        </div>
-      ))}
-    </div>
+    <Card className={`cp-plate cp-plate--${frame} cp-reveal`}>
+      <div className="cp-plate__row" style={{ '--n': slots.length } as React.CSSProperties}>
+        {slots.map((slot, i) => (
+          <Shot key={i} slot={slot} frame={frame} />
+        ))}
+      </div>
+    </Card>
   );
 }
 
@@ -122,7 +110,7 @@ export function PhoneRow({ slots }: { slots: CaseSlot[] }) {
  * comes in (useReveal), the sphere carries the pull, so a nudge is never
  * eased over the reveal's transition.
  */
-export function Orb({ label, children }: { label: string; children: React.ReactNode }) {
+export function Orb({ title, children }: { title: string; children: React.ReactNode }) {
   const slotRef = useRef<HTMLLIElement>(null);
   const ballRef = useRef<HTMLDivElement>(null);
   const canHover = useCanHover();
@@ -133,9 +121,8 @@ export function Orb({ label, children }: { label: string; children: React.ReactN
     <li ref={slotRef} className="cp-orb-slot">
       <div className="cp-reveal">
         <div ref={ballRef} className="cp-orb">
-          <span className="cp-orb__label">{label}</span>
-          <span className="sr-only"> — </span>
-          <p className="cp-orb__q">{children}</p>
+          <p className="cp-orb__q">{title}</p>
+          <p className="cp-orb__label">{children}</p>
         </div>
       </div>
     </li>

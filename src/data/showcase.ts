@@ -38,9 +38,9 @@ export const showcase: ShowcaseCase[] = [
     // \u00a0 (no-break space) keeps "6 steps to 1." on one line and every
     // note's last two words together, wherever the line breaks fall.
     notes: [
-      'Tokens, NFTs and dApps lived inside the chat, but users couldn’t find them. The desktop client reused mobile components and broke when\u00a0resized.',
-      'Rebuilt desktop around drag-and-drop and native context menus. Attaching a file went from 6\u00a0steps\u00a0to\u00a01.',
-      'Led design for a year and mentored a junior designer. The new visual concept you see here is\u00a0mine.',
+      'The desktop app was the mobile app stretched across a big window. Quests were rooms in the chat list, and nothing said what you’d\u00a0get.',
+      'Rebuilt desktop and shipped it to beta in three months. Attaching a file went from 6\u00a0steps\u00a0to\u00a01.',
+      'Led design for a year and mentored a junior designer. Together we designed threads for an AI assistant and a rewards system. The concept you see here is\u00a0mine.',
     ],
   },
   {
