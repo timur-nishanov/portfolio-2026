@@ -29,13 +29,27 @@
 }
 
 /* --- the text ------------------------------------------------------------- */
-/* The text's own layer the size of the stage: it melts away under the top
-   edge, as on the reference. The diplomas sit above it, untouched. */
+/* The text melts away under the top edge, as on the reference: across the
+   top of the stage the page's colour comes down over it, solid at the very
+   edge and clear a little lower, and the rising text goes under it. The
+   diplomas sit above, untouched. This used to be a mask on the text's box,
+   which looks the same over the plain page, but made the browser draw the
+   whole stage again off screen and blend it back in every frame it was in
+   view — the costliest thing in the section, and more so at 2x. The strip is
+   one small layer that never changes. It counts on the page's plain
+   background (--bg) behind the text, as everywhere on this page. */
 .aw__copy {
   position: absolute;
   inset: 0;
-  -webkit-mask-image: linear-gradient(to bottom, transparent 4svh, #000 16svh);
-  mask-image: linear-gradient(to bottom, transparent 4svh, #000 16svh);
+}
+.aw__copy::after {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 16svh;
+  background: linear-gradient(to bottom, var(--bg, #f7f7f5) 4svh, rgba(247, 247, 245, 0) 16svh);
+  /* The text under it stays a link and selectable, as it was under the mask. */
+  pointer-events: none;
 }
 .aw__text {
   position: absolute;
@@ -130,8 +144,9 @@
   }
   .aw__copy {
     position: static;
-    -webkit-mask-image: none;
-    mask-image: none;
+  }
+  .aw__copy::after {
+    content: none;
   }
   .aw__text {
     position: static;

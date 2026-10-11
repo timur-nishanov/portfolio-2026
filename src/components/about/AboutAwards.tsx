@@ -94,9 +94,17 @@ export function AboutAwards() {
     const Timeline = (globalThis as { ViewTimeline?: ViewTimelineCtor }).ViewTimeline;
     if (Timeline && typeof CSS !== 'undefined' && typeof CSS.px === 'function') {
       let anims: Animation[] = [];
+      let sampled = ''; // the screen the keyframes were last sampled for
       const build = () => {
-        anims.forEach((a) => a.cancel());
         measure();
+        // A phone fires resize whenever its toolbar slides in or out as the
+        // page scrolls, but the stage (100svh) and the curves stay the same:
+        // resampling and restarting seven animations then is only a stall in
+        // the middle of the scroll.
+        const screen = `${vh} ${phone}`;
+        if (screen === sampled) return;
+        sampled = screen;
+        anims.forEach((a) => a.cancel());
         const max = span();
         const frames = Array.from({ length: SAMPLES + 1 }, (_, k) => at((max * k) / SAMPLES));
         const opts = {

@@ -21,6 +21,8 @@ export function useLazyVideo(src: string, poster?: string) {
     if (!v) return;
 
     let attached = false;
+    // Whether it is on screen right now, as the play observer last saw it.
+    let visible = false;
     const attach = () => {
       if (attached) return;
       attached = true;
@@ -29,6 +31,13 @@ export function useLazyVideo(src: string, poster?: string) {
       if (poster) v.poster = poster;
       v.src = src;
       v.load();
+      // autoPlay in the markup starts a clip as soon as it can play, seen or
+      // not: one attached on approach, still below the screen, ran unseen
+      // until it had come on screen and gone again (in the cases, three or
+      // four clips decoding at once where one or two can be seen). Pausing
+      // now takes that autoplay back without stopping it from buffering; the
+      // play observer starts it once it is actually on screen.
+      if (!visible) v.pause();
     };
 
     // Start fetching before it arrives, so it is not blank on entry.
@@ -47,6 +56,7 @@ export function useLazyVideo(src: string, poster?: string) {
     // both wasted decode work and wasted battery.
     const play = new IntersectionObserver(
       ([e]) => {
+        visible = e.isIntersecting;
         if (e.isIntersecting) {
           attach();
           v.play().catch(() => {});
