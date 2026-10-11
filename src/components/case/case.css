@@ -269,15 +269,13 @@
 .cp-lead,
 .cp-sub,
 .cp-result__title,
-.cp-orb__q,
 .cp-end__link {
   font-size: 20px;
   line-height: 28px;
   letter-spacing: -0.005em;
   color: var(--cp-ink);
 }
-.cp-sub,
-.cp-orb__q {
+.cp-sub {
   text-wrap: balance;
 }
 /* 17 is the article's. A list line's lead-in is in full ink. */
@@ -288,7 +286,6 @@
 .cp-facts dt,
 .cp-toggle,
 .cp-card__label,
-.cp-orb__label,
 .cp-map,
 .cp-map__q {
   font-size: 15px;
@@ -738,101 +735,6 @@
   content: none;
 }
 
-/* --- the three moments ---------------------------------------------------- */
-/* Three glass spheres in a row, a touch over one another, so each shows
-   through the next. Lit rather than refracting: on the flat page there is
-   nothing behind them to bend, and three large backdrop filters would be
-   paid for on every frame of the scroll. */
-.cp-orbs {
-  display: flex;
-  justify-content: center;
-}
-.cp-orb-slot {
-  flex: none;
-  width: min(380px, 34%);
-}
-.cp-orb-slot + .cp-orb-slot {
-  margin-left: -1.6%;
-}
-/* Their shadows fall well below them: the text after keeps clear of it. */
-.cp-chapter > .cp-wide:has(> .cp-orbs) + .cp-col {
-  margin-top: calc(var(--cp-step) + 16px);
-}
-.cp-orb {
-  position: relative;
-  isolation: isolate;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  aspect-ratio: 1;
-  padding: 0 16%;
-  border-radius: 50%;
-  text-align: center;
-  /* Clear in the middle and denser toward the edge, where a sphere turns
-     away; a thin bright line on the edge itself, and the light it gathers
-     low inside. */
-  background:
-    radial-gradient(46% 20% at 50% 90%, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0) 100%),
-    radial-gradient(
-      closest-side,
-      rgba(255, 255, 255, 0) 0,
-      rgba(255, 255, 255, 0.06) 55%,
-      rgba(160, 168, 186, 0.1) 78%,
-      rgba(128, 136, 156, 0.22) 93%,
-      rgba(128, 136, 156, 0.3) 97.6%,
-      rgba(255, 255, 255, 0.95) 100%
-    );
-  /* The rim: lit up and to the left, softer opposite, with the faint cool
-     and warm fringes of glass; then its shadow, close and far. */
-  box-shadow:
-    inset 1.5px 2px 2px -0.5px rgba(255, 255, 255, 1),
-    inset -1.5px -2px 2px -0.5px rgba(255, 255, 255, 0.85),
-    inset 3px 4px 6px -2px rgba(140, 180, 255, 0.32),
-    inset -3px -4px 6px -2px rgba(255, 180, 140, 0.26),
-    0 28px 50px -24px rgba(30, 38, 58, 0.3),
-    0 60px 90px -40px rgba(30, 38, 58, 0.16);
-}
-/* The light along the rim: a bright arc up and to the left, a fainter one
-   low on the right. */
-.cp-orb::before {
-  content: '';
-  position: absolute;
-  inset: 3%;
-  z-index: -1;
-  border-radius: 50%;
-  background: radial-gradient(farthest-side, transparent 94%, rgba(255, 255, 255, 0.95) 98.5%, transparent 100%);
-  --cp-arcs: conic-gradient(
-    transparent 0deg,
-    rgba(0, 0, 0, 0.45) 120deg,
-    transparent 165deg,
-    transparent 205deg,
-    #000 260deg,
-    #000 300deg,
-    transparent 350deg
-  );
-  -webkit-mask: var(--cp-arcs);
-  mask: var(--cp-arcs);
-  filter: blur(0.5px);
-}
-/* And the window it reflects. */
-.cp-orb::after {
-  content: '';
-  position: absolute;
-  left: 21%;
-  top: 12%;
-  z-index: -1;
-  width: 19%;
-  height: 10%;
-  border-radius: 50%;
-  background: radial-gradient(closest-side, #fff, rgba(255, 255, 255, 0.7) 45%, rgba(255, 255, 255, 0));
-  transform: rotate(-34deg);
-  filter: blur(0.8px);
-}
-.cp-orb__label {
-  margin-top: 8px;
-}
-
 /* --- links ---------------------------------------------------------------- */
 /* Where to get the app: the menu's rows, larger. Each logo's disc on the
    column's edge, a soft pill under the row and its arrow on hover. */
@@ -1077,28 +979,6 @@
   .cp-map__branches {
     padding-top: 0;
   }
-  /* The spheres one under another, stepping either side of the centre line
-     and over one another. */
-  .cp-orbs {
-    flex-direction: column;
-    align-items: center;
-  }
-  .cp-orb-slot {
-    width: min(76%, 340px);
-  }
-  .cp-orb-slot + .cp-orb-slot {
-    margin: -40px 0 0;
-  }
-  .cp-orb-slot:nth-child(odd) {
-    translate: -16% 0;
-  }
-  .cp-orb-slot:nth-child(even) {
-    translate: 16% 0;
-  }
-  .cp-orb__q {
-    font-size: 17px;
-    line-height: 26px;
-  }
 }
 
 /* --- phones --------------------------------------------------------------- */
@@ -1138,13 +1018,6 @@
   }
   .cp-plate--phone .cp-shot {
     width: calc(50% - 6px);
-  }
-}
-
-/* Without colours of their own, the spheres keep an outline. */
-@media (forced-colors: active) {
-  .cp-orb {
-    border: 1px solid CanvasText;
   }
 }
 

@@ -5,9 +5,6 @@ import type { CaseSlot } from '@/data/chumsCase';
 import { ButtonChevron } from '@/components/header/menu/icons';
 import { useSmoothScroll } from '@/components/providers/SmoothScrollProvider';
 import { useLazyVideo } from '@/hooks/useLazyVideo';
-import { useMagnetic } from '@/hooks/useMagnetic';
-import { useCanHover } from '@/hooks/useMediaQuery';
-import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { zoomOf } from '@/lib/zoom';
 
 type Pair = { before: CaseSlot; after: CaseSlot };
@@ -99,33 +96,6 @@ export function Plate({ slots, frame }: { slots: CaseSlot[]; frame: Frame }) {
         ))}
       </div>
     </Card>
-  );
-}
-
-/* --- the glass spheres ----------------------------------------------------- */
-
-/**
- * One point in a glass sphere that leans a touch toward the cursor. Three
- * boxes, one job each: the slot stays put and is measured, the middle one
- * comes in (useReveal), the sphere carries the pull, so a nudge is never
- * eased over the reveal's transition.
- */
-export function Orb({ title, children }: { title: string; children: React.ReactNode }) {
-  const slotRef = useRef<HTMLLIElement>(null);
-  const ballRef = useRef<HTMLDivElement>(null);
-  const canHover = useCanHover();
-  const reduced = useReducedMotion();
-  // Faint on purpose: the spheres lean, they don't chase.
-  useMagnetic(slotRef, [{ ref: ballRef, factor: 0.045, max: 12 }], canHover && !reduced);
-  return (
-    <li ref={slotRef} className="cp-orb-slot">
-      <div className="cp-reveal">
-        <div ref={ballRef} className="cp-orb">
-          <p className="cp-orb__q">{title}</p>
-          <p className="cp-orb__label">{children}</p>
-        </div>
-      </div>
-    </li>
   );
 }
 

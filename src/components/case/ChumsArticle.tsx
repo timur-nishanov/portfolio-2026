@@ -4,7 +4,8 @@ import { useRef } from 'react';
 import { chumsLinks, chumsMedia as media } from '@/data/chumsCase';
 import { ButtonChevron, RowChevron } from '@/components/header/menu/icons';
 import { BackLink } from './BackLink';
-import { BeforeAfter, Chapter, Fold, Orb, Plate, ReadMore, useReveal } from './blocks';
+import { BeforeAfter, Chapter, Fold, Plate, ReadMore, useReveal } from './blocks';
+import { Orbs } from './Orbs';
 import { QuestMap } from './QuestMap';
 import type { ArticleProps } from './registry';
 
@@ -223,15 +224,19 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
           </p>
         </div>
         <div className="cp-wide">
-          <ol className="cp-orbs">
-            <Orb title="Can people find it?">Quests moved from the chat list to the Explore tab.</Orb>
-            <Orb title="Do they get the rules?">
-              Every screen starts with a short explanation, and a checklist walks you through the first steps.
-            </Orb>
-            <Orb title="Do they know what they’ll earn?">
-              One screen shows your points, the time left in the season and what each room gives.
-            </Orb>
-          </ol>
+          <Orbs
+            items={[
+              { title: 'Can people find it?', text: 'Quests moved from the chat list to the Explore tab.' },
+              {
+                title: 'Do they get the rules?',
+                text: 'Every screen starts with a short explanation, and a checklist walks you through the first steps.',
+              },
+              {
+                title: 'Do they know what they’ll earn?',
+                text: 'One screen shows your points, the time left in the season and what each room gives.',
+              },
+            ]}
+          />
         </div>
         <div className="cp-wide">
           <Plate slots={media.rewards} frame="phone" />
