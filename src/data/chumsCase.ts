@@ -1,54 +1,55 @@
+import { chumsShots, type CaseShot } from './chumsShots';
+
 /**
- * The media in the Chums case study (ChumsArticle). Every slot is a card with
- * a placeholder until it gets a `src`: put the file in /public and its path
- * here, and the card draws it in its device — a phone in the iPhone frame, a
- * desktop recording on the iMac, a desktop screenshot as is. Videos play
- * muted, looped and inline, and load only as they come near.
+ * The media in the Chums case study (ChumsArticle). A slot with a `src` draws
+ * its file; one without is a quiet stand-in of the same shape until the file
+ * is in — put it in /public and its path here. Videos play muted, looped and
+ * inline, and load only as they come near.
  */
 export type CaseSlot = {
   kind: 'video' | 'image';
   src?: string;
   poster?: string;
   alt: string;
-  /** What goes here — shown on the placeholder until the file is in. */
-  hint: string;
+  /** The file's own size, so its room is kept before it arrives. */
+  w?: number;
+  h?: number;
 };
 
+const shot = (s: CaseShot): CaseSlot => ({ kind: 'image', src: s.src, alt: s.alt, w: s.w, h: s.h });
+
+type Pair = { before: CaseSlot; after: CaseSlot };
+
 type ChumsMedia = {
-  concept: { before: CaseSlot; after: CaseSlot };
-  desktop: { before: CaseSlot[]; after: CaseSlot };
+  concept: Pair;
+  /** One large pair, then rows of smaller ones. */
+  desktop: { main: Pair; rows: Pair[] };
   rewards: CaseSlot[];
 };
 
 export const chumsMedia: ChumsMedia = {
   concept: {
-    before: {
-      kind: 'video',
-      alt: 'The old Chums app: signing in to a server takes a while',
-      hint: 'Video · the old app, signing in to a server',
-    },
-    after: {
-      kind: 'video',
-      alt: 'The concept: the same sign-in, in a sheet over the chat list',
-      hint: 'Video · the concept, same action',
-    },
+    before: { kind: 'video', alt: 'The old Chums app: signing in to a server takes a while' },
+    after: { kind: 'video', alt: 'The concept: the same sign-in, in a sheet over the chat list' },
   },
   desktop: {
-    before: [
-      { kind: 'image', alt: 'The old desktop client', hint: 'Screenshot · old desktop client' },
-      { kind: 'image', alt: 'The old desktop client', hint: 'Screenshot · old desktop client' },
-      { kind: 'image', alt: 'The old desktop client', hint: 'Screenshot · old desktop client' },
+    main: { before: shot(chumsShots.beforeEmoji), after: shot(chumsShots.afterEmoji) },
+    rows: [
+      { before: shot(chumsShots.beforeContacts), after: shot(chumsShots.afterContacts) },
+      { before: shot(chumsShots.beforeRecoveryKey), after: shot(chumsShots.afterRecoveryKey) },
     ],
-    after: {
-      kind: 'video',
-      alt: 'The rebuilt desktop client',
-      hint: 'Video · the rebuilt desktop client',
-    },
   },
   rewards: [
-    { kind: 'image', alt: 'A Chums rewards screen', hint: 'Image · rewards screen' },
-    { kind: 'image', alt: 'A Chums rewards screen', hint: 'Image · rewards screen' },
-    { kind: 'image', alt: 'A Chums rewards screen', hint: 'Image · rewards screen' },
-    { kind: 'image', alt: 'A Chums rewards screen', hint: 'Image · rewards screen' },
+    shot(chumsShots.chatList),
+    shot(chumsShots.quests),
+    shot(chumsShots.walletOnboarding),
+    shot(chumsShots.stats),
   ],
 };
+
+/** Where to get the app, at the case's end, each with its logo's disc. */
+export const chumsLinks = [
+  { label: 'Google Play', href: 'https://play.google.com/store/apps/details?id=rocks.bf.chums', icon: '/icons/google-play.svg' },
+  { label: 'chums.chat', href: 'https://chums.chat/#download', icon: '/logos/chums.webp' },
+  { label: 'App Store', href: 'https://apps.apple.com/no/app/chums-chat/id6458741197', icon: '/icons/app-store.svg' },
+];
