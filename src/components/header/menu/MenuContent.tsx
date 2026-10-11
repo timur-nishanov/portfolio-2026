@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useImperativeHandle, useRef, useState, type Ref, type RefObject } from 'react';
+import { memo, useCallback, useEffect, useImperativeHandle, useRef, useState, type Ref, type RefObject } from 'react';
 import { menuLinks, menuSections } from '@/data/menu';
 import { useSmoothScroll } from '@/components/providers/SmoothScrollProvider';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
@@ -49,7 +49,7 @@ async function copyText(value: string) {
   }
 }
 
-export function MenuContent({ id, labelledBy, open, contentRef, handleRef, onClose }: Props) {
+function MenuContentInner({ id, labelledBy, open, contentRef, handleRef, onClose }: Props) {
   const { scrollTo } = useSmoothScroll();
   const reduced = useReducedMotion();
   const itemsRef = useRef<HTMLElement[]>([]);
@@ -354,3 +354,8 @@ export function MenuContent({ id, labelledBy, open, contentRef, handleRef, onClo
     </>
   );
 }
+
+// Memoised: the header re-renders whenever the bar hides or comes back on a
+// scroll, and none of that is the menu's business — its props are stable, so
+// the rows are not re-rendered in the very frame the scroll turns.
+export const MenuContent = memo(MenuContentInner);

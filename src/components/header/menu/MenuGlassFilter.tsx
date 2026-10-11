@@ -1,4 +1,4 @@
-import type { Ref } from 'react';
+import { memo, type Ref } from 'react';
 
 export const MENU_GLASS_FILTER_ID = 'lg-menu';
 
@@ -51,7 +51,7 @@ type Props = {
  * the blur. Region and flood are in user space (= the element's own px), set
  * from JS; the values here are only the resting panel's.
  */
-export function MenuGlassFilter({ filterRef, floodRef, displaceRef, frostRef, saturateRef }: Props) {
+function MenuGlassFilterInner({ filterRef, floodRef, displaceRef, frostRef, saturateRef }: Props) {
   return (
     <svg
       width="0"
@@ -115,3 +115,7 @@ export function MenuGlassFilter({ filterRef, floodRef, displaceRef, frostRef, sa
     </svg>
   );
 }
+
+// Memoised for the same reason as the menu (MenuContent): its props are refs
+// that never change, so a header re-render on a scroll need not touch it.
+export const MenuGlassFilter = memo(MenuGlassFilterInner);
