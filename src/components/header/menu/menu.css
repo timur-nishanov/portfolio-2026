@@ -82,8 +82,9 @@
 /* The glass pill behind the title and the button, shown only over the
    cases (data-glass, SiteHeader) — over the hero they sit on the page. A
    frosted veil with the menu panel's rim and top sheen; it rises in with the
-   bar and fades away when the menu opens (the panel takes over). Width: the
-   title, the 8px gap, the 20px button, and 14px of air each side. */
+   bar and stays while the menu is open, as the title row's backing (the disc
+   still leaves the chevron bare). Width: the title, the 8px gap, the 20px
+   button, and 14px of air each side. */
 .site-header__glass {
   position: absolute;
   left: 50%;
@@ -218,6 +219,15 @@
     background-color: rgba(255, 255, 255, 0.72);
   }
 }
+/* Reduced transparency: the disc is solid (globals.css), so its hover is
+   solid too. The translucent white let dark content through (the disc went
+   darker on hover, not lighter), and the shape that takes its place, tinted
+   with it on the solid panel colour, came out white for the whole flight. */
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-transparency: reduce) {
+  .lgm-button:hover .lgm-button__disc {
+    background-color: #f6f6f7;
+  }
+}
 /* The focus ring is drawn above the glass (z 4), not as the button's
    outline, which is painted under it: on an Escape close focus comes back
    to the button while the panel is still folding over it. */
@@ -293,16 +303,39 @@
   transition-duration: 80ms;
 }
 /* Reduced motion (useLiquidMorph): no morph, the disc fades out from under
-   the chevron as the panel fades in, and the chevron's two inks crossfade
-   with it. */
+   the chevron as the panel fades in, and back as it fades out. */
 .site-header[data-menu-fade] .lgm-button__disc {
   transition:
     opacity 160ms ease,
     background-color 160ms ease;
 }
-.site-header[data-menu-fade] .lgm-chev,
-.site-header[data-menu-fade] + .site-header--blend .hb-chev {
-  transition: opacity 160ms ease;
+/* The chevron's two inks swap at once, never crossfade: over dark content
+   the fading disc passes through a mid grey that the blend ink all but
+   matches while the dark ink is already faint, and the glyph went. Opening,
+   the light ink takes over once the disc has faded enough (80ms); closing,
+   the dark ink comes back as soon as the disc is light enough (35ms). Keyed
+   on where the chevron is going, which flips in the same pass as the ink.
+   On the pill there is nothing to swap: the chevron keeps its own ink. */
+.site-header[data-menu-fade] .lgm-button[data-chevron='up'] .lgm-chev,
+.site-header[data-menu-fade] + .site-header--blend[data-chevron='up'] .hb-chev {
+  transition: opacity 0s linear 80ms;
+}
+.site-header[data-menu-fade] .lgm-button[data-chevron='down'] .lgm-chev,
+.site-header[data-menu-fade] + .site-header--blend[data-chevron='down'] .hb-chev {
+  transition: opacity 0s linear 35ms;
+}
+
+/* Forced colors (high contrast): the blend layer's copy is inverted and
+   blended by difference, which turns the forced CanvasText into Canvas —
+   black on black in a dark theme — and an SVG gets no backplate, so the
+   open menu had no chevron at all. Here it stays in its own system ink. */
+@media (forced-colors: active) {
+  .lgm-chev {
+    opacity: 1;
+  }
+  .hb-chev {
+    display: none;
+  }
 }
 
 /* --- the glass blob --------------------------------------------------------
@@ -599,7 +632,8 @@
     transform: none;
     transition: opacity 140ms ease;
   }
-  /* The chevron flips at once (its inks still crossfade, data-menu-fade). */
+  /* The chevron flips at once (its inks still swap on the disc's fade,
+     data-menu-fade). */
   .lgm-highlight,
   .lgm-item__trail > svg,
   .site-header .lgm-chev,

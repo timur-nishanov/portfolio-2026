@@ -114,7 +114,10 @@ export function SiteHeader() {
 
   // Over the cases the bar comes back on a glass pill, so the title and the
   // button read cleanly against whatever card is under them; over the hero
-  // they sit on the page as drawn. The pill's width follows the title.
+  // they sit on the page as drawn. The pill's width follows the title. It
+  // stays while the menu is open: it is the title row's backing, not the
+  // button's plate (the disc still leaves the chevron bare), and without it
+  // the title and the chevron printed straight over a card's heading.
   const [overContent, setOverContent] = useState(false);
   const [pillW, setPillW] = useState(0);
   useEffect(() => {
@@ -188,7 +191,7 @@ export function SiteHeader() {
         className="site-header"
         data-refract={refract ? '' : undefined}
         data-hidden={hidden && !open ? '' : undefined}
-        data-glass={overContent && !open ? '' : undefined}
+        data-glass={overContent ? '' : undefined}
         style={{ '--title-w': `${pillW}px` } as React.CSSProperties}
       >
         <MenuGlassFilter

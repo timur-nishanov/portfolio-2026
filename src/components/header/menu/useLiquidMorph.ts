@@ -14,8 +14,8 @@ export type MorphRefs = {
   /** The blend layer beside the header (SiteHeader): it draws the title, and
       the chevron's second ink for when no glass is under it. */
   blend: RefObject<HTMLElement | null>;
-  /** The bar's glass pill (shown over the cases, closed only): while enough
-      of it is under the chevron, the chevron keeps its own ink. */
+  /** The bar's glass pill (shown over the cases, the menu open or not):
+      while enough of it is under the chevron, the chevron keeps its own ink. */
   pill: RefObject<HTMLElement | null>;
   /** The title beside the button: the glass must not slide under it. */
   title: RefObject<HTMLElement | null>;
@@ -93,13 +93,14 @@ const REVEAL_INSET = 15;
 // the filter region pad: frost tail (3σ) plus the farthest the rim samples.
 const REFRACT_SCALE = 110;
 const FILTER_PAD = 48;
-// The bar's pill fades out as the menu opens and back in as it closes (menu.css,
-// 260ms), so for a moment the bare chevron sits on a part-faded pill. Over the
-// black cards the chevron's own ink and the blend ink read about equally well
-// at two thirds of the pill's opacity (both ~55/255 off it), and the blend ink
-// all but vanished on the full pill (~40). So the chevron keeps its own ink
-// while the pill is at least this opaque, and switches at once: a crossfade
-// between the two inks dims both.
+// Over the cases the bar's pill stays under the chevron, open or closed, and
+// the chevron keeps its own ink on it: the blend ink all but vanished on the
+// full pill (~40/255 off it). But the pill fades in or out (menu.css, 260ms)
+// whenever the bar crosses the hero's edge, the menu open or not, so for a
+// moment the bare chevron sits on a part-faded pill. Over the black cards the
+// two inks read about equally well at two thirds of the pill's opacity (both
+// ~55 off it). So the chevron keeps its own ink while the pill is at least
+// this opaque, and switches at once: a crossfade between the two dims both.
 const PILL_INK_AT = 0.66;
 
 type Rgba = [number, number, number, number];
@@ -158,6 +159,9 @@ function createEngine(refs: MorphRefs) {
   let docked = true;
   // The rows have been let in for this opening (see REVEAL_INSET).
   let revealed = false;
+  // This close calls off an opening whose rows never came in (a quick double
+  // click): there is nothing to fade out first, so it folds straight back.
+  let aborted = false;
   // How much of the chevron is drawn in its own ink (on glass) rather than in
   // the blend layer's (bare, over whatever the page shows); -1 = not yet set.
   let ink = -1;
@@ -295,23 +299,33 @@ function createEngine(refs: MorphRefs) {
     }
   };
 
+  // Enough of the bar's pill is under the out-of-dock chevron for it to keep
+  // its own ink (see PILL_INK_AT).
+  const onPill = () => {
+    const pill = refs.pill.current;
+    return !docked && !!pill && parseFloat(getComputedStyle(pill).opacity) >= PILL_INK_AT;
+  };
+
   const render = () => {
     const blob = refs.blob.current;
     const root = refs.root.current;
     const disc = refs.disc.current;
     if (!blob || !root) return;
     if (reduced) {
+      // Open, the chevron is bare once the disc has faded (menu.css times the
+      // swap), unless it sits on the pill.
+      const ownInk = docked || onPill();
       placeResting();
+      setInk(ownInk ? 1 : 0);
       return;
     }
     // Reads first, so neither forces a style pass of its own. On its way back
     // the glass takes on the disc's tint as it is right now, so a hover that
     // ends (or starts) mid-flight lands in the right glass; and how much of
-    // the bar's pill is under the chevron (it fades with the menu).
+    // the bar's pill is under the chevron (it fades at the hero's edge).
     const returning = target === 0 && !docked && !!disc;
     if (returning) btnColor = parseRgba(getComputedStyle(disc).backgroundColor, btnColor);
-    const pill = refs.pill.current;
-    const onPill = !docked && !!pill && parseFloat(getComputedStyle(pill).opacity) >= PILL_INK_AT;
+    const pilled = onPill();
     if (returning && refs.tint.current) refs.tint.current.style.background = css(btnColor);
     // The swell is the disc's alone: the chevron and the hit area never move.
     if (disc) disc.style.transform = Math.abs(bump.value) > 5e-4 ? `scale(${(1 + bump.value).toFixed(4)})` : '';
@@ -393,10 +407,10 @@ function createEngine(refs: MorphRefs) {
 
     // The chevron keeps its own ink while glass is under it and hands over to
     // the blend layer's as the shape's top edge slides down past it (and back
-    // as the returning drop rises under it), or as the pill fades (see
-    // PILL_INK_AT). Over the light page the two inks are the same colour, so
-    // only over dark content is there anything to see.
-    setInk(onPill ? 1 : 1 - smoothstep(B.cy - 3, B.cy + 4, top));
+    // as the returning drop rises under it) — unless it sits on the pill, which
+    // is glass too (see PILL_INK_AT). Over the light page the two inks are the
+    // same colour, so only over dark content is there anything to see.
+    setInk(pilled ? 1 : 1 - smoothstep(B.cy - 3, B.cy + 4, top));
   };
 
   const tick = (now: number) => {
@@ -419,11 +433,17 @@ function createEngine(refs: MorphRefs) {
       const pastTitle = leftX >= gateX - 2 || e.left.value <= 0.05;
       for (const k of EDGES) {
         // Until its delay has passed an edge keeps chasing the old target, so
-        // a reversal mid-flight never snaps.
-        let go = since >= motion[k].delay;
+        // a reversal mid-flight never snaps. A close that calls off an opening
+        // has no rows to wait for: every edge turns back at once (keeping its
+        // speed, so nothing snaps), and the top edge, while the title holds
+        // it, brakes where it is instead of carrying on towards the panel — an
+        // empty slab dropped below the bar, and the side edge, chasing the open
+        // panel unchecked by its own gate, slid under the title.
+        let go = aborted || since >= motion[k].delay;
         if (target === 1 && k === 'left' && !belowTitle) go = false;
         if (target === 0 && k === 'top' && !pastTitle) go = false;
-        Object.assign(e[k], stepSpring(e[k], go ? target : previous, motion[k].spring, dt / steps));
+        const to = go ? target : aborted ? e[k].value : previous;
+        Object.assign(e[k], stepSpring(e[k], to, motion[k].spring, dt / steps));
         // Closing, an edge stops dead on the disc's rect instead of
         // overshooting through it, so the drop lands exactly on the disc.
         if (target === 0 && e[k].value < 0) e[k].value = e[k].velocity = 0;
@@ -470,6 +490,23 @@ function createEngine(refs: MorphRefs) {
   const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(onResize) : null;
   if (refs.content.current) ro?.observe(refs.content.current);
 
+  // The pill can fade in or out under the open menu's chevron (the bar
+  // crossing the hero's edge) with nothing else moving: the ink follows it
+  // frame by frame until the fade is over. While the shape moves, its own
+  // frames already do.
+  let pillRaf = 0;
+  const followPill = () => {
+    pillRaf = 0;
+    if (docked) return;
+    if (!raf) render();
+    if (refs.pill.current?.getAnimations().length) pillRaf = requestAnimationFrame(followPill);
+  };
+  const watchPill = () => {
+    if (!pillRaf && !docked) pillRaf = requestAnimationFrame(followPill);
+  };
+  const pill = refs.pill.current;
+  pill?.addEventListener('transitionrun', watchPill);
+
   return {
     set(open: boolean, isReduced: boolean) {
       const next = open ? 1 : 0;
@@ -479,8 +516,9 @@ function createEngine(refs: MorphRefs) {
       if (isReduced) {
         // Reduced motion: no shape change at all — the panel simply fades in
         // and out in place (CSS, data-mode="fade"), the disc fades out from
-        // under the chevron as it does, and the chevron's two inks crossfade
-        // with it (data-menu-fade), so the open state is bare here too.
+        // under the chevron as it does, and the chevron's ink swaps once the
+        // disc has faded enough (data-menu-fade), so the open state is bare
+        // here too — on the pill, it keeps its own ink, as it does in motion.
         reduced = true;
         cancelAnimationFrame(raf);
         raf = 0;
@@ -498,10 +536,13 @@ function createEngine(refs: MorphRefs) {
           disc.style.visibility = '';
           disc.style.opacity = open ? '0' : '';
         }
-        setInk(open ? 0 : 1);
+        // The plate at the panel's rect and the ink (render), then the flip:
+        // the ink and the flip land in one style pass, as menu.css times the
+        // swap by where the chevron is going.
+        render();
         setChevron(open);
         setReveal(open);
-        placeResting();
+        watchPill();
         if (blob) {
           blob.style.visibility = '';
           blob.style.setProperty('--lgm-glass', '1');
@@ -530,6 +571,8 @@ function createEngine(refs: MorphRefs) {
       target = next;
       since = 0;
       setChevron(open);
+      // Read before the rows are dropped below, which every toggle does.
+      aborted = !open && !revealed;
       // Each opening reveals the rows afresh; closing drops them at once.
       setReveal(false);
       // Match whatever state the disc is drawn in (hover lightens it), so the
@@ -550,8 +593,10 @@ function createEngine(refs: MorphRefs) {
     },
     destroy() {
       cancelAnimationFrame(raf);
-      raf = 0;
+      cancelAnimationFrame(pillRaf);
+      raf = pillRaf = 0;
       window.removeEventListener('resize', onResize);
+      pill?.removeEventListener('transitionrun', watchPill);
       ro?.disconnect();
     },
   };
