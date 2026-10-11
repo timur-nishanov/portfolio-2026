@@ -15,9 +15,10 @@ type Props = {
 /**
  * The case's top bar, where the site's header is: the round back button and
  * the case's title. It sits on the page at the top; once there is content
- * under it, the top edge of the screen turns the page's colour behind it
- * (case.css), so text goes under it rather than through it. It gets out of
- * the way while reading down and returns on the first scroll up.
+ * under it, it stands on a solid band of the page's colour with a hairline
+ * under it (case.css), so what scrolls up goes under it, cleanly, rather than
+ * through it. It gets out of the way while reading down and returns on the
+ * first scroll up.
  */
 export const CaseBar = forwardRef<HTMLElement, Props>(function CaseBar({ title, onBack, backHref, scrollerRef }, ref) {
   const barRef = useRef<HTMLElement>(null);
@@ -30,13 +31,13 @@ export const CaseBar = forwardRef<HTMLElement, Props>(function CaseBar({ title, 
     const target: HTMLElement | Window = el ?? window;
     const y = () => (el ? el.scrollTop : window.scrollY);
     // The layer's scrollbar is under the bar (the window's never is): the
-    // page-coloured edge stops short of it.
+    // band stops short of it.
     if (el) setGutter(el.offsetWidth - el.clientWidth);
     let last = y();
     const onScroll = () => {
       const now = y();
       // Written on the bar at once rather than through a render, so the
-      // edge starts coming in on the very frame the page first moves.
+      // band starts coming in on the very frame the page first moves.
       barRef.current?.toggleAttribute('data-glass', now > 0);
       if (now < 120) setHidden(false);
       else if (now > last + 2) setHidden(true);

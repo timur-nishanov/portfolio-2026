@@ -40,7 +40,8 @@
 }
 /* A blank page under the card's surface, so the surface grows over nothing:
    not over the header, the next card's edge or the page around it
-   (CaseLayer fades it in and out). */
+   (CaseLayer fades it in and out, with the card cut out of it, so the page
+   around the card goes blank while the card is still the page's). */
 .cp__veil {
   position: absolute;
   inset: 0;
@@ -102,31 +103,32 @@
 .cp-bar[data-hidden] {
   transform: translateY(-96px);
 }
-/* Over content, the top edge of the screen turns the page's colour, solid
-   behind the row and fading out under it, and the text simply goes under it:
-   never seen through glass, so never bent or smeared. It stops short of the
-   case's own scrollbar (CaseBar measures it), and goes up with the bar. */
+/* Over content, the top of the screen is a band of the page's own colour,
+   solid behind the row and cut off crisply under it, with the dividers'
+   hairline along its edge; the content simply goes under it. No fade: over
+   the dark screenshots a fading edge read as a grey smear. No glass either,
+   so nothing is bent or blurred under it, and it costs nothing to scroll
+   past. 62px, twice the row's centre line (31px), so the row sits in its
+   middle. It stops short of the case's own scrollbar (CaseBar measures it),
+   and goes up with the bar. */
 .cp-bar::before {
   content: '';
   position: absolute;
   top: 0;
   left: 0;
   right: var(--cp-gutter, 0px);
-  height: 88px;
+  height: 62px;
   z-index: -1;
-  background: linear-gradient(
-    to bottom,
-    var(--bg, #f7f7f5) 0,
-    var(--bg, #f7f7f5) 54px,
-    rgba(247, 247, 245, 0.8) 66px,
-    rgba(247, 247, 245, 0) 88px
-  );
+  background: var(--bg, #f7f7f5);
+  box-shadow: 0 1px 0 var(--cp-hair);
   opacity: 0;
   transition: opacity 200ms ease;
   pointer-events: none;
 }
 /* It comes in from the first pixel of scroll, and fast: a quick first scroll
-   brings the opening line up to the row within a few frames. */
+   brings the opening line up to the band within a few frames. At the very
+   top it isn't there at all, so the card's surface can grow in under the
+   row with nothing drawn over it (CaseLayer). */
 .cp-bar[data-glass]::before {
   opacity: 1;
   transition-duration: 80ms;
