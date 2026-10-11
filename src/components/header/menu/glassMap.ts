@@ -212,7 +212,10 @@ function ramp(shape1x: Float32Array, spec: GlassMapSpec, dev: number, W: number,
   return r;
 }
 
-function greyImage(values: Uint8ClampedArray, w: number, h: number) {
+/** A grey PNG (data URL) of one 8-bit value per pixel: how a displacement map
+    reaches a filter intact (see above). The case's glass spheres send their
+    lens this way too (case/Orbs). */
+export function greyImage(values: Uint8ClampedArray, w: number, h: number) {
   const c = document.createElement('canvas');
   c.width = w;
   c.height = h;
