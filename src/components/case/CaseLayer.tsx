@@ -26,11 +26,13 @@ const SETTLE = 'cubic-bezier(0.22, 1, 0.36, 1)';
 
 // The choreography, in ms. The card becomes the page, and its grey surface
 // alone carries over: nothing travels on its own. In: the card's contents
-// fade where they are; the surface takes over from the card, whole and at
-// once (the same grey in the same place, so the hand-over doesn't show),
-// grows into the page and turns the page's colour well before it has done
-// growing, over a blank page (the veil); the case comes in on it as one.
-const IN = { clear: 120, surfaceAt: 90, grow: 500, color: 360, veil: 160, contentAt: 300, barAt: 320, arrive: 320 };
+// fade where they are, and the page around the card with them (the veil), so
+// a bare card is left on a blank page; the surface takes over from the card,
+// whole and at once (the same grey in the same place, so the hand-over
+// doesn't show), and grows into the page, turning the page's colour as it
+// goes, so it never stands as a screen of grey; the case comes in on it as
+// one, as soon as it has all but turned, so there is no pause between the two.
+const IN = { clear: 120, surfaceAt: 90, grow: 500, color: 300, contentAt: 260, barAt: 280, arrive: 320 };
 // Out: the case fades, the veil lifts off the page around it, and the
 // surface folds back into the card, turning the card's grey on the way. Once
 // it has all but landed (within a pixel of the card, at 9/10 of the fold:
@@ -108,6 +110,21 @@ function cardBox(card: HTMLElement | null, layer: HTMLElement): Rect | null {
 const inset = (b: Rect) =>
   `inset(${b.top}px ${b.right}px ${b.bottom}px ${b.left}px round ${b.radius}px ${b.radius}px ${b.foot}px ${b.foot}px)`;
 const FULL = 'inset(0px 0px 0px 0px round 0px)';
+
+/** The whole layer but the card, corners and all, for the veil: the page
+    around the card can go blank while the card is still the page's own. */
+function around(b: Rect, layer: HTMLElement) {
+  const w = layer.clientWidth;
+  const h = layer.clientHeight;
+  const { top: t, left: l, radius: r, foot: f } = b;
+  const right = w - b.right;
+  const bottom = h - b.bottom;
+  const card =
+    `M${l + r} ${t}H${right - r}A${r} ${r} 0 0 1 ${right} ${t + r}V${bottom - f}` +
+    `A${f} ${f} 0 0 1 ${right - f} ${bottom}H${l + f}A${f} ${f} 0 0 1 ${l} ${bottom - f}` +
+    `V${t + r}A${r} ${r} 0 0 1 ${l + r} ${t}Z`;
+  return `path(evenodd, "M0 0H${w}V${h}H0Z ${card}")`;
+}
 
 /** When, as a share of its time, the fold has gone a share p of its way:
     the easing curve's x where its y is p, found by halving (y only rises). */
@@ -248,6 +265,11 @@ export function CaseLayer() {
       out(scroller, [{ opacity: was.scroll }, { opacity: 0 }], { duration: OUT.clear, easing: FADE });
       out(bar, [{ opacity: was.bar }, { opacity: 0 }], { duration: OUT.clear, easing: FADE });
       const box = cardBox(card, root);
+      // The veil lifts off the page around the card, the card cut out of it
+      // where it is now (where it was, unless the window changed size while
+      // the case was open). With no card to fold into it is whole, so the
+      // page comes back evenly under the surface as the two fade together.
+      if (veil) veil.style.clipPath = box ? around(box, root) : '';
       if (box && card && Number(was.opacity) > 0.5) {
         // Then the page folds back into the card, turning its grey, while
         // the page comes back around it...
@@ -441,6 +463,12 @@ export function CaseLayer() {
         melted.current = cardParts(card).map((el) =>
           el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: IN.clear, easing: FADE, fill: 'forwards' }),
         );
+        // And the page around the card with them, in the same time on the
+        // same curve: no header, no edge of the next card is left to linger
+        // beside the card as it grows. The veil leaves the card itself alone,
+        // as the surface hasn't taken it over yet.
+        if (veil) veil.style.clipPath = around(box, root);
+        add(veil, [{ opacity: 0 }, { opacity: 1 }], { duration: IN.clear, easing: FADE, fill: 'backwards' });
         // Its surface takes over from the card, whole and at once, once the
         // card is all but bare — the same grey in the same place, so the
         // hand-over doesn't show — and grows.
@@ -456,21 +484,15 @@ export function CaseLayer() {
           easing: GROW,
           fill: 'backwards',
         });
-        // The colour is turned well before the size has settled: the long
-        // tail of the growth is then page on page, and can't be seen, and
-        // the case comes in on its final colour rather than through a grey
-        // fog.
+        // The colour turns with the growth, on its curve but in less time:
+        // the surface lightens as it moves, so it never stands as a screen
+        // of grey, its edge has all but gone by the time it nears the
+        // screen's, and the case comes in on the page's final colour rather
+        // than through a grey fog.
         add(surface, [{ backgroundColor: grey }, { backgroundColor: page }], {
           duration: IN.color,
           delay: IN.surfaceAt,
-          easing: SWAP,
-          fill: 'backwards',
-        });
-        // Under it the page goes blank: no header, no edge of the next card.
-        add(veil, [{ opacity: 0 }, { opacity: 1 }], {
-          duration: IN.veil,
-          delay: IN.surfaceAt,
-          easing: FADE,
+          easing: GROW,
           fill: 'backwards',
         });
       } else {
