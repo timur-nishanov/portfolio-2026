@@ -1,0 +1,297 @@
+/* ===========================================================================
+   The three glass spheres (Orbs). Each question is set on the page and a
+   sphere of clear glass sits over it: the middle of the text reads as it is,
+   the lines bow toward the rim, and the rim brings back the sphere's halo
+   and shadow bent along its edge. Chromium bends it for real (the filter in
+   Orbs.tsx, switched on with [data-lens]); Safari and Firefox get the same
+   glass with the band its rim would gather painted in, the text unbent.
+
+   Inside each sphere, back to front: the halo and shadow on the page, the
+   text, the glass. All the halos and texts lie under all the glass (z-index
+   across the list), so where two spheres overlap, the upper one bends the
+   lower one's edge, as glass over glass would. The list is no stacking
+   context of its own (isolation would make it one): Chromium gives a
+   backdrop filter only the page inside that context, and the rims look
+   past the list's edges.
+   =========================================================================== */
+
+.orbs {
+  display: flex;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+/* A row of three, a touch over one another, centred in the band, with room
+   left at the sides on a narrow window for the rims to look past their
+   edges without looking past the screen's. */
+.orb {
+  position: relative;
+  flex: none;
+  width: min(376px, 32%);
+}
+.orb + .orb {
+  margin-left: -0.8%;
+}
+/* The shadow falls well below the spheres: the text after keeps clear of it. */
+.cp-chapter > .cp-wide:has(> .orbs) + .cp-col {
+  margin-top: calc(var(--cp-step, 48px) + 16px);
+}
+.orbs__defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+.orb__body {
+  position: relative;
+  aspect-ratio: 1;
+}
+
+/* --- on the page ------------------------------------------------------------ */
+/* A faint halo round the sphere's foot and the shadow it casts below, with
+   the light the sphere gathers into it. Both lie mostly outside the glass,
+   and the rim, looking a little beyond itself, brings them back as a band
+   along its edge, lit at the bottom: that band is most of what makes the
+   glass read as thick. */
+.orb__shadow {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+.orb__shadow::before,
+.orb__shadow::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+}
+/* Starting at the rim, a little lower than the sphere, as the light is
+   from above. */
+.orb__shadow::before {
+  inset: -12% -14% -16%;
+  background: radial-gradient(
+    closest-side,
+    rgba(28, 32, 48, 0) 74%,
+    rgba(28, 32, 48, 0.05) 79%,
+    rgba(28, 32, 48, 0.02) 87%,
+    rgba(28, 32, 48, 0) 100%
+  );
+}
+/* The cast shadow, and in it the caustic: a glass ball focuses the light
+   that passes through it into a bright patch inside its own shadow. */
+.orb__shadow::after {
+  left: 10%;
+  right: 10%;
+  top: 76%;
+  height: 36%;
+  background:
+    radial-gradient(34% 26% at 50% 36%, rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0) 100%),
+    radial-gradient(
+      closest-side,
+      rgba(28, 32, 48, 0.15),
+      rgba(28, 32, 48, 0.07) 45%,
+      rgba(28, 32, 48, 0.02) 75%,
+      rgba(28, 32, 48, 0) 100%
+    );
+}
+
+/* --- the question ----------------------------------------------------------- */
+/* Wide enough that its longer lines reach where the glass starts to bend. */
+.orb__text {
+  container-type: inline-size;
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 14%;
+  text-align: center;
+}
+.orb__title {
+  margin: 0;
+  font: 400 20px/28px var(--font-sf);
+  letter-spacing: 0;
+  color: var(--cp-ink, #08080a);
+  text-wrap: balance;
+}
+.orb__copy {
+  margin: 8px 0 0;
+  font: 400 17px/26px var(--font-sf);
+  letter-spacing: 0;
+  color: rgba(8, 8, 10, 0.6);
+  text-wrap: balance;
+}
+/* A smaller sphere (a narrow window, a phone) holds the text in the small
+   size, so it stays clear of the rim. (The measure here is the text's: a
+   sphere of about 340px.) */
+@container (max-width: 260px) {
+  .orb__copy {
+    font-size: 15px;
+    line-height: 20px;
+  }
+}
+
+/* --- the glass -------------------------------------------------------------- */
+.orb__glass {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: 50%;
+  pointer-events: none;
+}
+/* The lens: the sphere and the room its rim looks into (REACH in Orbs.tsx,
+   a tenth of the diameter, and a few px to spare). Square and unclipped: a
+   clip or a rounded corner would cut the page the filter is given down to
+   the circle, and the rim would have nothing past its edge to bring in.
+   Outside the circle the filter returns the page untouched. */
+.orb__lens {
+  position: absolute;
+  inset: calc(-10% - 4px);
+}
+[data-lens] .orb__lens {
+  backdrop-filter: var(--orb-lens);
+}
+
+/* The surface: a whisper of white toward the edge, where glass reflects
+   more; a thin light edge, and a hairline to hold it on the light page. */
+.orb__light {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    rgba(255, 255, 255, 0) 88%,
+    rgba(255, 255, 255, 0.18) 97%,
+    rgba(255, 255, 255, 0.45) 100%
+  );
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.75),
+    0 0 0 0.5px rgba(8, 8, 10, 0.06);
+}
+/* Without the lens (Safari, Firefox; Chromium until the lens is worked out
+   or while the spheres are off screen), the band the rim would gather from
+   the halo is painted in: the glass reads as just as thick, it only does
+   not bend the text. */
+.orbs:not([data-lens]) .orb__light {
+  background: radial-gradient(
+    closest-side,
+    rgba(28, 32, 48, 0) 83%,
+    rgba(28, 32, 48, 0.045) 87.5%,
+    rgba(28, 32, 48, 0.025) 92%,
+    rgba(255, 255, 255, 0.2) 97%,
+    rgba(255, 255, 255, 0.5) 100%
+  );
+}
+.orb__light::before,
+.orb__light::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+}
+/* The specular: a fine bright line just inside the edge, lit from the top
+   left, and its reflection low on the right. */
+.orb__light::before {
+  inset: 1.5px;
+  background: radial-gradient(
+    closest-side,
+    transparent calc(100% - 3.5px),
+    #fff calc(100% - 1.4px),
+    rgba(255, 255, 255, 0.5) 100%
+  );
+  -webkit-mask: conic-gradient(
+    transparent 80deg,
+    rgba(0, 0, 0, 0.8) 130deg,
+    rgba(0, 0, 0, 0.8) 140deg,
+    transparent 190deg,
+    transparent 250deg,
+    #000 305deg,
+    #000 325deg,
+    transparent 380deg
+  );
+  mask: conic-gradient(
+    transparent 80deg,
+    rgba(0, 0, 0, 0.8) 130deg,
+    rgba(0, 0, 0, 0.8) 140deg,
+    transparent 190deg,
+    transparent 250deg,
+    #000 305deg,
+    #000 325deg,
+    transparent 380deg
+  );
+}
+/* And the softer light it spreads into the glass. */
+.orb__light::after {
+  background: radial-gradient(closest-side, transparent 74%, rgba(255, 255, 255, 0.75) 96%, transparent 100%);
+  -webkit-mask: conic-gradient(
+    transparent 95deg,
+    rgba(0, 0, 0, 0.5) 135deg,
+    transparent 175deg,
+    transparent 270deg,
+    #000 315deg,
+    transparent 360deg
+  );
+  mask: conic-gradient(
+    transparent 95deg,
+    rgba(0, 0, 0, 0.5) 135deg,
+    transparent 175deg,
+    transparent 270deg,
+    #000 315deg,
+    transparent 360deg
+  );
+}
+
+/* --- tablets in portrait and phones ----------------------------------------- */
+/* One under another, stepping either side of the centre line and over one
+   another, never so far that a rim looks past the screen's side (down to a
+   360px phone). Shifted with left, not a transform, so each sphere makes no
+   stacking context of its own and the glass still lies over every shadow. */
+@media (max-width: 899px) {
+  .orbs {
+    flex-direction: column;
+    align-items: center;
+  }
+  .orb {
+    width: min(72%, 330px);
+  }
+  .orb + .orb {
+    margin: -36px 0 0;
+  }
+  .orb:nth-child(odd) {
+    left: -9%;
+  }
+  .orb:nth-child(even) {
+    left: 9%;
+  }
+}
+
+/* --- without the glass ------------------------------------------------------ */
+/* Asked for less transparency: no see-through glass, a quiet solid disc
+   under the text, the edge kept. */
+@media (prefers-reduced-transparency: reduce) {
+  [data-lens] .orb__lens {
+    backdrop-filter: none;
+  }
+  .orb__shadow::before {
+    display: none;
+  }
+  .orb__text {
+    border-radius: 50%;
+    background: #efeff0;
+  }
+}
+/* Without colours of their own, the spheres keep an outline. */
+@media (forced-colors: active) {
+  .orb__shadow,
+  .orb__glass {
+    display: none;
+  }
+  .orb__body {
+    border: 1px solid CanvasText;
+    border-radius: 50%;
+  }
+}
