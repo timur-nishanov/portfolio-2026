@@ -219,10 +219,9 @@
 .cp-subtitle {
   color: var(--cp-mute);
 }
-/* The small heads: inside a chapter, the results. One weight for
+/* The only heads inside a part are the results' names. One weight for
    everything set apart from the text, and a clear step from it: a semibold
    only a little heavier than the text read as a smudge, not as a head. */
-.cp-sub,
 .cp-result__title {
   font-weight: 600;
 }
@@ -276,20 +275,15 @@
 }
 /* The text's rhythm, as benji.org's. A paragraph's step between paragraphs
    and lists. Each gap is closer on the side a thing belongs to: a part's
-   heading sits nearer its own text than the part before it, a small head
-   all but on its text, and a figure nearer the words that lead to it than
-   what follows it. The two sides of a comparison close together. */
+   heading sits nearer its own text than the part before it, and a figure
+   nearer the words that lead to it than what follows it. Figures in a row
+   keep a text's step apart, but the two sides of a comparison close
+   together. */
 .cp-col > * + * {
   margin-top: 16px;
 }
 .cp-col > .cp-h + * {
   margin-top: var(--cp-head);
-}
-.cp-col > * + .cp-sub {
-  margin-top: 36px;
-}
-.cp-col > .cp-sub + * {
-  margin-top: 8px;
 }
 .cp-col > * + :is(.cp-figure, .go) {
   margin-top: var(--cp-step);
@@ -298,6 +292,9 @@
   margin-top: var(--cp-after);
 }
 .cp-col > .cp-figure + .cp-figure {
+  margin-top: var(--cp-step);
+}
+.cp-col > .cp-figure + .cp-figure--after {
   margin-top: 16px;
 }
 
@@ -306,7 +303,7 @@
    kept in view as the case scrolls; the chapter being read in ink. Only
    where there is room beside the column: there the bar is not shown. */
 .cp-index-host {
-  --cp-index-w: 256px; /* the longest chapter's name, on one line */
+  --cp-index-w: 264px; /* the longest chapter name of any case, on one line */
   position: sticky;
   top: 128px;
   z-index: 2;
@@ -390,7 +387,8 @@
 .cp-intro > .cp-subtitle + * {
   margin-top: 24px;
 }
-.cp-intro > .cp-facts {
+.cp-intro > .cp-facts,
+.cp-intro > .cp-facts + * {
   margin-top: 32px;
 }
 
@@ -415,6 +413,11 @@
 .cp-facts dt {
   color: var(--cp-mute);
 }
+/* A fact that runs onto a second line splits evenly, rather than leaving a
+   word or two under a full line. */
+.cp-facts dd {
+  text-wrap: balance;
+}
 
 /* --- parts ---------------------------------------------------------------- */
 .cp-chapter {
@@ -427,13 +430,16 @@
 }
 
 /* A list is its lines, one under another with a little less room than
-   between paragraphs, each with a bullet in the text's own ink and size, on
-   the middle of its first line's small letters: a small grey dot read as a
-   smudge. A point that runs onto a second line (on a phone) splits evenly,
-   rather than leaving a word or two hanging under a full line. */
+   between paragraphs, each with a grey bullet the size of the text's dots
+   blown up a little, on the middle of its first line's small letters. */
 .cp-list li {
   position: relative;
   padding-left: 18px;
+}
+/* A list of short points: one that runs onto a second line splits evenly,
+   rather than leaving a word or two hanging under a full line. Longer
+   points wrap as paragraphs do, out to the column's edge. */
+.cp-list--short li {
   text-wrap: balance;
 }
 .cp-list li + li {
@@ -447,7 +453,7 @@
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: currentColor;
+  background: var(--cp-mute);
 }
 
 /* Where it landed: each part's name over what became of it. */
@@ -469,7 +475,8 @@
   background: #fff;
   box-shadow: inset 0 0 0 1px var(--cp-hair);
 }
-.cp-figure--desktop {
+.cp-figure--desktop,
+.cp-figure--wide {
   padding: 48px 36px;
 }
 .cp-figure__label {
@@ -489,15 +496,23 @@
   width: 240px;
   border-radius: 12% / 5.6%;
 }
-.cp-shot--desktop {
+.cp-shot--desktop,
+.cp-shot--wide {
   width: 100%;
   border-radius: 8px;
 }
+/* A screen's file lifts off the box a little; a wide picture (a diagram,
+   several screens laid out) is drawn on it, flat and square. */
 .cp-figure img.cp-shot,
 .cp-figure video.cp-shot {
   box-shadow:
     0 1px 2px rgba(0, 0, 0, 0.06),
     0 16px 32px -16px rgba(0, 0, 0, 0.2);
+}
+.cp-figure img.cp-shot--wide,
+.cp-figure video.cp-shot--wide {
+  border-radius: 0;
+  box-shadow: none;
 }
 /* The stand-in, until the file is in: a grey screen, blank. */
 .cp-ph {
@@ -645,7 +660,8 @@
   .cp-figure {
     padding: 32px 16px;
   }
-  .cp-figure--desktop {
+  .cp-figure--desktop,
+  .cp-figure--wide {
     padding: 40px 20px;
   }
   .cp-figure__label {
