@@ -9,8 +9,8 @@ import { GlassOrbs } from './GlassOrbs';
 import { QuestBoard } from './QuestBoard';
 import type { ArticleProps } from './registry';
 
-/** A part's heading, small and a tone down, with a rule running out to the
-    column's edge (as benji.org heads a section). */
+/** A part's heading: the text's size in semibold ink, with a faint rule
+    running out to the column's edge (as benji.org heads a section). */
 function Heading({ id, children }: { id: string; children: React.ReactNode }) {
   return (
     <h2 id={id} className="cp-h cp-reveal">
@@ -125,17 +125,17 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
         <p className="cp-reveal">
           Attaching a file took six steps. <Mark>Now you drag it into the chat.</Mark>
         </p>
-        <Figure slots={[media.drag]} frame="desktop" />
+        <Figure slot={media.drag} frame="desktop" />
         <p className="cp-reveal">
           We set rules for window sizes from 1300 to 375px: the chat list keeps its width, the chat stretches, and a
           narrow window shows one column.
         </p>
-        <Figure slots={[media.resize]} frame="desktop" />
+        <Figure slot={media.resize} frame="desktop" />
         <p className="cp-reveal">
           The wallet was designed before us. We fitted it to desktop: a popup in a wide window, a full screen in a
           narrow one.
         </p>
-        <Figure slots={[media.wallet]} frame="desktop" />
+        <Figure slot={media.wallet} frame="desktop" />
         <p className="cp-reveal">
           The founders and the PM approved the plan within a week. We had one developer, so some details had to wait.{' '}
           <Mark>The first beta shipped three months later.</Mark> The new patterns went into the design system.
@@ -155,7 +155,7 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
           <li>The answer stays in the thread. The chat shows one line and a counter.</li>
           <li>All threads of a room are in one list.</li>
         </ul>
-        <Figure slots={[media.assistant]} frame="phone" />
+        <Figure slot={media.assistant} frame="phone" />
         <p className="cp-reveal">The junior designer designed the flow, I reviewed it.</p>
       </section>
 
@@ -188,7 +188,7 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
             },
           ]}
         />
-        <Figure slots={media.rewards} frame="phone" />
+        <Figure slot={media.rewards} frame="phone" />
         <p className="cp-reveal">
           The junior designer made the screens, I directed the work. The system was{' '}
           <Mark>approved and handed to development</Mark> before I left the studio in January 2026.

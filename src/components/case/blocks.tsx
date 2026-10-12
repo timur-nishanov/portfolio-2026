@@ -60,19 +60,14 @@ function Shot({ slot, frame }: { slot: CaseSlot; frame: Frame }) {
 
 /**
  * A figure as benji.org has them: a light box in the column with a hairline
- * round it, the screen centred inside, and what it shows named in its corner
- * when it is one side of a comparison. One screen, or several phones in a
- * row (smaller, so they fit).
+ * round it, one screen centred inside, and what it shows named in its corner
+ * when it is one side of a comparison.
  */
-export function Figure({ slots, frame, label }: { slots: CaseSlot[]; frame: Frame; label?: 'Before' | 'After' }) {
+export function Figure({ slot, frame, label }: { slot: CaseSlot; frame: Frame; label?: 'Before' | 'After' }) {
   return (
-    <figure className={`cp-figure cp-figure--${frame}${slots.length > 2 ? ' cp-figure--many' : ''} cp-reveal`}>
+    <figure className={`cp-figure cp-figure--${frame} cp-reveal`}>
       {label && <figcaption className="cp-figure__label">{label}</figcaption>}
-      <div className="cp-figure__row">
-        {slots.map((slot, i) => (
-          <Shot key={i} slot={slot} frame={frame} />
-        ))}
-      </div>
+      <Shot slot={slot} frame={frame} />
     </figure>
   );
 }
@@ -81,8 +76,8 @@ export function Figure({ slots, frame, label }: { slots: CaseSlot[]; frame: Fram
 export function BeforeAfter({ before, after, frame }: Pair & { frame: Frame }) {
   return (
     <>
-      <Figure label="Before" slots={[before]} frame={frame} />
-      <Figure label="After" slots={[after]} frame={frame} />
+      <Figure label="Before" slot={before} frame={frame} />
+      <Figure label="After" slot={after} frame={frame} />
     </>
   );
 }
