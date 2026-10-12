@@ -249,7 +249,9 @@ function start(THREE: Three, root: HTMLElement, canvas: HTMLCanvasElement) {
       const title = orb.el.querySelector<HTMLElement>('.go__title');
       const text = orb.el.querySelector<HTMLElement>('.go__p');
       if (!title || !text) continue;
-      const maxW = orb.r * 2 * TEXT_WIDTH * s;
+      // A small sphere (a phone's) takes its words wider, in fewer lines, so
+      // the block stays short of the rim top and bottom.
+      const maxW = orb.r * 2 * (orb.r < 170 ? 0.64 : TEXT_WIDTH) * s;
       const font = (el: HTMLElement) => {
         const cs = getComputedStyle(el);
         const size = parseFloat(cs.fontSize) * s;
