@@ -33,7 +33,11 @@ export function UrbantigerArticle({ onBack, backHref }: ArticleProps) {
         <h1 className="cp-title cp-reveal">Urbantiger</h1>
         <p className="cp-subtitle cp-reveal">Redesigning an online clothing store</p>
         <p className="cp-reveal">
-          I was the senior designer on the full redesign of urbantiger.ru, the online store of a Russian premium
+          I was the senior designer on the full redesign of{' '}
+          <a className="cp-a" href="https://urbantiger.ru" target="_blank" rel="noopener noreferrer">
+            urbantiger.ru
+          </a>
+          , the online store of a Russian premium
           clothing brand that makes most of its collections from eco materials.
         </p>
         <p className="cp-reveal">
