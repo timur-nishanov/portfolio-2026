@@ -353,6 +353,13 @@ export function CaseLayer() {
         if (lenis) lenis.scrollTo(y, { immediate: true, force: true });
         else if (scroller) scroller.scrollTop = y;
       },
+      // A glide, for a chapter chosen in the index (CaseIndex).
+      glide: (y: number) => {
+        const lenis = lenisRef.current;
+        const scroller = scrollRef.current;
+        if (lenis) lenis.scrollTo(y, { duration: 1.1 });
+        else scroller?.scrollTo({ top: y, behavior: 'smooth' });
+      },
     }),
     [],
   );

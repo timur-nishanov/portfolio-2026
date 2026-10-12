@@ -1,11 +1,13 @@
 /* ===========================================================================
    The case study (CaseLayer over the page, CasePage on its own). In the
    page's own language: SF Pro at weight 400 on the warm off-white, with the
-   cards' grey for media. Five sizes and no more — 40 for the case's name and
-   the chapters, 28 for the line under the name, 20 for the lead and sub-heads
-   (the cards' titles), 17 for reading, 15 for labels (the cards' notes). One
-   narrow column of text with a single left edge; media run wider than it, on
-   the same centre line.
+   cards' grey for media. Four sizes and no more — 28 for the case's name and
+   the chapters, 20 for the line under the name and the sub-heads (the cards'
+   titles), 17 for reading, 15 for labels (the cards' notes). Laid out as
+   benji.org lays out a case: one narrow column of text with a single left
+   edge, a few lines at a time, and the pictures between them as wide as the
+   page's cards, on the same centre line; the chapters down the left where
+   there is room.
    =========================================================================== */
 
 .cp,
@@ -18,9 +20,9 @@
   --cp-hair: rgba(8, 8, 10, 0.08);
   --cp-card: #e6e6e7;
   --cp-col: 560px; /* the about block's measure */
-  --cp-wide: 1200px; /* media: one width for every figure */
-  --cp-chapter: 112px; /* between parts, and on either side of a hairline */
-  --cp-step: 40px; /* text to media, figure to figure */
+  --cp-wide: 1400px; /* media: the home cards' width, one for every figure */
+  --cp-chapter: 128px; /* between parts: nothing rules them apart but room */
+  --cp-step: 48px; /* text to media, media to text */
   --cp-inner: 16px; /* between the parts of one figure */
   --cp-ease: cubic-bezier(0.22, 1, 0.36, 1);
   /* What isn't set in one of the four sizes takes the reading one. */
@@ -210,6 +212,7 @@
 /* The reading size is the article's own; everything else is set where it is
    used. */
 .cp-article {
+  position: relative;
   padding: 0 20px;
   font: 400 17px/26px var(--font-sf);
   letter-spacing: 0;
@@ -229,44 +232,27 @@
   text-wrap: pretty;
 }
 
-/* The sizes. 40: the case's name and the chapters' headings, the page's
-   loudest line, tight. A chapter's number sits before its name in grey. */
+/* The sizes. 28: the case's name and the chapters' headings, a chapter's
+   number before its name in grey. */
 .cp-title,
 .cp-h {
-  font-size: 40px;
-  line-height: 44px;
-  letter-spacing: -0.025em;
+  font-size: 28px;
+  line-height: 34px;
+  letter-spacing: -0.01em;
   color: var(--cp-ink);
   text-wrap: balance;
 }
 .cp-h {
-  position: relative;
+  scroll-margin-top: 112px;
 }
 .cp-h__no {
-  margin-right: 0.4em;
+  margin-right: 0.45em;
   color: var(--cp-grey);
   font-variant-numeric: tabular-nums;
 }
-/* With room beside the column, the number hangs out in the margin, so every
-   heading's words start on the text's left edge. */
-@media (min-width: 900px) {
-  .cp-h__no {
-    position: absolute;
-    right: 100%;
-    margin-right: 24px;
-  }
-}
-/* 28: what the case is about, under its name, a tone down. */
-.cp-subtitle {
-  font-size: 28px;
-  line-height: 34px;
-  letter-spacing: -0.015em;
-  color: var(--cp-mute);
-  text-wrap: balance;
-}
-/* 20: the lead, and the sub-heads (inside a chapter, the results, the three
-   questions). */
-.cp-lead,
+/* 20: the line under the name, and the sub-heads (inside a chapter, the
+   results, the three questions). */
+.cp-subtitle,
 .cp-sub,
 .cp-result__title,
 .cp-end__link {
@@ -275,15 +261,24 @@
   letter-spacing: -0.005em;
   color: var(--cp-ink);
 }
+.cp-subtitle {
+  color: var(--cp-mute);
+}
+.cp-subtitle,
 .cp-sub {
   text-wrap: balance;
 }
-/* 17 is the article's. A list line's lead-in is in full ink. */
+/* 17 is the article's. A list line's lead-in is in full ink; a note under
+   the facts a step softer. */
 .cp-runin {
   color: var(--cp-ink);
 }
+.cp-note {
+  color: var(--cp-mute);
+}
 /* 15: labels. */
 .cp-facts dt,
+.cp-index,
 .cp-toggle,
 .cp-card__label,
 .cp-map,
@@ -317,10 +312,55 @@
   margin-top: 24px;
 }
 .cp-col > * + .cp-sub {
-  margin-top: 48px;
+  margin-top: 40px;
 }
 .cp-col > .cp-sub + * {
   margin-top: 8px;
+}
+
+/* --- the index ------------------------------------------------------------ */
+/* The chapters down the left, from the case's name down, kept in view as
+   the case scrolls; the one being read in ink. Only where there is room
+   beside the column. */
+.cp-index-host {
+  position: sticky;
+  top: 128px;
+  z-index: 2;
+  display: none;
+  height: 0;
+}
+@media (min-width: 1200px) {
+  .cp-index-host {
+    display: block;
+  }
+}
+.cp-index {
+  position: absolute;
+  top: 0;
+  left: 60px;
+  width: 200px;
+}
+.cp-index li + li {
+  margin-top: 10px;
+}
+.cp-index a {
+  color: var(--cp-grey);
+  text-decoration: none;
+  text-wrap: balance;
+  transition: color 160ms ease;
+}
+.cp-index a[aria-current] {
+  color: var(--cp-ink);
+}
+@media (hover: hover) and (pointer: fine) {
+  .cp-index a:hover {
+    color: var(--cp-text);
+  }
+}
+.cp-index a:focus-visible {
+  outline: 2px solid var(--accent, #5b94f0);
+  outline-offset: 2px;
+  border-radius: 4px;
 }
 
 /* --- overview ------------------------------------------------------------- */
@@ -328,19 +368,16 @@
   padding-top: 128px;
 }
 .cp-intro > .cp-subtitle {
-  margin-top: 8px;
+  margin-top: 4px;
 }
-.cp-intro > .cp-subtitle + .cp-lead {
-  margin-top: 40px;
+.cp-intro > .cp-subtitle + * {
+  margin-top: 32px;
 }
 .cp-intro > .cp-facts {
-  margin-top: 48px;
+  margin-top: 40px;
 }
 .cp-intro > .cp-note {
   margin-top: 24px;
-}
-.cp-note {
-  color: var(--cp-mute);
 }
 
 /* The facts, a line each with a hairline between: the label in a column of
@@ -369,29 +406,10 @@
 }
 
 /* --- parts ---------------------------------------------------------------- */
-/* A hairline between the big parts, across the page with the home cards'
-   edges, and the same room either side. Not after a part that ends on a
-   picture: the picture's own edge already closes it. */
-.cp-divider {
-  display: block;
-  height: 1px;
-  margin: var(--cp-chapter) 0;
-  border: 0;
-  background: var(--cp-hair);
-}
 .cp-chapter {
   margin-top: var(--cp-chapter);
 }
-.cp-divider + .cp-chapter {
-  margin-top: 0;
-}
-.cp-chapter:has(> .cp-wide:last-child) + .cp-divider {
-  display: none;
-}
-.cp-chapter:has(> .cp-wide:last-child) + .cp-divider + .cp-chapter {
-  margin-top: calc(var(--cp-chapter) * 1.25);
-}
-/* Text to media, media to text, figure to figure. */
+/* Text to media, media to text. */
 .cp-chapter > :is(.cp-col, .cp-wide, .cp-fold) + :is(.cp-col, .cp-wide) {
   margin-top: var(--cp-step);
 }
@@ -502,8 +520,10 @@
 }
 
 /* --- media ---------------------------------------------------------------- */
-/* Grey cards like the page's, each a size container so what's inside fits
-   it either way round; a side of a comparison is named in its corner. */
+/* Grey cards like the page's, as wide as them, each a size container so what
+   is inside fits it either way round; a side of a comparison is named in its
+   corner. The screens are what the cards are for: as large as a card allows,
+   clear of its corners and the label. */
 .cp-card {
   container-type: size;
   position: relative;
@@ -515,10 +535,10 @@
 }
 .cp-card__label {
   position: absolute;
-  top: 18px;
-  left: 20px;
+  top: 20px;
+  left: 24px;
   z-index: 1;
-  color: var(--cp-text);
+  color: var(--cp-mute);
 }
 /* Before and after, side by side: phones in two tall cards, desktop windows
    in two 4:3 ones. */
@@ -528,17 +548,24 @@
   gap: var(--cp-inner);
 }
 .cp-pair--phone .cp-card {
-  height: clamp(440px, calc(100svh - 180px), 720px);
+  height: clamp(560px, calc(100svh - 120px), 900px);
 }
 .cp-pair--desktop .cp-card {
   aspect-ratio: 4 / 3;
 }
-/* One wide card: the band's whole width (on a short screen the height gives
-   way, never the width). */
+/* One wide card: a desktop window at nearly the band's width (on a short
+   screen the height gives way, never the width), or phones in a row, the
+   card as tall as they are. */
 .cp-plate {
   width: 100%;
-  aspect-ratio: 16 / 9;
-  max-height: calc(100svh - 160px);
+}
+.cp-plate--desktop {
+  aspect-ratio: 16 / 10;
+  max-height: calc(100svh - 120px);
+}
+.cp-plate--phone {
+  container-type: inline-size;
+  padding: 6cqw 0;
 }
 .cp-plate__row {
   display: flex;
@@ -547,41 +574,43 @@
   gap: 2.4cqw;
   width: 100%;
 }
-
-/* A screen keeps its own shape (--ar), as large as its card allows and
-   clear of the corner label; a phone with a phone's corners, a window with a
-   window's. */
+/* A screen keeps its own shape (--ar): a phone with a phone's corners, a
+   window with a window's. */
 .cp-shot {
   display: block;
   aspect-ratio: var(--ar);
   object-fit: cover;
 }
 .cp-shot--desktop {
-  width: min(80cqw, calc(80cqh * var(--ar)));
+  width: min(88cqw, calc(84cqh * var(--ar)));
   border-radius: 10px;
 }
 .cp-pair--desktop .cp-shot {
-  width: min(84cqw, calc(72cqh * var(--ar)));
+  width: min(90cqw, calc(78cqh * var(--ar)));
 }
 .cp-shot--phone {
   border-radius: 12% / 5.6%;
 }
 .cp-pair--phone .cp-shot {
-  height: min(82cqh, calc(80cqw / var(--ar)));
+  height: min(86cqh, calc(84cqw / var(--ar)));
 }
 .cp-plate--phone .cp-shot {
-  width: min(calc((88cqw - (var(--n, 1) - 1) * 2.4cqw) / var(--n, 1)), calc(76cqh * var(--ar)));
+  width: calc((88cqw - (var(--n, 1) - 1) * 2.4cqw) / var(--n, 1));
 }
 .cp-card img.cp-shot,
 .cp-card video.cp-shot {
   box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.06),
-    0 10px 28px -8px rgba(0, 0, 0, 0.2);
+    0 1px 2px rgba(0, 0, 0, 0.05),
+    0 24px 48px -24px rgba(0, 0, 0, 0.18);
 }
-/* The stand-in: a lighter shape of the screen to come. */
+/* The stand-in, until the file is in: a lit screen, blank. */
 .cp-ph {
-  background: rgba(255, 255, 255, 0.5);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.7);
+  background: linear-gradient(180deg, #fbfbfb, #f0f0f1);
+  box-shadow:
+    inset 0 0 0 1px rgba(8, 8, 10, 0.045),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    0 1px 2px rgba(0, 0, 0, 0.05),
+    0 24px 48px -24px rgba(0, 0, 0, 0.18);
 }
 
 /* --- the rewards map ------------------------------------------------------ */
@@ -839,9 +868,9 @@
    is simply there. */
 .cp-reveal {
   transition:
-    opacity 400ms var(--cp-ease),
-    transform 400ms var(--cp-ease),
-    filter 400ms var(--cp-ease);
+    opacity 340ms var(--cp-ease),
+    transform 340ms var(--cp-ease),
+    filter 340ms var(--cp-ease);
   transition-delay: calc(var(--stagger, 0) * 40ms);
 }
 .cp-armed .cp-reveal:not(.is-in) {
@@ -862,9 +891,9 @@
    own quick change, never held back by the stagger. */
 .cp-toggle.cp-reveal {
   transition:
-    opacity 400ms var(--cp-ease) calc(var(--stagger, 0) * 40ms),
-    transform 400ms var(--cp-ease) calc(var(--stagger, 0) * 40ms),
-    filter 400ms var(--cp-ease) calc(var(--stagger, 0) * 40ms),
+    opacity 340ms var(--cp-ease) calc(var(--stagger, 0) * 40ms),
+    transform 340ms var(--cp-ease) calc(var(--stagger, 0) * 40ms),
+    filter 340ms var(--cp-ease) calc(var(--stagger, 0) * 40ms),
     color 160ms ease;
 }
 .cp-toggle.cp-reveal.is-first {
@@ -888,59 +917,43 @@
 @media (max-width: 899px) {
   .cp,
   .cp-page {
-    --cp-chapter: 72px;
-    --cp-step: 28px;
+    --cp-chapter: 88px;
+    --cp-step: 32px;
     --cp-inner: 8px;
   }
-  /* The media, and the hairlines between parts, reach to the home cards'
-     12px edges. */
-  .cp-wide,
-  .cp-divider {
+  /* The media reach to the home cards' 12px edges. */
+  .cp-wide {
     margin-left: -8px;
     margin-right: -8px;
   }
   .cp-intro {
     padding-top: 96px;
   }
-  .cp-title,
-  .cp-h {
-    font-size: 32px;
-    line-height: 36px;
-  }
-  .cp-subtitle {
-    font-size: 20px;
-    line-height: 28px;
-  }
-  .cp-intro > .cp-subtitle + .cp-lead {
+  .cp-intro > .cp-subtitle + * {
     margin-top: 28px;
   }
   .cp-intro > .cp-facts {
     margin-top: 36px;
   }
-  /* A phone's column has no room for a second large size: the lead reads
-     at the text's size, in full ink. */
-  .cp-lead {
-    font-size: 17px;
-    line-height: 26px;
-  }
   .cp-col > * + .cp-sub,
   .cp-chapter > .cp-wide + .cp-col:has(> .cp-sub:first-child) {
-    margin-top: 40px;
+    margin-top: 36px;
   }
   .cp-card {
     border-radius: 20px;
   }
   .cp-card__label {
-    top: 12px;
-    left: 14px;
+    top: 14px;
+    left: 16px;
   }
   /* Still side by side, the phones clear of the corner labels. */
   .cp-pair--phone .cp-card {
     height: auto;
-    aspect-ratio: 9 / 16;
+    aspect-ratio: 9 / 17;
   }
   .cp-pair--phone .cp-shot {
-    margin-top: 24px;
+    margin-top: 30px;
+    height: min(84cqh, calc(86cqw / var(--ar)));
   }
   /* The map: one column, the questions under their boxes. */
   .cp-map {
@@ -962,6 +975,7 @@
     grid-template-columns: minmax(0, min(100%, 320px));
     grid-template-rows: none;
     row-gap: 32px;
+    padding-top: 0;
   }
   .cp-map__branches > .cp-map__node {
     display: block;
@@ -975,9 +989,6 @@
   .cp-map__fork::before {
     height: 32px;
     bottom: 100%;
-  }
-  .cp-map__branches {
-    padding-top: 0;
   }
 }
 
@@ -994,24 +1005,24 @@
     grid-template-columns: 1fr;
   }
   .cp-pair--desktop .cp-card,
-  .cp-plate {
+  .cp-plate--desktop {
     container-type: inline-size;
     aspect-ratio: auto;
     max-height: none;
-    padding: 40px 10px 10px;
+    padding: 44px 12px 12px;
+  }
+  .cp-plate--desktop {
+    padding-top: 12px;
   }
   .cp-pair--desktop .cp-shot,
   .cp-plate--desktop .cp-shot {
     width: 100%;
     border-radius: 8px;
   }
-  .cp-plate {
-    padding: 16px;
-  }
-  .cp-plate--desktop {
-    padding-top: 16px;
-  }
   /* Phones two to a row. */
+  .cp-plate--phone {
+    padding: 12px;
+  }
   .cp-plate__row {
     flex-wrap: wrap;
     gap: 12px;

@@ -1,0 +1,129 @@
+/* ===========================================================================
+   The three questions in glass (GlassOrbs). Each is set on the page in the
+   case's type, and a sphere of glass is drawn over it on a canvas that
+   covers the row and the room below it for the shadows. Without WebGL the
+   canvas stays empty and a lit disc of glass is painted behind the words.
+   =========================================================================== */
+
+.go {
+  position: relative;
+}
+.go__list {
+  display: flex;
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+/* A row of three, a touch over one another, centred in the band. */
+.go__orb {
+  position: relative;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: min(380px, 32%);
+  aspect-ratio: 1;
+}
+.go__orb + .go__orb {
+  margin-left: -0.8%;
+}
+.go__text {
+  max-width: 64%;
+  text-align: center;
+}
+.go__title {
+  margin: 0;
+  font-size: 20px;
+  line-height: 28px;
+  letter-spacing: -0.005em;
+  color: var(--cp-ink);
+  text-wrap: balance;
+}
+.go__p {
+  margin: 8px 0 0;
+  font-size: 15px;
+  line-height: 20px;
+  letter-spacing: 0.2px;
+  color: var(--cp-mute);
+  font-feature-settings:
+    'liga' off,
+    'clig' off;
+}
+.go__canvas {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  width: 100%;
+  height: calc(100% + 160px);
+  pointer-events: none;
+}
+/* With the glass drawn, the words under it are the texture's: the page's
+   own stay for screen readers. */
+.go[data-gl] .go__text {
+  opacity: 0;
+}
+/* The shadows fall below the spheres: what follows keeps clear of them. */
+.cp-chapter > .cp-wide:has(> .go) + :is(.cp-col, .cp-wide) {
+  margin-top: calc(var(--cp-step) + 40px);
+}
+
+/* --- without WebGL ---------------------------------------------------------- */
+/* A disc of glass painted behind the words: clear in the middle, denser at
+   the edge where a sphere turns away, lit up and to the left. */
+.go:not([data-gl]) .go__orb::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: 50%;
+  background:
+    radial-gradient(46% 20% at 50% 90%, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0) 100%),
+    radial-gradient(
+      closest-side,
+      rgba(255, 255, 255, 0) 0,
+      rgba(255, 255, 255, 0.06) 55%,
+      rgba(160, 168, 186, 0.1) 78%,
+      rgba(128, 136, 156, 0.22) 93%,
+      rgba(128, 136, 156, 0.3) 97.6%,
+      rgba(255, 255, 255, 0.95) 100%
+    );
+  box-shadow:
+    inset 1.5px 2px 2px -0.5px rgba(255, 255, 255, 1),
+    inset -1.5px -2px 2px -0.5px rgba(255, 255, 255, 0.85),
+    0 28px 50px -24px rgba(30, 38, 58, 0.3),
+    0 60px 90px -40px rgba(30, 38, 58, 0.16);
+}
+.go:not([data-gl]) .go__canvas {
+  display: none;
+}
+@media (forced-colors: active) {
+  .go__orb::before {
+    border: 1px solid CanvasText;
+  }
+}
+
+/* --- phones and tablets in portrait ----------------------------------------- */
+/* One under another, stepping either side of the centre line and over one
+   another. */
+@media (max-width: 899px) {
+  .go__list {
+    flex-direction: column;
+    align-items: center;
+  }
+  .go__orb {
+    width: min(84%, 340px);
+  }
+  .go__orb + .go__orb {
+    margin: -48px 0 0;
+  }
+  .go__orb:nth-child(odd) {
+    translate: -9% 0;
+  }
+  .go__orb:nth-child(even) {
+    translate: 9% 0;
+  }
+  .go__title {
+    font-size: 17px;
+    line-height: 24px;
+  }
+}

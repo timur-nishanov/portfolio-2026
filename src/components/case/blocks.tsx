@@ -104,7 +104,7 @@ export function Plate({ slots, frame }: { slots: CaseSlot[]; frame: Frame }) {
 /** Where the case is scrolled to, read and set at once: the layer's own
     scroll (CaseLayer provides it). Without it, the case is its own page and
     the page's scroll is used. */
-export const CaseScroll = createContext<{ get(): number; set(y: number): void } | null>(null);
+export const CaseScroll = createContext<{ get(): number; set(y: number): void; glide(y: number): void } | null>(null);
 
 type ChapterState = { open: boolean; toggle: () => void; register: (id: string) => () => void; ids: string };
 const ChapterContext = createContext<ChapterState | null>(null);
