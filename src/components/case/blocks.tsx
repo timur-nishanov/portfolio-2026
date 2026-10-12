@@ -58,41 +58,32 @@ function Shot({ slot, frame }: { slot: CaseSlot; frame: Frame }) {
   );
 }
 
-/** A grey card like the ones on the page, with what it shows written in its
-    corner when it is one side of a comparison. */
-function Card({ label, className = '', children }: { label?: 'Before' | 'After'; className?: string; children: React.ReactNode }) {
+/**
+ * A figure as benji.org has them: a light box in the column with a hairline
+ * round it, the screen centred inside, and what it shows named in its corner
+ * when it is one side of a comparison. One screen, or several phones in a
+ * row (smaller, so they fit).
+ */
+export function Figure({ slots, frame, label }: { slots: CaseSlot[]; frame: Frame; label?: 'Before' | 'After' }) {
   return (
-    <div className={`cp-card ${className}`}>
-      {label && <span className="cp-card__label">{label}</span>}
-      {children}
-    </div>
-  );
-}
-
-/** Two cards side by side, the same thing before and after. */
-export function BeforeAfter({ before, after, frame }: Pair & { frame: Frame }) {
-  return (
-    <div className={`cp-pair cp-pair--${frame} cp-reveal`}>
-      <Card label="Before">
-        <Shot slot={before} frame={frame} />
-      </Card>
-      <Card label="After">
-        <Shot slot={after} frame={frame} />
-      </Card>
-    </div>
-  );
-}
-
-/** One wide card: a desktop screen, or several phones in a row. */
-export function Plate({ slots, frame }: { slots: CaseSlot[]; frame: Frame }) {
-  return (
-    <Card className={`cp-plate cp-plate--${frame} cp-reveal`}>
-      <div className="cp-plate__row" style={{ '--n': slots.length } as React.CSSProperties}>
+    <figure className={`cp-figure cp-figure--${frame}${slots.length > 2 ? ' cp-figure--many' : ''} cp-reveal`}>
+      {label && <figcaption className="cp-figure__label">{label}</figcaption>}
+      <div className="cp-figure__row">
         {slots.map((slot, i) => (
           <Shot key={i} slot={slot} frame={frame} />
         ))}
       </div>
-    </Card>
+    </figure>
+  );
+}
+
+/** The same thing before and after, one figure over the other. */
+export function BeforeAfter({ before, after, frame }: Pair & { frame: Frame }) {
+  return (
+    <>
+      <Figure label="Before" slots={[before]} frame={frame} />
+      <Figure label="After" slots={[after]} frame={frame} />
+    </>
   );
 }
 

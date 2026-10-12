@@ -1,11 +1,10 @@
 /* ===========================================================================
    The case study (CaseLayer over the page, CasePage on its own). Set as
-   benji.org sets a case: Inter at one reading size, in ink, with the cards'
-   grey for media; a heading is the same size in semibold, a part's heading
-   smaller still, with a rule. One narrow column of text with a single left
-   edge, a few lines at a time, and the pictures between them as wide as the
-   page's cards, on the same centre line; the way back and the chapters down
-   the left where there is room.
+   benji.org sets a case: Inter at one reading size, in ink, the figures in
+   light boxes; a heading is the same size in semibold, a part's heading
+   smaller and a tone down, with a rule. One narrow column, a few lines at a
+   time, with the pictures between them in the same column, before over
+   after; the way back and the chapters down the left where there is room.
    =========================================================================== */
 
 .cp,
@@ -15,13 +14,9 @@
   --cp-mute: rgba(8, 8, 10, 0.45); /* the quieter line: a subject, a label, a note, the index */
   --cp-grey: #ababab; /* the page's secondary grey: bullets */
   --cp-hair: rgba(8, 8, 10, 0.08);
-  --cp-card: #e6e6e7;
   --cp-col: 560px; /* the about block's measure */
-  --cp-wide: 1400px; /* media: the home cards' width, one for every figure */
   --cp-chapter: 96px; /* between parts: nothing rules them apart but room */
-  --cp-step: 56px; /* text to media */
-  --cp-after: 48px; /* media to what follows */
-  --cp-inner: 16px; /* between the parts of one figure */
+  --cp-step: 40px; /* text to a figure, a figure to text */
   --cp-ease: cubic-bezier(0.22, 1, 0.36, 1);
   font-size: 15px;
 }
@@ -208,11 +203,12 @@
 /* --- the article ---------------------------------------------------------- */
 /* Set as benji.org sets a case: Inter at a reading size with a touch more
    weight than regular, in ink, and nothing larger than it — a heading is the
-   same size in semibold, a part's heading smaller still, with a rule. */
+   same size in semibold, a part's heading smaller and a tone down, with a
+   rule. */
 .cp-article {
   position: relative;
-  padding: 0 20px;
-  font: 460 15px/22px var(--font-inter), var(--font-sf);
+  padding: 0 20px 128px;
+  font: 460 15px/22px var(--font-sf);
   letter-spacing: -0.006em;
   color: var(--cp-ink);
 }
@@ -237,28 +233,24 @@
 .cp-subtitle {
   color: var(--cp-mute);
 }
-/* The small heads: inside a chapter, the results, the three questions. */
+/* The small heads: inside a chapter, the results, the three questions, a
+   line's lead-in. */
 .cp-sub,
 .cp-result__title,
 .cp-runin {
   font-weight: 560;
 }
-/* A part's heading: smaller than the text, a rule running out to the
-   column's edge; a chapter's number before its name. */
+/* A part's heading: smaller than the text and a tone down, a rule running
+   out to the column's edge. */
 .cp-h {
   display: flex;
   align-items: center;
   gap: 12px;
+  color: var(--cp-mute);
   scroll-margin-top: 112px;
 }
 .cp-h__name {
   flex: none;
-}
-.cp-h__no {
-  flex: none;
-  margin-right: -2px;
-  color: var(--cp-mute);
-  font-variant-numeric: tabular-nums;
 }
 .cp-h::after {
   content: '';
@@ -267,35 +259,39 @@
   background: var(--cp-hair);
 }
 /* The small size: a part's heading, the index, the facts' labels, what a
-   card shows, the map. */
+   figure shows, the board. */
 .cp-h,
 .cp-index,
 .cp-facts dt,
-.cp-card__label,
-.cp-map,
-.cp-map__q {
+.cp-figure__label,
+.cp-board {
   font-size: 13px;
   line-height: 16px;
   letter-spacing: -0.003em;
 }
-.cp-note {
-  color: var(--cp-mute);
+/* A phrase the case turns on, marked as with a highlighter, in the notes'
+   yellow: the lower part of the line, as a pen leaves it. */
+.cp-mark {
+  margin: 0 -2px;
+  padding: 0 2px;
+  border-radius: 2px;
+  background: linear-gradient(to top, rgba(255, 217, 45, 0.45) 58%, transparent 58%);
+  color: inherit;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
 }
 
-/* The column, and the wider band for media, on one centre line. */
+/* The column, everything on one centre line. */
 .cp-col {
   max-width: var(--cp-col);
   margin-left: auto;
   margin-right: auto;
 }
-.cp-wide {
-  max-width: var(--cp-wide);
-  margin-left: auto;
-  margin-right: auto;
-}
 /* The text's rhythm: a step between paragraphs, a shorter one under a
    part's heading, a clear break before a small head and none after it, so
-   the head is read as the first line of what follows. */
+   the head is read as the first line of what follows. A figure sits a clear
+   step from the text either side; two in a row (before, after) close
+   together. */
 .cp-col > * + * {
   margin-top: 16px;
 }
@@ -307,6 +303,13 @@
 }
 .cp-col > .cp-sub + * {
   margin-top: 0;
+}
+.cp-col > * + :is(.cp-figure, .go),
+.cp-col > :is(.cp-figure, .go) + * {
+  margin-top: var(--cp-step);
+}
+.cp-col > .cp-figure + .cp-figure {
+  margin-top: 12px;
 }
 
 /* --- the index ------------------------------------------------------------ */
@@ -334,12 +337,6 @@
   left: 60px;
   width: 200px;
   color: var(--cp-mute);
-  transition: opacity 200ms ease;
-}
-/* Stepped aside while a picture passes under it (CaseIndex). */
-.cp-index[data-aside] {
-  opacity: 0;
-  pointer-events: none;
 }
 .cp-index__back {
   display: inline-flex;
@@ -366,7 +363,7 @@
   margin-top: 56px;
 }
 .cp-index li + li {
-  margin-top: 8px;
+  margin-top: 14px;
 }
 .cp-index a {
   color: inherit;
@@ -430,13 +427,6 @@
 .cp-chapter {
   margin-top: var(--cp-chapter);
 }
-/* Text to media, media to text. */
-.cp-chapter > .cp-col + .cp-wide {
-  margin-top: var(--cp-step);
-}
-.cp-chapter > .cp-wide + :is(.cp-col, .cp-wide) {
-  margin-top: var(--cp-after);
-}
 
 /* Bullets: small dots inside the column, so nothing hangs out of it. */
 .cp-list li {
@@ -464,63 +454,38 @@
 .cp-results li + li {
   margin-top: 16px;
 }
-.cp-results p {
-  color: var(--cp-mute);
-}
 
-/* --- media ---------------------------------------------------------------- */
-/* Grey cards like the page's, as wide as them, each a size container so what
-   is inside fits it either way round; a side of a comparison is named in its
-   corner. The screens are what the cards are for: as large as a card allows,
-   clear of its corners and the label. */
-.cp-card {
-  container-type: size;
+/* --- figures -------------------------------------------------------------- */
+/* A figure as benji.org has them: a light box in the column with a hairline
+   round it, the screen centred inside, and what it shows named in its
+   corner. Phones at a phone's width, smaller when there are several; a
+   window as wide as the box allows. */
+.cp-figure {
   position: relative;
   display: grid;
   place-items: center;
-  overflow: hidden;
-  border-radius: 24px;
-  background: var(--cp-card);
+  padding: 40px 24px;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: inset 0 0 0 1px var(--cp-hair);
 }
-.cp-card__label {
+.cp-figure--desktop {
+  padding: 24px;
+}
+.cp-figure--desktop:has(> .cp-figure__label) {
+  padding-top: 48px;
+}
+.cp-figure__label {
   position: absolute;
-  top: 20px;
-  left: 24px;
-  z-index: 1;
+  top: 16px;
+  left: 20px;
   color: var(--cp-mute);
 }
-/* Before and after, side by side: phones in two tall cards, desktop windows
-   in two 4:3 ones. */
-.cp-pair {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--cp-inner);
-}
-.cp-pair--phone .cp-card {
-  height: clamp(560px, calc(100svh - 120px), 900px);
-}
-.cp-pair--desktop .cp-card {
-  aspect-ratio: 4 / 3;
-}
-/* One wide card: a desktop window at nearly the band's width (on a short
-   screen the height gives way, never the width), or phones in a row, the
-   card as tall as they are. */
-.cp-plate {
-  width: 100%;
-}
-.cp-plate--desktop {
-  aspect-ratio: 16 / 10;
-  max-height: calc(100svh - 120px);
-}
-.cp-plate--phone {
-  container-type: inline-size;
-  padding: 6cqw 0;
-}
-.cp-plate__row {
+.cp-figure__row {
   display: flex;
-  align-items: center;
+  flex-wrap: wrap;
   justify-content: center;
-  gap: 2.4cqw;
+  gap: 16px;
   width: 100%;
 }
 /* A screen keeps its own shape (--ar): a phone with a phone's corners, a
@@ -530,186 +495,77 @@
   aspect-ratio: var(--ar);
   object-fit: cover;
 }
-.cp-shot--desktop {
-  width: min(88cqw, calc(84cqh * var(--ar)));
-  border-radius: 10px;
-}
-.cp-pair--desktop .cp-shot {
-  width: min(90cqw, calc(78cqh * var(--ar)));
-}
 .cp-shot--phone {
+  width: 240px;
   border-radius: 12% / 5.6%;
 }
-.cp-pair--phone .cp-shot {
-  height: min(86cqh, calc(84cqw / var(--ar)));
+.cp-figure--many .cp-shot--phone {
+  width: 148px;
 }
-.cp-plate--phone .cp-shot {
-  width: calc((88cqw - (var(--n, 1) - 1) * 2.4cqw) / var(--n, 1));
+.cp-shot--desktop {
+  width: 100%;
+  border-radius: 8px;
 }
-.cp-card img.cp-shot,
-.cp-card video.cp-shot {
+.cp-figure img.cp-shot,
+.cp-figure video.cp-shot {
   box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.05),
-    0 24px 48px -24px rgba(0, 0, 0, 0.18);
+    0 1px 2px rgba(0, 0, 0, 0.06),
+    0 16px 32px -16px rgba(0, 0, 0, 0.2);
 }
-/* The stand-in, until the file is in: a lit screen, blank. */
+/* The stand-in, until the file is in: a grey screen, blank. */
 .cp-ph {
-  background: linear-gradient(180deg, #fbfbfb, #f0f0f1);
-  box-shadow:
-    inset 0 0 0 1px rgba(8, 8, 10, 0.045),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8),
-    0 1px 2px rgba(0, 0, 0, 0.05),
-    0 24px 48px -24px rgba(0, 0, 0, 0.18);
+  background: linear-gradient(180deg, #f1f1f1, #e9e9ea);
+  box-shadow: inset 0 0 0 1px rgba(8, 8, 10, 0.05);
 }
 
-/* --- the rewards map ------------------------------------------------------ */
-/* Boxes down a trunk, the brief to the hub, then three branches; the
-   questions to the PM beside the parts they were about. White boxes on the
-   grey card, joined by hairlines. */
-.cp-map {
-  container-type: inline-size;
-  display: block;
-  padding: 64px 48px;
+/* --- the board ------------------------------------------------------------ */
+/* Notes on a board (QuestBoard): three columns under small labels, each
+   note a square of yellow paper, the questions on blue ones, a touch askew
+   as stuck-on notes are. */
+.cp-board {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px 16px;
+  place-items: stretch;
+  padding: 24px;
 }
-.cp-map ol,
-.cp-map ul {
+.cp-board__col {
+  min-width: 0;
+}
+.cp-board__col ul {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
   margin: 0;
   padding: 0;
   list-style: none;
 }
-.cp-map__trunk {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+.cp-board__label {
+  margin: 0 0 12px;
+  color: var(--cp-mute);
 }
-.cp-map__node {
-  position: relative;
-  width: 300px;
-}
-.cp-map__trunk > .cp-map__node + .cp-map__node,
-.cp-map__trunk > .cp-map__fork {
-  margin-top: 32px;
-}
-/* The line down from the box above. */
-.cp-map__trunk > .cp-map__node + .cp-map__node::before {
-  content: '';
-  position: absolute;
-  bottom: 100%;
-  left: 50%;
-  width: 1px;
-  height: 32px;
-  background: rgba(8, 8, 10, 0.18);
-}
-.cp-map__box {
+.cp-note {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding: 14px 18px 15px;
-  border-radius: 16px;
-  background: #fff;
-  box-shadow: 0 0 0 1px rgba(8, 8, 10, 0.06);
-  text-align: center;
+  padding: 12px 12px 14px;
+  border-radius: 2px;
+  background: #fff0a0;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.06),
+    0 10px 18px -10px rgba(0, 0, 0, 0.22);
 }
-.cp-map__name {
+.cp-note--ask {
+  background: #dbe8ff;
+}
+.cp-note__title {
   font-weight: 560;
 }
-.cp-map__detail {
-  color: var(--cp-mute);
+.cp-note:nth-child(odd) {
+  rotate: -0.8deg;
 }
-/* A question: beside its box on the right, joined by a short dashed line. */
-.cp-map__q {
-  position: absolute;
-  top: 50%;
-  left: calc(100% + 36px);
-  display: flex;
-  gap: 8px;
-  align-items: baseline;
-  width: 230px;
-  transform: translateY(-50%);
-  color: var(--cp-mute);
-}
-.cp-map__q::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  right: calc(100% + 8px);
-  width: 20px;
-  border-top: 1px dashed rgba(8, 8, 10, 0.25);
-}
-.cp-map__mark {
-  flex: none;
-  display: inline-grid;
-  place-items: center;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: var(--cp-ink);
-  color: #fff;
-  font-size: 10px;
-  line-height: 1;
-  transform: translateY(-1px);
-}
-/* The fork: a line down from the hub to a rail, the rail across the three
-   branches, a line down to each. */
-.cp-map__fork {
-  position: relative;
-  width: 100%;
-}
-.cp-map__fork::before {
-  content: '';
-  position: absolute;
-  bottom: calc(100% - 16px);
-  left: 50%;
-  width: 1px;
-  height: 48px;
-  background: rgba(8, 8, 10, 0.18);
-}
-.cp-map__branches {
-  position: relative;
-  display: grid;
-  grid-template-columns: repeat(3, 260px);
-  grid-template-rows: auto auto;
-  justify-content: center;
-  column-gap: 24px;
-  padding-top: 16px;
-}
-.cp-map__branches::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: calc(50% - 284px);
-  right: calc(50% - 284px);
-  height: 1px;
-  background: rgba(8, 8, 10, 0.18);
-}
-.cp-map__branches > .cp-map__node {
-  display: grid;
-  grid-row: span 2;
-  grid-template-rows: subgrid;
-  align-items: start;
-  width: auto;
-}
-.cp-map__branches > .cp-map__node::before {
-  content: '';
-  position: absolute;
-  bottom: 100%;
-  left: 50%;
-  width: 1px;
-  height: 16px;
-  background: rgba(8, 8, 10, 0.18);
-}
-.cp-map__branches .cp-map__box {
-  align-self: stretch;
-}
-/* Under a branch, the question goes beneath it. */
-.cp-map__branches .cp-map__q {
-  position: static;
-  width: auto;
-  margin-top: 14px;
-  transform: none;
-}
-.cp-map__branches .cp-map__q::before {
-  content: none;
+.cp-note:nth-child(even) {
+  rotate: 0.7deg;
 }
 
 /* --- links ---------------------------------------------------------------- */
@@ -769,49 +625,6 @@
   transform: none;
 }
 
-/* --- the end -------------------------------------------------------------- */
-/* The way back once more, on the page's centre line; its padding is only a
-   bigger target and takes no room. */
-.cp-end {
-  display: flex;
-  justify-content: center;
-  margin-top: var(--cp-chapter);
-  padding-bottom: var(--cp-chapter);
-}
-.cp-end__link {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  margin: -10px -12px;
-  padding: 10px 12px;
-  border: 0;
-  background: none;
-  font: inherit;
-  letter-spacing: inherit;
-  color: var(--cp-ink);
-  text-decoration: none;
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-}
-.cp-end__disc {
-  display: grid;
-  place-items: center;
-  width: 20px;
-  height: 20px;
-  color: #1c1c1e;
-  transition: transform 260ms cubic-bezier(0.3, 1.4, 0.5, 1);
-}
-@media (hover: hover) and (pointer: fine) {
-  .cp-end__link:hover .cp-end__disc {
-    transform: translateX(-3px);
-  }
-}
-.cp-end__link:focus-visible {
-  outline: 2px solid var(--accent, #5b94f0);
-  outline-offset: 2px;
-  border-radius: 999px;
-}
-
 /* --- coming in ------------------------------------------------------------ */
 /* Further down, blocks come out of a light blur as they are reached, a touch
    after one another (useReveal). Armed by script, so without it everything
@@ -848,113 +661,43 @@
   animation: cp-bar-in 420ms var(--cp-ease) 60ms both;
 }
 
-/* --- tablets in portrait and phones --------------------------------------- */
-@media (max-width: 899px) {
+/* --- phones --------------------------------------------------------------- */
+@media (max-width: 599px) {
   .cp,
   .cp-page {
     --cp-chapter: 80px;
-    --cp-step: 36px;
-    --cp-after: 32px;
-    --cp-inner: 8px;
+    --cp-step: 32px;
   }
-  /* The media reach to the home cards' 12px edges. */
-  .cp-wide {
-    margin-left: -8px;
-    margin-right: -8px;
+  .cp-article {
+    padding-bottom: 96px;
   }
   .cp-intro {
     padding-top: 96px;
   }
-  .cp-card {
-    border-radius: 20px;
-  }
-  .cp-card__label {
-    top: 14px;
-    left: 16px;
-  }
-  /* Still side by side, the phones clear of the corner labels. */
-  .cp-pair--phone .cp-card {
-    height: auto;
-    aspect-ratio: 9 / 17;
-  }
-  .cp-pair--phone .cp-shot {
-    margin-top: 30px;
-    height: min(84cqh, calc(86cqw / var(--ar)));
-  }
-  /* The map: one column, the questions under their boxes. */
-  .cp-map {
-    padding: 32px 16px;
-  }
-  .cp-map__node {
-    width: min(100%, 320px);
-  }
-  .cp-map__q {
-    position: static;
-    width: auto;
-    margin-top: 12px;
-    transform: none;
-  }
-  .cp-map__q::before {
-    content: none;
-  }
-  .cp-map__branches {
-    grid-template-columns: minmax(0, min(100%, 320px));
-    grid-template-rows: none;
-    row-gap: 32px;
-    padding-top: 0;
-  }
-  .cp-map__branches > .cp-map__node {
-    display: block;
-  }
-  .cp-map__branches::before {
-    content: none;
-  }
-  .cp-map__branches > .cp-map__node::before {
-    height: 32px;
-  }
-  .cp-map__fork::before {
-    height: 32px;
-    bottom: 100%;
-  }
-}
-
-/* --- phones --------------------------------------------------------------- */
-@media (max-width: 599px) {
   /* Too narrow for a label column: each label over its fact. */
   .cp-facts > div {
     grid-template-columns: minmax(0, 1fr);
     gap: 2px;
   }
-  /* Windows one under another, each card as tall as its screen, which takes
-     the card's whole width under its label. */
-  .cp-pair--desktop {
-    grid-template-columns: 1fr;
+  .cp-figure {
+    padding: 32px 16px;
   }
-  .cp-pair--desktop .cp-card,
-  .cp-plate--desktop {
-    container-type: inline-size;
-    aspect-ratio: auto;
-    max-height: none;
-    padding: 44px 12px 12px;
+  .cp-figure--desktop {
+    padding: 16px;
   }
-  .cp-plate--desktop {
-    padding-top: 12px;
+  .cp-figure--desktop:has(> .cp-figure__label) {
+    padding-top: 40px;
   }
-  .cp-pair--desktop .cp-shot,
-  .cp-plate--desktop .cp-shot {
-    width: 100%;
-    border-radius: 8px;
+  .cp-shot--phone {
+    width: 200px;
   }
-  /* Phones two to a row. */
-  .cp-plate--phone {
-    padding: 12px;
+  .cp-figure--many .cp-shot--phone {
+    width: calc(50% - 8px);
   }
-  .cp-plate__row {
-    flex-wrap: wrap;
-    gap: 12px;
-  }
-  .cp-plate--phone .cp-shot {
-    width: calc(50% - 6px);
+  /* The board one column. */
+  .cp-board {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 20px 16px;
   }
 }
 
@@ -962,8 +705,7 @@
   .cp-bar,
   .cp-bar::before,
   .cp-back__disc,
-  .cp-link__chevron,
-  .cp-end__disc {
+  .cp-link__chevron {
     transition: none;
   }
   .cp-bar:has(~ .cp-page) {

@@ -26,8 +26,8 @@ type ChumsMedia = {
   drag: CaseSlot;
   resize: CaseSlot;
   wallet: CaseSlot;
-  /** 03: the assistant's screens, step by step. */
-  assistant: CaseSlot[];
+  /** 03: the assistant, step by step, in one phone. */
+  assistant: CaseSlot;
   /** 04: the rewards screens in a row. */
   rewards: CaseSlot[];
 };
@@ -48,12 +48,7 @@ export const chumsMedia: ChumsMedia = {
   drag: { kind: 'video', alt: 'A file dragged into the chat window and attached' },
   resize: { kind: 'video', alt: 'The window narrowing from 1300 to 375px as the layout rearranges' },
   wallet: { kind: 'video', alt: 'The wallet popup turning into a full screen as the window narrows' },
-  assistant: [
-    { kind: 'image', alt: 'Calling the assistant with @' },
-    { kind: 'image', alt: 'Sending it a task' },
-    { kind: 'image', alt: 'The thread with its answer' },
-    { kind: 'image', alt: 'All the threads of a room' },
-  ],
+  assistant: { kind: 'video', alt: 'Calling the assistant with @, sending a task, the thread with its answer, all the threads of a room' },
   rewards: [
     { kind: 'image', alt: 'The Explore tab' },
     { kind: 'image', alt: 'The quests screen' },
