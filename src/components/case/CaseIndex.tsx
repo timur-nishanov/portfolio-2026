@@ -32,9 +32,6 @@ export function CaseIndex({ items, onBack, backHref }: { items: IndexItem[] } & 
     const scroller = nav.closest<HTMLElement>('.cp__scroll');
     const target: HTMLElement | Window = scroller ?? window;
     const heads = items.map((item) => document.getElementById(item.id)).filter((el): el is HTMLElement => !!el);
-    // The pictures run as wide as the page and would pass under the index:
-    // it steps aside while one is there, and is back with the text.
-    const wides = Array.from(nav.closest('.cp-article')?.querySelectorAll<HTMLElement>('.cp-wide') ?? []);
     let raf = 0;
     const update = () => {
       raf = 0;
@@ -42,14 +39,6 @@ export function CaseIndex({ items, onBack, backHref }: { items: IndexItem[] } & 
       let id = '';
       for (const head of heads) if (head.getBoundingClientRect().top <= line) id = head.id;
       setCurrent(id);
-      const mine = nav.getBoundingClientRect();
-      const under = wides.some((el) => {
-        const r = el.getBoundingClientRect();
-        return r.bottom > mine.top + 4 && r.top < mine.bottom - 4 && r.left < mine.right;
-      });
-      // Written on the nav at once rather than through a render: a picture
-      // arriving under it is a matter of frames.
-      nav.toggleAttribute('data-aside', under);
     };
     const schedule = () => {
       if (!raf) raf = requestAnimationFrame(update);

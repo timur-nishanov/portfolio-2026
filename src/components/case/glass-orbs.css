@@ -9,24 +9,32 @@
 .go {
   position: relative;
 }
+/* One under another down the column, stepping either side of its centre
+   line and a touch over one another. */
 .go__list {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
   margin: 0;
   padding: 0;
   list-style: none;
 }
-/* A row of three, a clear step apart, centred in the band. */
 .go__orb {
   position: relative;
   flex: none;
   display: grid;
   place-items: center;
-  width: min(400px, 29%);
+  width: min(320px, 84%);
   aspect-ratio: 1;
 }
 .go__orb + .go__orb {
-  margin-left: 4%;
+  margin-top: -40px;
+}
+.go__orb:nth-child(odd) {
+  translate: -14% 0;
+}
+.go__orb:nth-child(even) {
+  translate: 14% 0;
 }
 .go__text {
   max-width: 60%;
@@ -35,14 +43,12 @@
 .go__title {
   margin: 0;
   font-weight: 560;
-  color: var(--cp-ink);
   text-wrap: balance;
 }
 .go__p {
   margin: 6px 0 0;
-  color: rgba(8, 8, 10, 0.55);
 }
-/* The canvas, over the row and the lean's reach round it. */
+/* The canvas, over the column and the lean's reach round it. */
 .go__canvas {
   position: absolute;
   top: -20px;
@@ -90,28 +96,3 @@
   }
 }
 
-/* --- phones and tablets in portrait ----------------------------------------- */
-/* One under another, stepping either side of the centre line. No cursor to
-   lean toward: the canvas needs no room at the sides. */
-@media (max-width: 899px) {
-  .go__list {
-    flex-direction: column;
-    align-items: center;
-  }
-  .go__canvas {
-    left: 0;
-    width: 100%;
-  }
-  .go__orb {
-    width: min(84%, 340px);
-  }
-  .go__orb + .go__orb {
-    margin: 24px 0 0;
-  }
-  .go__orb:nth-child(odd) {
-    translate: -7% 0;
-  }
-  .go__orb:nth-child(even) {
-    translate: 7% 0;
-  }
-}

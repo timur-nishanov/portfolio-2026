@@ -2,23 +2,26 @@
 
 import { useRef } from 'react';
 import { chumsLinks, chumsMedia as media } from '@/data/chumsCase';
-import { ButtonChevron, RowChevron } from '@/components/header/menu/icons';
-import { BackLink } from './BackLink';
-import { BeforeAfter, Plate, useReveal } from './blocks';
+import { RowChevron } from '@/components/header/menu/icons';
+import { BeforeAfter, Figure, useReveal } from './blocks';
 import { CaseIndex } from './CaseIndex';
 import { GlassOrbs } from './GlassOrbs';
-import { QuestMap } from './QuestMap';
+import { QuestBoard } from './QuestBoard';
 import type { ArticleProps } from './registry';
 
-/** A part's heading, small, with a rule running out to the column's edge
-    (as benji.org heads a section); a chapter's number before its name. */
-function Heading({ id, no, children }: { id: string; no?: string; children: React.ReactNode }) {
+/** A part's heading, small and a tone down, with a rule running out to the
+    column's edge (as benji.org heads a section). */
+function Heading({ id, children }: { id: string; children: React.ReactNode }) {
   return (
     <h2 id={id} className="cp-h cp-reveal">
-      {no && <span className="cp-h__no">{no}</span>}
       <span className="cp-h__name">{children}</span>
     </h2>
   );
+}
+
+/** A phrase the case turns on, marked as with a highlighter. */
+function Mark({ children }: { children: React.ReactNode }) {
+  return <mark className="cp-mark">{children}</mark>;
 }
 
 const INDEX = [
@@ -33,10 +36,10 @@ const INDEX = [
 
 /**
  * The Chums case study, laid out as benji.org lays out a case: one narrow
- * column of text with a single left edge, a few lines at a time, and the
- * pictures between them as wide as the page's cards; the way back and the
- * chapters down the left where there is room. Nothing rules the parts
- * apart: the room between them does.
+ * column, a few lines at a time, with the pictures between them in the same
+ * column, before over after; the way back and the chapters down the left
+ * where there is room. Nothing rules the parts apart: the room between them
+ * does.
  */
 export function ChumsArticle({ onBack, backHref }: ArticleProps) {
   const ref = useRef<HTMLElement>(null);
@@ -52,7 +55,7 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
         <p className="cp-subtitle cp-reveal">Making a Web3 messenger easier to use</p>
         <p className="cp-reveal">
           I led design at Chums, a messenger on the open Matrix protocol with crypto wallets, NFTs, domains and dApps
-          built into the chat. It had 32k+ wallets and $200k+ in user balances.
+          built into the chat. It had <Mark>32k+ wallets and $200k+ in user balances</Mark>.
         </p>
         <p className="cp-reveal">Most of the work wasn’t new features. It was making the existing ones easier to use.</p>
         <dl className="cp-facts cp-reveal">
@@ -72,176 +75,124 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
       </div>
 
       {/* --- 01 ------------------------------------------------------------ */}
-      <section className="cp-chapter" aria-labelledby="cp-01">
-        <div className="cp-col">
-          <Heading id="cp-01" no="01">
-            Give Chums its own flow
-          </Heading>
-          <p className="cp-reveal">
-            On Matrix, every community can have its own server. In Chums you could pick a server only when signing in,
-            so switching was slow.
-          </p>
-          <p className="cp-reveal">In early 2024 I designed a concept for the main mobile screens:</p>
-          <ul className="cp-list cp-reveal">
-            <li>
-              <span className="cp-runin">Servers at the top.</span> Switch in one tap.
-            </li>
-            <li>
-              <span className="cp-runin">Sign&#8209;in in a sheet.</span> Join a server without leaving the chat list.
-            </li>
-            <li>
-              <span className="cp-runin">Direct messages apart from server spaces.</span> You see where a chat lives.
-            </li>
-            <li>
-              <span className="cp-runin">Coins in the attachment menu,</span> next to photos and files.
-            </li>
-          </ul>
-        </div>
-        <div className="cp-wide">
-          <BeforeAfter {...media.concept} frame="phone" />
-        </div>
-        <div className="cp-col">
-          <p className="cp-reveal">
-            The founders approved it. When the product’s designer left, I took over design and got a junior designer to
-            mentor.
-          </p>
-          <p className="cp-reveal">
-            The server flow stayed the same: you still pick a server at the start. Only the look reached the product, in
-            small steps.
-          </p>
-        </div>
+      <section className="cp-chapter cp-col" aria-labelledby="cp-01">
+        <Heading id="cp-01">Give Chums its own flow</Heading>
+        <p className="cp-reveal">
+          On Matrix, every community can have its own server. In Chums you could pick a server only when signing in, so
+          switching was slow.
+        </p>
+        <p className="cp-reveal">In early 2024 I designed a concept for the main mobile screens:</p>
+        <ul className="cp-list cp-reveal">
+          <li>
+            <span className="cp-runin">Servers at the top.</span> Switch in one tap.
+          </li>
+          <li>
+            <span className="cp-runin">Sign&#8209;in in a sheet.</span> Join a server without leaving the chat list.
+          </li>
+          <li>
+            <span className="cp-runin">Direct messages apart from server spaces.</span> You see where a chat lives.
+          </li>
+          <li>
+            <span className="cp-runin">Coins in the attachment menu,</span> next to photos and files.
+          </li>
+        </ul>
+        <BeforeAfter {...media.concept} frame="phone" />
+        <p className="cp-reveal">
+          The founders approved it. When the product’s designer left, I took over design and got a junior designer to
+          mentor.
+        </p>
+        <p className="cp-reveal">
+          The server flow stayed the same: you still pick a server at the start. Only the look reached the product, in
+          small steps.
+        </p>
       </section>
 
       {/* --- 02 ------------------------------------------------------------ */}
-      <section className="cp-chapter" aria-labelledby="cp-02">
-        <div className="cp-col">
-          <Heading id="cp-02" no="02">
-            Make desktop work like desktop
-          </Heading>
-          <p className="cp-reveal">
-            The PM and I each audited the desktop app. We found the same thing: it was the mobile app stretched across a
-            big window.
-          </p>
-          <h3 className="cp-sub cp-reveal">Keep the chat in view</h3>
-          <p className="cp-reveal">Contacts used to open in a full window. Now it’s a small window over the chat.</p>
-        </div>
-        <div className="cp-wide">
-          <BeforeAfter {...media.contacts} frame="desktop" />
-        </div>
-        <div className="cp-col">
-          <p className="cp-reveal">
-            Emoji used to open as a panel across the whole window. Now it’s a small window above the message field.
-          </p>
-        </div>
-        <div className="cp-wide">
-          <BeforeAfter {...media.emoji} frame="desktop" />
-        </div>
-        <div className="cp-col">
-          <h3 className="cp-sub cp-reveal">Mouse and window size</h3>
-          <p className="cp-reveal">Attaching a file took six steps. Now you drag it into the chat.</p>
-        </div>
-        <div className="cp-wide">
-          <Plate slots={[media.drag]} frame="desktop" />
-        </div>
-        <div className="cp-col">
-          <p className="cp-reveal">
-            We set rules for window sizes from 1300 to 375px: the chat list keeps its width, the chat stretches, and a
-            narrow window shows one column.
-          </p>
-        </div>
-        <div className="cp-wide">
-          <Plate slots={[media.resize]} frame="desktop" />
-        </div>
-        <div className="cp-col">
-          <p className="cp-reveal">
-            The wallet was designed before us. We fitted it to desktop: a popup in a wide window, a full screen in a
-            narrow one.
-          </p>
-        </div>
-        <div className="cp-wide">
-          <Plate slots={[media.wallet]} frame="desktop" />
-        </div>
-        <div className="cp-col">
-          <p className="cp-reveal">
-            The founders and the PM approved the plan within a week. We had one developer, so some details had to wait.
-            The first beta shipped three months later. The new patterns went into the design system.
-          </p>
-        </div>
+      <section className="cp-chapter cp-col" aria-labelledby="cp-02">
+        <Heading id="cp-02">Make desktop work like desktop</Heading>
+        <p className="cp-reveal">
+          The PM and I each audited the desktop app. We found the same thing: it was the mobile app stretched across a
+          big window.
+        </p>
+        <h3 className="cp-sub cp-reveal">Keep the chat in view</h3>
+        <p className="cp-reveal">Contacts used to open in a full window. Now it’s a small window over the chat.</p>
+        <BeforeAfter {...media.contacts} frame="desktop" />
+        <p className="cp-reveal">
+          Emoji used to open as a panel across the whole window. Now it’s a small window above the message field.
+        </p>
+        <BeforeAfter {...media.emoji} frame="desktop" />
+        <h3 className="cp-sub cp-reveal">Mouse and window size</h3>
+        <p className="cp-reveal">
+          Attaching a file took six steps. <Mark>Now you drag it into the chat.</Mark>
+        </p>
+        <Figure slots={[media.drag]} frame="desktop" />
+        <p className="cp-reveal">
+          We set rules for window sizes from 1300 to 375px: the chat list keeps its width, the chat stretches, and a
+          narrow window shows one column.
+        </p>
+        <Figure slots={[media.resize]} frame="desktop" />
+        <p className="cp-reveal">
+          The wallet was designed before us. We fitted it to desktop: a popup in a wide window, a full screen in a
+          narrow one.
+        </p>
+        <Figure slots={[media.wallet]} frame="desktop" />
+        <p className="cp-reveal">
+          The founders and the PM approved the plan within a week. We had one developer, so some details had to wait.{' '}
+          <Mark>The first beta shipped three months later.</Mark> The new patterns went into the design system.
+        </p>
       </section>
 
       {/* --- 03 ------------------------------------------------------------ */}
-      <section className="cp-chapter" aria-labelledby="cp-03">
-        <div className="cp-col">
-          <Heading id="cp-03" no="03">
-            Give every AI request its own thread
-          </Heading>
-          <p className="cp-reveal">
-            Chums was trying out an AI assistant in group chats. You mention it and give it a task. In a group this gets
-            noisy: one person’s chat with a bot fills everyone’s feed.
-          </p>
-          <p className="cp-reveal">So every request opens its own thread. Chums calls it a discussion.</p>
-          <ul className="cp-list cp-reveal">
-            <li>You call the assistant with @, like any member.</li>
-            <li>The answer stays in the thread. The chat shows one line and a counter.</li>
-            <li>All threads of a room are in one list.</li>
-          </ul>
-        </div>
-        <div className="cp-wide">
-          <Plate slots={media.assistant} frame="phone" />
-        </div>
-        <div className="cp-col">
-          <p className="cp-reveal">The junior designer designed the flow, I reviewed it.</p>
-        </div>
+      <section className="cp-chapter cp-col" aria-labelledby="cp-03">
+        <Heading id="cp-03">Give every AI request its own thread</Heading>
+        <p className="cp-reveal">
+          Chums was trying out an AI assistant in group chats. You mention it and give it a task. In a group this gets
+          noisy: one person’s chat with a bot fills everyone’s feed.
+        </p>
+        <p className="cp-reveal">So every request opens its own thread. Chums calls it a discussion.</p>
+        <ul className="cp-list cp-reveal">
+          <li>You call the assistant with @, like any member.</li>
+          <li>The answer stays in the thread. The chat shows one line and a counter.</li>
+          <li>All threads of a room are in one list.</li>
+        </ul>
+        <Figure slots={[media.assistant]} frame="phone" />
+        <p className="cp-reveal">The junior designer designed the flow, I reviewed it.</p>
       </section>
 
       {/* --- 04 ------------------------------------------------------------ */}
-      <section className="cp-chapter" aria-labelledby="cp-04">
-        <div className="cp-col">
-          <Heading id="cp-04" no="04">
-            Turn a vague brief into a rewards system
-          </Heading>
-          <p className="cp-reveal">
-            The PM wanted XP for activity in the messenger, plus time&#8209;limited quests from Venom, a blockchain
-            network Chums worked with. The old quests were rooms in the chat list, set up by hand. Nothing said what
-            they were for or what you’d get.
-          </p>
-          <p className="cp-reveal">
-            First we went through the open questions with the PM and mapped how the system should work.
-          </p>
-        </div>
-        <div className="cp-wide">
-          <QuestMap />
-        </div>
-        <div className="cp-col">
-          <p className="cp-reveal">
-            We also looked at how Matrix clients, Telegram, Discord and Family do it. Then we built the screens around
-            three questions.
-          </p>
-        </div>
-        <div className="cp-wide">
-          <GlassOrbs
-            items={[
-              { title: 'Can people find it?', text: 'Quests moved from the chat list to the Explore tab.' },
-              {
-                title: 'Do they get the rules?',
-                text: 'Every screen starts with a short explanation, and a checklist walks you through the first steps.',
-              },
-              {
-                title: 'Do they know what they’ll earn?',
-                text: 'One screen shows your points, the time left in the season and what each room gives.',
-              },
-            ]}
-          />
-        </div>
-        <div className="cp-wide">
-          <Plate slots={media.rewards} frame="phone" />
-        </div>
-        <div className="cp-col">
-          <p className="cp-reveal">
-            The junior designer made the screens, I directed the work. The system was approved and handed to development
-            before I left the studio in January 2026.
-          </p>
-        </div>
+      <section className="cp-chapter cp-col" aria-labelledby="cp-04">
+        <Heading id="cp-04">Turn a vague brief into a rewards system</Heading>
+        <p className="cp-reveal">
+          The PM wanted XP for activity in the messenger, plus time&#8209;limited quests from Venom, a blockchain
+          network Chums worked with. The old quests were rooms in the chat list, set up by hand. Nothing said what they
+          were for or what you’d get.
+        </p>
+        <p className="cp-reveal">
+          First we went through the open questions with the PM and mapped how the system should work.
+        </p>
+        <QuestBoard />
+        <p className="cp-reveal">
+          We also looked at how Matrix clients, Telegram, Discord and Family do it. Then we built the screens around
+          three questions.
+        </p>
+        <GlassOrbs
+          items={[
+            { title: 'Can people find it?', text: 'Quests moved from the chat list to the Explore tab.' },
+            {
+              title: 'Do they get the rules?',
+              text: 'Every screen starts with a short explanation, and a checklist walks you through the first steps.',
+            },
+            {
+              title: 'Do they know what they’ll earn?',
+              text: 'One screen shows your points, the time left in the season and what each room gives.',
+            },
+          ]}
+        />
+        <Figure slots={media.rewards} frame="phone" />
+        <p className="cp-reveal">
+          The junior designer made the screens, I directed the work. The system was{' '}
+          <Mark>approved and handed to development</Mark> before I left the studio in January 2026.
+        </p>
       </section>
 
       {/* --- outcome ------------------------------------------------------- */}
@@ -296,16 +247,6 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
           ))}
         </ul>
       </section>
-
-      {/* The way back once more at the end, on the centre line. */}
-      <footer className="cp-end cp-reveal">
-        <BackLink onBack={onBack} backHref={backHref} className="cp-end__link">
-          <span className="cp-end__disc glass-disc" aria-hidden="true">
-            <ButtonChevron className="cp-chevron-left" />
-          </span>
-          <span>Back to all work</span>
-        </BackLink>
-      </footer>
     </article>
   );
 }
