@@ -33,8 +33,16 @@ export function AliceArticle({ onBack, backHref }: ArticleProps) {
         <h1 className="cp-title cp-reveal">Yandex Alice</h1>
         <p className="cp-subtitle cp-reveal">An AI assistant that lives on the lock screen, not in a chat</p>
         <p className="cp-reveal">
-          This is a concept for a design battle run by the Yandex Alice team at the Kaiference conference. The
-          question was: what could an AI assistant be with no technical limits? It had to be built around the phone.
+          This is a concept for a design battle run by the{' '}
+          <a className="cp-a" href="https://alice.yandex.ru" target="_blank" rel="noopener noreferrer">
+            Yandex Alice
+          </a>{' '}
+          team at the{' '}
+          <a className="cp-a" href="https://www.kaifconf.ru/kaiferenciya-2025" target="_blank" rel="noopener noreferrer">
+            Kaiference
+          </a>{' '}
+          conference. The question was: what could an AI assistant be with no technical limits? It had to be built
+          around the phone.
         </p>
         <p className="cp-reveal">
           Our studio team took <Mark>2nd place, one point behind the winner</Mark>.

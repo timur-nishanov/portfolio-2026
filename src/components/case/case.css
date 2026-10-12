@@ -343,7 +343,7 @@
 .cp-index {
   position: absolute;
   top: 0;
-  left: clamp(0px, calc(50% - var(--cp-col) / 2 - 40px - var(--cp-index-w)), 60px);
+  left: clamp(6px, calc(50% - var(--cp-col) / 2 - 40px - var(--cp-index-w)), 60px);
   display: flex;
   flex-direction: column;
   width: var(--cp-index-w);
@@ -356,10 +356,10 @@
   gap: 14px;
   margin-top: 56px;
 }
-/* Every line is the pill's size, 6px over and under its name and 10px out
-   past it either side, its margins taking that back so the names keep their
-   places: the pill lands on the line exactly, and the whole of it is the
-   line's to point at and click. */
+/* Every line is the pill's size, hugging its name: 6px over and under it
+   and 10px out past it either side, its margins taking that back so the
+   names keep their places. The pill lands on the line exactly, and the
+   whole of it is the line's to point at and click. */
 .cp-index__back,
 .cp-index li > a {
   position: relative;
@@ -367,7 +367,7 @@
   box-sizing: border-box;
   display: flex;
   align-items: center;
-  width: calc(100% + 20px);
+  width: max-content;
   margin: -6px -10px;
   padding: 6px 10px;
   border-radius: 14px;
@@ -376,22 +376,47 @@
   transition: color 160ms ease;
   -webkit-tap-highlight-color: transparent;
 }
-/* The way back's chevron sits 2px out, so its stroke lines up with the
-   names under it. */
+/* The way back's name lines up with the chapters'; its chevron hangs out
+   past that edge, in room the line keeps for it, and shows only under the
+   pointer or the keyboard, sliding in as the links' at the end of a case
+   do (pointing back, so from the other side). */
 .cp-index__back {
-  gap: 6px;
-  width: calc(100% + 22px);
-  margin-left: -12px;
+  margin-left: -26px;
+  padding-left: 26px;
   border: 0;
   background: none;
   font: inherit;
   letter-spacing: inherit;
   cursor: pointer;
 }
-.cp-index__back svg {
+.cp-index__chev {
+  position: absolute;
+  top: 50%;
+  left: 8px;
   display: block;
   width: 12px;
   height: 12px;
+  margin-top: -6px;
+  opacity: 0;
+  transform: translateX(4px);
+  transition:
+    opacity 160ms ease,
+    transform 260ms cubic-bezier(0.3, 1.4, 0.5, 1);
+}
+.cp-index__chev svg {
+  display: block;
+  width: 12px;
+  height: 12px;
+}
+@media (hover: hover) and (pointer: fine) {
+  .cp-index__back:hover .cp-index__chev {
+    opacity: 1;
+    transform: none;
+  }
+}
+.cp-index__back:focus-visible .cp-index__chev {
+  opacity: 1;
+  transform: none;
 }
 .cp-index li > a[aria-current] {
   color: var(--cp-ink);
@@ -408,22 +433,24 @@
   outline-offset: 0;
   color: var(--cp-ink);
 }
-/* The menu's highlight pill (menu.css .lgm-highlight), the index's width and
-   a line's height, gliding between lines on the menu's spring. */
+/* The menu's highlight pill (menu.css .lgm-highlight), on a line's box
+   (CaseIndex), gliding and growing or shrinking between lines on the menu's
+   spring. */
 .cp-index__pill {
   position: absolute;
   top: 0;
-  left: -10px;
-  width: calc(100% + 20px);
+  left: 0;
+  width: var(--w, 0px);
   height: 28px;
   border-radius: 14px;
   background: rgba(8, 8, 10, 0.075);
   box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.35);
   opacity: 0;
-  transform: translateY(var(--y, 0px));
+  transform: translate(var(--x, 0px), var(--y, 0px));
   pointer-events: none;
   transition:
     transform 280ms cubic-bezier(0.3, 1.25, 0.5, 1),
+    width 280ms cubic-bezier(0.3, 1.25, 0.5, 1),
     opacity 160ms ease,
     background-color 120ms ease;
 }
@@ -745,7 +772,8 @@
   .cp-bar::before,
   .cp-back__disc,
   .cp-link__chevron,
-  .cp-index__pill {
+  .cp-index__pill,
+  .cp-index__chev {
     transition: none;
   }
 }
