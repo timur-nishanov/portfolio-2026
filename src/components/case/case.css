@@ -1,32 +1,29 @@
 /* ===========================================================================
-   The case study (CaseLayer over the page, CasePage on its own). In the
-   page's own language: SF Pro at weight 400 on the warm off-white, with the
-   cards' grey for media. Four sizes and no more — 28 for the case's name and
-   the chapters, 20 for the line under the name and the sub-heads (the cards'
-   titles), 17 for reading, 15 for labels (the cards' notes). Laid out as
-   benji.org lays out a case: one narrow column of text with a single left
+   The case study (CaseLayer over the page, CasePage on its own). Set as
+   benji.org sets a case: Inter at one reading size, in ink, with the cards'
+   grey for media; a heading is the same size in semibold, a part's heading
+   smaller still, with a rule. One narrow column of text with a single left
    edge, a few lines at a time, and the pictures between them as wide as the
-   page's cards, on the same centre line; the chapters down the left where
-   there is room.
+   page's cards, on the same centre line; the way back and the chapters down
+   the left where there is room.
    =========================================================================== */
 
 .cp,
 .cp-page,
 .cp-bar {
   --cp-ink: var(--ink-strong, #08080a);
-  --cp-text: rgba(8, 8, 10, 0.8); /* running text: a step softer than headings */
-  --cp-mute: rgba(8, 8, 10, 0.58); /* under a title or beside a fact: a clear step down, still easy to read */
-  --cp-grey: #ababab; /* the page's secondary grey: only labels of a word or three */
+  --cp-mute: rgba(8, 8, 10, 0.45); /* the quieter line: a subject, a label, a note, the index */
+  --cp-grey: #ababab; /* the page's secondary grey: bullets */
   --cp-hair: rgba(8, 8, 10, 0.08);
   --cp-card: #e6e6e7;
   --cp-col: 560px; /* the about block's measure */
   --cp-wide: 1400px; /* media: the home cards' width, one for every figure */
-  --cp-chapter: 128px; /* between parts: nothing rules them apart but room */
-  --cp-step: 48px; /* text to media, media to text */
+  --cp-chapter: 96px; /* between parts: nothing rules them apart but room */
+  --cp-step: 56px; /* text to media */
+  --cp-after: 48px; /* media to what follows */
   --cp-inner: 16px; /* between the parts of one figure */
   --cp-ease: cubic-bezier(0.22, 1, 0.36, 1);
-  /* What isn't set in one of the four sizes takes the reading one. */
-  font-size: 17px;
+  font-size: 15px;
 }
 
 /* --- the layer ------------------------------------------------------------ */
@@ -209,86 +206,80 @@
 }
 
 /* --- the article ---------------------------------------------------------- */
-/* The reading size is the article's own; everything else is set where it is
-   used. */
+/* Set as benji.org sets a case: Inter at a reading size with a touch more
+   weight than regular, in ink, and nothing larger than it — a heading is the
+   same size in semibold, a part's heading smaller still, with a rule. */
 .cp-article {
   position: relative;
   padding: 0 20px;
-  font: 400 17px/26px var(--font-sf);
-  letter-spacing: 0;
-  color: var(--cp-text);
+  font: 460 15px/22px var(--font-inter), var(--font-sf);
+  letter-spacing: -0.006em;
+  color: var(--cp-ink);
 }
-:where(.cp-article) :where(p, h2, h3, ul, ol, dl, dd, figure) {
+:where(.cp-article) :where(p, h1, h2, h3, ul, ol, dl, dd, figure) {
   margin: 0;
 }
 :where(.cp-article) :where(ul, ol) {
   padding: 0;
   list-style: none;
 }
-:where(.cp-article) :where(h2, h3) {
+:where(.cp-article) :where(h1, h2, h3) {
   font: inherit;
 }
 .cp-article :where(p, li, dd) {
   text-wrap: pretty;
 }
 
-/* The sizes. 28: the case's name and the chapters' headings, a chapter's
-   number before its name in grey. */
-.cp-title,
-.cp-h {
-  font-size: 28px;
-  line-height: 34px;
-  letter-spacing: -0.01em;
-  color: var(--cp-ink);
-  text-wrap: balance;
-}
-.cp-h {
-  scroll-margin-top: 112px;
-}
-.cp-h__no {
-  margin-right: 0.45em;
-  color: var(--cp-grey);
-  font-variant-numeric: tabular-nums;
-}
-/* 20: the line under the name, and the sub-heads (inside a chapter, the
-   results, the three questions). */
-.cp-subtitle,
-.cp-sub,
-.cp-result__title,
-.cp-end__link {
-  font-size: 20px;
-  line-height: 28px;
-  letter-spacing: -0.005em;
-  color: var(--cp-ink);
+/* The case's name, the subject under it a tone down. */
+.cp-title {
+  font-weight: 500;
 }
 .cp-subtitle {
   color: var(--cp-mute);
 }
-.cp-subtitle,
-.cp-sub {
-  text-wrap: balance;
-}
-/* 17 is the article's. A list line's lead-in is in full ink; a note under
-   the facts a step softer. */
+/* The small heads: inside a chapter, the results, the three questions. */
+.cp-sub,
+.cp-result__title,
 .cp-runin {
-  color: var(--cp-ink);
+  font-weight: 560;
 }
-.cp-note {
+/* A part's heading: smaller than the text, a rule running out to the
+   column's edge; a chapter's number before its name. */
+.cp-h {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  scroll-margin-top: 112px;
+}
+.cp-h__name {
+  flex: none;
+}
+.cp-h__no {
+  flex: none;
+  margin-right: -2px;
   color: var(--cp-mute);
+  font-variant-numeric: tabular-nums;
 }
-/* 15: labels. */
-.cp-facts dt,
+.cp-h::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--cp-hair);
+}
+/* The small size: a part's heading, the index, the facts' labels, what a
+   card shows, the map. */
+.cp-h,
 .cp-index,
-.cp-toggle,
+.cp-facts dt,
 .cp-card__label,
 .cp-map,
 .cp-map__q {
-  font-size: 15px;
-  line-height: 20px;
-  letter-spacing: 0.2px;
-  font-feature-settings:
-    'liga' off,
-    'clig' off;
+  font-size: 13px;
+  line-height: 16px;
+  letter-spacing: -0.003em;
+}
+.cp-note {
+  color: var(--cp-mute);
 }
 
 /* The column, and the wider band for media, on one centre line. */
@@ -302,26 +293,26 @@
   margin-left: auto;
   margin-right: auto;
 }
-/* The text's rhythm: a step between paragraphs, more under a heading, a
-   clear break before a sub-head and less after it, so each sub-head is seen
-   to belong to what follows. */
+/* The text's rhythm: a step between paragraphs, a shorter one under a
+   part's heading, a clear break before a small head and none after it, so
+   the head is read as the first line of what follows. */
 .cp-col > * + * {
   margin-top: 16px;
 }
 .cp-col > .cp-h + * {
-  margin-top: 24px;
+  margin-top: 18px;
 }
 .cp-col > * + .cp-sub {
-  margin-top: 40px;
+  margin-top: 32px;
 }
 .cp-col > .cp-sub + * {
-  margin-top: 8px;
+  margin-top: 0;
 }
 
 /* --- the index ------------------------------------------------------------ */
-/* The chapters down the left, from the case's name down, kept in view as
-   the case scrolls; the one being read in ink. Only where there is room
-   beside the column. */
+/* The way back and the chapters down the left, from the case's name down,
+   kept in view as the case scrolls; the chapter being read in ink. Only
+   where there is room beside the column: there the bar is not shown. */
 .cp-index-host {
   position: sticky;
   top: 128px;
@@ -333,18 +324,52 @@
   .cp-index-host {
     display: block;
   }
+  .cp-bar {
+    display: none;
+  }
 }
 .cp-index {
   position: absolute;
   top: 0;
   left: 60px;
   width: 200px;
+  color: var(--cp-mute);
+  transition: opacity 200ms ease;
+}
+/* Stepped aside while a picture passes under it (CaseIndex). */
+.cp-index[data-aside] {
+  opacity: 0;
+  pointer-events: none;
+}
+.cp-index__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 0 -2px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 160ms ease;
+}
+.cp-index__back svg {
+  display: block;
+  width: 12px;
+  height: 12px;
+}
+.cp-index ol {
+  margin-top: 56px;
 }
 .cp-index li + li {
-  margin-top: 10px;
+  margin-top: 8px;
 }
 .cp-index a {
-  color: var(--cp-grey);
+  color: inherit;
   text-decoration: none;
   text-wrap: balance;
   transition: color 160ms ease;
@@ -353,11 +378,13 @@
   color: var(--cp-ink);
 }
 @media (hover: hover) and (pointer: fine) {
-  .cp-index a:hover {
-    color: var(--cp-text);
+  .cp-index a:hover,
+  .cp-index__back:hover {
+    color: var(--cp-ink);
   }
 }
-.cp-index a:focus-visible {
+.cp-index a:focus-visible,
+.cp-index__back:focus-visible {
   outline: 2px solid var(--accent, #5b94f0);
   outline-offset: 2px;
   border-radius: 4px;
@@ -374,20 +401,17 @@
   margin-top: 32px;
 }
 .cp-intro > .cp-facts {
-  margin-top: 40px;
-}
-.cp-intro > .cp-note {
-  margin-top: 24px;
+  margin-top: 32px;
 }
 
 /* The facts, a line each with a hairline between: the label in a column of
-   its own, the fact in ink. */
+   its own. */
 .cp-facts > div {
   display: grid;
-  grid-template-columns: 136px minmax(0, 1fr);
+  grid-template-columns: 120px minmax(0, 1fr);
   gap: 16px;
   align-items: baseline;
-  padding: 12px 0;
+  padding: 10px 0;
 }
 .cp-facts > div:first-child {
   padding-top: 0;
@@ -401,122 +425,47 @@
 .cp-facts dt {
   color: var(--cp-mute);
 }
-.cp-facts dd {
-  color: var(--cp-ink);
-}
 
 /* --- parts ---------------------------------------------------------------- */
 .cp-chapter {
   margin-top: var(--cp-chapter);
 }
 /* Text to media, media to text. */
-.cp-chapter > :is(.cp-col, .cp-wide, .cp-fold) + :is(.cp-col, .cp-wide) {
+.cp-chapter > .cp-col + .cp-wide {
   margin-top: var(--cp-step);
 }
-/* A sub-head right under a picture gets the break it has under text. */
-.cp-chapter > .cp-wide + .cp-col:has(> .cp-sub:first-child) {
-  margin-top: 64px;
+.cp-chapter > .cp-wide + :is(.cp-col, .cp-wide) {
+  margin-top: var(--cp-after);
 }
 
-/* Bullets: small grey dots inside the column, so nothing hangs out of it. */
+/* Bullets: small dots inside the column, so nothing hangs out of it. */
 .cp-list li {
   position: relative;
-  padding-left: 18px;
+  padding-left: 16px;
 }
 .cp-list li + li {
-  margin-top: 8px;
+  margin-top: 6px;
 }
 .cp-list li::before {
   content: '';
   position: absolute;
-  left: 3px;
-  top: 11px;
+  left: 2px;
+  top: 9px;
   width: 4px;
   height: 4px;
   border-radius: 50%;
   background: var(--cp-grey);
 }
 
-/* Where it landed: each part's name over what became of it, a size and a
-   tone apart. */
+/* Where it landed: each part's name over what became of it. */
 .cp-col > .cp-results {
-  margin-top: 32px;
+  margin-top: 18px;
 }
 .cp-results li + li {
-  margin-top: 24px;
-}
-.cp-results p {
-  margin-top: 4px;
-  color: var(--cp-mute);
-}
-
-/* --- read more ------------------------------------------------------------ */
-/* A hidden region (Fold): its own step of room sits inside it, so closed it
-   takes none. */
-.cp-fold {
-  overflow: hidden;
-}
-/* Focused only from script (ReadMore), to take a keyboard reader into it. */
-.cp-fold:focus {
-  outline: none;
-}
-.cp-fold__inner {
-  padding-top: 16px;
-}
-.cp-fold__inner > * + * {
   margin-top: 16px;
 }
-/* One that holds pictures as well as text keeps the chapter's own steps. */
-.cp-chapter > .cp-fold > .cp-fold__inner {
-  padding-top: var(--cp-step);
-}
-.cp-chapter > .cp-fold > .cp-fold__inner > * + * {
-  margin-top: var(--cp-step);
-}
-
-/* The toggle: a soft pill in the small type, its words in ink. */
-.cp-toggle {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  width: max-content;
-  margin: 0;
-  padding: 8px 12px 8px 16px;
-  border: 0;
-  border-radius: 999px;
-  background: rgba(8, 8, 10, 0.05);
-  font-family: inherit;
-  color: var(--cp-ink);
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  transition:
-    background-color 160ms ease,
-    scale 160ms ease;
-}
-.cp-col > .cp-toggle {
-  margin-top: 24px;
-}
-.cp-col > .cp-toggle:first-child {
-  margin-top: 0;
-}
-.cp-toggle__chevron {
-  transform: rotate(180deg);
-  transition: transform 360ms var(--cp-ease);
-}
-.cp-toggle[aria-expanded='true'] .cp-toggle__chevron {
-  transform: none;
-}
-@media (hover: hover) and (pointer: fine) {
-  .cp-toggle:hover {
-    background-color: rgba(8, 8, 10, 0.08);
-  }
-}
-.cp-toggle:active {
-  scale: 0.97;
-}
-.cp-toggle:focus-visible {
-  outline: 2px solid var(--accent, #5b94f0);
-  outline-offset: 2px;
+.cp-results p {
+  color: var(--cp-mute);
 }
 
 /* --- media ---------------------------------------------------------------- */
@@ -621,7 +570,6 @@
   container-type: inline-size;
   display: block;
   padding: 64px 48px;
-  color: var(--cp-text);
 }
 .cp-map ol,
 .cp-map ul {
@@ -663,7 +611,7 @@
   text-align: center;
 }
 .cp-map__name {
-  color: var(--cp-ink);
+  font-weight: 560;
 }
 .cp-map__detail {
   color: var(--cp-mute);
@@ -692,12 +640,12 @@
   flex: none;
   display: inline-grid;
   place-items: center;
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
   background: var(--cp-ink);
   color: #fff;
-  font-size: 11px;
+  font-size: 10px;
   line-height: 1;
   transform: translateY(-1px);
 }
@@ -765,20 +713,20 @@
 }
 
 /* --- links ---------------------------------------------------------------- */
-/* Where to get the app: the menu's rows, larger. Each logo's disc on the
-   column's edge, a soft pill under the row and its arrow on hover. */
+/* Where to get the app: the menu's rows, each logo's disc on the column's
+   edge, a soft pill under the row and its arrow on hover. */
 .cp-col > .cp-links {
-  margin-top: 24px;
+  margin-top: 18px;
 }
 .cp-links li + li {
-  margin-top: 4px;
+  margin-top: 2px;
 }
 .cp-link {
   display: inline-flex;
   align-items: center;
-  gap: 12px;
-  margin: 0 -14px 0 -8px;
-  padding: 8px 14px 8px 8px;
+  gap: 10px;
+  margin: 0 -12px 0 -6px;
+  padding: 6px 12px 6px 6px;
   border-radius: 999px;
   color: var(--cp-ink);
   text-decoration: none;
@@ -788,14 +736,14 @@
 .cp-link__icon {
   flex: none;
   display: block;
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   box-shadow: 0 0 0 0.5px rgba(8, 8, 10, 0.12);
 }
 .cp-link__chevron {
   flex: none;
-  margin-left: -6px;
+  margin-left: -4px;
   color: var(--cp-ink);
   opacity: 0;
   transform: translateX(-4px);
@@ -822,8 +770,8 @@
 }
 
 /* --- the end -------------------------------------------------------------- */
-/* The way back, on the page's centre line like the bar's title; its padding
-   is only a bigger target and takes no room. */
+/* The way back once more, on the page's centre line; its padding is only a
+   bigger target and takes no room. */
 .cp-end {
   display: flex;
   justify-content: center;
@@ -838,7 +786,9 @@
   padding: 10px 12px;
   border: 0;
   background: none;
-  font-family: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  color: var(--cp-ink);
   text-decoration: none;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
@@ -887,21 +837,6 @@
     transform 320ms var(--cp-ease);
   transition-delay: 0ms;
 }
-/* The Read more button comes in the same way, and keeps its hover colour's
-   own quick change, never held back by the stagger. */
-.cp-toggle.cp-reveal {
-  transition:
-    opacity 340ms var(--cp-ease) calc(var(--stagger, 0) * 40ms),
-    transform 340ms var(--cp-ease) calc(var(--stagger, 0) * 40ms),
-    filter 340ms var(--cp-ease) calc(var(--stagger, 0) * 40ms),
-    color 160ms ease;
-}
-.cp-toggle.cp-reveal.is-first {
-  transition:
-    opacity 320ms var(--cp-ease),
-    transform 320ms var(--cp-ease),
-    color 160ms ease;
-}
 /* The case's own page arrives the same way: the bar first. */
 @keyframes cp-bar-in {
   from {
@@ -917,8 +852,9 @@
 @media (max-width: 899px) {
   .cp,
   .cp-page {
-    --cp-chapter: 88px;
-    --cp-step: 32px;
+    --cp-chapter: 80px;
+    --cp-step: 36px;
+    --cp-after: 32px;
     --cp-inner: 8px;
   }
   /* The media reach to the home cards' 12px edges. */
@@ -928,16 +864,6 @@
   }
   .cp-intro {
     padding-top: 96px;
-  }
-  .cp-intro > .cp-subtitle + * {
-    margin-top: 28px;
-  }
-  .cp-intro > .cp-facts {
-    margin-top: 36px;
-  }
-  .cp-col > * + .cp-sub,
-  .cp-chapter > .cp-wide + .cp-col:has(> .cp-sub:first-child) {
-    margin-top: 36px;
   }
   .cp-card {
     border-radius: 20px;
@@ -1036,7 +962,6 @@
   .cp-bar,
   .cp-bar::before,
   .cp-back__disc,
-  .cp-toggle__chevron,
   .cp-link__chevron,
   .cp-end__disc {
     transition: none;

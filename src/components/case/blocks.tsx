@@ -1,11 +1,8 @@
 'use client';
 
-import { createContext, useCallback, useContext, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { createContext, useLayoutEffect } from 'react';
 import type { CaseSlot } from '@/data/chumsCase';
-import { ButtonChevron } from '@/components/header/menu/icons';
-import { useSmoothScroll } from '@/components/providers/SmoothScrollProvider';
 import { useLazyVideo } from '@/hooks/useLazyVideo';
-import { zoomOf } from '@/lib/zoom';
 
 type Pair = { before: CaseSlot; after: CaseSlot };
 type Frame = 'phone' | 'desktop';
@@ -99,179 +96,12 @@ export function Plate({ slots, frame }: { slots: CaseSlot[]; frame: Frame }) {
   );
 }
 
-/* --- Read more ------------------------------------------------------------ */
+/* --- the layer's scroll --------------------------------------------------- */
 
-/** Where the case is scrolled to, read and set at once: the layer's own
+/** Where the case is scrolled to, read, set and glided to: the layer's own
     scroll (CaseLayer provides it). Without it, the case is its own page and
     the page's scroll is used. */
 export const CaseScroll = createContext<{ get(): number; set(y: number): void; glide(y: number): void } | null>(null);
-
-type ChapterState = { open: boolean; toggle: () => void; register: (id: string) => () => void; ids: string };
-const ChapterContext = createContext<ChapterState | null>(null);
-
-// The way a region opens: it unrolls fast and settles long, its text coming
-// up a beat behind so it never shows cut through. Closing is brisker, the
-// text gone before the region has started to fold.
-const UNROLL = 'cubic-bezier(0.22, 1, 0.36, 1)';
-const ROLL_UP = 'cubic-bezier(0.4, 0, 0.2, 1)';
-
-/**
- * A chapter of the case: the part that is always there (its heading, a
- * short summary, the media) and what explains how, hidden in one or more
- * regions (Fold) that one "Read more" (ReadMore) opens together. Desktop has
- * a region under each of its rules plus one after them.
- */
-export function Chapter({ className = '', ...props }: React.ComponentProps<'section'>) {
-  const [open, setOpen] = useState(false);
-  const [ids, setIds] = useState<string[]>([]);
-  const toggle = useCallback(() => setOpen((o) => !o), []);
-  const register = useCallback((id: string) => {
-    setIds((all) => [...all, id]);
-    return () => setIds((all) => all.filter((x) => x !== id));
-  }, []);
-  const state = useMemo(() => ({ open, toggle, register, ids: ids.join(' ') }), [open, toggle, register, ids]);
-  return (
-    <ChapterContext.Provider value={state}>
-      <section className={`cp-chapter ${className}`} {...props} />
-    </ChapterContext.Provider>
-  );
-}
-
-/**
- * One hidden region of a chapter. Closed it takes no room and is hidden
- * outright, so its text is out of the way of screen readers and Find too.
- * It opens in place, from wherever it is: a second click mid-way turns it
- * round. Reduced motion just shows and hides it.
- */
-export function Fold({ children }: { children: React.ReactNode }) {
-  const chapter = useContext(ChapterContext);
-  const open = !!chapter?.open;
-  const register = chapter?.register;
-  const id = useId();
-  const ref = useRef<HTMLDivElement>(null);
-  const innerRef = useRef<HTMLDivElement>(null);
-  const motion = useRef<Animation[]>([]);
-  const was = useRef(open);
-
-  useLayoutEffect(() => register?.(id), [register, id]);
-
-  useLayoutEffect(() => {
-    const fold = ref.current;
-    const inner = innerRef.current;
-    if (was.current === open || !fold || !inner) return;
-    was.current = open;
-    const from = fold.hidden ? 0 : fold.offsetHeight;
-    const shown = fold.hidden ? '0' : getComputedStyle(inner).opacity;
-    motion.current.forEach((a) => a.cancel());
-    motion.current = [];
-    fold.hidden = false;
-    if (reducedMotion()) {
-      fold.hidden = !open;
-      return;
-    }
-    if (open) {
-      // To its full height, then back to auto, so it reflows with the page.
-      const to = fold.scrollHeight;
-      motion.current = [
-        fold.animate([{ height: `${from}px` }, { height: `${to}px` }], { duration: 380, easing: UNROLL }),
-        inner.animate([{ opacity: shown }, { opacity: 1 }], {
-          duration: 240,
-          delay: from ? 0 : 80,
-          easing: 'ease',
-          fill: 'backwards',
-        }),
-      ];
-    } else {
-      const shrink = fold.animate([{ height: `${from}px` }, { height: '0px' }], {
-        duration: 280,
-        easing: ROLL_UP,
-        fill: 'forwards',
-      });
-      motion.current = [
-        shrink,
-        inner.animate([{ opacity: shown }, { opacity: 0 }], { duration: 120, fill: 'forwards' }),
-      ];
-      shrink.finished.then(
-        () => {
-          fold.hidden = true;
-          motion.current.forEach((a) => a.cancel());
-          motion.current = [];
-        },
-        () => {},
-      );
-    }
-  }, [open]);
-
-  // Focusable from script only: opened from the keyboard, the reader is
-  // taken into it (ReadMore).
-  return (
-    <div ref={ref} id={id} className="cp-fold" tabIndex={-1} hidden>
-      <div ref={innerRef} className="cp-fold__inner">
-        {children}
-      </div>
-    </div>
-  );
-}
-
-/**
- * The chapter's one "Read more", always in the same place: under its last
- * text, over its media. It opens every region of the chapter at once.
- */
-export function ReadMore({ className = '' }: { className?: string }) {
-  const chapter = useContext(ChapterContext);
-  const caseScroll = useContext(CaseScroll);
-  const { jumpTo } = useSmoothScroll();
-  const ref = useRef<HTMLButtonElement>(null);
-  if (!chapter) return null;
-  const { open, toggle, ids } = chapter;
-  const onClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    const button = ref.current;
-    const regions = ids
-      .split(' ')
-      .map((id) => document.getElementById(id))
-      .filter((el): el is HTMLElement => !!el);
-    // Folding up a long passage from below would leave the button above the
-    // screen, and the reader lost: it comes back down to just under the bar.
-    // The scroll follows the regions' height as it is drawn, frame by frame,
-    // so the button only ever moves one way, never swung past and back.
-    if (open && button) {
-      const folded = regions.reduce((sum, el) => sum + el.offsetHeight, 0);
-      const top = button.getBoundingClientRect().top / zoomOf(button) - folded;
-      if (top < 96 && folded > 0) {
-        const by = top - 120;
-        const from = caseScroll ? caseScroll.get() : window.scrollY;
-        const scrollTo = caseScroll ? caseScroll.set : jumpTo;
-        const follow = () => {
-          // Opened again mid-way: the scroll is left where it has got to.
-          if (button.getAttribute('aria-expanded') === 'true') return;
-          const left = regions.reduce((sum, el) => sum + (el.hidden ? 0 : el.offsetHeight), 0);
-          const gone = Math.min(1, Math.max(0, 1 - left / folded));
-          scrollTo(from + by * gone);
-          if (gone < 1) requestAnimationFrame(follow);
-        };
-        requestAnimationFrame(follow);
-      }
-    }
-    // Opened from the keyboard or a screen reader (no pointer: detail 0),
-    // the reader is taken on into the text that has just opened, the view
-    // left where it is.
-    if (!open && e.detail === 0) requestAnimationFrame(() => regions[0]?.focus({ preventScroll: true }));
-    toggle();
-  };
-  return (
-    <button
-      ref={ref}
-      type="button"
-      className={`cp-toggle ${className}`}
-      aria-expanded={open}
-      aria-controls={ids || undefined}
-      onClick={onClick}
-    >
-      {open ? 'Show less' : 'Read more'}
-      <ButtonChevron className="cp-toggle__chevron" />
-    </button>
-  );
-}
 
 /* --- coming in ------------------------------------------------------------ */
 

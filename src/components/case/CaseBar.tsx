@@ -18,7 +18,8 @@ type Props = {
  * under it, it stands on a solid band of the page's colour with a hairline
  * under it (case.css), so what scrolls up goes under it, cleanly, rather than
  * through it. It gets out of the way while reading down and returns on the
- * first scroll up.
+ * first scroll up. Only on screens too narrow for the index down the left
+ * (CaseIndex), which carries the way back there.
  */
 export const CaseBar = forwardRef<HTMLElement, Props>(function CaseBar({ title, onBack, backHref, scrollerRef }, ref) {
   const barRef = useRef<HTMLElement>(null);
@@ -63,8 +64,9 @@ export const CaseBar = forwardRef<HTMLElement, Props>(function CaseBar({ title, 
           <span className="cp-back__disc glass-disc" aria-hidden="true" />
           <ButtonChevron className="cp-back__chevron cp-chevron-left" />
         </BackLink>
-        {/* The page's title, as the site's own title sits in its header. */}
-        <h1 className="cp-bar__title">{title}</h1>
+        {/* The case's name, as the site's own sits in its header; the page's
+            heading is the name at the top of the case itself. */}
+        <p className="cp-bar__title">{title}</p>
       </div>
     </header>
   );

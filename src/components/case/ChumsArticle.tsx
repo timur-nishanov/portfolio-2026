@@ -4,18 +4,19 @@ import { useRef } from 'react';
 import { chumsLinks, chumsMedia as media } from '@/data/chumsCase';
 import { ButtonChevron, RowChevron } from '@/components/header/menu/icons';
 import { BackLink } from './BackLink';
-import { BeforeAfter, Chapter, Fold, Plate, ReadMore, useReveal } from './blocks';
+import { BeforeAfter, Plate, useReveal } from './blocks';
 import { CaseIndex } from './CaseIndex';
 import { GlassOrbs } from './GlassOrbs';
 import { QuestMap } from './QuestMap';
 import type { ArticleProps } from './registry';
 
-/** A chapter's heading: its number in grey, then its name. */
+/** A part's heading, small, with a rule running out to the column's edge
+    (as benji.org heads a section); a chapter's number before its name. */
 function Heading({ id, no, children }: { id: string; no?: string; children: React.ReactNode }) {
   return (
     <h2 id={id} className="cp-h cp-reveal">
       {no && <span className="cp-h__no">{no}</span>}
-      {children}
+      <span className="cp-h__name">{children}</span>
     </h2>
   );
 }
@@ -33,9 +34,9 @@ const INDEX = [
 /**
  * The Chums case study, laid out as benji.org lays out a case: one narrow
  * column of text with a single left edge, a few lines at a time, and the
- * pictures between them as wide as the page's cards; the chapters down the
- * left where there is room. Nothing rules the parts apart: the room between
- * them does.
+ * pictures between them as wide as the page's cards; the way back and the
+ * chapters down the left where there is room. Nothing rules the parts
+ * apart: the room between them does.
  */
 export function ChumsArticle({ onBack, backHref }: ArticleProps) {
   const ref = useRef<HTMLElement>(null);
@@ -43,13 +44,11 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
 
   return (
     <article ref={ref} className="cp-article">
-      <CaseIndex items={INDEX} />
+      <CaseIndex items={INDEX} onBack={onBack} backHref={backHref} />
 
       {/* --- overview ---------------------------------------------------- */}
       <div className="cp-col cp-intro">
-        {/* The case's name. Not a heading: its title in the bar is the
-            page's h1. */}
-        <p className="cp-title cp-reveal">Chums Messenger</p>
+        <h1 className="cp-title cp-reveal">Chums Messenger</h1>
         <p className="cp-subtitle cp-reveal">Making a Web3 messenger easier to use</p>
         <p className="cp-reveal">
           I led design at Chums, a messenger on the open Matrix protocol with crypto wallets, NFTs, domains and dApps
@@ -70,13 +69,10 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
             <dd>Concept in 2024 · Design lead in 2025</dd>
           </div>
         </dl>
-        <p className="cp-note cp-reveal">
-          Chums was a client of the studio I worked at. I led its design alongside other studio projects.
-        </p>
       </div>
 
       {/* --- 01 ------------------------------------------------------------ */}
-      <Chapter aria-labelledby="cp-01">
+      <section className="cp-chapter" aria-labelledby="cp-01">
         <div className="cp-col">
           <Heading id="cp-01" no="01">
             Give Chums its own flow
@@ -114,10 +110,10 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
             small steps.
           </p>
         </div>
-      </Chapter>
+      </section>
 
       {/* --- 02 ------------------------------------------------------------ */}
-      <Chapter aria-labelledby="cp-02">
+      <section className="cp-chapter" aria-labelledby="cp-02">
         <div className="cp-col">
           <Heading id="cp-02" no="02">
             Make desktop work like desktop
@@ -156,31 +152,25 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
         <div className="cp-wide">
           <Plate slots={[media.resize]} frame="desktop" />
         </div>
-        {/* What came after, and the part that wasn't ours to design. */}
-        <Fold>
-          <div className="cp-col">
-            <p>
-              The wallet was designed before us. We fitted it to desktop: a popup in a wide window, a full screen in a
-              narrow one.
-            </p>
-          </div>
-          <div className="cp-wide">
-            <Plate slots={[media.wallet]} frame="desktop" />
-          </div>
-          <div className="cp-col">
-            <p>
-              The founders and the PM approved the plan within a week. We had one developer, so some details had to
-              wait. The first beta shipped three months later. The new patterns went into the design system.
-            </p>
-          </div>
-        </Fold>
         <div className="cp-col">
-          <ReadMore className="cp-reveal" />
+          <p className="cp-reveal">
+            The wallet was designed before us. We fitted it to desktop: a popup in a wide window, a full screen in a
+            narrow one.
+          </p>
         </div>
-      </Chapter>
+        <div className="cp-wide">
+          <Plate slots={[media.wallet]} frame="desktop" />
+        </div>
+        <div className="cp-col">
+          <p className="cp-reveal">
+            The founders and the PM approved the plan within a week. We had one developer, so some details had to wait.
+            The first beta shipped three months later. The new patterns went into the design system.
+          </p>
+        </div>
+      </section>
 
       {/* --- 03 ------------------------------------------------------------ */}
-      <Chapter aria-labelledby="cp-03">
+      <section className="cp-chapter" aria-labelledby="cp-03">
         <div className="cp-col">
           <Heading id="cp-03" no="03">
             Give every AI request its own thread
@@ -202,10 +192,10 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
         <div className="cp-col">
           <p className="cp-reveal">The junior designer designed the flow, I reviewed it.</p>
         </div>
-      </Chapter>
+      </section>
 
       {/* --- 04 ------------------------------------------------------------ */}
-      <Chapter aria-labelledby="cp-04">
+      <section className="cp-chapter" aria-labelledby="cp-04">
         <div className="cp-col">
           <Heading id="cp-04" no="04">
             Turn a vague brief into a rewards system
@@ -252,7 +242,7 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
             before I left the studio in January 2026.
           </p>
         </div>
-      </Chapter>
+      </section>
 
       {/* --- outcome ------------------------------------------------------- */}
       <section className="cp-chapter cp-col" aria-labelledby="cp-landed">
@@ -298,7 +288,7 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
             <li key={link.href} className="cp-reveal">
               <a className="cp-link" href={link.href} target="_blank" rel="noopener noreferrer">
                 {/* eslint-disable-next-line @next/next/no-img-element -- a static export: next/image adds nothing here */}
-                <img className="cp-link__icon" src={link.icon} alt="" width={28} height={28} />
+                <img className="cp-link__icon" src={link.icon} alt="" width={24} height={24} />
                 <span>{link.label}</span>
                 <RowChevron className="cp-link__chevron" />
               </a>
@@ -307,7 +297,7 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
         </ul>
       </section>
 
-      {/* The way back, on the centre line like the bar's title up top. */}
+      {/* The way back once more at the end, on the centre line. */}
       <footer className="cp-end cp-reveal">
         <BackLink onBack={onBack} backHref={backHref} className="cp-end__link">
           <span className="cp-end__disc glass-disc" aria-hidden="true">

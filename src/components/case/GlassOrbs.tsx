@@ -11,27 +11,27 @@ type Three = typeof import('three');
  * real: a solid ball of a light glass floating a touch above the page, drawn
  * on a canvas over the text. Rays are bent in at its front and out at its
  * back, and where they land on the page is what the glass shows — the text
- * read a little larger through the middle, pulled hard round the rim, where
+ * read a little larger through the middle, pulled out toward the rim, where
  * the colours part. Twelve rays of different colours per pixel make the
  * rainbow at the edge continuous rather than three copies.
  *
  * The text under each sphere is the page's own (the <li>, for screen readers
- * and for browsers without WebGL, where orbs.css paints a lit disc behind
- * it); the canvas draws the same words into a texture, smaller by what the
- * glass magnifies, so they come out at size. The spheres lean toward the
- * cursor, as the page's buttons do, and float a little; nothing is drawn
- * while they are off screen.
+ * and for browsers without WebGL, where glass-orbs.css paints a lit disc
+ * behind it); the canvas draws the same words into a texture, smaller by
+ * what the glass magnifies, so they come out at size. The spheres lean
+ * toward the cursor, as the page's buttons do, and float a little; nothing is
+ * drawn while they are off screen, and nothing outside the spheres at all.
  */
 
 // The glass: how much it bends (its index), how far the colours part across
-// the spectrum, and how far above the page it floats, in radii.
-const IOR = 1.1;
-const DISPERSION = 0.015;
+// the spectrum, and how far above the page it floats, in radii. Light, so
+// the words stay readable through the middle.
+const IOR = 1.055;
+const DISPERSION = 0.006;
 const GAP = 0.3;
-// The text in the texture: drawn this much smaller (the glass magnifies it
-// back), and no wider than this share of the diameter, clear of the rim.
-const TEXT_SCALE = 0.84;
-const TEXT_WIDTH = 0.56;
+// The text block no wider than this share of the diameter: within the flat
+// middle, clear of the rim, where the glass pulls the page out.
+const TEXT_WIDTH = 0.54;
 // The lean: a fraction of the cursor's distance, capped, within this reach
 // past the edge; the same pull as the page's buttons (useMagnetic).
 const LEAN = 0.045;
@@ -56,42 +56,23 @@ const float IOR = ${IOR.toFixed(3)};
 const float DISP = ${DISPERSION.toFixed(4)};
 const float GAP = ${GAP.toFixed(3)};
 
-// On the page under the sphere, in radii with y up: the shadow it casts
-// (a line under its foot and a softer one around), and the light it
-// gathers into a bright spot beneath.
-float shadowAt(vec2 p) {
-  vec2 d = p - vec2(0.0, -1.08);
-  float foot = exp(-(d.x * d.x * 2.2 + d.y * d.y * 22.0));
-  vec2 e = p - vec2(0.0, -1.0);
-  float wide = exp(-(e.x * e.x * 1.1 + e.y * e.y * 4.0)) * smoothstep(0.8, 1.15, length(p));
-  return (foot * 0.6 + wide * 0.4) * 0.32;
-}
-float causticAt(vec2 p) {
-  vec2 d = p - vec2(0.0, -1.0);
-  return exp(-(d.x * d.x * 9.0 + d.y * d.y * 40.0)) * 0.25;
-}
-// The page at a point, in radii from the sphere's centre: its colour with
-// the shadow and the light on it, and the text, if any, over that. Only the
-// sphere's own words: a neighbour's seen bent round the rim read as noise.
+// The page at a point, in radii from the sphere's centre: its colour, and the
+// text over it. Only the sphere's own words, and only from the middle: a
+// neighbour's, or its own brought back round the rim, read as noise.
 vec3 pageAt(vec2 p) {
   vec2 q = uCenter + vec2(p.x, -p.y) * uRadius;
   vec4 t = texture2D(uTex, vec2(q.x / uSize.x, 1.0 - q.y / uSize.y));
-  t.a *= 1.0 - smoothstep(1.0, 1.12, length(p));
-  vec3 c = uBg * (1.0 - shadowAt(p));
-  c = mix(c, vec3(1.0), causticAt(p));
-  return mix(c, t.rgb, t.a);
+  t.a *= 1.0 - smoothstep(0.76, 0.92, length(p));
+  return mix(uBg, t.rgb, t.a);
 }
 
 void main() {
   vec2 p = (vUv - 0.5) * uScale;
   float r = length(p);
   float aa = 1.5 / uRadius;
-  // Past the glass: only its shadow and the light under it, over the page.
-  if (r > 1.0 + aa) {
-    float sh = shadowAt(p);
-    float ca = causticAt(p);
-    float a = sh + ca * (1.0 - sh);
-    gl_FragColor = vec4(vec3(ca * (1.0 - sh)), a);
+  float alpha = 1.0 - smoothstep(1.0 - aa, 1.0 + aa, r);
+  if (alpha <= 0.0) {
+    gl_FragColor = vec4(0.0);
     return;
   }
   float rr = min(r, 1.0);
@@ -137,9 +118,33 @@ void main() {
   light += smoothstep(0.9, 1.0, rr) * down * down * down * 0.2;
   col += light;
   col = mix(col, vec3(1.0), smoothstep(0.984, 1.0, rr) * 0.85);
-  float alpha = 1.0 - smoothstep(1.0 - aa, 1.0 + aa, r);
   gl_FragColor = vec4(col * alpha, alpha);
 }`;
+
+type Vec3 = [number, number, number];
+const dot = (a: Vec3, b: Vec3) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+const refract = (I: Vec3, N: Vec3, eta: number): Vec3 => {
+  const d = dot(N, I);
+  const k = 1 - eta * eta * (1 - d * d);
+  if (k < 0) return [0, 0, 0];
+  const f = eta * d + Math.sqrt(k);
+  return [eta * I[0] - f * N[0], eta * I[1] - f * N[1], eta * I[2] - f * N[2]];
+};
+/** How much larger the glass shows the page through its middle: one ray
+    traced as the shader traces them, near the centre. The words are drawn
+    smaller by this, so they read at their size. */
+function magnification() {
+  const x = 0.12;
+  const z = Math.sqrt(1 - x * x);
+  const n: Vec3 = [x, 0, z];
+  const d1 = refract([0, 0, -1], n, 1 / IOR);
+  const t = -2 * dot(n, d1);
+  const P2: Vec3 = [n[0] + d1[0] * t, n[1] + d1[1] * t, n[2] + d1[2] * t];
+  let d2 = refract(d1, [-P2[0], -P2[1], -P2[2]], IOR);
+  if (dot(d2, d2) < 1e-6) d2 = d1;
+  const s = (-1 - GAP - P2[2]) / Math.min(d2[2], -1e-3);
+  return x / (P2[0] + d2[0] * s);
+}
 
 type Orb = { el: HTMLElement; cx: number; cy: number; r: number; lean: [number, number]; target: [number, number]; engaged: boolean };
 
@@ -230,28 +235,29 @@ function start(THREE: Three, root: HTMLElement, canvas: HTMLCanvasElement) {
     scene.add(mesh);
     return mesh;
   });
+  const shrink = 1 / magnification();
 
   let W = 1;
   let H = 1;
   let box = canvas.getBoundingClientRect();
   // The words of each sphere drawn once into the texture, where they are
   // on the page, in the page's own type, smaller by what the glass adds.
+  // Drawn finer than the screen (up to the texture's limit), as the glass
+  // reads them at the screen's pixels and a touch between.
   const draw = () => {
-    const scale = Math.min((window.devicePixelRatio || 1) * 1.5, 3);
+    const scale = Math.min((window.devicePixelRatio || 1) * 2, 4096 / W, 4);
     sheet.width = Math.round(W * scale);
     sheet.height = Math.round(H * scale);
     ctx.setTransform(scale, 0, 0, scale, 0, 0);
     ctx.clearRect(0, 0, W, H);
     ctx.textAlign = 'center';
     ctx.textBaseline = 'alphabetic';
-    const s = TEXT_SCALE;
+    const s = shrink;
     for (const orb of orbs) {
       const title = orb.el.querySelector<HTMLElement>('.go__title');
       const text = orb.el.querySelector<HTMLElement>('.go__p');
       if (!title || !text) continue;
-      // A small sphere (a phone's) takes its words wider, in fewer lines, so
-      // the block stays short of the rim top and bottom.
-      const maxW = orb.r * 2 * (orb.r < 170 ? 0.64 : TEXT_WIDTH) * s;
+      const maxW = orb.r * 2 * TEXT_WIDTH * s;
       const font = (el: HTMLElement) => {
         const cs = getComputedStyle(el);
         const size = parseFloat(cs.fontSize) * s;
@@ -295,7 +301,7 @@ function start(THREE: Three, root: HTMLElement, canvas: HTMLCanvasElement) {
       orb.cx = r.left - box.left + r.width / 2;
       orb.cy = r.top - box.top + r.height / 2;
       orb.r = r.width / 2;
-      const size = orb.r * 2 * 1.45; // room for the shadow
+      const size = orb.r * 2 * 1.04; // a little over the sphere, for its soft edge
       const m = meshes[i];
       m.scale.set(size, size, 1);
       const u = (m.material as import('three').ShaderMaterial).uniforms;
@@ -366,6 +372,9 @@ function start(THREE: Three, root: HTMLElement, canvas: HTMLCanvasElement) {
   };
   if (hover && motion) window.addEventListener('pointermove', onMove);
   root.setAttribute('data-gl', '');
+  // The words are drawn once the face is in: before, the texture would hold
+  // the fallback face.
+  document.fonts?.ready.then(() => draw()).catch(() => {});
   measure();
 
   return () => {
