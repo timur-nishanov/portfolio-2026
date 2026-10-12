@@ -219,13 +219,11 @@
 .cp-subtitle {
   color: var(--cp-mute);
 }
-/* The small heads: inside a chapter, the results, a line's lead-in. One
-   weight for everything set apart from the text, and a clear step from it:
-   a semibold only a little heavier than the text read as a smudge, not as a
-   head. */
+/* The small heads: inside a chapter, the results. One weight for
+   everything set apart from the text, and a clear step from it: a semibold
+   only a little heavier than the text read as a smudge, not as a head. */
 .cp-sub,
-.cp-result__title,
-.cp-runin {
+.cp-result__title {
   font-weight: 600;
 }
 /* A part's heading, as benji.org's: the text's size in semibold ink, so it
@@ -276,12 +274,11 @@
   margin-left: auto;
   margin-right: auto;
 }
-/* The text's rhythm, as benji.org's. A paragraph's step between paragraphs,
-   lists and a small head and its text. Each gap is closer on the side a
-   thing belongs to: a part's heading sits nearer its own text than the part
-   before it, a small head nearer its text than what is above it, and a
-   figure nearer the words that lead to it than what follows it. The two
-   sides of a comparison close together. */
+/* The text's rhythm, as benji.org's. A paragraph's step between paragraphs
+   and lists. Each gap is closer on the side a thing belongs to: a part's
+   heading sits nearer its own text than the part before it, a small head
+   all but on its text, and a figure nearer the words that lead to it than
+   what follows it. The two sides of a comparison close together. */
 .cp-col > * + * {
   margin-top: 16px;
 }
@@ -290,6 +287,9 @@
 }
 .cp-col > * + .cp-sub {
   margin-top: 36px;
+}
+.cp-col > .cp-sub + * {
+  margin-top: 8px;
 }
 .cp-col > * + :is(.cp-figure, .go) {
   margin-top: var(--cp-step);
@@ -427,14 +427,27 @@
 }
 
 /* A list is its lines, one under another with a little less room than
-   between paragraphs: no markers down the side. */
+   between paragraphs, each with a bullet in the text's own ink and size, on
+   the middle of its first line's small letters: a small grey dot read as a
+   smudge. A point that runs onto a second line (on a phone) splits evenly,
+   rather than leaving a word or two hanging under a full line. */
+.cp-list li {
+  position: relative;
+  padding-left: 18px;
+  text-wrap: balance;
+}
 .cp-list li + li {
   margin-top: 6px;
 }
-/* A point that runs onto a second line (on a phone) splits evenly, rather
-   than leaving a word or two hanging under a full line. */
-.cp-list li {
-  text-wrap: balance;
+.cp-list li::before {
+  content: '';
+  position: absolute;
+  left: 2px;
+  top: 9px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
 }
 
 /* Where it landed: each part's name over what became of it. */
@@ -446,8 +459,7 @@
 /* A figure as benji.org has them: a light box in the column with a hairline
    round it, one screen centred inside, and what it shows named in its
    corner. A phone at a phone's width, 40px of room over and under it; a
-   window with benji's 48px over and under and 36px either side, the name in
-   the room above it, on its left edge. */
+   window with benji's 48px over and under and 36px either side. */
 .cp-figure {
   position: relative;
   display: grid;
@@ -463,11 +475,8 @@
 .cp-figure__label {
   position: absolute;
   top: 16px;
-  left: 24px;
+  left: 20px;
   color: var(--cp-mute);
-}
-.cp-figure--desktop > .cp-figure__label {
-  left: 36px;
 }
 /* A screen keeps its own shape (--ar): a phone with a phone's corners, a
    window with a window's. */
@@ -498,8 +507,7 @@
 
 /* --- the board ------------------------------------------------------------ */
 /* Notes on a board (QuestBoard): three columns under small labels, each
-   note a square of yellow paper, the questions on blue ones, a touch askew
-   as stuck-on notes are. */
+   note a square of yellow paper, the questions on blue ones, set straight. */
 .cp-board {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -538,12 +546,6 @@
 }
 .cp-note__title {
   font-weight: 600;
-}
-.cp-note:nth-child(odd) {
-  rotate: -0.8deg;
-}
-.cp-note:nth-child(even) {
-  rotate: 0.7deg;
 }
 
 /* --- links ---------------------------------------------------------------- */
@@ -649,9 +651,6 @@
   .cp-figure__label {
     top: 12px;
     left: 16px;
-  }
-  .cp-figure--desktop > .cp-figure__label {
-    left: 20px;
   }
   .cp-shot--phone {
     width: 200px;

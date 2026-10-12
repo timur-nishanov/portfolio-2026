@@ -1,9 +1,9 @@
 /**
  * How the rewards system took shape (Chums, 04), as notes on a board: what
  * the PM brought, what we asked, and what we mapped from the answers — each
- * a square of paper under a small label, the questions on blue ones, a
- * touch askew as stuck-on notes are. Drawn in the page's own type rather
- * than as a picture, so it stays sharp and reads as text.
+ * a square of paper under a small label, the questions on blue ones. Drawn
+ * in the page's own type rather than as a picture, so it stays sharp and
+ * reads as text.
  */
 
 type Note = { title?: string; text?: string };
