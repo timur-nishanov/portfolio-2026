@@ -568,12 +568,15 @@ export function CaseLayer() {
     }
     lenisRef.current = lenis;
     // Focus in the case's scroll, so the keyboard reads it down (arrows,
-    // Page Down, Space) from the start; the first Tab goes up to the bar's
-    // back button, as the bar comes first.
+    // Page Down, Space) from the start; the first Tab goes to the way back:
+    // the index's down the left where it is shown, else the bar's button.
     scroller.focus({ preventScroll: true });
     const onTab = (e: KeyboardEvent) => {
       if (e.key !== 'Tab' || e.shiftKey || e.target !== scroller) return;
-      const backButton = barRef.current?.querySelector<HTMLElement>('.cp-back');
+      const backButton = [
+        scroller.querySelector<HTMLElement>('.cp-index__back'),
+        barRef.current?.querySelector<HTMLElement>('.cp-back'),
+      ].find((el) => el && el.offsetWidth > 0);
       if (!backButton) return;
       e.preventDefault();
       backButton.focus();

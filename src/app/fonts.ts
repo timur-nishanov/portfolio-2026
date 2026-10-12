@@ -1,5 +1,15 @@
 import localFont from 'next/font/local';
 
+// Inter — the case studies, set as benji.org sets a case. The variable face
+// (weight and optical size), the Latin subset only: the cases are in English.
+// Preloaded: a case opens over the home page, and its text should be in its
+// face from the first frame.
+export const inter = localFont({
+  src: [{ path: './fonts/InterVariable-latin.woff2', weight: '100 900', style: 'normal' }],
+  variable: '--font-inter',
+  display: 'swap',
+});
+
 // The first screen is set in SF Pro, which is a system font (Apple licence, no
 // self-hosting) — it is a CSS stack, --font-sf in globals.css, not loaded here.
 // The two faces below remain for the hidden sections. preload: false while
