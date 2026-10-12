@@ -83,6 +83,7 @@ export const showcase: ShowcaseCase[] = [
   },
   {
     id: 'yandex-cloud',
+    href: '/cases/yandex-cloud',
     device: 'imac',
     title: 'Yandex Cloud at Scale 2026',
     subtitle: 'Touchscreen game for a conference booth',
@@ -94,9 +95,9 @@ export const showcase: ShowcaseCase[] = [
       alt: 'Yandex Cloud booth game: choosing a business task',
     },
     notes: [
-      'Designed and coded the front-end myself in a week and a half. Engineers built on my code, so design review on a tight deadline took almost no\u00a0time.',
-      'Visitors drag Yandex Cloud services into a chain on a 55-inch touchscreen and hit “run”. The right chain lights up and earns a coin for the booth\u00a0contest.',
-      'Two ways to play: assemble the chain yourself and get instant feedback, or pick a ready bundle and still get a\u00a0coin.',
+      'Designed the game and built the front end myself, with Claude Code, in a week and a half. The production version was built on my\u00a0code.',
+      'Visitors pick a business task on a 55\u2011inch touchscreen and put together the Yandex Cloud services that solve\u00a0it.',
+      'Every result leads somewhere: points you exchange with the booth staff, and a QR code for a\u00a0consultation.',
     ],
   },
 ];
