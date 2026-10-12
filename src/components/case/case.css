@@ -14,8 +14,11 @@
   --cp-mute: rgba(8, 8, 10, 0.45); /* the quieter line: a subject, a label, a note, the index */
   --cp-hair: rgba(8, 8, 10, 0.08);
   --cp-col: 560px; /* the about block's measure */
-  --cp-chapter: 96px; /* between parts: nothing rules them apart but room */
-  --cp-step: 40px; /* text to a figure, a figure to text */
+  /* The spacing, measured off benji.org's case: */
+  --cp-chapter: 56px; /* text to the next part's heading */
+  --cp-head: 28px; /* a part's heading to its text */
+  --cp-step: 40px; /* text to the figure it leads to */
+  --cp-after: 64px; /* a figure to what follows it */
   --cp-ease: cubic-bezier(0.22, 1, 0.36, 1);
   font-size: 15px;
 }
@@ -273,29 +276,29 @@
   margin-left: auto;
   margin-right: auto;
 }
-/* The text's rhythm: a step between paragraphs, a shorter one under a
-   part's heading, a clear break before a small head and none after it, so
-   the head is read as the first line of what follows. A figure sits a clear
-   step from the text either side; two in a row (before, after) close
-   together. */
+/* The text's rhythm, as benji.org's. A paragraph's step between paragraphs,
+   lists and a small head and its text. Each gap is closer on the side a
+   thing belongs to: a part's heading sits nearer its own text than the part
+   before it, a small head nearer its text than what is above it, and a
+   figure nearer the words that lead to it than what follows it. The two
+   sides of a comparison close together. */
 .cp-col > * + * {
   margin-top: 16px;
 }
 .cp-col > .cp-h + * {
-  margin-top: 18px;
+  margin-top: var(--cp-head);
 }
 .cp-col > * + .cp-sub {
-  margin-top: 32px;
+  margin-top: 36px;
 }
-.cp-col > .cp-sub + * {
-  margin-top: 0;
-}
-.cp-col > * + :is(.cp-figure, .go),
-.cp-col > :is(.cp-figure, .go) + * {
+.cp-col > * + :is(.cp-figure, .go) {
   margin-top: var(--cp-step);
 }
+.cp-col > :is(.cp-figure, .go) + * {
+  margin-top: var(--cp-after);
+}
 .cp-col > .cp-figure + .cp-figure {
-  margin-top: 12px;
+  margin-top: 16px;
 }
 
 /* --- the index ------------------------------------------------------------ */
@@ -385,7 +388,7 @@
   margin-top: 4px;
 }
 .cp-intro > .cp-subtitle + * {
-  margin-top: 32px;
+  margin-top: 24px;
 }
 .cp-intro > .cp-facts {
   margin-top: 32px;
@@ -417,6 +420,11 @@
 .cp-chapter {
   margin-top: var(--cp-chapter);
 }
+/* A part that ends on a figure keeps the longer step a figure has under it,
+   on top of the room before the next part. */
+.cp-chapter:has(> :is(.cp-figure, .go):last-child) {
+  padding-bottom: calc(var(--cp-after) - 16px);
+}
 
 /* A list is its lines, one under another with a little less room than
    between paragraphs: no markers down the side. */
@@ -430,9 +438,6 @@
 }
 
 /* Where it landed: each part's name over what became of it. */
-.cp-col > .cp-results {
-  margin-top: 18px;
-}
 .cp-results li + li {
   margin-top: 16px;
 }
@@ -440,7 +445,9 @@
 /* --- figures -------------------------------------------------------------- */
 /* A figure as benji.org has them: a light box in the column with a hairline
    round it, one screen centred inside, and what it shows named in its
-   corner. A phone at a phone's width; a window as wide as the box allows. */
+   corner. A phone at a phone's width, 40px of room over and under it; a
+   window with benji's 48px over and under and 36px either side, the name in
+   the room above it, on its left edge. */
 .cp-figure {
   position: relative;
   display: grid;
@@ -451,16 +458,16 @@
   box-shadow: inset 0 0 0 1px var(--cp-hair);
 }
 .cp-figure--desktop {
-  padding: 24px;
-}
-.cp-figure--desktop:has(> .cp-figure__label) {
-  padding-top: 48px;
+  padding: 48px 36px;
 }
 .cp-figure__label {
   position: absolute;
   top: 16px;
-  left: 20px;
+  left: 24px;
   color: var(--cp-mute);
+}
+.cp-figure--desktop > .cp-figure__label {
+  left: 36px;
 }
 /* A screen keeps its own shape (--ar): a phone with a phone's corners, a
    window with a window's. */
@@ -498,7 +505,7 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 20px 16px;
   place-items: stretch;
-  padding: 24px;
+  padding: 32px;
 }
 .cp-board__col {
   min-width: 0;
@@ -542,9 +549,6 @@
 /* --- links ---------------------------------------------------------------- */
 /* Where to get the app: the menu's rows, each logo's disc on the column's
    edge, a soft pill under the row and its arrow on hover. */
-.cp-col > .cp-links {
-  margin-top: 18px;
-}
 .cp-links li + li {
   margin-top: 8px;
 }
@@ -620,8 +624,10 @@
 @media (max-width: 599px) {
   .cp,
   .cp-page {
-    --cp-chapter: 80px;
+    --cp-chapter: 48px;
+    --cp-head: 24px;
     --cp-step: 32px;
+    --cp-after: 48px;
   }
   .cp-article {
     padding-bottom: 96px;
@@ -638,10 +644,14 @@
     padding: 32px 16px;
   }
   .cp-figure--desktop {
-    padding: 16px;
+    padding: 40px 20px;
   }
-  .cp-figure--desktop:has(> .cp-figure__label) {
-    padding-top: 40px;
+  .cp-figure__label {
+    top: 12px;
+    left: 16px;
+  }
+  .cp-figure--desktop > .cp-figure__label {
+    left: 20px;
   }
   .cp-shot--phone {
     width: 200px;
@@ -649,7 +659,7 @@
   /* The board one column. */
   .cp-board {
     grid-template-columns: minmax(0, 1fr);
-    padding: 20px 16px;
+    padding: 24px 16px;
   }
 }
 
