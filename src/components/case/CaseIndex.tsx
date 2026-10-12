@@ -24,9 +24,11 @@ const rowOf = (t: EventTarget | null) =>
  * is room beside the column (case.css); a line chosen glides the case to
  * its chapter.
  *
- * The chapter being read sits on a pill, the menu's (MenuContent): it glides
- * down the lines as the case scrolls, to the line under the pointer (the way
- * back included) or the keyboard's, and back again when they leave.
+ * The chapter being read sits on a pill, the menu's (MenuContent), hugging
+ * its name: it glides down the lines as the case scrolls, to the line under
+ * the pointer (the way back included) or the keyboard's, and back again when
+ * they leave. The way back's chevron shows only then, as the links' at the
+ * end of a case do.
  */
 export function CaseIndex({ items, onBack, backHref }: { items: IndexItem[] } & ArticleProps) {
   const ref = useRef<HTMLElement>(null);
@@ -56,7 +58,10 @@ export function CaseIndex({ items, onBack, backHref }: { items: IndexItem[] } & 
     }
     const appearing = !pill.hasAttribute('data-on');
     if (appearing) pill.setAttribute('data-instant', '');
+    // The line's own box: it hugs its name (the way back's, its chevron too).
+    pill.style.setProperty('--x', `${row.offsetLeft}px`);
     pill.style.setProperty('--y', `${row.offsetTop}px`);
+    pill.style.setProperty('--w', `${row.offsetWidth}px`);
     pill.style.height = `${row.offsetHeight}px`;
     if (appearing) {
       void pill.offsetWidth;
@@ -141,7 +146,9 @@ export function CaseIndex({ items, onBack, backHref }: { items: IndexItem[] } & 
       >
         <span ref={pillRef} className="cp-index__pill" aria-hidden="true" />
         <BackLink onBack={onBack} backHref={backHref} className="cp-index__back">
-          <ButtonChevron className="cp-chevron-left" />
+          <span className="cp-index__chev" aria-hidden="true">
+            <ButtonChevron className="cp-chevron-left" />
+          </span>
           <span>Back to all work</span>
         </BackLink>
         <ol>
