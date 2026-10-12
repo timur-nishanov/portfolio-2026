@@ -83,18 +83,10 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
         </p>
         <p className="cp-reveal">In early 2024 I designed a concept for the main mobile screens:</p>
         <ul className="cp-list cp-reveal">
-          <li>
-            <span className="cp-runin">Servers at the top.</span> Switch in one tap.
-          </li>
-          <li>
-            <span className="cp-runin">Sign&#8209;in in a sheet.</span> Join a server without leaving the chat list.
-          </li>
-          <li>
-            <span className="cp-runin">Direct messages apart from server spaces.</span> You see where a chat lives.
-          </li>
-          <li>
-            <span className="cp-runin">Coins in the attachment menu,</span> next to photos and files.
-          </li>
+          <li>Servers at the top. Switch in one tap.</li>
+          <li>Sign&#8209;in in a sheet. Join a server without leaving the chat list.</li>
+          <li>Direct messages apart from server spaces. You see where a chat lives.</li>
+          <li>Coins in the attachment menu, next to photos and files.</li>
         </ul>
         <BeforeAfter {...media.concept} frame="phone" />
         <p className="cp-reveal">
@@ -156,7 +148,6 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
           <li>All threads of a room are in one list.</li>
         </ul>
         <Figure slot={media.assistant} frame="phone" />
-        <p className="cp-reveal">The junior designer designed the flow, I reviewed it.</p>
       </section>
 
       {/* --- 04 ------------------------------------------------------------ */}
@@ -222,12 +213,8 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
         <Heading id="cp-differently">What I’d do differently</Heading>
         <p className="cp-reveal">Agree on metrics with the PM before starting.</p>
         <ul className="cp-list cp-reveal">
-          <li>
-            <span className="cp-runin">For desktop:</span> steps and time for common actions.
-          </li>
-          <li>
-            <span className="cp-runin">For rewards:</span> how many people start a quest and how many finish.
-          </li>
+          <li>For desktop: steps and time for common actions.</li>
+          <li>For rewards: how many people start a quest and how many finish.</li>
         </ul>
       </section>
 
