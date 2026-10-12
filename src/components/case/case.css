@@ -1,8 +1,8 @@
 /* ===========================================================================
    The case study (CaseLayer over the page, CasePage on its own). Set as
    benji.org sets a case: Inter at one reading size, in ink, the figures in
-   light boxes; a heading is the same size in semibold, a part's heading
-   smaller and a tone down, with a rule. One narrow column, a few lines at a
+   light boxes; a heading is the same size in semibold, a part's heading a
+   touch bolder still, with a faint rule. One narrow column, a few lines at a
    time, with the pictures between them in the same column, before over
    after; the way back and the chapters down the left where there is room.
    =========================================================================== */
@@ -203,8 +203,7 @@
 /* --- the article ---------------------------------------------------------- */
 /* Set as benji.org sets a case: Inter at a reading size with a touch more
    weight than regular, in ink, and nothing larger than it — a heading is the
-   same size in semibold, a part's heading smaller and a tone down, with a
-   rule. */
+   same size in semibold, a part's heading bolder still, with a faint rule. */
 .cp-article {
   position: relative;
   padding: 0 20px 128px;
@@ -240,13 +239,15 @@
 .cp-runin {
   font-weight: 560;
 }
-/* A part's heading: smaller than the text and a tone down, a rule running
-   out to the column's edge. */
+/* A part's heading, as benji.org's: the text's size in ink, bolder than the
+   small heads, so it stands clear of the text under it; a faint rule runs
+   from it out to the column's edge. */
 .cp-h {
   display: flex;
   align-items: center;
-  gap: 12px;
-  color: var(--cp-mute);
+  gap: 8px;
+  font-weight: 600;
+  letter-spacing: -0.009em;
   scroll-margin-top: 112px;
 }
 .cp-h__name {
@@ -256,11 +257,10 @@
   content: '';
   flex: 1;
   height: 1px;
-  background: var(--cp-hair);
+  background: rgba(8, 8, 10, 0.06);
 }
-/* The small size: a part's heading, the index, the facts' labels, what a
-   figure shows, the board. */
-.cp-h,
+/* The small size: the index, the facts' labels, what a figure shows, the
+   board. */
 .cp-index,
 .cp-facts dt,
 .cp-figure__label,
@@ -317,6 +317,7 @@
    kept in view as the case scrolls; the chapter being read in ink. Only
    where there is room beside the column: there the bar is not shown. */
 .cp-index-host {
+  --cp-index-w: 256px; /* the longest chapter's name, on one line */
   position: sticky;
   top: 128px;
   z-index: 2;
@@ -331,12 +332,16 @@
     display: none;
   }
 }
+/* Each name on one line. 60px in from the edge where there is room, as
+   benji.org has it; on a narrower screen it moves toward the edge instead,
+   so it always keeps 40px clear of the column. */
 .cp-index {
   position: absolute;
   top: 0;
-  left: 60px;
-  width: 200px;
+  left: clamp(0px, calc(50% - var(--cp-col) / 2 - 40px - var(--cp-index-w)), 60px);
+  width: var(--cp-index-w);
   color: var(--cp-mute);
+  white-space: nowrap;
 }
 .cp-index__back {
   display: inline-flex;
@@ -368,7 +373,6 @@
 .cp-index a {
   color: inherit;
   text-decoration: none;
-  text-wrap: balance;
   transition: color 160ms ease;
 }
 .cp-index a[aria-current] {
@@ -457,9 +461,8 @@
 
 /* --- figures -------------------------------------------------------------- */
 /* A figure as benji.org has them: a light box in the column with a hairline
-   round it, the screen centred inside, and what it shows named in its
-   corner. Phones at a phone's width, smaller when there are several; a
-   window as wide as the box allows. */
+   round it, one screen centred inside, and what it shows named in its
+   corner. A phone at a phone's width; a window as wide as the box allows. */
 .cp-figure {
   position: relative;
   display: grid;
@@ -481,13 +484,6 @@
   left: 20px;
   color: var(--cp-mute);
 }
-.cp-figure__row {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 16px;
-  width: 100%;
-}
 /* A screen keeps its own shape (--ar): a phone with a phone's corners, a
    window with a window's. */
 .cp-shot {
@@ -498,9 +494,6 @@
 .cp-shot--phone {
   width: 240px;
   border-radius: 12% / 5.6%;
-}
-.cp-figure--many .cp-shot--phone {
-  width: 148px;
 }
 .cp-shot--desktop {
   width: 100%;
@@ -575,7 +568,7 @@
   margin-top: 18px;
 }
 .cp-links li + li {
-  margin-top: 2px;
+  margin-top: 8px;
 }
 .cp-link {
   display: inline-flex;
@@ -690,9 +683,6 @@
   }
   .cp-shot--phone {
     width: 200px;
-  }
-  .cp-figure--many .cp-shot--phone {
-    width: calc(50% - 8px);
   }
   /* The board one column. */
   .cp-board {

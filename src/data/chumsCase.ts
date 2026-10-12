@@ -28,8 +28,8 @@ type ChumsMedia = {
   wallet: CaseSlot;
   /** 03: the assistant, step by step, in one phone. */
   assistant: CaseSlot;
-  /** 04: the rewards screens in a row. */
-  rewards: CaseSlot[];
+  /** 04: the rewards system, screen by screen, in one phone. */
+  rewards: CaseSlot;
 };
 
 export const chumsMedia: ChumsMedia = {
@@ -49,13 +49,10 @@ export const chumsMedia: ChumsMedia = {
   resize: { kind: 'video', alt: 'The window narrowing from 1300 to 375px as the layout rearranges' },
   wallet: { kind: 'video', alt: 'The wallet popup turning into a full screen as the window narrows' },
   assistant: { kind: 'video', alt: 'Calling the assistant with @, sending a task, the thread with its answer, all the threads of a room' },
-  rewards: [
-    { kind: 'image', alt: 'The Explore tab' },
-    { kind: 'image', alt: 'The quests screen' },
-    { kind: 'image', alt: 'First steps' },
-    { kind: 'image', alt: 'Statistics' },
-    { kind: 'image', alt: 'A room and what it gives' },
-  ],
+  rewards: {
+    kind: 'video',
+    alt: 'The rewards system: quests in the Explore tab, the first steps, your points and the season, what each room gives',
+  },
 };
 
 /** Where to get the app, at the case's end, each with its logo's disc. */
