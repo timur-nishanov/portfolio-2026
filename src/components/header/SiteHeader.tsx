@@ -126,10 +126,8 @@ export function SiteHeader() {
     measure();
     document.fonts?.ready.then(measure);
     window.addEventListener('resize', measure);
-    // Over content once the hero is out of the screen below the bar's 80px,
-    // either way: past the middle of the page the hero waits at the end for
-    // the loop (LoopToStart), below the screen. Watched, not measured on
-    // every scroll.
+    // Over content once the hero is out of the screen below the bar's 80px.
+    // Watched, not measured on every scroll.
     const io = hero
       ? new IntersectionObserver(([e]) => setOverContent(!e.isIntersecting), { rootMargin: '-80px 0px 0px 0px' })
       : null;

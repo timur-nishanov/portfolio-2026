@@ -5,7 +5,8 @@ import { chumsLinks, chumsMedia as media } from '@/data/chumsCase';
 import { ButtonChevron, RowChevron } from '@/components/header/menu/icons';
 import { BackLink } from './BackLink';
 import { BeforeAfter, Chapter, Fold, Plate, ReadMore, useReveal } from './blocks';
-import { Orbs } from './Orbs';
+import { CaseIndex } from './CaseIndex';
+import { GlassOrbs } from './GlassOrbs';
 import { QuestMap } from './QuestMap';
 import type { ArticleProps } from './registry';
 
@@ -19,10 +20,22 @@ function Heading({ id, no, children }: { id: string; no?: string; children: Reac
   );
 }
 
+const INDEX = [
+  { id: 'cp-01', label: 'Give Chums its own flow' },
+  { id: 'cp-02', label: 'Make desktop work like desktop' },
+  { id: 'cp-03', label: 'Give every AI request its own thread' },
+  { id: 'cp-04', label: 'Turn a vague brief into a rewards system' },
+  { id: 'cp-landed', label: 'Where it landed' },
+  { id: 'cp-differently', label: 'What I’d do differently' },
+  { id: 'cp-links', label: 'Links' },
+];
+
 /**
- * The Chums case study. One narrow column of text with a single left edge,
- * and the media running wider than it on the same centre line. A hairline
- * between the big parts, unless one ends on a picture.
+ * The Chums case study, laid out as benji.org lays out a case: one narrow
+ * column of text with a single left edge, a few lines at a time, and the
+ * pictures between them as wide as the page's cards; the chapters down the
+ * left where there is room. Nothing rules the parts apart: the room between
+ * them does.
  */
 export function ChumsArticle({ onBack, backHref }: ArticleProps) {
   const ref = useRef<HTMLElement>(null);
@@ -30,19 +43,19 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
 
   return (
     <article ref={ref} className="cp-article">
+      <CaseIndex items={INDEX} />
+
       {/* --- overview ---------------------------------------------------- */}
       <div className="cp-col cp-intro">
-        {/* The page's opening line. Not a heading: the case's title in the
-            bar is the page's h1. */}
+        {/* The case's name. Not a heading: its title in the bar is the
+            page's h1. */}
         <p className="cp-title cp-reveal">Chums Messenger</p>
         <p className="cp-subtitle cp-reveal">Making a Web3 messenger easier to use</p>
-        <p className="cp-lead cp-reveal">
+        <p className="cp-reveal">
           I led design at Chums, a messenger on the open Matrix protocol with crypto wallets, NFTs, domains and dApps
           built into the chat. It had 32k+ wallets and $200k+ in user balances.
         </p>
-        <p className="cp-lead cp-reveal">
-          Most of the work wasn’t new features. It was making the existing ones easier to use.
-        </p>
+        <p className="cp-reveal">Most of the work wasn’t new features. It was making the existing ones easier to use.</p>
         <dl className="cp-facts cp-reveal">
           <div>
             <dt>Role</dt>
@@ -61,8 +74,6 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
           Chums was a client of the studio I worked at. I led its design alongside other studio projects.
         </p>
       </div>
-
-      <hr className="cp-divider" />
 
       {/* --- 01 ------------------------------------------------------------ */}
       <Chapter aria-labelledby="cp-01">
@@ -104,8 +115,6 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
           </p>
         </div>
       </Chapter>
-
-      <hr className="cp-divider" />
 
       {/* --- 02 ------------------------------------------------------------ */}
       <Chapter aria-labelledby="cp-02">
@@ -170,8 +179,6 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
         </div>
       </Chapter>
 
-      <hr className="cp-divider" />
-
       {/* --- 03 ------------------------------------------------------------ */}
       <Chapter aria-labelledby="cp-03">
         <div className="cp-col">
@@ -196,8 +203,6 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
           <p className="cp-reveal">The junior designer designed the flow, I reviewed it.</p>
         </div>
       </Chapter>
-
-      <hr className="cp-divider" />
 
       {/* --- 04 ------------------------------------------------------------ */}
       <Chapter aria-labelledby="cp-04">
@@ -224,7 +229,7 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
           </p>
         </div>
         <div className="cp-wide">
-          <Orbs
+          <GlassOrbs
             items={[
               { title: 'Can people find it?', text: 'Quests moved from the chat list to the Explore tab.' },
               {
@@ -248,8 +253,6 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
           </p>
         </div>
       </Chapter>
-
-      <hr className="cp-divider" />
 
       {/* --- outcome ------------------------------------------------------- */}
       <section className="cp-chapter cp-col" aria-labelledby="cp-landed">
