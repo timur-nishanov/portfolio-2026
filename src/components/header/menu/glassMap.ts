@@ -20,8 +20,8 @@
  *
  * Checked against the filter's own map (rendered as a plain CSS filter and
  * read back) at 1x, 2x and 3x: within ±2/255 inside the shape, where the map
- * is used, which moves the refracted rim by well under a pixel. Other pixel
- * ratios are left to the filter (see glassMapScale).
+ * is used, which moves the refracted rim by well under a pixel. A
+ * fractional ratio takes the map of the nearest whole one (glassMapScale).
  *
  * The result is two grey images, x and y, not one red/green map: Chromium
  * colour-manages images inside a filter, and on a wide-gamut screen (every
@@ -59,17 +59,21 @@ export const GLASS_MAP_MARGIN = 2;
 const MAX_DIRECT_SIGMA = 4;
 
 /**
- * Device pixels per CSS pixel the map can be drawn for, or null to keep the
- * filter's own map. Only whole ratios (1x, 2x, 3x) were checked against
- * Skia's output: at fractional ones the shape lands on part pixels and the
- * steps on half pixels, which the copy above does not reproduce exactly.
+ * Device pixels per CSS pixel the map is worked out at, or null to keep the
+ * filter's own map. At a whole ratio (1x, 2x, 3x) it is the screen's own,
+ * and the map matches Skia's (checked, see above). At a fractional one
+ * (Windows at 125% or 150%, a browser zoom) it is the nearest whole ratio:
+ * there the filter's own map lands the shape on part pixels and its steps on
+ * half pixels, which this copy does not reproduce exactly, but the two part
+ * only by a fraction of a pixel at the rim, which can't be seen. Keeping the
+ * filter's own map there ran its dozen primitives again on every frame of a
+ * scroll, on the screens least able to spare them.
  */
 export function glassMapScale(step: number): number | null {
   // The glass sits inside the body's zoom (globals.css, lib/zoom).
   const dev = window.devicePixelRatio * zoomOf(document.body);
-  if (Math.abs(dev - Math.round(dev)) > 1e-3) return null;
-  const d = Math.round(dev);
-  if (d < 1 || d > 3) return null;
+  const d = Math.max(1, Math.round(dev));
+  if (d > 3) return null;
   // A step on a half pixel rounds either way in Skia (none of today's do:
   // 3, 6, 9 for the pill; 1.26, 2.52, 3.78 for the buttons).
   const s = step * d;

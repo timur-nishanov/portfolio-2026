@@ -241,9 +241,15 @@
   display: inline-block;
 }
 /* Words come out of a blur one after another and go back into it a little
-   faster — no movement up or down, the text stays where it is. */
+   faster — no movement up or down, the text stays where it is.
+   Coming in, a word holds the first frame through its delay but lets go of
+   the last one: the last frame (opaque, blur(0)) is how a word looks anyway,
+   and kept on (`both`), every word of the note stayed a layer of its own
+   with a filter, as if still animating, through the whole time the note
+   was up, the page scrolling over it. Going out keeps its last frame: the
+   word stays gone until the next note takes its place. */
 .rn__live[data-phase='in'][data-animate] .rn__w {
-  animation: rn-in 720ms cubic-bezier(0.22, 0.8, 0.24, 1) both;
+  animation: rn-in 720ms cubic-bezier(0.22, 0.8, 0.24, 1) backwards;
   animation-delay: calc(var(--i) * 26ms);
 }
 .rn__live[data-phase='out'] .rn__w {
@@ -251,7 +257,7 @@
   animation-delay: calc(var(--i) * 10ms);
 }
 .rn__live[data-reduced][data-phase='in'][data-animate] .rn__w {
-  animation: rn-fade-in 260ms ease both;
+  animation: rn-fade-in 260ms ease backwards;
 }
 .rn__live[data-reduced][data-phase='out'] .rn__w {
   animation: rn-fade-out 260ms ease both;

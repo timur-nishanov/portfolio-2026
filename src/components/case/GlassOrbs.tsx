@@ -39,6 +39,14 @@ const LEAN_MAX = 12;
 const REACH = 90;
 // The float: a slow rise and fall, each sphere a beat behind the last.
 const FLOAT = 3;
+// How far, in device pixels, a sphere moves before the glass is drawn
+// again. The float alone moves a sphere at most ~2.7px a second, under a
+// twentieth of a pixel a frame: drawing every frame (twelve rays a pixel,
+// the heaviest thing on the page) redrew the same picture over and over at
+// the screen's full refresh rate, scrolling or not. A quarter of a pixel
+// can't be seen; the lean, which moves pixels a frame, is still drawn every
+// frame.
+const REDRAW_STEP = 0.25;
 
 const VERT = `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`;
 
@@ -311,7 +319,7 @@ function start(THREE: Three, root: HTMLElement, canvas: HTMLCanvasElement) {
     });
     draw();
     place(performance.now());
-    renderer.render(scene, camera);
+    render(true);
   };
   // Where each sphere is this frame: its place, its lean, its float.
   const place = (now: number) => {
@@ -322,6 +330,24 @@ function start(THREE: Three, root: HTMLElement, canvas: HTMLCanvasElement) {
       meshes[i].position.set(x, H - y, 0);
       (meshes[i].material as import('three').ShaderMaterial).uniforms.uCenter.value.set(x, y);
     });
+  };
+  // Drawn only once a sphere has moved REDRAW_STEP since it was last drawn
+  // (or when asked: a new size, the words redrawn).
+  const step = REDRAW_STEP / dpr;
+  const drawnAt = orbs.map(() => [NaN, NaN]);
+  const render = (force = false) => {
+    const centre = (i: number) => (meshes[i].material as import('three').ShaderMaterial).uniforms.uCenter.value;
+    const moved = orbs.some((_, i) => {
+      const c = centre(i);
+      return !(Math.abs(c.x - drawnAt[i][0]) < step && Math.abs(c.y - drawnAt[i][1]) < step);
+    });
+    if (!force && !moved) return;
+    orbs.forEach((_, i) => {
+      const c = centre(i);
+      drawnAt[i][0] = c.x;
+      drawnAt[i][1] = c.y;
+    });
+    renderer.render(scene, camera);
   };
 
   let raf = 0;
@@ -335,8 +361,10 @@ function start(THREE: Three, root: HTMLElement, canvas: HTMLCanvasElement) {
       orb.lean[1] += (orb.target[1] - orb.lean[1]) * k;
     }
     place(now);
-    renderer.render(scene, camera);
-    if (visible && (motion || !settled())) raf = requestAnimationFrame(loop);
+    const going = visible && (motion || !settled());
+    // The last frame before it stops is drawn exactly where it settled.
+    render(!going);
+    if (going) raf = requestAnimationFrame(loop);
   };
   const wake = () => {
     if (!raf && visible) raf = requestAnimationFrame(loop);
@@ -373,8 +401,13 @@ function start(THREE: Three, root: HTMLElement, canvas: HTMLCanvasElement) {
   if (hover && motion) window.addEventListener('pointermove', onMove);
   root.setAttribute('data-gl', '');
   // The words are drawn once the face is in: before, the texture would hold
-  // the fallback face.
-  document.fonts?.ready.then(() => draw()).catch(() => {});
+  // the fallback face. Shown at once, not on the next move.
+  document.fonts?.ready
+    .then(() => {
+      draw();
+      render(true);
+    })
+    .catch(() => {});
   measure();
 
   return () => {
