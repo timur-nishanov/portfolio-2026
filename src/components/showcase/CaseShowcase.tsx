@@ -7,11 +7,13 @@ import { CaseCard } from './CaseCard';
 import './showcase.css';
 
 // How the card beneath goes as the next one slides over it: it shrinks a
-// little toward its top edge, blurs, and fades out completely by the time it
-// is covered.
+// little toward its top edge, dims, and fades out completely by the time it
+// is covered. No blur: blurring a whole card again every frame of the slide
+// was the heaviest thing on the page, two to three times the GPU's work of
+// every other frame, and it fell on every card change (measured; a smaller
+// radius cost more still, as the browser blurs a wide one on a smaller copy).
 const COVERED_SCALE = 0.08;
 const COVERED_RISE = 56; // px it drifts up as it recedes, a slower layer behind
-const COVERED_BLUR = 10; // px
 const COVERED_DIM = 0.06; // darker by this much once covered — depth without a shadow
 // Parking is eased: a sticky card would ride the scroll at full speed and
 // stop dead on its line, a jolt every time. Instead its speed fades out over
@@ -20,7 +22,7 @@ const COVERED_DIM = 0.06; // darker by this much once covered — depth without 
 // ~22px, which the gap between cards (showcase.css) is wide enough to absorb.
 const SETTLE = 32;
 // How far the next card has come over (0..1) before the one beneath starts
-// to shrink, blur and fade.
+// to shrink, dim and fade.
 const RECEDE_FROM = 0.4;
 
 /** The cases after the hero (#works, the menu's "Works"). */
@@ -71,9 +73,9 @@ export function CaseShowcase() {
       written[i].set(prop, value);
       cards[i].style.setProperty(prop, value);
     };
-    // A card fully covered by the next one (opacity 0) drops its blur, and
-    // its clip waits: videos decoding and blurred under the stack were the
-    // worst of the scroll's cost. It stays in the page for the keyboard and
+    // A card fully covered by the next one (opacity 0) drops its filter, and
+    // its clip waits: videos decoding under the stack were the worst of the
+    // scroll's cost. It stays in the page for the keyboard and
     // screen readers, as before.
     const heldBack = cards.map(() => false);
     const softplus = (x: number) => (x > 30 ? x : Math.log1p(Math.exp(x)));
@@ -124,16 +126,11 @@ export function CaseShowcase() {
               rise[i] = COVERED_RISE * p;
               put(i, 'transform', `translateY(${(settle[i] - rise[i]).toFixed(2)}px) scale(${1 - COVERED_SCALE * p})`);
               // A new scale every frame had the card drawn over again at it,
-              // every frame, all the way down. Once it is a pixel out of
-              // focus the drawing at full size, scaled, can't be told apart,
-              // so from there it is drawn once and only scaled; before that
-              // (sharp, close to full size) it is still drawn at its scale.
-              put(i, 'will-change', COVERED_BLUR * p >= 1 ? 'transform' : '');
-              put(
-                i,
-                'filter',
-                p < 1 ? `blur(${(COVERED_BLUR * p).toFixed(2)}px) brightness(${(1 - COVERED_DIM * p).toFixed(3)})` : '',
-              );
+              // every frame, all the way down. Receding, it is drawn once at
+              // full size and only scaled: a touch soft by the end, as a card
+              // going back into the stack may well be.
+              put(i, 'will-change', 'transform');
+              put(i, 'filter', p < 1 ? `brightness(${(1 - COVERED_DIM * p).toFixed(3)})` : '');
             }
             put(i, 'opacity', String(1 - p * p));
           }

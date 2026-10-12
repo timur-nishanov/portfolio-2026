@@ -46,6 +46,14 @@
   scrollbar-gutter: stable;
   scrollbar-width: thin;
   scrollbar-color: rgba(17, 17, 17, 0.14) transparent;
+  /* The layer's colour again, on what scrolls ('local'), so the case scrolls
+     on the compositor. Without an opaque background of its own, a screen at
+     1x (an external monitor, Windows at 100%) kept the scroll on the main
+     thread, to keep the text's subpixel smoothing: every frame of a scroll
+     painted and rasterised the whole screen of the case again. A plain
+     colour under a stable gutter only counts when it scrolls with the
+     content. It looks the same: the colour of the layer under it. */
+  background: var(--bg, #f7f7f5) local;
 }
 /* Focused only from script (CaseLayer), for the keyboard's scrolling. */
 .cp__scroll:focus {
@@ -724,6 +732,16 @@
   opacity: 0;
   transform: translateY(10px);
   filter: blur(4px);
+}
+/* The big boxes (a figure, the board, the spheres) only fade and rise. A
+   blur can't be animated off the main thread (it spills past the box), so
+   each of these came in with the page restyled and its layers rebuilt every
+   frame, and a blur pass over a box the column's width and up to 880px tall
+   (the spheres' canvas through it), while the scroll went on: a stall each
+   time one arrived. Fading in from nothing, the blur barely showed on them;
+   the text keeps it. */
+.cp-armed :is(.cp-figure, .go).cp-reveal:not(.is-in) {
+  filter: none;
 }
 
 /* --- phones --------------------------------------------------------------- */

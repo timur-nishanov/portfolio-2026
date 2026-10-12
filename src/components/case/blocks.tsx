@@ -159,25 +159,28 @@ export function useReveal(ref: React.RefObject<HTMLElement | null>) {
     const height = () => (scroller ? scroller.clientHeight : window.innerHeight);
     let pending = Array.from(root.querySelectorAll<HTMLElement>('.cp-reveal'));
     let raf = 0;
+    // The blocks above the line come out of pending, those below stay. Every
+    // block's place is read before any is shown: a class set between two
+    // reads had the browser work the page out again for the next read, once
+    // for every block that came in on the same frame (a quick scroll, a
+    // jump), the whole frame's time and more.
+    const above = (line: number) => {
+      const tops = pending.map((el) => el.getBoundingClientRect().top);
+      const up = pending.filter((_, i) => tops[i] < line);
+      if (up.length) pending = pending.filter((_, i) => tops[i] >= line);
+      return up;
+    };
     const sweep = () => {
       raf = 0;
-      const line = height() * 0.92;
-      let n = 0;
-      pending = pending.filter((el) => {
-        if (el.getBoundingClientRect().top >= line) return true;
-        el.style.setProperty('--stagger', String(Math.min(n++, 2)));
+      above(height() * 0.92).forEach((el, n) => {
+        el.style.setProperty('--stagger', String(Math.min(n, 2)));
         el.classList.add('is-in');
-        return false;
       });
     };
     const schedule = () => {
       if (!raf && pending.length) raf = requestAnimationFrame(sweep);
     };
-    pending = pending.filter((el) => {
-      if (el.getBoundingClientRect().top >= height()) return true;
-      el.classList.add('is-in');
-      return false;
-    });
+    above(height()).forEach((el) => el.classList.add('is-in'));
     // The ones further down go into hiding at once, not through their fade:
     // the style is taken with transitions off, then they are put back.
     root.classList.add('cp-arming', 'cp-armed');
