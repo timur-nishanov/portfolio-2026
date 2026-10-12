@@ -2,6 +2,7 @@ import type { ComponentType } from 'react';
 import { AliceArticle } from './AliceArticle';
 import { ChumsArticle } from './ChumsArticle';
 import { UrbantigerArticle } from './UrbantigerArticle';
+import { YandexCloudArticle } from './YandexCloudArticle';
 
 /** How the case's own "back" leaves it: closing the layer over the page, or a
     link home from the case's standalone page. */
@@ -19,4 +20,5 @@ export const CASES: Record<string, CaseEntry> = {
   chums: { title: 'Chums messenger', Article: ChumsArticle },
   urbantiger: { title: 'Urbantiger', Article: UrbantigerArticle },
   alice: { title: 'Yandex Alice', Article: AliceArticle },
+  'yandex-cloud': { title: 'Yandex Cloud at Scale 2026', Article: YandexCloudArticle },
 };

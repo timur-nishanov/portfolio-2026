@@ -576,6 +576,9 @@
 .cp-figure--wide {
   padding: 48px 36px;
 }
+.cp-figure--imac {
+  padding: 40px 36px;
+}
 .cp-figure__label {
   position: absolute;
   top: 16px;
@@ -610,6 +613,12 @@
 .cp-figure video.cp-shot--wide {
   border-radius: 0;
   box-shadow: none;
+}
+/* The iMac, its screen and stand drawn by the home page's mockup: as wide
+   as the box allows, in the frame's own shape. */
+.cp-shot--imac {
+  width: 100%;
+  aspect-ratio: 1600 / 1288;
 }
 /* The stand-in, until the file is in: a grey screen, blank. */
 .cp-ph {
@@ -770,6 +779,9 @@
   .cp-figure--desktop,
   .cp-figure--wide {
     padding: 40px 20px;
+  }
+  .cp-figure--imac {
+    padding: 32px 16px;
   }
   .cp-figure__label {
     top: 12px;
