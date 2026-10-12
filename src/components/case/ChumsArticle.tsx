@@ -55,9 +55,9 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
         <p className="cp-subtitle cp-reveal">Making a Web3 messenger easier to use</p>
         <p className="cp-reveal">
           I led design at Chums, a messenger on the open Matrix protocol with crypto wallets, NFTs, domains and dApps
-          built into the chat. It had <Mark>32k+ wallets and $200k+ in user balances</Mark>.
+          built into the chat. It had <Mark>32k+ wallets and $200k+ in user balances</Mark>. Most of the work wasn’t
+          new features. It was making the existing ones easier to use.
         </p>
-        <p className="cp-reveal">Most of the work wasn’t new features. It was making the existing ones easier to use.</p>
         <dl className="cp-facts cp-reveal">
           <div>
             <dt>Role</dt>
@@ -146,8 +146,8 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
       <section className="cp-chapter cp-col" aria-labelledby="cp-03">
         <Heading id="cp-03">Give every AI request its own thread</Heading>
         <p className="cp-reveal">
-          Chums was trying out an AI assistant in group chats. You mention it and give it a task. In a group this gets
-          noisy: one person’s chat with a bot fills everyone’s feed.
+          Chums was trying out an AI assistant in group chats. You mention it and give it a task. That gets noisy: one
+          person’s chat with a bot fills everyone’s feed.
         </p>
         <p className="cp-reveal">So every request opens its own thread. Chums calls it a discussion.</p>
         <ul className="cp-list cp-reveal">
@@ -164,11 +164,11 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
         <Heading id="cp-04">Turn a vague brief into a rewards system</Heading>
         <p className="cp-reveal">
           The PM wanted XP for activity in the messenger, plus time&#8209;limited quests from Venom, a blockchain
-          network Chums worked with. The old quests were rooms in the chat list, set up by hand. Nothing said what they
-          were for or what you’d get.
+          network Chums worked with.
         </p>
         <p className="cp-reveal">
-          First we went through the open questions with the PM and mapped how the system should work.
+          The old quests were rooms in the chat list, set up by hand. Nothing said what they were for or what you’d
+          get. First we went through the open questions with the PM and mapped how the system should work.
         </p>
         <QuestBoard />
         <p className="cp-reveal">
@@ -188,11 +188,11 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
             },
           ]}
         />
-        <Figure slot={media.rewards} frame="phone" />
         <p className="cp-reveal">
           The junior designer made the screens, I directed the work. The system was{' '}
-          <Mark>approved and handed to development</Mark> before I left the studio in January 2026.
+          <Mark>approved and handed to development</Mark> before I left the studio in January&nbsp;2026.
         </p>
+        <Figure slot={media.rewards} frame="phone" />
       </section>
 
       {/* --- outcome ------------------------------------------------------- */}

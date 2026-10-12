@@ -97,10 +97,11 @@ export const CaseScroll = createContext<{ get(): number; set(y: number): void; g
  * scrollbar, End) still shows it. Armed from script, so without it
  * everything is simply there; reduced motion leaves it all in place.
  *
- * Inside the case layer it waits for the layer's go (the hold comes off as
- * the page has all but grown out of the card): then the whole first screen
- * comes in at once, without a blur, with the page. Further down, blocks come
- * out of a light blur as they are reached, a touch after one another.
+ * The first screen is there from the start, as it is (the case opens at
+ * once, and on its own page the text is already on screen from the server):
+ * down to the screen's very bottom, or what was just seen would vanish.
+ * Further down, blocks come out of a light blur as they are reached, a touch
+ * after one another.
  */
 export function useReveal(ref: React.RefObject<HTMLElement | null>) {
   useLayoutEffect(() => {
@@ -108,59 +109,40 @@ export function useReveal(ref: React.RefObject<HTMLElement | null>) {
     if (!root || reducedMotion()) return;
     const scroller = root.closest<HTMLElement>('.cp__scroll');
     const target: HTMLElement | Window = scroller ?? window;
-    const hold = root.closest<HTMLElement>('[data-hold]');
+    const height = () => (scroller ? scroller.clientHeight : window.innerHeight);
     let pending = Array.from(root.querySelectorAll<HTMLElement>('.cp-reveal'));
     let raf = 0;
-    let live = false;
-    const sweep = (first = false) => {
+    const sweep = () => {
       raf = 0;
-      if (!live) return;
-      const line = (scroller ? scroller.clientHeight : window.innerHeight) * 0.92;
+      const line = height() * 0.92;
       let n = 0;
       pending = pending.filter((el) => {
         if (el.getBoundingClientRect().top >= line) return true;
-        if (first) el.classList.add('is-first');
-        else el.style.setProperty('--stagger', String(Math.min(n++, 2)));
+        el.style.setProperty('--stagger', String(Math.min(n++, 2)));
         el.classList.add('is-in');
         return false;
       });
     };
     const schedule = () => {
-      if (!raf && pending.length) raf = requestAnimationFrame(() => sweep());
+      if (!raf && pending.length) raf = requestAnimationFrame(sweep);
     };
-    // On the case's own page the text is already on screen from the server:
-    // all that is in view stays as it is (down to the screen's very bottom,
-    // or what was just seen would vanish), only what is further down waits.
-    if (!hold) {
-      pending = pending.filter((el) => {
-        if (el.getBoundingClientRect().top >= window.innerHeight) return true;
-        el.classList.add('is-in');
-        return false;
-      });
-    }
-    root.classList.add('cp-armed');
-    let watch: MutationObserver | null = null;
-    if (hold) {
-      // The hidden state has been on screen since the layer mounted, so the
-      // first screen can go at once, in the very frame the hold comes off.
-      watch = new MutationObserver(() => {
-        if (hold.hasAttribute('data-hold')) return;
-        watch?.disconnect();
-        live = true;
-        sweep(true);
-      });
-      watch.observe(hold, { attributes: true, attributeFilter: ['data-hold'] });
-    } else {
-      live = true;
-    }
+    pending = pending.filter((el) => {
+      if (el.getBoundingClientRect().top >= height()) return true;
+      el.classList.add('is-in');
+      return false;
+    });
+    // The ones further down go into hiding at once, not through their fade:
+    // the style is taken with transitions off, then they are put back.
+    root.classList.add('cp-arming', 'cp-armed');
+    void root.offsetHeight;
+    root.classList.remove('cp-arming');
     target.addEventListener('scroll', schedule, { passive: true });
     window.addEventListener('resize', schedule);
-    // A Read more folding up brings the blocks under it up the screen
-    // without a scroll.
+    // The page changing height under the screen (the window narrowing)
+    // brings blocks up without a scroll.
     const grow = new ResizeObserver(schedule);
     grow.observe(root);
     return () => {
-      watch?.disconnect();
       grow.disconnect();
       cancelAnimationFrame(raf);
       target.removeEventListener('scroll', schedule);

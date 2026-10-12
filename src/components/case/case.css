@@ -1,8 +1,8 @@
 /* ===========================================================================
    The case study (CaseLayer over the page, CasePage on its own). Set as
    benji.org sets a case: Inter at one reading size, in ink, the figures in
-   light boxes; a heading is the same size in semibold, a part's heading a
-   touch bolder still, with a faint rule. One narrow column, a few lines at a
+   light boxes; a heading is the same size in semibold, a part's heading
+   with a faint rule. One narrow column, a few lines at a
    time, with the pictures between them in the same column, before over
    after; the way back and the chapters down the left where there is room.
    =========================================================================== */
@@ -12,7 +12,6 @@
 .cp-bar {
   --cp-ink: var(--ink-strong, #08080a);
   --cp-mute: rgba(8, 8, 10, 0.45); /* the quieter line: a subject, a label, a note, the index */
-  --cp-grey: #ababab; /* the page's secondary grey: bullets */
   --cp-hair: rgba(8, 8, 10, 0.08);
   --cp-col: 560px; /* the about block's measure */
   --cp-chapter: 96px; /* between parts: nothing rules them apart but room */
@@ -23,7 +22,8 @@
 
 /* --- the layer ------------------------------------------------------------ */
 /* Over everything, the page's scrollbar gutter included (100vw), so its own
-   scrollbar sits where the page's was. */
+   scrollbar sits where the page's was; a page of its own colour, there at
+   once (CaseLayer). */
 .cp {
   position: fixed;
   top: 0;
@@ -31,21 +31,6 @@
   z-index: 70;
   width: calc(100vw / var(--site-zoom, 1));
   height: 100%;
-}
-/* A blank page under the card's surface, so the surface grows over nothing:
-   not over the header, the next card's edge or the page around it
-   (CaseLayer fades it in and out, with the card cut out of it, so the page
-   around the card goes blank while the card is still the page's). */
-.cp__veil {
-  position: absolute;
-  inset: 0;
-  background: var(--bg, #f7f7f5);
-}
-/* The card's surface, grown into the page (CaseLayer animates it out of
-   the card and back). */
-.cp__surface {
-  position: absolute;
-  inset: 0;
   background: var(--bg, #f7f7f5);
 }
 .cp__scroll {
@@ -121,8 +106,7 @@
 }
 /* It comes in from the first pixel of scroll, and fast: a quick first scroll
    brings the opening line up to the band within a few frames. At the very
-   top it isn't there at all, so the card's surface can grow in under the
-   row with nothing drawn over it (CaseLayer). */
+   top it isn't there at all. */
 .cp-bar[data-glass]::before {
   opacity: 1;
   transition-duration: 80ms;
@@ -203,7 +187,7 @@
 /* --- the article ---------------------------------------------------------- */
 /* Set as benji.org sets a case: Inter at a reading size with a touch more
    weight than regular, in ink, and nothing larger than it — a heading is the
-   same size in semibold, a part's heading bolder still, with a faint rule. */
+   same size in semibold, a part's heading with a faint rule. */
 .cp-article {
   position: relative;
   padding: 0 20px 128px;
@@ -227,21 +211,23 @@
 
 /* The case's name, the subject under it a tone down. */
 .cp-title {
-  font-weight: 500;
+  font-weight: 600;
 }
 .cp-subtitle {
   color: var(--cp-mute);
 }
-/* The small heads: inside a chapter, the results, the three questions, a
-   line's lead-in. */
+/* The small heads: inside a chapter, the results, a line's lead-in. One
+   weight for everything set apart from the text, and a clear step from it:
+   a semibold only a little heavier than the text read as a smudge, not as a
+   head. */
 .cp-sub,
 .cp-result__title,
 .cp-runin {
-  font-weight: 560;
+  font-weight: 600;
 }
-/* A part's heading, as benji.org's: the text's size in ink, bolder than the
-   small heads, so it stands clear of the text under it; a faint rule runs
-   from it out to the column's edge. */
+/* A part's heading, as benji.org's: the text's size in semibold ink, so it
+   stands clear of the text under it; a faint rule runs from it out to the
+   column's edge. */
 .cp-h {
   display: flex;
   align-items: center;
@@ -432,23 +418,15 @@
   margin-top: var(--cp-chapter);
 }
 
-/* Bullets: small dots inside the column, so nothing hangs out of it. */
-.cp-list li {
-  position: relative;
-  padding-left: 16px;
-}
+/* A list is its lines, one under another with a little less room than
+   between paragraphs: no markers down the side. */
 .cp-list li + li {
   margin-top: 6px;
 }
-.cp-list li::before {
-  content: '';
-  position: absolute;
-  left: 2px;
-  top: 9px;
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: var(--cp-grey);
+/* A point that runs onto a second line (on a phone) splits evenly, rather
+   than leaving a word or two hanging under a full line. */
+.cp-list li {
+  text-wrap: balance;
 }
 
 /* Where it landed: each part's name over what became of it. */
@@ -552,7 +530,7 @@
   background: #dbe8ff;
 }
 .cp-note__title {
-  font-weight: 560;
+  font-weight: 600;
 }
 .cp-note:nth-child(odd) {
   rotate: -0.8deg;
@@ -629,29 +607,13 @@
     filter 340ms var(--cp-ease);
   transition-delay: calc(var(--stagger, 0) * 40ms);
 }
+.cp-arming .cp-reveal {
+  transition: none;
+}
 .cp-armed .cp-reveal:not(.is-in) {
   opacity: 0;
   transform: translateY(10px);
   filter: blur(4px);
-}
-/* The first screen arrives with the page grown out of the card, all at
-   once and sharp: blurred text over a surface still settling read as a
-   smear. Its blur drops at once, while it is still unseen. */
-.cp-reveal.is-first {
-  transition:
-    opacity 320ms var(--cp-ease),
-    transform 320ms var(--cp-ease);
-  transition-delay: 0ms;
-}
-/* The case's own page arrives the same way: the bar first. */
-@keyframes cp-bar-in {
-  from {
-    opacity: 0;
-    scale: 0.96;
-  }
-}
-.cp-bar:has(~ .cp-page) {
-  animation: cp-bar-in 420ms var(--cp-ease) 60ms both;
 }
 
 /* --- phones --------------------------------------------------------------- */
@@ -697,8 +659,5 @@
   .cp-back__disc,
   .cp-link__chevron {
     transition: none;
-  }
-  .cp-bar:has(~ .cp-page) {
-    animation: none;
   }
 }
