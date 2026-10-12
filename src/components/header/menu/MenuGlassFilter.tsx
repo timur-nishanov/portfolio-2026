@@ -23,6 +23,9 @@ const INVERT = '-1 0 0 0 1  -1 0 0 0 1  -1 0 0 0 1  0 0 0 1 0';
 // (ramp 0.5), gone ~2σ in. Kept well under 1: at full strength busy content
 // (hair) streaked the rim, and the mockup's edge is calm.
 const LIP = '0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  -0.9 0 0 0 0.9';
+// The rim's bend at rest (feDisplacementMap scale; useLiquidMorph scales it
+// with the shape).
+export const MENU_BEND = 110;
 
 type Props = {
   filterRef: Ref<SVGFilterElement>;
@@ -50,6 +53,12 @@ type Props = {
  * bent glass rather than more frost. Corners come out rounded for free from
  * the blur. Region and flood are in user space (= the element's own px), set
  * from JS; the values here are only the resting panel's.
+ *
+ * One bend for all three colours. A pass per colour, summed back together,
+ * turned every sample the bend pulls from past the readable backdrop into an
+ * opaque dark or orange pixel (premultiplied colour scaled down, alpha summed
+ * up to 1): streaks and a beige band along the panel's edges. Under a σ8
+ * frost the split could not be seen anyway; the light on the edge is CSS.
  */
 function MenuGlassFilterInner({ filterRef, floodRef, displaceRef, frostRef, saturateRef }: Props) {
   return (
@@ -68,11 +77,11 @@ function MenuGlassFilterInner({ filterRef, floodRef, displaceRef, frostRef, satu
           x="-48"
           y="-48"
           width="343"
-          height="478"
+          height="508"
           colorInterpolationFilters="sRGB"
         >
           <feFlood floodColor="#000" result="black" />
-          <feFlood ref={floodRef} floodColor="#fff" x="0" y="0" width="207" height="342" result="white" />
+          <feFlood ref={floodRef} floodColor="#fff" x="0" y="0" width="207" height="372" result="white" />
           <feComposite in="white" in2="black" operator="over" result="shape" />
           <feGaussianBlur in="shape" stdDeviation={RIM} result="ramp" />
           {/* x slope: ramp(x−s) − ramp(x+s), packed as 0.5 + ½·slope. The
@@ -106,7 +115,7 @@ function MenuGlassFilterInner({ filterRef, floodRef, displaceRef, frostRef, satu
             ref={displaceRef}
             in="glassSat"
             in2="map"
-            scale="110"
+            scale={MENU_BEND}
             xChannelSelector="R"
             yChannelSelector="G"
           />

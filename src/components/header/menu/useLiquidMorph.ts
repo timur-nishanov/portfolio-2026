@@ -5,7 +5,8 @@ import { lerp } from '@/lib/lerp';
 import { zoomOf } from '@/lib/zoom';
 import { stepSpring, type SpringConfig, type SpringState } from '@/lib/spring';
 import { smoothstep, springOf } from './liquid';
-import { MENU_FROST, MENU_SATURATE } from './MenuGlassFilter';
+import { MENU_BEND, MENU_FROST, MENU_SATURATE } from './MenuGlassFilter';
+import { glassDrop, glassEdge } from './glassMaterial';
 import { PILL_SATURATE, PILL_SOFTEN } from './PillGlassFilter';
 
 export type MorphRefs = {
@@ -84,14 +85,15 @@ const BUMP_IN = 1.0;
 // real disc in one frame cannot be seen.
 const DOCK_AT = 0.25;
 
-const PANEL_RADIUS = 28;
+// The panel's corners: the row highlight's (18px) plus the 6px it keeps from
+// the panel's edge, so the two run parallel round the corner and the gap is
+// 6px there too, as along the sides.
+const PANEL_RADIUS = 24;
 // The rows come in once the left edge has passed their text inset (px): with
 // the content parked at its final place behind a moving clip, words showed
 // cut at the edge ("andom", "areer") for a few frames.
 const REVEAL_INSET = 15;
-// Rim refraction strength (feDisplacementMap scale, see MenuGlassFilter) and
-// the filter region pad: frost tail (3σ) plus the farthest the rim samples.
-const REFRACT_SCALE = 110;
+// The filter region pad: frost tail (3σ) plus the farthest the rim samples.
 const FILTER_PAD = 48;
 // Over the cases the bar's pill stays under the chevron, open or closed, and
 // the chevron keeps its own ink on it: the blend ink all but vanished on the
@@ -115,23 +117,17 @@ const css = (c: Rgba) => `rgba(${Math.round(c[0])}, ${Math.round(c[1])}, ${Math.
 const f2 = (v: number) => v.toFixed(2);
 
 /**
- * The shape's edge, from the button disc's (.glass-disc, globals.css) at
- * m = 0 to the panel's resting one (menu.css) at m = 1, as one list of
- * layers so it blends: the disc's two inner lights give way to the panel's
- * hairline, the outer hair and both drops carry over and grow. At m = 0 it is
- * the disc's five shadows exactly, so the shape that replaces the disc on the
- * first frame has the disc's own edge.
+ * The shape's edge (glassMaterial): the spheres' glass, scaled to the corner
+ * radius the shape has this frame — the disc's own edge on the 20px drop
+ * (R 10, as .glass-disc in globals.css draws it), the panel's at its 24px
+ * corners — so the rim grows with the shape and never jumps. The inset
+ * layers go on the sheen (menu.css: above the disc's tint, as the disc draws
+ * them above its own colour); the drop on the shape itself, blended from the
+ * disc's to the panel's as the glass clears.
  */
-const edgeShadow = (m: number) => {
-  const a = (v: number) => v.toFixed(3);
-  return (
-    `inset 0 0.5px 0.5px rgba(255,255,255,${a(1 - m)}), ` +
-    `inset 0 -0.5px 1px rgba(255,255,255,${a(0.6 * (1 - m))}), ` +
-    `inset 0 0 0 0.5px rgba(255,255,255,${a(0.65 * m)}), ` +
-    `0 0 0 0.5px rgba(0,0,0,${a(lerp(0.1, 0.07, m))}), ` +
-    `0 ${f2(lerp(1, 2, m))}px ${f2(lerp(3, 6, m))}px rgba(0,0,0,${a(lerp(0.1, 0.04, m))}), ` +
-    `0 ${f2(lerp(4, 10, m))}px ${f2(lerp(10, 36, m))}px rgba(0,0,0,${a(lerp(0.05, 0.1, m))})`
-  );
+const setEdge = (blob: HTMLElement, radius: number, m: number) => {
+  blob.style.setProperty('--lgm-edge', glassEdge(radius));
+  blob.style.boxShadow = glassDrop(m);
 };
 
 type Circle = { cx: number; cy: number; r: number };
@@ -168,7 +164,7 @@ function createEngine(refs: MorphRefs) {
   // The disc's tint and the panel's veil (both read off the CSS per toggle,
   // hover and reduced transparency included).
   let btnColor: Rgba = [255, 255, 255, 0.3];
-  let veil: Rgba = [247, 247, 247, 0.7];
+  let veil: Rgba = [253, 253, 252, 0.8];
   let solidVeil = false;
   let B: Circle = { cx: 0, cy: 0, r: 10 };
   let T: Box = { top: 0, right: 0, bottom: 0, left: 0 };
@@ -293,7 +289,7 @@ function createEngine(refs: MorphRefs) {
     if (refs.root.current?.hasAttribute('data-refract')) {
       refs.flood.current?.setAttribute('width', String(T.right - T.left));
       refs.flood.current?.setAttribute('height', String(T.bottom - T.top));
-      refs.displace.current?.setAttribute('scale', String(REFRACT_SCALE));
+      refs.displace.current?.setAttribute('scale', String(MENU_BEND));
       refs.frost.current?.setAttribute('stdDeviation', String(MENU_FROST));
       refs.saturate.current?.setAttribute('values', String(MENU_SATURATE));
     }
@@ -359,7 +355,7 @@ function createEngine(refs: MorphRefs) {
     const bottom = Math.max(lerp(B.cy + r0, T.bottom, p.bottom), top + Math.min(right - left, 2 * r0));
     const w = Math.max(right - left, 1);
     const ht = Math.max(bottom - top, 1);
-    // Circle → 28px corners, capped so a narrow drop stays a capsule.
+    // Circle → the panel's corners, capped so a narrow drop stays a capsule.
     const radius = Math.min(lerp(r0, PANEL_RADIUS, smoothstep(0, 0.55, grow)), w / 2, ht / 2);
 
     blob.style.visibility = 'visible';
@@ -377,7 +373,7 @@ function createEngine(refs: MorphRefs) {
     if (refs.tint.current) refs.tint.current.style.opacity = (1 - glass).toFixed(3);
     blob.style.backgroundColor = css(solidVeil ? veil : fade(veil, glass));
     blob.style.setProperty('--lgm-glass', glass.toFixed(3));
-    blob.style.boxShadow = edgeShadow(glass);
+    setEdge(blob, radius, glass);
 
     if (root.hasAttribute('data-refract')) {
       refs.frost.current?.setAttribute('stdDeviation', lerp(PILL_SOFTEN, MENU_FROST, glass).toFixed(2));
@@ -388,7 +384,7 @@ function createEngine(refs: MorphRefs) {
       // filter). It fades in with size: on a 20px drop a 6px rim is all lens.
       refs.flood.current?.setAttribute('width', w.toFixed(1));
       refs.flood.current?.setAttribute('height', ht.toFixed(1));
-      refs.displace.current?.setAttribute('scale', (REFRACT_SCALE * smoothstep(40, 150, Math.min(w, ht))).toFixed(1));
+      refs.displace.current?.setAttribute('scale', (MENU_BEND * smoothstep(40, 150, Math.min(w, ht))).toFixed(1));
     } else if (!solidVeil) {
       // The disc's blur(6px) saturate(170%) to the panel's (menu.css).
       const frost = `blur(${f2(lerp(6, 8, glass))}px) saturate(${lerp(170, 120, glass).toFixed(0)}%)`;
@@ -547,6 +543,7 @@ function createEngine(refs: MorphRefs) {
           blob.style.visibility = '';
           blob.style.setProperty('--lgm-glass', '1');
           blob.style.boxShadow = '';
+          blob.style.removeProperty('--lgm-edge');
           blob.style.backgroundColor = '';
           if (refs.tint.current) refs.tint.current.style.opacity = '0';
           blob.dataset.mode = 'fade';
