@@ -22,7 +22,7 @@
    is the fallback for engines without container units. */
 .cs-card {
   /* Sticky, so the cards stack: each one parks in the middle of the screen
-     and the next slides up over it (the one beneath shrinks, blurs and fades
+     and the next slides up over it (the one beneath shrinks, dims and fades
      — CaseShowcase drives that from the scroll position). */
   position: sticky;
   top: max(20px, calc((100svh / var(--site-zoom, 1) - (100vw - 40px) * 736 / 1400) / 2));
