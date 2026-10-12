@@ -1,4 +1,5 @@
 import type { ComponentType } from 'react';
+import { AliceArticle } from './AliceArticle';
 import { ChumsArticle } from './ChumsArticle';
 import { UrbantigerArticle } from './UrbantigerArticle';
 
@@ -17,4 +18,5 @@ type CaseEntry = {
 export const CASES: Record<string, CaseEntry> = {
   chums: { title: 'Chums messenger', Article: ChumsArticle },
   urbantiger: { title: 'Urbantiger', Article: UrbantigerArticle },
+  alice: { title: 'Yandex Alice', Article: AliceArticle },
 };

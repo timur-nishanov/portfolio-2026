@@ -64,6 +64,7 @@ export const showcase: ShowcaseCase[] = [
   },
   {
     id: 'alice',
+    href: '/cases/alice',
     device: 'phone',
     title: 'Yandex Alice',
     subtitle: 'Design battle concept',
@@ -75,9 +76,9 @@ export const showcase: ShowcaseCase[] = [
       alt: 'Alice on the lock screen: a warm-up card after a short night',
     },
     notes: [
-      'Chat works like a request queue: you have to know what to ask and remember to open the app. We moved Alice to the lock screen, where she shows up when something is about to\u00a0happen.',
-      'One person, one day: breakfast ordered before the daily, questions for a 1:1, a summary after it, tickets for the weekend. Alice acts, you confirm with one\u00a0tap.',
-      '2nd place at a Yandex design battle, one point behind the winner and ahead of every in\u2011house team. Studio team of five; I built the scenario and the\u00a0screens.',
+      'A chat works like a queue of requests: you have to know what to ask and remember to open the app. We moved Alice to the lock screen, where she shows up when something is about to\u00a0happen.',
+      'Alice is with you all day, from a morning warm-up to a mood check-in before bed. She orders, books and writes drafts, and you confirm with one\u00a0tap.',
+      '2nd place at a Yandex design battle, one point behind the winner and ahead of the other product teams. Senior designer in a studio team of five; I worked on the idea, the scenario and the\u00a0screens.',
     ],
   },
   {
