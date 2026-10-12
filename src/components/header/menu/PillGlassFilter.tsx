@@ -9,17 +9,24 @@ export const PILL_GLASS_FILTER_ID = 'lg-pill';
 // The header pill's liquid glass (Chromium, as backdrop-filter: url()). The
 // same construction as the menu's filter — a ramp blurred off the shape and
 // differentiated into a displacement map, so the rim bends what lies just
-// beyond the glass — tuned the way iOS 26/27 glass looks rather than the
-// menu's frost: clear glass (barely any blur, more colour), a stronger lens
-// at the edge, and a touch of chromatic dispersion there, red bent a little
-// less than blue. The shape is a real pill (an SVG rounded rect fed in via
-// feImage), not a blurred rectangle, so the lens follows the round ends.
+// beyond the glass — but clear, as the case's spheres are, rather than the
+// menu's frost: barely any blur, more colour, a stronger lens at the edge.
+// The light on its edge is CSS (glassMaterial: menu.css, globals.css). The
+// shape is a real pill (an SVG rounded rect fed in via feImage), not a
+// blurred rectangle, so the lens follows the round ends.
+//
+// One bend for all three colours. It used to run once per colour and sum the
+// three back together, for a touch of dispersion at the rim; but wherever a
+// pass sampled past the backdrop it can read, the sum came out as opaque
+// dark or orange streaks (premultiplied colour scaled down, alpha added up
+// to 1) — dirt on a surface that is on screen through every scroll — and it
+// cost seven primitives a frame.
 
 // Width of the refracting rim (σ of the ramp), and the slope step.
 const RIM = 5;
 const STEP = 3;
-// How far the rim reaches out, per channel: dispersion.
-const BEND = { r: 54, g: 62, b: 70 };
+// How far the rim reaches out (feDisplacementMap scale).
+const BEND = 62;
 // Clear glass: the backdrop is only softened, and its colour lifted. The
 // menu's morph starts from these (the button disc's glass, useLiquidMorph).
 export const PILL_SOFTEN = 2.2;
@@ -98,26 +105,6 @@ function PillGlassFilterInner({ width, height, id = PILL_GLASS_FILTER_ID, scale 
   const w = Math.max(1, Math.round(width));
   const h = Math.max(1, Math.round(height));
   const maps = useGlassMaps(w, h, scale);
-  const channel = (c: 'r' | 'g' | 'b') => {
-    const row = {
-      r: '1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0',
-      g: '0 0 0 0 0  0 1 0 0 0  0 0 0 0 0  0 0 0 1 0',
-      b: '0 0 0 0 0  0 0 0 0 0  0 0 1 0 0  0 0 0 1 0',
-    }[c];
-    return (
-      <>
-        <feDisplacementMap
-          in="glass"
-          in2="map"
-          scale={BEND[c] * scale}
-          xChannelSelector="R"
-          yChannelSelector="G"
-          result={`bent-${c}`}
-        />
-        <feColorMatrix in={`bent-${c}`} type="matrix" values={row} result={`only-${c}`} />
-      </>
-    );
-  };
   const m = GLASS_MAP_MARGIN;
   return (
     <svg
@@ -164,11 +151,13 @@ function PillGlassFilterInner({ width, height, id = PILL_GLASS_FILTER_ID, scale 
           <feBlend in="mapX" in2="mapY" mode="lighten" result="map" />
           <feGaussianBlur in="SourceGraphic" stdDeviation={PILL_SOFTEN} result="soft" />
           <feColorMatrix in="soft" type="saturate" values={String(PILL_SATURATE)} result="glass" />
-          {channel('r')}
-          {channel('g')}
-          {channel('b')}
-          <feComposite in="only-r" in2="only-g" operator="arithmetic" k1="0" k2="1" k3="1" k4="0" result="rg" />
-          <feComposite in="rg" in2="only-b" operator="arithmetic" k1="0" k2="1" k3="1" k4="0" />
+          <feDisplacementMap
+            in="glass"
+            in2="map"
+            scale={Number((BEND * scale).toFixed(2))}
+            xChannelSelector="R"
+            yChannelSelector="G"
+          />
         </filter>
       </defs>
     </svg>

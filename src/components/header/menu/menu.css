@@ -9,12 +9,12 @@
   --menu-font: var(--font-sf);
   --menu-title-ink: #08080a;
   --menu-ink: #151514;
-  /* Glass plate. The mockup's material is white 65% + #DDD colour-burn +
-     #F7F7F7 darken over a σ8 frost; blend modes on children cannot reach a
-     backdrop filter's output, but that stack is affine in the backdrop up to
-     the darken cap, and a #F7F7F7 veil at ~70% lands on the same values (bg
-     stays 247, the dark hair comes out ~192 as in the mockup). */
-  --menu-veil: rgba(247, 247, 247, 0.7);
+  /* Glass plate: the case's spheres' milky white glass over a σ8 frost. A
+     near-white veil at 80% (it was the page's #F7F7F7 at 70%, which left the
+     panel reading as grey frost, and the dark hair behind it a muddy taupe,
+     ~190; now ~210), so the panel glows a touch brighter than the page and
+     its text sits on a calm, light body over any backdrop. */
+  --menu-veil: rgba(253, 253, 252, 0.8);
 
   position: fixed;
   inset: 0 0 auto 0;
@@ -91,8 +91,9 @@
   filter: invert(1);
 }
 /* The glass pill behind the title and the button, shown only over the
-   cases (data-glass, SiteHeader) — over the hero they sit on the page. A
-   frosted veil with the menu panel's rim and top sheen; it rises in with the
+   cases (data-glass, SiteHeader) — over the hero they sit on the page. The
+   site's glass (glassMaterial.ts: the case's spheres) at its 20px ends, over
+   a frost here and the refracting #lg-pill in Chromium; it rises in with the
    bar and stays while the menu is open, as the title row's backing (the disc
    still leaves the chevron bare). Width: the title, the 8px gap, the 20px
    button, and 14px of air each side. */
@@ -107,11 +108,16 @@
   background: rgba(247, 247, 247, 0.55);
   backdrop-filter: blur(14px) saturate(160%);
   -webkit-backdrop-filter: blur(14px) saturate(160%);
+  /* glassEdge(20), then the drop. */
   box-shadow:
-    inset 0 0 0 0.5px rgba(255, 255, 255, 0.65),
-    0 0 0 0.5px rgba(0, 0, 0, 0.07),
-    0 8px 28px rgba(0, 0, 0, 0.08),
-    0 1px 4px rgba(0, 0, 0, 0.04);
+    inset 0 0 0 0.85px rgba(255, 255, 255, 0.9),
+    inset 3.18px 5.42px 8.6px -1.46px rgba(255, 255, 255, 1),
+    inset -1.68px -2.24px 6.45px -1.12px rgba(255, 255, 255, 0.6),
+    inset 0 0 3.36px rgba(255, 255, 255, 0.45),
+    inset 0 0 1.44px 1.75px rgba(20, 20, 26, 0.11),
+    0 0 0 0.5px rgba(0, 0, 0, 0.06),
+    0 6px 20px rgba(0, 0, 0, 0.07),
+    0 1px 3px rgba(0, 0, 0, 0.04);
   opacity: 0;
   transform: translateX(-50%) scale(0.94);
   /* Faded out it also leaves the frame (visibility, once the fade and the
@@ -139,46 +145,15 @@
     opacity 260ms ease,
     transform 420ms cubic-bezier(0.22, 1, 0.36, 1);
 }
-/* Chromium: real liquid glass (PillGlassFilter) — clear, colour-lifted glass
-   whose rim bends and slightly splits what is behind it. The veil all but
-   goes; the light lives in the edge instead: a bright specular rim, strongest
-   where the light falls (top left) and again at the opposite corner, a soft
-   inner glow, and a sheen across the top. */
+/* Chromium: the refracting glass (PillGlassFilter) — clear, colour-lifted
+   glass whose rim bends what is behind it, as the spheres' does. The veil
+   all but goes; the light lives in the edge (the same glassEdge as above)
+   and a sheen across the top. */
 .site-header[data-refract] .site-header__glass {
   width: calc(var(--title-w, 180px) + 84px);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.2));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.24));
   backdrop-filter: url(#lg-pill);
   -webkit-backdrop-filter: url(#lg-pill);
-  box-shadow:
-    inset 0 1px 0.5px rgba(255, 255, 255, 0.95),
-    inset 0 -1px 1px rgba(255, 255, 255, 0.55),
-    inset 0 -10px 18px -12px rgba(0, 0, 0, 0.07),
-    0 0 0 0.5px rgba(0, 0, 0, 0.08),
-    0 6px 20px rgba(0, 0, 0, 0.08),
-    0 1px 3px rgba(0, 0, 0, 0.05);
-}
-/* Specular rim: a 1px ring whose light runs round the pill — bright where the
-   light falls (top left), dipping to a faint shade on the far side, catching
-   again at the opposite corner, as on iOS glass. */
-.site-header[data-refract] .site-header__glass::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1px;
-  background: linear-gradient(
-    120deg,
-    rgba(255, 255, 255, 1) 0%,
-    rgba(255, 255, 255, 0.35) 30%,
-    rgba(0, 0, 0, 0.07) 62%,
-    rgba(255, 255, 255, 0.75) 100%
-  );
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
 }
 .site-header[data-refract] .site-header__glass::after {
   background: linear-gradient(to bottom, rgba(255, 255, 255, 0.45) 0, rgba(255, 255, 255, 0) 40%);
@@ -380,29 +355,41 @@
   backdrop-filter: blur(8px) saturate(120%);
   -webkit-backdrop-filter: blur(8px) saturate(120%);
   pointer-events: none;
-  /* An even edge all round, as in the mockup: a faint light hairline inside,
-     an equally faint dark one outside, and a soft drop. The earlier rim (a
-     dark 0.24 seam, a white top lip and a 15px white band at the bottom) read
-     as a dark top edge and a washed-out bottom on a Retina screen. This is the
-     resting value; during the morph useLiquidMorph blends into it from the
-     disc's edge, so the drop leaves the button with the button's own edge. */
+  /* The drop, at rest (glassDrop(1)); during the morph useLiquidMorph blends
+     it from the disc's. The edge itself is on the sheen, below. */
   box-shadow:
-    inset 0 0 0 0.5px rgba(255, 255, 255, 0.65),
-    0 0 0 0.5px rgba(0, 0, 0, 0.07),
-    0 10px 36px 0 rgba(0, 0, 0, 0.1),
-    0 2px 6px 0 rgba(0, 0, 0, 0.04);
+    0 0 0 0.5px rgba(0, 0, 0, 0.06),
+    0 2px 6px rgba(0, 0, 0, 0.04),
+    0 10px 36px rgba(0, 0, 0, 0.09);
 }
-/* A soft sheen under the top edge only — no band along the bottom. One
-   sheen for every size: on the 20px drop it is the disc's own gradient
-   (0.45 → 0 at 70%), so the first frame matches the disc; on the panel it
-   runs 14px down. */
+/* The sheen and the edge. A soft sheen under the top edge only, one for every
+   size: on the 20px drop it is the disc's own gradient (0.45 → 0 at 70%), so
+   the first frame matches the disc; on the panel it runs 14px down. Over it,
+   the site's glass edge (glassMaterial.ts: the case's spheres): a bright line
+   at the rim, the light gathered along the top left and, fainter, the bottom
+   right, and a slightly darker band of the glass's thickness inside. Here
+   the panel's (glassEdge(24)); useLiquidMorph writes it for the radius the
+   shape has every frame (--lgm-edge), the disc's on the drop. On this layer,
+   not the shape, so the disc's tint (below it) never washes it out. */
 .lgm-blob::after {
   content: '';
   position: absolute;
   inset: 0;
   z-index: 1;
   border-radius: inherit;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.45) 0, rgba(255, 255, 255, 0) min(70%, 14px));
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.45) 0,
+    rgba(255, 255, 255, 0) min(70%, 14px)
+  );
+  box-shadow: var(
+    --lgm-edge,
+    inset 0 0 0 0.97px rgba(255, 255, 255, 0.9),
+    inset 3.82px 6.5px 10.32px -1.75px rgba(255, 255, 255, 1),
+    inset -2.02px -2.69px 7.74px -1.34px rgba(255, 255, 255, 0.6),
+    inset 0 0 4.03px rgba(255, 255, 255, 0.45),
+    inset 0 0 1.63px 1.99px rgba(20, 20, 26, 0.11)
+  );
   pointer-events: none;
 }
 .site-header[data-refract] .lgm-blob {
@@ -430,15 +417,28 @@
   transition: opacity 160ms ease;
 }
 @media (prefers-reduced-transparency: reduce) {
+  /* The pill too: solid, no refraction (it kept #lg-pill over a translucent
+     gradient, as the disc and the shape here did not). */
+  .site-header__glass,
+  .site-header[data-refract] .site-header__glass {
+    background: #f4f4f4;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
   .lgm-blob,
   .site-header[data-refract] .lgm-blob {
     background: #f4f4f4;
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
   }
-  /* The disc has no sheen here, so the shape's comes in with the panel. */
+  /* The disc has no sheen here, so the shape's comes in with the panel; its
+     edge stays, as the disc keeps its own. */
   .lgm-blob::after {
-    opacity: var(--lgm-glass);
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, calc(0.45 * var(--lgm-glass))) 0,
+      rgba(255, 255, 255, 0) min(70%, 14px)
+    );
   }
 }
 
@@ -451,11 +451,11 @@
   left: calc(50% - 103.5px);
   z-index: 4;
   width: 207px;
-  /* 10 / 8, not 9 / 9: puts the divider and the label centres on the
-     mockup's rows (divider at y 268) at the same 342px height. */
-  padding: 10px 0 8px;
+  /* The row highlight (36px in a 38px row, 6px in from the sides) sits 6px
+     from the top and the bottom edge too: 5px here, plus the row's 1px. */
+  padding: 5px 0;
   /* Never taller than the screen (the page itself does not scroll): on a
-     phone in landscape the 342px panel ran past a 390px viewport, the Gmail
+     phone in landscape the panel ran past a 390px viewport, the Gmail
      row on the very edge and the bottom corners cut off. useLiquidMorph
      measures this box, so the glass is capped with it. */
   max-height: calc(100svh / var(--site-zoom, 1) - 58px - 12px);
@@ -586,21 +586,6 @@
     transform 420ms cubic-bezier(0.2, 1, 0.3, 1) calc(var(--i, 0) * 14ms);
 }
 
-/* Short screens (a phone in landscape): a tighter row pitch, so the whole
-   menu still fits without scrolling down to a 390px viewport. */
-@media (max-height: 420px) {
-  .lgm-item {
-    height: 34px;
-  }
-  .lgm-sep {
-    height: 16px;
-  }
-  .lgm-highlight {
-    height: 32px;
-    border-radius: 16px;
-  }
-}
-
 /* iOS-style hover/selection pill: one element gliding between rows. Strong
    enough to read over the frosted hair too (0.055 vanished there), with a
    faint light rim that keeps it visible on the darkest backdrop. */
@@ -643,6 +628,23 @@
   box-shadow:
     inset 0 0 0 0.5px rgba(255, 255, 255, 0.35),
     0 0 0 1.5px rgba(91, 148, 240, 0.9);
+}
+
+/* Short screens (a phone in landscape): a tighter row pitch, so the whole
+   menu still fits without scrolling down to a 390px viewport. After the
+   highlight's own rule, so its smaller size wins (it sat above it, and the
+   36px pill overhung the 34px rows). */
+@media (max-height: 420px) {
+  .lgm-item {
+    height: 34px;
+  }
+  .lgm-sep {
+    height: 16px;
+  }
+  .lgm-highlight {
+    height: 32px;
+    border-radius: 16px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
