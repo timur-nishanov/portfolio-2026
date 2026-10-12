@@ -3,26 +3,11 @@
 import { useRef } from 'react';
 import { chumsLinks, chumsMedia as media } from '@/data/chumsCase';
 import { RowChevron } from '@/components/header/menu/icons';
-import { BeforeAfter, Figure, useReveal } from './blocks';
+import { BeforeAfter, Facts, Figure, Heading, Mark, Results, useReveal } from './blocks';
 import { CaseIndex } from './CaseIndex';
 import { GlassOrbs } from './GlassOrbs';
 import { QuestBoard } from './QuestBoard';
 import type { ArticleProps } from './registry';
-
-/** A part's heading: the text's size in semibold ink, with a faint rule
-    running out to the column's edge (as benji.org heads a section). */
-function Heading({ id, children }: { id: string; children: React.ReactNode }) {
-  return (
-    <h2 id={id} className="cp-h cp-reveal">
-      <span className="cp-h__name">{children}</span>
-    </h2>
-  );
-}
-
-/** A phrase the case turns on, marked as with a highlighter. */
-function Mark({ children }: { children: React.ReactNode }) {
-  return <mark className="cp-mark">{children}</mark>;
-}
 
 const INDEX = [
   { id: 'cp-01', label: 'Give Chums its own flow' },
@@ -38,8 +23,7 @@ const INDEX = [
  * The Chums case study, laid out as benji.org lays out a case: one narrow
  * column, a few lines at a time, with the pictures between them in the same
  * column, before over after; the way back and the chapters down the left
- * where there is room. Nothing rules the parts apart: the room between them
- * does.
+ * where there is room.
  */
 export function ChumsArticle({ onBack, backHref }: ArticleProps) {
   const ref = useRef<HTMLElement>(null);
@@ -58,20 +42,13 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
           built into the chat. It had <Mark>32k+ wallets and $200k+ in user balances</Mark>. Most of the work wasn’t
           new features. It was making the existing ones easier to use.
         </p>
-        <dl className="cp-facts cp-reveal">
-          <div>
-            <dt>Role</dt>
-            <dd>Senior Product Designer & Design Lead</dd>
-          </div>
-          <div>
-            <dt>Team</dt>
-            <dd>Founders, PM, Art Director, 1&nbsp;developer, junior designer</dd>
-          </div>
-          <div>
-            <dt>Timeline</dt>
-            <dd>Concept in 2024 · Design lead in 2025</dd>
-          </div>
-        </dl>
+        <Facts
+          items={[
+            ['Role', 'Senior Product Designer & Design Lead'],
+            ['Team', <>Founders, PM, Art Director, 1&nbsp;developer, junior designer</>],
+            ['Timeline', 'Concept in 2024 · Design lead in 2025'],
+          ]}
+        />
       </div>
 
       {/* --- 01 ------------------------------------------------------------ */}
@@ -82,7 +59,7 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
           switching was slow.
         </p>
         <p className="cp-reveal">In early 2024 I designed a concept for the main mobile screens:</p>
-        <ul className="cp-list cp-reveal">
+        <ul className="cp-list cp-list--short cp-reveal">
           <li>Servers at the top. Switch in one tap.</li>
           <li>Sign&#8209;in in a sheet. Join a server without leaving the chat list.</li>
           <li>Direct messages apart from server spaces. You see where a chat lives.</li>
@@ -106,14 +83,12 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
           The PM and I each audited the desktop app. We found the same thing: it was the mobile app stretched across a
           big window.
         </p>
-        <h3 className="cp-sub cp-reveal">Keep the chat in view</h3>
         <p className="cp-reveal">Contacts used to open in a full window. Now it’s a small window over the chat.</p>
         <BeforeAfter {...media.contacts} frame="desktop" />
         <p className="cp-reveal">
           Emoji used to open as a panel across the whole window. Now it’s a small window above the message field.
         </p>
         <BeforeAfter {...media.emoji} frame="desktop" />
-        <h3 className="cp-sub cp-reveal">Mouse and window size</h3>
         <p className="cp-reveal">
           Attaching a file took six steps. <Mark>Now you drag it into the chat.</Mark>
         </p>
@@ -142,7 +117,7 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
           person’s chat with a bot fills everyone’s feed.
         </p>
         <p className="cp-reveal">So every request opens its own thread. Chums calls it a discussion.</p>
-        <ul className="cp-list cp-reveal">
+        <ul className="cp-list cp-list--short cp-reveal">
           <li>You call the assistant with @, like any member.</li>
           <li>The answer stays in the thread. The chat shows one line and a counter.</li>
           <li>All threads of a room are in one list.</li>
@@ -189,30 +164,20 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
       {/* --- outcome ------------------------------------------------------- */}
       <section className="cp-chapter cp-col" aria-labelledby="cp-landed">
         <Heading id="cp-landed">Where it landed</Heading>
-        <ul className="cp-results">
-          <li className="cp-reveal">
-            <h3 className="cp-result__title">Concept</h3>
-            <p>Approved. Only the look reached the product, the server flow stayed the same.</p>
-          </li>
-          <li className="cp-reveal">
-            <h3 className="cp-result__title">Desktop</h3>
-            <p>In beta three months after approval. Attaching a file went from six steps to one.</p>
-          </li>
-          <li className="cp-reveal">
-            <h3 className="cp-result__title">Assistant</h3>
-            <p>Designed for desktop and mobile.</p>
-          </li>
-          <li className="cp-reveal">
-            <h3 className="cp-result__title">Rewards</h3>
-            <p>Approved and handed to development.</p>
-          </li>
-        </ul>
+        <Results
+          items={[
+            ['Concept', 'Approved. Only the look reached the product, the server flow stayed the same.'],
+            ['Desktop', 'In beta three months after approval. Attaching a file went from six steps to one.'],
+            ['Assistant', 'Designed for desktop and mobile.'],
+            ['Rewards', 'Approved and handed to development.'],
+          ]}
+        />
       </section>
 
       <section className="cp-chapter cp-col" aria-labelledby="cp-differently">
         <Heading id="cp-differently">What I’d do differently</Heading>
         <p className="cp-reveal">Agree on metrics with the PM before starting.</p>
-        <ul className="cp-list cp-reveal">
+        <ul className="cp-list cp-list--short cp-reveal">
           <li>For desktop: steps and time for common actions.</li>
           <li>For rewards: how many people start a quest and how many finish.</li>
         </ul>

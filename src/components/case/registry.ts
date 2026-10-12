@@ -1,5 +1,6 @@
 import type { ComponentType } from 'react';
 import { ChumsArticle } from './ChumsArticle';
+import { UrbantigerArticle } from './UrbantigerArticle';
 
 /** How the case's own "back" leaves it: closing the layer over the page, or a
     link home from the case's standalone page. */
@@ -15,4 +16,5 @@ type CaseEntry = {
     address, come from the showcase data. */
 export const CASES: Record<string, CaseEntry> = {
   chums: { title: 'Chums messenger', Article: ChumsArticle },
+  urbantiger: { title: 'Urbantiger', Article: UrbantigerArticle },
 };

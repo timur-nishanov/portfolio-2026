@@ -45,6 +45,7 @@ export const showcase: ShowcaseCase[] = [
   },
   {
     id: 'urbantiger',
+    href: '/cases/urbantiger',
     device: 'imac',
     title: 'Urbantiger',
     subtitle: 'Eco ecommerce',
@@ -56,9 +57,9 @@ export const showcase: ShowcaseCase[] = [
       alt: 'Urbantiger: choosing a gift card design',
     },
     notes: [
-      'The MVP converts at twice the old site’s rate, with traffic down\u00a030–40% over the same period. The client’s own\u00a0numbers.',
-      'Senior designer leading two juniors and an illustrator. I owned purchase, search and account flows and covered every corner, from three login options to an 8-step\u00a0return.',
-      'Nothing brought people back, so I turned loyalty into a game: achievements for purchases, eco choices and activity, with silver-to-platinum tiers and bonuses you spend at\u00a0checkout.',
+      'The store was designed in a hurry in 2021, and nobody had touched its UX since 2023. It no longer matched the\u00a0brand.',
+      'The MVP is live. The client reported conversion at about twice the old site’s rate, with traffic down 30–40% over the same\u00a0period.',
+      'Senior designer, leading two junior designers and an illustrator. We designed 28 pages at four breakpoints in three months, plus achievements and gift cards for the loyalty\u00a0section.',
     ],
   },
   {

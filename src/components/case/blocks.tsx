@@ -1,17 +1,18 @@
 'use client';
 
 import { createContext, useLayoutEffect } from 'react';
-import type { CaseSlot } from '@/data/chumsCase';
+import type { CasePair, CaseSlot } from '@/data/caseSlot';
 import { useLazyVideo } from '@/hooks/useLazyVideo';
 
-type Pair = { before: CaseSlot; after: CaseSlot };
-type Frame = 'phone' | 'desktop';
+/** A phone's screen, a desktop window, or a wide picture of several things
+    at once (a diagram, concepts side by side) that sits on the box as it is. */
+type Frame = 'phone' | 'desktop' | 'wide';
 
 const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /** A screen's shape, for the CSS that sizes it (--ar): the file's own once it
-    is known, so its room is kept before it arrives; until then a phone's or a
-    desktop window's. */
+    is known, so its room is kept before it arrives; until then a phone's, or
+    a desktop window's for the rest. */
 const shape = (slot: CaseSlot, frame: Frame) =>
   ({
     '--ar': slot.w && slot.h ? slot.w / slot.h : frame === 'phone' ? 9 / 19.5 : 16 / 10,
@@ -65,7 +66,7 @@ function Shot({ slot, frame }: { slot: CaseSlot; frame: Frame }) {
  */
 export function Figure({ slot, frame, label }: { slot: CaseSlot; frame: Frame; label?: 'Before' | 'After' }) {
   return (
-    <figure className={`cp-figure cp-figure--${frame} cp-reveal`}>
+    <figure className={`cp-figure cp-figure--${frame}${label === 'After' ? ' cp-figure--after' : ''} cp-reveal`}>
       {label && <figcaption className="cp-figure__label">{label}</figcaption>}
       <Shot slot={slot} frame={frame} />
     </figure>
@@ -73,12 +74,58 @@ export function Figure({ slot, frame, label }: { slot: CaseSlot; frame: Frame; l
 }
 
 /** The same thing before and after, one figure over the other. */
-export function BeforeAfter({ before, after, frame }: Pair & { frame: Frame }) {
+export function BeforeAfter({ before, after, frame }: CasePair & { frame: Frame }) {
   return (
     <>
       <Figure label="Before" slot={before} frame={frame} />
       <Figure label="After" slot={after} frame={frame} />
     </>
+  );
+}
+
+/* --- the text ------------------------------------------------------------- */
+
+/** A part's heading: the text's size in semibold ink, with a faint rule
+    running out to the column's edge (as benji.org heads a section). */
+export function Heading({ id, children }: { id: string; children: React.ReactNode }) {
+  return (
+    <h2 id={id} className="cp-h cp-reveal">
+      <span className="cp-h__name">{children}</span>
+    </h2>
+  );
+}
+
+/** A phrase the case turns on, marked as with a highlighter. */
+export function Mark({ children }: { children: React.ReactNode }) {
+  return <mark className="cp-mark">{children}</mark>;
+}
+
+/** The facts under a case's opening: a line each, the label in a column of
+    its own. */
+export function Facts({ items }: { items: [label: string, value: React.ReactNode][] }) {
+  return (
+    <dl className="cp-facts cp-reveal">
+      {items.map(([label, value]) => (
+        <div key={label}>
+          <dt>{label}</dt>
+          <dd>{value}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
+/** Where a case landed: each part's name over what became of it. */
+export function Results({ items }: { items: [title: string, text: React.ReactNode][] }) {
+  return (
+    <ul className="cp-results">
+      {items.map(([title, text]) => (
+        <li key={title} className="cp-reveal">
+          <h3 className="cp-result__title">{title}</h3>
+          <p>{text}</p>
+        </li>
+      ))}
+    </ul>
   );
 }
 
