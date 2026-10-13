@@ -1,14 +1,19 @@
 import type { CasePair as Pair, CaseSlot } from './caseSlot';
 
-/** The media in the Chums case study (ChumsArticle): see CaseSlot. */
+/** The media in the Chums case study (ChumsArticle): see CaseSlot. The
+    recordings are each the whole of their white stage (windows at 1280×800,
+    phones at 1080×1350), and the two old screenshots are set on the same
+    stage, where the new window rests. */
 type ChumsMedia = {
   /** 01: signing in to a server, the old app and the concept. */
   concept: Pair;
   /** 02: the contact picker and the emoji panel, before and after. */
   contacts: Pair;
   emoji: Pair;
-  /** 02: dragging a file in, the window narrowing, the wallet. */
+  /** 02: dragging a file in, the attach button's window, the window
+      narrowing, the wallet. */
   drag: CaseSlot;
+  attach: CaseSlot;
   resize: CaseSlot;
   wallet: CaseSlot;
   /** 03: the assistant, step by step, in one phone. */
@@ -17,27 +22,67 @@ type ChumsMedia = {
   rewards: CaseSlot;
 };
 
+/** A recording in /cases/chums, its poster its first frame. */
+const clip = (name: string, w: number, h: number, alt: string): CaseSlot => ({
+  kind: 'video',
+  src: `/cases/chums/${name}.mp4`,
+  poster: `/cases/chums/${name}.webp`,
+  w,
+  h,
+  alt,
+});
+
 export const chumsMedia: ChumsMedia = {
   concept: {
-    before: { kind: 'video', alt: 'The old Chums app: signing in to a server' },
-    after: { kind: 'video', alt: 'The concept: joining a server in a sheet over the chat list' },
+    before: clip('01-before-server-signin', 1080, 1350, 'The old Chums app: picking a server, then signing in to it'),
+    after: clip(
+      '01-after-concept',
+      1080,
+      1350,
+      'The concept: servers at the top, joining one in a sheet over the chat list, coins in the attachment menu',
+    ),
   },
   contacts: {
-    before: { kind: 'image', alt: 'Before: contacts open in a full window' },
-    after: { kind: 'video', alt: 'After: a small contacts window opens over the chat' },
+    before: {
+      kind: 'image',
+      src: '/cases/chums/02-before-contacts.webp',
+      w: 1440,
+      h: 900,
+      alt: 'Before: contacts open in a full window',
+    },
+    after: clip('02-after-contacts', 1280, 800, 'After: a small contacts window opens over the chat'),
   },
   emoji: {
-    before: { kind: 'image', alt: 'Before: the emoji panel across the whole window' },
-    after: { kind: 'video', alt: 'After: a small emoji window above the message field' },
+    before: {
+      kind: 'image',
+      src: '/cases/chums/03-before-emoji.webp',
+      w: 1440,
+      h: 900,
+      alt: 'Before: the emoji panel across the whole window',
+    },
+    after: clip('03-after-emoji', 1280, 800, 'After: a small emoji window above the message field'),
   },
-  drag: { kind: 'video', alt: 'A file dragged into the chat window and attached' },
-  resize: { kind: 'video', alt: 'The window narrowing from 1300 to 375px as the layout rearranges' },
-  wallet: { kind: 'video', alt: 'The wallet popup turning into a full screen as the window narrows' },
-  assistant: { kind: 'video', alt: 'Calling the assistant with @, sending a task, the thread with its answer, all the threads of a room' },
-  rewards: {
-    kind: 'video',
-    alt: 'The rewards system: quests in the Explore tab, the first steps, your points and the season, what each room gives',
-  },
+  drag: clip('04-after-drag', 1280, 800, 'A file dragged into the chat window and attached'),
+  attach: clip(
+    '05-after-attach-pictures',
+    1280,
+    800,
+    'The attach button’s small window: a picture picked under Pictures and attached above the message field',
+  ),
+  resize: clip('06-after-window-sizes', 1280, 800, 'The window narrowing from 1300 to 375px as the layout rearranges'),
+  wallet: clip('07-after-wallet', 1280, 800, 'The wallet popup turning into a full screen as the window narrows'),
+  assistant: clip(
+    '08-after-threads',
+    1080,
+    1350,
+    'Calling the assistant with @, sending a task, the thread with its answer, all the threads of a room',
+  ),
+  rewards: clip(
+    '09-after-venom-quest',
+    1080,
+    1350,
+    'The rewards system: quests in the Explore tab, the first steps, your points and the season, what each room gives',
+  ),
 };
 
 /** Where to get the app, at the case's end, each with its logo's disc. */

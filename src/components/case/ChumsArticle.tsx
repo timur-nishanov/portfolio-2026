@@ -65,7 +65,7 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
           <li>Direct messages apart from server spaces. You see where a chat lives.</li>
           <li>Coins in the attachment menu, next to photos and files.</li>
         </ul>
-        <BeforeAfter {...media.concept} frame="phone" />
+        <BeforeAfter {...media.concept} frame="stage" />
         <p className="cp-reveal">
           The founders approved it. When the product’s designer left, I took over design and got a junior designer to
           mentor.
@@ -84,25 +84,30 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
           big window.
         </p>
         <p className="cp-reveal">Contacts used to open in a full window. Now it’s a small window over the chat.</p>
-        <BeforeAfter {...media.contacts} frame="desktop" />
+        <BeforeAfter {...media.contacts} frame="stage" />
         <p className="cp-reveal">
           Emoji used to open as a panel across the whole window. Now it’s a small window above the message field.
         </p>
-        <BeforeAfter {...media.emoji} frame="desktop" />
+        <BeforeAfter {...media.emoji} frame="stage" />
         <p className="cp-reveal">
           Attaching a file took six steps. <Mark>Now you drag it into the chat.</Mark>
         </p>
-        <Figure slot={media.drag} frame="desktop" />
+        <Figure slot={media.drag} frame="stage" />
+        <p className="cp-reveal">
+          We didn’t forget the usual way to attach a picture either. The attach button opens a small window above the
+          message field, with your pictures and recent files.
+        </p>
+        <Figure slot={media.attach} frame="stage" />
         <p className="cp-reveal">
           We set rules for window sizes from 1300 to 375px: the chat list keeps its width, the chat stretches, and a
           narrow window shows one column.
         </p>
-        <Figure slot={media.resize} frame="desktop" />
+        <Figure slot={media.resize} frame="stage" />
         <p className="cp-reveal">
           The wallet was designed before us. We fitted it to desktop: a popup in a wide window, a full screen in a
           narrow one.
         </p>
-        <Figure slot={media.wallet} frame="desktop" />
+        <Figure slot={media.wallet} frame="stage" />
         <p className="cp-reveal">
           The founders and the PM approved the plan within a week. We had one developer, so some details had to wait.{' '}
           <Mark>The first beta shipped three months later.</Mark> The new patterns went into the design system.
@@ -122,7 +127,7 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
           <li>The answer stays in the thread. The chat shows one line and a counter.</li>
           <li>All threads of a room are in one list.</li>
         </ul>
-        <Figure slot={media.assistant} frame="phone" />
+        <Figure slot={media.assistant} frame="stage" />
       </section>
 
       {/* --- 04 ------------------------------------------------------------ */}
@@ -158,7 +163,7 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
           The junior designer made the screens, I directed the work. The system was{' '}
           <Mark>approved and handed to development</Mark> before I left the studio in January&nbsp;2026.
         </p>
-        <Figure slot={media.rewards} frame="phone" />
+        <Figure slot={media.rewards} frame="stage" />
       </section>
 
       {/* --- outcome ------------------------------------------------------- */}
