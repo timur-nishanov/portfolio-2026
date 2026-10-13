@@ -6,9 +6,11 @@ import { useLazyVideo } from '@/hooks/useLazyVideo';
 import { MonitorMockup } from '@/components/showcase/MonitorMockup';
 
 /** A phone's screen, a desktop window, a wide picture of several things at
-    once (a diagram, concepts side by side) that sits on the box as it is, or
-    a recording playing in the iMac the home page's cards show. */
-type Frame = 'phone' | 'desktop' | 'wide' | 'imac';
+    once (a diagram, concepts side by side) that sits on the box as it is, a
+    recording playing in the iMac the home page's cards show, or a recording
+    composed on its own white stage (a window or a phone on white, the camera
+    moving in it), drawn whole. */
+type Frame = 'phone' | 'desktop' | 'wide' | 'imac' | 'stage';
 
 const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -76,7 +78,11 @@ function Shot({ slot, frame }: { slot: CaseSlot; frame: Frame }) {
  */
 export function Figure({ slot, frame, label }: { slot: CaseSlot; frame: Frame; label?: 'Before' | 'After' }) {
   return (
-    <figure className={`cp-figure cp-figure--${frame}${label === 'After' ? ' cp-figure--after' : ''} cp-reveal`}>
+    <figure
+      className={`cp-figure cp-figure--${frame}${label === 'After' ? ' cp-figure--after' : ''} cp-reveal`}
+      // A stage is the figure itself, so the figure takes the recording's shape.
+      style={frame === 'stage' ? shape(slot, frame) : undefined}
+    >
       {label && <figcaption className="cp-figure__label">{label}</figcaption>}
       <Shot slot={slot} frame={frame} />
     </figure>

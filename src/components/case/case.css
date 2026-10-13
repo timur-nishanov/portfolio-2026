@@ -323,6 +323,23 @@
 .cp-col > .cp-figure + .cp-figure--after {
   margin-top: 16px;
 }
+/* The media a touch wider than the text, on the same centre line: up to
+   680px, 12px clear of the screen's edges (on a phone, past the text's 20px)
+   and, where the index is down the left, 28px clear of it. */
+.cp,
+.cp-page {
+  --cp-media: 680px;
+}
+.cp-col > .cp-figure {
+  --cp-media-w: clamp(100%, calc(100vw / var(--site-zoom, 1) - 24px), var(--cp-media));
+  width: var(--cp-media-w);
+  margin-left: calc((100% - var(--cp-media-w)) / 2);
+}
+@media (min-width: 1200px) {
+  .cp-col > .cp-figure {
+    --cp-media-w: clamp(100%, calc(100vw / var(--site-zoom, 1) - 704px), var(--cp-media));
+  }
+}
 
 /* --- the index ------------------------------------------------------------ */
 /* The way back and the chapters down the left, from the case's name down,
@@ -579,6 +596,25 @@
 .cp-figure--imac {
   padding: 40px 36px;
 }
+/* A recording composed on its own white stage is the figure itself: no room
+   round it, the stage's white the box's, the hairline kept over it. An
+   upright one is no taller than 620px, so the phone on it is about a phone's
+   width (--ar, the recording's shape, is set on the figure too). */
+.cp-col > .cp-figure.cp-figure--stage {
+  --cp-stage-w: min(var(--cp-media-w), calc(620px * var(--ar)));
+  width: var(--cp-stage-w);
+  margin-left: calc((100% - var(--cp-stage-w)) / 2);
+  padding: 0;
+  overflow: hidden;
+}
+.cp-figure--stage::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px var(--cp-hair);
+  pointer-events: none;
+}
 .cp-figure__label {
   position: absolute;
   top: 16px;
@@ -601,6 +637,9 @@
   width: 100%;
   border-radius: 8px;
 }
+.cp-shot--stage {
+  width: 100%;
+}
 /* A screen's file lifts off the box a little; a wide picture (a diagram,
    several screens laid out) is drawn on it, flat and square. */
 .cp-figure img.cp-shot,
@@ -610,7 +649,9 @@
     0 16px 32px -16px rgba(0, 0, 0, 0.2);
 }
 .cp-figure img.cp-shot--wide,
-.cp-figure video.cp-shot--wide {
+.cp-figure video.cp-shot--wide,
+.cp-figure img.cp-shot--stage,
+.cp-figure video.cp-shot--stage {
   border-radius: 0;
   box-shadow: none;
 }
