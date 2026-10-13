@@ -49,19 +49,19 @@
   margin: 6px 0 0;
 }
 /* On a wide screen the three stand in a triangle, two over one, read as a
-   line is (left, right, then below), each 40px into the other two: the
-   centres 280px apart every way. The block is the column's width and 20px
-   out either side, so the spheres keep their size and their words their
-   measure. */
+   line is (left, right, then below). The block is the media's width from the
+   text's left edge, as the figures are, so the spheres keep their size with
+   air between them: the centres one length apart every way, 360px (40px
+   clear of each other) where the media are at their widest. */
 @media (min-width: 760px) {
   .go {
-    margin-left: -20px;
-    margin-right: -20px;
+    --go-w: min(var(--cp-media, 680px), calc(50vw / var(--site-zoom, 1) + var(--cp-col, 560px) / 2 - 20px));
+    width: var(--go-w);
   }
   .go__list {
     position: relative;
     display: block;
-    height: 562px; /* 242px down to the third, and its 320px */
+    height: calc((var(--go-w) - 320px) * 0.866 + 320px); /* down to the third, and its 320px */
   }
   .go__orb {
     position: absolute;
@@ -83,7 +83,7 @@
     right: 0;
   }
   .go__orb:nth-child(3) {
-    top: 242px;
+    top: calc((var(--go-w) - 320px) * 0.866);
     left: calc(50% - 160px);
   }
 }
