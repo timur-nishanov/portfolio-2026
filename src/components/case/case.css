@@ -605,10 +605,11 @@
   box-shadow: inset 0 0 0 1px var(--cp-hair);
   pointer-events: none;
 }
-/* What happens in it, or which side of a comparison it is: under the box,
-   in the small size, grey, in Inter's italic. */
+/* What happens in it, or which side of a comparison it is: under the box on
+   its centre line, in the small size, grey, in Inter's italic. */
 .cp-figure__cap {
   margin-top: 10px;
+  text-align: center;
   font-family: var(--font-inter-italic), var(--font-sf);
   font-style: italic;
   color: var(--cp-mute);
