@@ -23,13 +23,14 @@ type ChumsMedia = {
 };
 
 /** A recording in /cases/chums, its poster its first frame. */
-const clip = (name: string, w: number, h: number, alt: string): CaseSlot => ({
+const clip = (name: string, w: number, h: number, alt: string, caption?: string): CaseSlot => ({
   kind: 'video',
   src: `/cases/chums/${name}.mp4`,
   poster: `/cases/chums/${name}.webp`,
   w,
   h,
   alt,
+  caption,
 });
 
 export const chumsMedia: ChumsMedia = {
@@ -62,26 +63,41 @@ export const chumsMedia: ChumsMedia = {
     },
     after: clip('03-after-emoji', 1280, 800, 'After: a small emoji window above the message field'),
   },
-  drag: clip('04-after-drag', 1280, 800, 'A file dragged into the chat window and attached'),
+  drag: clip('04-after-drag', 1280, 800, 'A file dragged into the chat window and attached', 'Dragging a file into the chat'),
   attach: clip(
     '05-after-attach-pictures',
     1280,
     800,
     'The attach button’s small window: a picture picked under Pictures and attached above the message field',
+    'Attaching a picture from the attach button',
   ),
-  resize: clip('06-after-window-sizes', 1280, 800, 'The window narrowing from 1300 to 375px as the layout rearranges'),
-  wallet: clip('07-after-wallet', 1280, 800, 'The wallet popup turning into a full screen as the window narrows'),
+  resize: clip(
+    '06-after-window-sizes',
+    1280,
+    800,
+    'The window narrowing from 1300 to 375px as the layout rearranges',
+    'Narrowing the window from 1300 to 375px',
+  ),
+  wallet: clip(
+    '07-after-wallet',
+    1280,
+    800,
+    'The wallet popup turning into a full screen as the window narrows',
+    'The wallet in a wide window and a narrow one',
+  ),
   assistant: clip(
     '08-after-threads',
     1080,
     1350,
     'Calling the assistant with @, sending a task, the thread with its answer, all the threads of a room',
+    'Asking the assistant in its own thread',
   ),
   rewards: clip(
     '09-after-venom-quest',
     1080,
     1350,
     'The rewards system: quests in the Explore tab, the first steps, your points and the season, what each room gives',
+    'Quests in the Explore tab, the first steps and the points',
   ),
 };
 

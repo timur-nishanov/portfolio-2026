@@ -35,20 +35,23 @@ const COLUMNS: Column[] = [
 
 export function QuestBoard() {
   return (
-    <figure className="cp-figure cp-board cp-reveal" aria-label="How the rewards system took shape">
-      {COLUMNS.map((col) => (
-        <div key={col.label} className="cp-board__col">
-          <p className="cp-board__label">{col.label}</p>
-          <ul>
-            {col.notes.map((note, i) => (
-              <li key={i} className={`cp-note${col.ask ? ' cp-note--ask' : ''}`}>
-                {note.title && <span className="cp-note__title">{note.title}</span>}
-                {note.text && <span>{note.text}</span>}
-              </li>
-            ))}
-          </ul>
-        </div>
-      ))}
+    <figure className="cp-figure cp-reveal">
+      <div className="cp-figure__box cp-board">
+        {COLUMNS.map((col) => (
+          <div key={col.label} className="cp-board__col">
+            <p className="cp-board__label">{col.label}</p>
+            <ul>
+              {col.notes.map((note, i) => (
+                <li key={i} className={`cp-note${col.ask ? ' cp-note--ask' : ''}`}>
+                  {note.title && <span className="cp-note__title">{note.title}</span>}
+                  {note.text && <span>{note.text}</span>}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+      <figcaption className="cp-figure__cap">How the rewards system took shape</figcaption>
     </figure>
   );
 }

@@ -10,6 +10,16 @@ export const inter = localFont({
   display: 'swap',
 });
 
+// Inter's italic, the same subset, for the cases' captions under the media.
+// Not preloaded: nothing on the home page is set in it, and a case's captions
+// are further down than its first screen.
+export const interItalic = localFont({
+  src: [{ path: './fonts/InterVariable-Italic-latin.woff2', weight: '100 900', style: 'italic' }],
+  variable: '--font-inter-italic',
+  display: 'swap',
+  preload: false,
+});
+
 // The first screen is set in SF Pro, which is a system font (Apple licence, no
 // self-hosting) — it is a CSS stack, --font-sf in globals.css, not loaded here.
 // The two faces below remain for the hidden sections. preload: false while

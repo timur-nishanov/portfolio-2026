@@ -254,11 +254,11 @@
   height: 1px;
   background: rgba(8, 8, 10, 0.06);
 }
-/* The small size: the index, the facts' labels, what a figure shows, the
+/* The small size: the index, the facts' labels, a figure's caption, the
    board. */
 .cp-index,
 .cp-facts dt,
-.cp-figure__label,
+.cp-figure__cap,
 .cp-board {
   font-size: 13px;
   line-height: 16px;
@@ -321,23 +321,18 @@
   margin-top: var(--cp-step);
 }
 .cp-col > .cp-figure + .cp-figure--after {
-  margin-top: 16px;
+  margin-top: 24px;
 }
-/* The media a touch wider than the text, on the same centre line: up to
-   680px, 12px clear of the screen's edges (on a phone, past the text's 20px)
-   and, where the index is down the left, 28px clear of it. */
+/* The media: every figure one width, from the text's left edge. Where the
+   screen is wide enough, a touch past the text on the right, up to 680px and
+   20px clear of the screen's edge; on a narrower one, the text's own width. */
 .cp,
 .cp-page {
   --cp-media: 680px;
 }
-.cp-col > .cp-figure {
-  --cp-media-w: clamp(100%, calc(100vw / var(--site-zoom, 1) - 24px), var(--cp-media));
-  width: var(--cp-media-w);
-  margin-left: calc((100% - var(--cp-media-w)) / 2);
-}
-@media (min-width: 1200px) {
+@media (min-width: 760px) {
   .cp-col > .cp-figure {
-    --cp-media-w: clamp(100%, calc(100vw / var(--site-zoom, 1) - 704px), var(--cp-media));
+    width: min(var(--cp-media), calc(50vw / var(--site-zoom, 1) + var(--cp-col) / 2 - 20px));
   }
 }
 
@@ -576,11 +571,11 @@
 }
 
 /* --- figures -------------------------------------------------------------- */
-/* A figure as benji.org has them: a light box in the column with a hairline
-   round it, one screen centred inside, and what it shows named in its
-   corner. A phone at a phone's width, 40px of room over and under it; a
-   window with benji's 48px over and under and 36px either side. */
-.cp-figure {
+/* A figure as benji.org has them: a light box with a hairline round it, one
+   screen centred inside, and under it a short line in grey italics. A phone
+   at a phone's width, 40px of room over and under it; a window with benji's
+   48px over and under and 36px either side. */
+.cp-figure__box {
   position: relative;
   display: grid;
   place-items: center;
@@ -589,25 +584,20 @@
   background: #fff;
   box-shadow: inset 0 0 0 1px var(--cp-hair);
 }
-.cp-figure--desktop,
-.cp-figure--wide {
+.cp-figure--desktop .cp-figure__box,
+.cp-figure--wide .cp-figure__box {
   padding: 48px 36px;
 }
-.cp-figure--imac {
+.cp-figure--imac .cp-figure__box {
   padding: 40px 36px;
 }
-/* A recording composed on its own white stage is the figure itself: no room
-   round it, the stage's white the box's, the hairline kept over it. An
-   upright one is no taller than 620px, so the phone on it is about a phone's
-   width (--ar, the recording's shape, is set on the figure too). */
-.cp-col > .cp-figure.cp-figure--stage {
-  --cp-stage-w: min(var(--cp-media-w), calc(620px * var(--ar)));
-  width: var(--cp-stage-w);
-  margin-left: calc((100% - var(--cp-stage-w)) / 2);
+/* A recording composed on its own white stage is the box itself: no room
+   round it, the stage's white the box's, the hairline kept over it. */
+.cp-figure.cp-figure--stage .cp-figure__box {
   padding: 0;
   overflow: hidden;
 }
-.cp-figure--stage::after {
+.cp-figure--stage .cp-figure__box::after {
   content: '';
   position: absolute;
   inset: 0;
@@ -615,10 +605,12 @@
   box-shadow: inset 0 0 0 1px var(--cp-hair);
   pointer-events: none;
 }
-.cp-figure__label {
-  position: absolute;
-  top: 16px;
-  left: 20px;
+/* What happens in it, or which side of a comparison it is: under the box,
+   in the small size, grey, in Inter's italic. */
+.cp-figure__cap {
+  margin-top: 10px;
+  font-family: var(--font-inter-italic), var(--font-sf);
+  font-style: italic;
   color: var(--cp-mute);
 }
 /* A screen keeps its own shape (--ar): a phone with a phone's corners, a
@@ -814,19 +806,15 @@
     grid-template-columns: minmax(0, 1fr);
     gap: 2px;
   }
-  .cp-figure {
+  .cp-figure__box {
     padding: 32px 16px;
   }
-  .cp-figure--desktop,
-  .cp-figure--wide {
+  .cp-figure--desktop .cp-figure__box,
+  .cp-figure--wide .cp-figure__box {
     padding: 40px 20px;
   }
-  .cp-figure--imac {
+  .cp-figure--imac .cp-figure__box {
     padding: 32px 16px;
-  }
-  .cp-figure__label {
-    top: 12px;
-    left: 16px;
   }
   .cp-shot--phone {
     width: 200px;

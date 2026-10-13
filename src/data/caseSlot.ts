@@ -10,6 +10,9 @@ export type CaseSlot = {
   src?: string;
   poster?: string;
   alt: string;
+  /** A short line under it saying what happens in it (the two sides of a
+      comparison are named Before and After instead). */
+  caption?: string;
   /** The file's own size, so its room is kept before it arrives. */
   w?: number;
   h?: number;

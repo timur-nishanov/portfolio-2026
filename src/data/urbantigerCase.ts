@@ -28,8 +28,16 @@ type UrbantigerMedia = {
 };
 
 export const urbantigerMedia: UrbantigerMedia = {
-  flow: { kind: 'image', alt: 'The whole store as a flow diagram, with the prototypes beside it' },
-  concepts: { kind: 'image', alt: 'Three concept directions side by side, the chosen one marked' },
+  flow: {
+    kind: 'image',
+    alt: 'The whole store as a flow diagram, with the prototypes beside it',
+    caption: 'The whole store as one flow',
+  },
+  concepts: {
+    kind: 'image',
+    alt: 'Three concept directions side by side, the chosen one marked',
+    caption: 'Three concept directions',
+  },
   home: {
     before: { kind: 'image', alt: 'Before: the old home page on a phone' },
     after: { kind: 'image', alt: 'After: the new home page on a phone' },
@@ -38,13 +46,18 @@ export const urbantigerMedia: UrbantigerMedia = {
     before: { kind: 'image', alt: 'Before: the old catalog cards on desktop' },
     after: { kind: 'video', alt: 'After: picking a size and adding the item to the cart right from its catalog card' },
   },
-  checkout: { kind: 'image', alt: 'Checkout with three delivery options' },
+  checkout: { kind: 'image', alt: 'Checkout with three delivery options', caption: 'Checkout with three delivery options' },
   states: {
     kind: 'image',
     alt: 'Six states: confirming sign-in, a promo code error, a bonus error, a restock alert, an empty wishlist, the first step of a return',
+    caption: 'Six of the states',
   },
-  breakpoints: { kind: 'image', alt: 'One page at four screen widths' },
-  achievements: { kind: 'image', alt: 'The achievements screen, with three badges beside it' },
-  giftCard: { kind: 'video', alt: 'The recipient opening a gift card like an envelope' },
-  wishlist: { kind: 'image', alt: 'The wishlist with its collections' },
+  breakpoints: { kind: 'image', alt: 'One page at four screen widths', caption: 'One page at four screen widths' },
+  achievements: {
+    kind: 'image',
+    alt: 'The achievements screen, with three badges beside it',
+    caption: 'Achievements and badges',
+  },
+  giftCard: { kind: 'video', alt: 'The recipient opening a gift card like an envelope', caption: 'Opening a gift card' },
+  wishlist: { kind: 'image', alt: 'The wishlist with its collections', caption: 'The wishlist and its collections' },
 };

@@ -2,7 +2,7 @@
 
 import { createContext, useLayoutEffect } from 'react';
 import type { CasePair, CaseSlot } from '@/data/caseSlot';
-import { useLazyVideo } from '@/hooks/useLazyVideo';
+import { useLazyVideo, type VideoWatch } from '@/hooks/useLazyVideo';
 import { MonitorMockup } from '@/components/showcase/MonitorMockup';
 
 /** A phone's screen, a desktop window, a wide picture of several things at
@@ -14,6 +14,13 @@ type Frame = 'phone' | 'desktop' | 'wide' | 'imac' | 'stage';
 
 const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+/** A case's clip plays once most of it is on screen, a second after, and from
+    its start whenever it comes back to the screen (see VideoWatch). An After
+    also waits for its top to come up to the screen's middle: on a phone it
+    is on screen whole while its Before is still being looked at. */
+const CASE_WATCH: VideoWatch = { share: 0.7, hold: 1000, restart: true };
+const AFTER_WATCH: VideoWatch = { ...CASE_WATCH, line: 0.5 };
+
 /** A screen's shape, for the CSS that sizes it (--ar): the file's own once it
     is known, so its room is kept before it arrives; until then a phone's, or
     a desktop window's for the rest. */
@@ -22,8 +29,18 @@ const shape = (slot: CaseSlot, frame: Frame) =>
     '--ar': slot.w && slot.h ? slot.w / slot.h : frame === 'phone' ? 9 / 19.5 : 16 / 10,
   }) as React.CSSProperties;
 
-function Clip({ slot, className, style }: { slot: CaseSlot; className: string; style: React.CSSProperties }) {
-  const ref = useLazyVideo(slot.src ?? '', slot.poster);
+function Clip({
+  slot,
+  className,
+  style,
+  watch,
+}: {
+  slot: CaseSlot;
+  className: string;
+  style: React.CSSProperties;
+  watch: VideoWatch;
+}) {
+  const ref = useLazyVideo(slot.src ?? '', slot.poster, watch);
   return (
     <video
       ref={ref}
@@ -43,19 +60,22 @@ function Clip({ slot, className, style }: { slot: CaseSlot; className: string; s
 
 /** One screen, as it is: no device around it, a phone's corners or a
     window's. Until its file is in, a lighter shape of the same size. */
-function Shot({ slot, frame }: { slot: CaseSlot; frame: Frame }) {
+function Shot({ slot, frame, watch }: { slot: CaseSlot; frame: Frame; watch: VideoWatch }) {
   // The iMac is the home page's (MonitorMockup), the recording in its screen.
   if (frame === 'imac' && slot.src) {
     return (
       <div className="cp-shot cp-shot--imac">
-        <MonitorMockup screen={{ framed: true, type: 'video', src: slot.src, poster: slot.poster, alt: slot.alt }} />
+        <MonitorMockup
+          screen={{ framed: true, type: 'video', src: slot.src, poster: slot.poster, alt: slot.alt }}
+          watch={watch}
+        />
       </div>
     );
   }
   const className = `cp-shot cp-shot--${frame === 'imac' ? 'desktop' : frame}`;
   const style = shape(slot, frame);
   if (!slot.src) return <div className={`${className} cp-ph`} style={style} role="img" aria-label={slot.alt} />;
-  if (slot.kind === 'video') return <Clip slot={slot} className={className} style={style} />;
+  if (slot.kind === 'video') return <Clip slot={slot} className={className} style={style} watch={watch} />;
   return (
     // eslint-disable-next-line @next/next/no-img-element -- a static export: next/image adds nothing here
     <img
@@ -72,19 +92,19 @@ function Shot({ slot, frame }: { slot: CaseSlot; frame: Frame }) {
 }
 
 /**
- * A figure as benji.org has them: a light box in the column with a hairline
- * round it, one screen centred inside, and what it shows named in its corner
- * when it is one side of a comparison.
+ * A figure as benji.org has them: a light box with a hairline round it, one
+ * screen centred inside (a stage is the box itself), and under it a short
+ * line in grey italics: what happens in it, or which side of a comparison it
+ * is.
  */
 export function Figure({ slot, frame, label }: { slot: CaseSlot; frame: Frame; label?: 'Before' | 'After' }) {
+  const caption = label ?? slot.caption;
   return (
-    <figure
-      className={`cp-figure cp-figure--${frame}${label === 'After' ? ' cp-figure--after' : ''} cp-reveal`}
-      // A stage is the figure itself, so the figure takes the recording's shape.
-      style={frame === 'stage' ? shape(slot, frame) : undefined}
-    >
-      {label && <figcaption className="cp-figure__label">{label}</figcaption>}
-      <Shot slot={slot} frame={frame} />
+    <figure className={`cp-figure cp-figure--${frame}${label === 'After' ? ' cp-figure--after' : ''} cp-reveal`}>
+      <div className="cp-figure__box">
+        <Shot slot={slot} frame={frame} watch={label === 'After' ? AFTER_WATCH : CASE_WATCH} />
+      </div>
+      {caption && <figcaption className="cp-figure__cap">{caption}</figcaption>}
     </figure>
   );
 }
