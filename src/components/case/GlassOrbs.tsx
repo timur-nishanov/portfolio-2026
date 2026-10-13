@@ -30,8 +30,11 @@ const IOR = 1.055;
 const DISPERSION = 0.006;
 const GAP = 0.3;
 // The text block no wider than this share of the diameter: within the flat
-// middle, clear of the rim, where the glass pulls the page out.
+// middle, clear of the rim, where the glass pulls the page out. A sphere
+// larger than TEXT_REF keeps the measure it has at that size, so its words
+// stay as they are, in its middle.
 const TEXT_WIDTH = 0.54;
+const TEXT_REF = 320;
 // The lean: a fraction of the cursor's distance, capped, within this reach
 // past the edge; the same pull as the page's buttons (useMagnetic).
 const LEAN = 0.045;
@@ -265,7 +268,7 @@ function start(THREE: Three, root: HTMLElement, canvas: HTMLCanvasElement) {
       const title = orb.el.querySelector<HTMLElement>('.go__title');
       const text = orb.el.querySelector<HTMLElement>('.go__p');
       if (!title || !text) continue;
-      const maxW = orb.r * 2 * TEXT_WIDTH * s;
+      const maxW = Math.min(orb.r * 2, TEXT_REF) * TEXT_WIDTH * s;
       const font = (el: HTMLElement) => {
         const cs = getComputedStyle(el);
         const size = parseFloat(cs.fontSize) * s;

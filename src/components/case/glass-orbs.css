@@ -36,8 +36,10 @@
 .go__orb:nth-child(even) {
   translate: 14% 0;
 }
+/* The words' measure: 60% of a sphere, but never past what it is in a 320px
+   one, so a larger sphere keeps them as they are, in its middle. */
 .go__text {
-  max-width: 60%;
+  max-width: min(60%, 192px);
   text-align: center;
 }
 .go__title {
@@ -50,22 +52,23 @@
 }
 /* On a wide screen the three stand in a triangle, two over one, read as a
    line is (left, right, then below). The block is the media's width from the
-   text's left edge, as the figures are, so the spheres keep their size with
-   air between them: the centres one length apart every way, 360px (40px
-   clear of each other) where the media are at their widest. */
+   text's left edge, as the figures are, and the spheres are 360px, so each
+   runs a little into the other two: 40px where the media are at their
+   widest, the centres one length apart every way. */
 @media (min-width: 760px) {
   .go {
     --go-w: min(var(--cp-media, 680px), calc(50vw / var(--site-zoom, 1) + var(--cp-col, 560px) / 2 - 20px));
+    --go-d: 360px;
     width: var(--go-w);
   }
   .go__list {
     position: relative;
     display: block;
-    height: calc((var(--go-w) - 320px) * 0.866 + 320px); /* down to the third, and its 320px */
+    height: calc((var(--go-w) - var(--go-d)) * 0.866 + var(--go-d)); /* down to the third, and its own */
   }
   .go__orb {
     position: absolute;
-    width: 320px;
+    width: var(--go-d);
   }
   .go__orb + .go__orb {
     margin-top: 0;
@@ -83,8 +86,8 @@
     right: 0;
   }
   .go__orb:nth-child(3) {
-    top: calc((var(--go-w) - 320px) * 0.866);
-    left: calc(50% - 160px);
+    top: calc((var(--go-w) - var(--go-d)) * 0.866);
+    left: calc(50% - var(--go-d) / 2);
   }
 }
 /* The canvas, over the column and the lean's reach round it. */
