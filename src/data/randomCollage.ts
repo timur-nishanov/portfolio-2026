@@ -30,11 +30,11 @@ export const collage: CollageItem[] = [
     title: 'Site for director Artem Shcherbakov',
     side: 'right',
     video: {
-      src: '/random/artem-site.mp4', // Shcherbakov_Video.mp4, 1600×900, no audio
+      src: '/random/artem-site.mp4', // artem_404_1080p60.mp4, 1600×900, 60fps, no audio
       poster: '/random/artem-site.webp',
       width: 1600,
       height: 900,
-      alt: 'The artemartemartem.com site on a laptop and an iPad',
+      alt: 'The artemartemartem.com 404 page in a browser: “page not found” inks in, and cut-out heads trail the cursor across it',
     },
   },
   {
@@ -54,7 +54,7 @@ export const collage: CollageItem[] = [
     title: 'Site for the Stepicon 2026 conference',
     side: 'right',
     video: {
-      src: '/random/stepicon-site.mp4', // stepicon_mockup_4k60_1.mp4, 1600×900, 60fps, no audio
+      src: '/random/stepicon-site.mp4', // stepicon_mockup_1080p60.mp4, 1600×900, 60fps, no audio
       poster: '/random/stepicon-site.webp',
       width: 1600,
       height: 900,
@@ -78,7 +78,7 @@ export const collage: CollageItem[] = [
     title: 'Site for Moneta, a payment platform',
     side: 'right',
     video: {
-      src: '/random/moneta-site.mp4', // moneta_mockup_4k60_3.mp4, 1600×900, 60fps, no audio
+      src: '/random/moneta-site.mp4', // moneta_mockup_1080p60_1.mp4, 1600×900, 60fps, no audio
       poster: '/random/moneta-site.webp',
       width: 1600,
       height: 900,
