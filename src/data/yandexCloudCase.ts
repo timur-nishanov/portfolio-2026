@@ -25,20 +25,27 @@ type YandexCloudMedia = {
 };
 
 export const yandexCloudMedia: YandexCloudMedia = {
-  booth: { kind: 'image', alt: 'The Yandex Cloud booth at Yandex Scale 2026, with the game on a 55-inch touchscreen' },
+  booth: {
+    kind: 'image',
+    alt: 'The Yandex Cloud booth at Yandex Scale 2026, with the game on a 55-inch touchscreen',
+    caption: 'The booth at Yandex Scale 2026',
+  },
   buildYourself: {
     kind: 'video',
     alt: 'Build it yourself: a service dragged into a slot, another placed with two taps, then the result marked slot by slot',
+    caption: 'Building the chain yourself',
   },
   wheel: {
     kind: 'video',
     src: assets.ycCaseVideo,
     poster: assets.ycCasePoster,
     alt: 'The task wheel sweeping through the cards and snapping to one',
+    caption: 'The task wheel',
   },
   readyBundle: {
     kind: 'video',
     alt: 'Choose from ready-made: a tap on a bundle, then the result with points and a QR code on the right',
+    caption: 'Picking a ready bundle',
   },
-  team: { kind: 'video', alt: 'Yandex team members playing the game on the touchscreen' },
+  team: { kind: 'video', alt: 'Yandex team members playing the game on the touchscreen', caption: 'The Yandex team playing' },
 };

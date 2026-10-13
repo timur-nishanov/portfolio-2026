@@ -3,6 +3,20 @@
 import { useEffect, useRef } from 'react';
 
 /**
+ * When a clip plays, if not as soon as any of it is on screen: once `share`
+ * of it is (of the screen's height, for a clip taller than the screen), with
+ * `line` only once its top has come up past that share of the screen's
+ * height, `hold` ms after that, and with `restart` from its first frame
+ * whenever it comes back after leaving the screen altogether. The cases'
+ * clips are set so (CASE_WATCH): an After under its Before would otherwise
+ * have played half through while the Before was still being looked at.
+ */
+export type VideoWatch = { share: number; hold: number; restart: boolean; line?: number };
+
+/** Steps of a twentieth, so the share is seen as it is crossed. */
+const STEPS = Array.from({ length: 21 }, (_, i) => i / 20);
+
+/**
  * Attaches a video's source (and its poster) only once it is near the
  * viewport, then plays it while it is on screen.
  *
@@ -13,16 +27,25 @@ import { useEffect, useRef } from 'react';
  * the poster covers the gap, and by the time a clip scrolls in it has had time
  * to buffer.
  */
-export function useLazyVideo(src: string, poster?: string) {
+export function useLazyVideo(src: string, poster?: string, watch?: VideoWatch) {
   const ref = useRef<HTMLVideoElement>(null);
+  // Read out, so a caller's fresh object each render doesn't set it up again.
+  const watched = watch !== undefined;
+  const share = watch?.share ?? 0;
+  const hold = watch?.hold ?? 0;
+  const restart = watch?.restart ?? false;
+  const line = watch?.line;
 
   useEffect(() => {
     const v = ref.current;
     if (!v) return;
 
     let attached = false;
-    // Whether it is on screen right now, as the play observer last saw it.
+    // Whether it is on screen enough to play, as the play observer last saw it.
     let visible = false;
+    // Whether it has been off the screen altogether since it last played.
+    let gone = true;
+    let held = 0;
     const attach = () => {
       if (attached) return;
       attached = true;
@@ -36,8 +59,8 @@ export function useLazyVideo(src: string, poster?: string) {
       // until it had come on screen and gone again (in the cases, three or
       // four clips decoding at once where one or two can be seen). Pausing
       // now takes that autoplay back without stopping it from buffering; the
-      // play observer starts it once it is actually on screen.
-      if (!visible) v.pause();
+      // play observer starts it once it is actually on screen (and held).
+      if (!visible || hold) v.pause();
     };
 
     // Start fetching before it arrives, so it is not blank on entry.
@@ -54,25 +77,54 @@ export function useLazyVideo(src: string, poster?: string) {
 
     // Play only while actually visible — seven clips running off-screen is
     // both wasted decode work and wasted battery.
+    let enough = false;
+    let risen = line === undefined;
+    const decide = () => {
+      const seen = enough && risen;
+      if (seen === visible) return;
+      visible = seen;
+      window.clearTimeout(held);
+      if (seen) {
+        attach();
+        if (restart && gone) v.currentTime = 0;
+        gone = false;
+        if (hold) held = window.setTimeout(() => v.play().catch(() => {}), hold);
+        else v.play().catch(() => {});
+      } else {
+        v.pause();
+      }
+    };
     const play = new IntersectionObserver(
       ([e]) => {
-        visible = e.isIntersecting;
-        if (e.isIntersecting) {
-          attach();
-          v.play().catch(() => {});
-        } else {
-          v.pause();
-        }
+        if (!e.isIntersecting) gone = true;
+        const room = Math.min(e.boundingClientRect.height, e.rootBounds?.height ?? Infinity);
+        enough = e.isIntersecting && e.intersectionRect.height >= room * share - 1;
+        decide();
       },
-      { threshold: 0.1 },
+      { threshold: watched ? STEPS : 0.1 },
     );
     play.observe(v);
+    // Whether its top has come up past the line: it meets the screen's part
+    // above the line.
+    const rise =
+      line === undefined
+        ? null
+        : new IntersectionObserver(
+            ([e]) => {
+              risen = e.isIntersecting;
+              decide();
+            },
+            { rootMargin: `0px 0px ${-(1 - line) * 100}% 0px` },
+          );
+    rise?.observe(v);
 
     return () => {
+      window.clearTimeout(held);
       near.disconnect();
       play.disconnect();
+      rise?.disconnect();
     };
-  }, [src, poster]);
+  }, [src, poster, watched, share, hold, restart, line]);
 
   return ref;
 }

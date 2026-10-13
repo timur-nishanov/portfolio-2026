@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import type { PhoneScreen } from '@/data/cases';
 import { assets } from '@/data/assets';
-import { useLazyVideo } from '@/hooks/useLazyVideo';
+import { useLazyVideo, type VideoWatch } from '@/hooks/useLazyVideo';
 
 // The 16:9 screen inside imac-frame.webp (1600 x 1288), measured at the rim's
 // half-alpha line: x 74..1525, y 71..887. The bezel around it is black.
@@ -18,10 +18,11 @@ const FRAME_AR = '1600 / 1288';
 // seam only ever holds the screen's own pixels.
 const BLEED = '1.5px';
 
-/** An iMac with a screen recording playing in it; the frame sits on top. */
-export function MonitorMockup({ screen }: { screen: PhoneScreen }) {
+/** An iMac with a screen recording playing in it; the frame sits on top. In a
+    case, the recording waits to be well in view (watch, see VideoWatch). */
+export function MonitorMockup({ screen, watch }: { screen: PhoneScreen; watch?: VideoWatch }) {
   // Source and poster are attached on approach, not in the markup — see useLazyVideo.
-  const videoRef = useLazyVideo(screen.src, screen.poster);
+  const videoRef = useLazyVideo(screen.src, screen.poster, watch);
   return (
     <div className="relative h-full" style={{ aspectRatio: FRAME_AR }}>
       <video

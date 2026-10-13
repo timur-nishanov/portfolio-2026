@@ -22,19 +22,30 @@ type AliceMedia = {
 };
 
 export const aliceMedia: AliceMedia = {
-  concepts: { kind: 'image', alt: 'Several early concepts side by side, and the one they were merged into' },
-  lockScreen: { kind: 'video', alt: 'The lock screen at 8:03: Alice’s card comes up and suggests a warm-up' },
+  concepts: {
+    kind: 'image',
+    alt: 'Several early concepts side by side, and the one they were merged into',
+    caption: 'Early concepts and the one they became',
+  },
+  lockScreen: {
+    kind: 'video',
+    alt: 'The lock screen at 8:03: Alice’s card comes up and suggests a warm-up',
+    caption: 'Alice’s card on the lock screen',
+  },
   day: {
     kind: 'image',
     alt: 'The day’s screens in a row: a warm-up, the summary and breakfast, getting ready for a 1:1, the weekend, the mood',
+    caption: 'Alice through the day',
   },
   notch: {
     kind: 'image',
     alt: 'Alice in a MacBook’s notch: feedback on a Figma mockup, and a summary after a call',
+    caption: 'Alice in a MacBook’s notch',
   },
   onboarding: {
     kind: 'image',
     alt: 'Onboarding: signing in, picking an avatar and a character, connecting services',
+    caption: 'Onboarding',
   },
-  presentation: { kind: 'video', alt: 'The animations from the presentation' },
+  presentation: { kind: 'video', alt: 'The animations from the presentation', caption: 'Animations from the presentation' },
 };
