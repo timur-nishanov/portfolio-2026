@@ -265,6 +265,25 @@ function MenuContentInner({ id, labelledBy, open, contentRef, handleRef, onClose
 
         {menuSections.map((s) => {
           const k = index++;
+          if (s.href) {
+            return (
+              <a
+                key={s.id}
+                href={s.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="lgm-item lgm-row"
+                style={{ '--i': row++ } as React.CSSProperties}
+                onClick={() => onClose(true)}
+                {...itemProps(k)}
+              >
+                <span className="lgm-item__label">{s.label}</span>
+                <span className="lgm-item__trail">
+                  <RowChevron />
+                </span>
+              </a>
+            );
+          }
           return (
             <button
               key={s.id}

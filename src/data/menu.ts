@@ -9,6 +9,8 @@ export type MenuSection = {
   /** Section id to scroll to. The row still closes the menu when the section
       is not on the page (they are hidden while only the first screen ships). */
   id: string;
+  /** A file to open in a new tab instead of a section to scroll to. */
+  href?: string;
 };
 
 // Order as drawn in the menu mockup — independent of the page order.
@@ -17,8 +19,8 @@ export const menuSections: MenuSection[] = [
   { label: 'Random', id: 'random' },
   { label: 'Awards', id: 'awards' },
   { label: 'Career', id: 'career' },
-  // No CV section on the page yet: the row just closes the menu until there is.
-  { label: 'CV', id: 'cv' },
+  // The CV is a PDF, opened in a new tab.
+  { label: 'CV', id: 'cv', href: '/Timur-Nishanov-CV.pdf' },
 ];
 
 export type MenuLink =
