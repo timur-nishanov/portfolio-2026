@@ -30,10 +30,10 @@ export const collage: CollageItem[] = [
     title: 'Site for director Artem Shcherbakov',
     side: 'right',
     video: {
-      src: '/random/artem-site.mp4', // artem_404_1080p60.mp4, 1600×900, 60fps, no audio
+      src: '/random/artem-site.mp4', // artem_404_1600x1200_60.mp4, 1600×1200 (4:3), 60fps, no audio
       poster: '/random/artem-site.webp',
       width: 1600,
-      height: 900,
+      height: 1200,
       alt: 'The artemartemartem.com 404 page in a browser: “page not found” inks in, and cut-out heads trail the cursor across it',
     },
   },
