@@ -11,7 +11,10 @@ export const aboutText: AboutLine[][] = [
   [
     'Experienced mostly in B2C, fintech and Web3.',
     'Focused on visuals and complex user flows.',
-    'Skilled in research, vibe coding, and AI generation.',
+    // Kept whole where the line has to wrap (a phone): it breaks after
+    // "research," instead.
+    'Skilled in research, prototyping and front-end in code,',
+    'and AI generation.',
   ],
   [
     'I love to mix craft and systems.',

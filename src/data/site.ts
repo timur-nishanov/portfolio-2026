@@ -6,7 +6,7 @@ export const site = {
   hero: {
     // New first screen (Figma 2:384): the title rides the top bar, the
     // tagline sits at the bottom, two authored lines.
-    title: "Hey! I'm Timur, 27",
+    title: "Hey! I'm Timur",
     tagline: ['interface designer from Bangkok', 'who builds in code'],
     // Previous hero statement — kept for when the old layout's copy is reused.
     // Authored as three lines to preserve the wide hero composition.
