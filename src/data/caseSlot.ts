@@ -18,5 +18,6 @@ export type CaseSlot = {
   h?: number;
 };
 
-/** The same thing before and after. */
-export type CasePair = { before: CaseSlot; after: CaseSlot };
+/** The same thing before and after, and what the two sides are called under
+    them if not Before and After. */
+export type CasePair = { before: CaseSlot; after: CaseSlot; labels?: [before: string, after: string] };
