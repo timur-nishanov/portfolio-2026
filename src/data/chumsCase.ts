@@ -42,6 +42,8 @@ export const chumsMedia: ChumsMedia = {
       1350,
       'The concept: servers at the top, joining one in a sheet over the chat list, coins in the attachment menu',
     ),
+    // The app as it was and the concept beside it, not a before and after.
+    labels: ['Current', 'Concept'],
   },
   contacts: {
     before: {

@@ -97,24 +97,37 @@ function Shot({ slot, frame, watch }: { slot: CaseSlot; frame: Frame; watch: Vid
  * line in grey italics: what happens in it, or which side of a comparison it
  * is.
  */
-export function Figure({ slot, frame, label }: { slot: CaseSlot; frame: Frame; label?: 'Before' | 'After' }) {
+export function Figure({
+  slot,
+  frame,
+  label,
+  after,
+}: {
+  slot: CaseSlot;
+  frame: Frame;
+  /** The side's name, when it is one side of a comparison. */
+  label?: string;
+  /** The second side: set close under the first, and waits its turn to play. */
+  after?: boolean;
+}) {
   const caption = label ?? slot.caption;
   return (
-    <figure className={`cp-figure cp-figure--${frame}${label === 'After' ? ' cp-figure--after' : ''} cp-reveal`}>
+    <figure className={`cp-figure cp-figure--${frame}${after ? ' cp-figure--after' : ''} cp-reveal`}>
       <div className="cp-figure__box">
-        <Shot slot={slot} frame={frame} watch={label === 'After' ? AFTER_WATCH : CASE_WATCH} />
+        <Shot slot={slot} frame={frame} watch={after ? AFTER_WATCH : CASE_WATCH} />
       </div>
       {caption && <figcaption className="cp-figure__cap">{caption}</figcaption>}
     </figure>
   );
 }
 
-/** The same thing before and after, one figure over the other. */
-export function BeforeAfter({ before, after, frame }: CasePair & { frame: Frame }) {
+/** The same thing before and after, one figure over the other, each side
+    named under it: Before and After, unless the pair names them itself. */
+export function BeforeAfter({ before, after, frame, labels = ['Before', 'After'] }: CasePair & { frame: Frame }) {
   return (
     <>
-      <Figure label="Before" slot={before} frame={frame} />
-      <Figure label="After" slot={after} frame={frame} />
+      <Figure label={labels[0]} slot={before} frame={frame} />
+      <Figure label={labels[1]} slot={after} frame={frame} after />
     </>
   );
 }
