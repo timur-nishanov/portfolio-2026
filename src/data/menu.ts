@@ -16,9 +16,8 @@ export type MenuSection = {
 // Order as drawn in the menu mockup — independent of the page order.
 export const menuSections: MenuSection[] = [
   { label: 'Works', id: 'works' },
-  { label: 'Random', id: 'random' },
   { label: 'Awards', id: 'awards' },
-  { label: 'Career', id: 'career' },
+  { label: 'Random', id: 'random' },
   // The CV is a PDF, opened in a new tab.
   { label: 'CV', id: 'cv', href: '/Timur-Nishanov-CV.pdf' },
 ];
