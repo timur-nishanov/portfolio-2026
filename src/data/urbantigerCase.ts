@@ -1,63 +1,116 @@
-import type { CasePair, CaseSlot } from './caseSlot';
+import type { CaseSlot } from './caseSlot';
 
 /** The media in the Urbantiger case study (UrbantigerArticle): see CaseSlot.
-    The optional ones were "if there is one" in the copy: they stand in like
-    the rest until a file comes, and go if none does. */
+    The recordings are each the whole of their white stage, a browser window
+    at 1280×800, as the Chums case's are. */
 type UrbantigerMedia = {
-  /** 01: the whole store as a flow diagram, the prototypes beside it. */
+  /** 01: the store as one flow, from the catalog round to loyalty. */
   flow: CaseSlot;
-  /** 01: the three concept directions side by side, the chosen one marked. */
+  /** 01: the three concept directions. */
   concepts: CaseSlot;
-  /** 02: the home page on a phone, old and new. */
-  home: CasePair;
-  /** 02: the catalog on desktop: the old cards, then a size picked and the
-      item added to the cart right from its card. */
-  catalog: CasePair;
-  /** 02, optional: checkout with its three delivery options. */
+  /** 02: the new home page. */
+  home: CaseSlot;
+  /** 02: a size picked and the item added to the cart right from its card. */
+  catalog: CaseSlot;
+  /** 02: the product page: the gallery and the size chart in a side sheet. */
+  product: CaseSlot;
+  /** 02: checkout with its three delivery options. */
   checkout: CaseSlot;
-  /** 03: six states in a grid. */
-  states: CaseSlot;
-  /** 03, optional: one page at four screen widths. */
+  /** 03: the states: signing in, promo code and bonus errors, the empty
+      cart, a return. */
+  signIn: CaseSlot;
+  promoBonus: CaseSlot;
+  emptyCart: CaseSlot;
+  returns: CaseSlot;
+  /** 03: one page across the breakpoints, and on desktop and phone at once. */
   breakpoints: CaseSlot;
-  /** 04: the achievements screen, three badges large beside it. */
+  devices: CaseSlot;
+  /** 04: achievements, a gift card, the wishlist's collections. */
   achievements: CaseSlot;
-  /** 04: the recipient opening a gift card like an envelope. */
   giftCard: CaseSlot;
-  /** 04, optional: the wishlist with its collections. */
   wishlist: CaseSlot;
 };
+
+/** A recording in /cases/urbantiger, its poster its first frame. */
+const clip = (name: string, alt: string, caption: string): CaseSlot => ({
+  kind: 'video',
+  src: `/cases/urbantiger/${name}.mp4`,
+  poster: `/cases/urbantiger/${name}.webp`,
+  w: 1280,
+  h: 800,
+  alt,
+  caption,
+});
 
 export const urbantigerMedia: UrbantigerMedia = {
   flow: {
     kind: 'image',
-    alt: 'The whole store as a flow diagram, with the prototypes beside it',
+    src: '/cases/urbantiger/01-flow.webp',
+    w: 1920,
+    h: 789,
+    alt: 'The store as one flow: catalog, product page, cart and checkout, then account and loyalty, and back to the catalog',
     caption: 'The whole store as one flow',
   },
-  concepts: {
-    kind: 'image',
-    alt: 'Three concept directions side by side, the chosen one marked',
-    caption: 'Three concept directions',
-  },
-  home: {
-    before: { kind: 'image', alt: 'Before: the old home page on a phone' },
-    after: { kind: 'image', alt: 'After: the new home page on a phone' },
-  },
-  catalog: {
-    before: { kind: 'image', alt: 'Before: the old catalog cards on desktop' },
-    after: { kind: 'video', alt: 'After: picking a size and adding the item to the cart right from its catalog card' },
-  },
-  checkout: { kind: 'image', alt: 'Checkout with three delivery options', caption: 'Checkout with three delivery options' },
-  states: {
-    kind: 'image',
-    alt: 'Six states: confirming sign-in, a promo code error, a bonus error, a restock alert, an empty wishlist, the first step of a return',
-    caption: 'Six of the states',
-  },
-  breakpoints: { kind: 'image', alt: 'One page at four screen widths', caption: 'One page at four screen widths' },
-  achievements: {
-    kind: 'image',
-    alt: 'The achievements screen, with three badges beside it',
-    caption: 'Achievements and badges',
-  },
-  giftCard: { kind: 'video', alt: 'The recipient opening a gift card like an envelope', caption: 'Opening a gift card' },
-  wishlist: { kind: 'image', alt: 'The wishlist with its collections', caption: 'The wishlist and its collections' },
+  concepts: clip('02-concepts', 'The three concept directions for the home page, one after another', 'Three concept directions'),
+  home: clip(
+    '03-home',
+    'The new home page scrolled: the tennis capsule, the collections, bestsellers and the brand’s eco numbers',
+    'The new home page',
+  ),
+  catalog: clip(
+    '04-catalog',
+    'The catalog: a size picked on a product card, the item added to the cart and the quick cart sliding in',
+    'Picking a size and adding to the cart from the catalog',
+  ),
+  product: clip(
+    '13-product-page',
+    'The product page: the gallery opened full screen and zoomed, the size chart in a side sheet',
+    'The product page: gallery zoom and the size chart',
+  ),
+  checkout: clip(
+    '05-checkout',
+    'Checkout: courier, store pickup with fitting or a pickup point, then card, installments or pay on delivery',
+    'Checkout with three delivery options',
+  ),
+  signIn: clip('06-1-sign-in', 'Signing in by phone, the code confirmed through Telegram, VK or a call', 'Signing in by phone'),
+  promoBonus: clip(
+    '06-2-promo-bonus',
+    'Checkout with a promo code that doesn’t work and too many bonus points, each with its own message',
+    'Promo code and bonus errors',
+  ),
+  emptyCart: clip(
+    '06-3-empty-cart',
+    'The cart emptied item by item, then the empty cart with products to try',
+    'The empty cart',
+  ),
+  returns: clip(
+    '11-returns',
+    'A return: the items, the reason, how to send them back, a last check, and the return request created',
+    'A return, step by step',
+  ),
+  breakpoints: clip(
+    '07-breakpoints',
+    'The product page as the window narrows from desktop to phone and widens back',
+    'One page across the breakpoints',
+  ),
+  devices: clip(
+    '12-product-devices',
+    'The product page on desktop and on a phone side by side, a size picked on both',
+    'The product page on desktop and phone',
+  ),
+  achievements: clip(
+    '08-achievements',
+    'The achievements screen: badges in silver, gold and platinum, one unlocking with its reward',
+    'Achievements and badges',
+  ),
+  giftCard: clip(
+    '09-gift-card',
+    'A gift card: a design picked, an amount set, a greeting added, then the envelope opened by the recipient',
+    'Making and opening a gift card',
+  ),
+  wishlist: clip(
+    '10-wishlist',
+    'The wishlist: a collection created, items moved into it, and the collection shared by link',
+    'The wishlist and its collections',
+  ),
 };

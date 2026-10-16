@@ -2,7 +2,7 @@
 
 import { useRef } from 'react';
 import { urbantigerMedia as media } from '@/data/urbantigerCase';
-import { BeforeAfter, Facts, Figure, Heading, Mark, Results, useReveal } from './blocks';
+import { Facts, Figure, Heading, Mark, Results, useReveal } from './blocks';
 import { CaseIndex } from './CaseIndex';
 import type { ArticleProps } from './registry';
 
@@ -78,7 +78,7 @@ export function UrbantigerArticle({ onBack, backHref }: ArticleProps) {
         </p>
         <Figure slot={media.flow} frame="wide" />
         <p className="cp-reveal">With the design lead I made three concept directions. The client picked one.</p>
-        <Figure slot={media.concepts} frame="wide" />
+        <Figure slot={media.concepts} frame="stage" />
       </section>
 
       {/* --- 02 ------------------------------------------------------------ */}
@@ -87,7 +87,7 @@ export function UrbantigerArticle({ onBack, backHref }: ArticleProps) {
         <p className="cp-reveal">
           Most of the money goes through four screens: catalog, product page, cart and checkout.
         </p>
-        <BeforeAfter {...media.home} frame="phone" />
+        <Figure slot={media.home} frame="stage" />
         <ul className="cp-list cp-reveal">
           <li>
             Catalog. Pick a size and add to cart right from the product card. If a size is sold out, you can ask for a
@@ -105,8 +105,9 @@ export function UrbantigerArticle({ onBack, backHref }: ArticleProps) {
             fitting. You can pay by card, on delivery or in installments.
           </li>
         </ul>
-        <BeforeAfter {...media.catalog} frame="desktop" />
-        <Figure slot={media.checkout} frame="desktop" />
+        <Figure slot={media.catalog} frame="stage" />
+        <Figure slot={media.product} frame="stage" />
+        <Figure slot={media.checkout} frame="stage" />
       </section>
 
       {/* --- 03 ------------------------------------------------------------ */}
@@ -124,12 +125,16 @@ export function UrbantigerArticle({ onBack, backHref }: ArticleProps) {
           <li>Changing an email or phone number.</li>
           <li>Returns in six steps. If you pick an exchange instead of a return, you get an extra 10% off.</li>
         </ul>
-        <Figure slot={media.states} frame="wide" />
+        <Figure slot={media.signIn} frame="stage" />
+        <Figure slot={media.promoBonus} frame="stage" />
+        <Figure slot={media.emptyCart} frame="stage" />
+        <Figure slot={media.returns} frame="stage" />
         <p className="cp-reveal">
           Everything is built on one UI kit, so 28 pages at four breakpoints stay consistent. I led two junior
           designers and an illustrator and reviewed their work.
         </p>
-        <Figure slot={media.breakpoints} frame="wide" />
+        <Figure slot={media.breakpoints} frame="stage" />
+        <Figure slot={media.devices} frame="stage" />
       </section>
 
       {/* --- 04 ------------------------------------------------------------ */}
@@ -147,9 +152,9 @@ export function UrbantigerArticle({ onBack, backHref }: ArticleProps) {
           </li>
           <li>Wishlist collections. Group saved items and share a collection by link.</li>
         </ul>
-        <Figure slot={media.achievements} frame="wide" />
-        <Figure slot={media.giftCard} frame="desktop" />
-        <Figure slot={media.wishlist} frame="desktop" />
+        <Figure slot={media.achievements} frame="stage" />
+        <Figure slot={media.giftCard} frame="stage" />
+        <Figure slot={media.wishlist} frame="stage" />
       </section>
 
       {/* --- outcome ------------------------------------------------------- */}
