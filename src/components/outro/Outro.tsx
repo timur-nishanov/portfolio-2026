@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { outroLinks, outroText } from '@/data/outro';
+import { outroLinks, outroPostscript, outroText } from '@/data/outro';
 import { copyText } from '@/lib/clipboard';
 import { startGlassSpheres, type Glass, type GlassPaint } from '@/lib/glassSpheres';
 import './outro.css';
@@ -101,9 +101,20 @@ function GlassLinks() {
   );
 }
 
+/** Lines set one under another, each wrapping within itself. */
+function Lines({ lines, className }: { lines: string[]; className: string }) {
+  return (
+    <p className={className}>
+      {lines.map((line) => (
+        <span key={line}>{line}</span>
+      ))}
+    </p>
+  );
+}
+
 /**
- * The end of the home page: a last word in the middle of the screen, and the
- * links under it.
+ * The end of the home page, in the middle of the screen: a last word, the
+ * links it leads into, and a P.S. after them.
  */
 export function Outro() {
   return (
@@ -111,16 +122,9 @@ export function Outro() {
       <h2 id="outro-heading" className="sr-only">
         Contact
       </h2>
-      <div className="outro__text">
-        {outroText.map((lines) => (
-          <p key={lines[0]}>
-            {lines.map((line) => (
-              <span key={line}>{line}</span>
-            ))}
-          </p>
-        ))}
-      </div>
+      <Lines lines={outroText} className="outro__text" />
       <GlassLinks />
+      <Lines lines={outroPostscript} className="outro__text outro__ps" />
     </section>
   );
 }

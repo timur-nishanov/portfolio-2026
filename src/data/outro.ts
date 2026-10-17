@@ -1,13 +1,19 @@
 import { menuLinks, type MenuLink } from './menu';
 
-// The last words on the home page (Outro), over the links: paragraphs set
-// line by line, as the about block's are (about.ts), broken where the sense
-// breaks; a line too long for a phone wraps within itself, evenly.
-export const outroText: string[][] = [
-  ['Thanks for stopping by :)', 'If something here clicked, write to me.', 'I’ll answer from Bangkok.'],
-  // The head on the first screen: thrown at the walls, it now and then says
-  // "khm" (impactSound).
-  ['P.S. You can throw my head around on the first screen.', 'It grumbles, but it’s used to it.'],
+// The last words on the home page (Outro), set line by line as the about
+// block's are (about.ts), broken where the sense breaks; a line too long for
+// a phone wraps within itself, evenly. The words lead into the links, under
+// them; the P.S. comes after the links.
+export const outroText: string[] = [
+  'I believe design can be great in any situation.',
+  'Open to remote roles, part-time projects',
+  'or just networking:',
+];
+// The head on the first screen: thrown at the walls, it now and then says
+// "khm" (impactSound).
+export const outroPostscript: string[] = [
+  'P.S. You can throw my head around on the first screen.',
+  'It grumbles, but it’s used to it.',
 ];
 
 // The links under the words: the menu's (menu.ts) but GitHub, and the mail
