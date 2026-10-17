@@ -1,8 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { menuLinks } from '@/data/menu';
-import { outroText } from '@/data/outro';
+import { outroLinks, outroText } from '@/data/outro';
 import { copyText } from '@/lib/clipboard';
 import { startGlassSpheres, type Glass, type GlassPaint } from '@/lib/glassSpheres';
 import './outro.css';
@@ -22,7 +21,7 @@ const paintLogos: GlassPaint = (ctx, spheres, shrink) => {
 };
 
 /**
- * The menu's links once more (data/menu), each logo under a small sphere of
+ * The menu's links once more (data/outro), each logo under a small sphere of
  * the glass the Chums case's questions are under (lib/glassSpheres). The
  * links and their logos are the page's own, for screen readers, the keyboard
  * and browsers without WebGL, where outro.css paints a lit disc behind each.
@@ -65,8 +64,8 @@ function GlassLinks() {
 
   return (
     <div ref={rootRef} className="outro__links">
-      <ul className="outro__list">
-        {menuLinks.map((l) => {
+      <ul className="outro__list" style={{ '--n': outroLinks.length } as React.CSSProperties}>
+        {outroLinks.map((l) => {
           const logo = (
             // eslint-disable-next-line @next/next/no-img-element
             <img className="outro__logo" src={l.icon} alt="" width={16} height={16} draggable={false} />
