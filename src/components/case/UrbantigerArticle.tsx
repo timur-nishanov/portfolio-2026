@@ -77,7 +77,10 @@ export function UrbantigerArticle({ onBack, backHref }: ArticleProps) {
           built prototypes, so we could argue about structure while it was cheap to change.
         </p>
         <Figure slot={media.flow} frame="wide" />
-        <p className="cp-reveal">With the design lead I made three concept directions. The client picked one.</p>
+        <p className="cp-reveal">
+          With the design lead I made three concept directions for the home page. A&nbsp;fourth grew out of the three, and
+          it became the final design.
+        </p>
         <Figure slot={media.concepts} frame="stage" />
       </section>
 
