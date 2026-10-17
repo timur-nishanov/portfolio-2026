@@ -42,7 +42,7 @@ function GlassLinks() {
     let gone = false;
     import('three').then((THREE) => {
       if (gone) return;
-      glass = startGlassSpheres(THREE, root, canvas, '.outro__orb', paintLogos);
+      glass = startGlassSpheres(THREE, root, canvas, '.outro__orb', paintLogos, { soft: 1 });
       // The logos are drawn again once they are all in.
       const logos = [...root.querySelectorAll<HTMLImageElement>('.outro__logo')];
       Promise.all(logos.map((img) => img.decode().catch(() => {}))).then(() => !gone && glass?.repaint());
@@ -113,8 +113,8 @@ function Lines({ lines, className }: { lines: string[]; className: string }) {
 }
 
 /**
- * The end of the home page, in the middle of the screen: a last word, the
- * links it leads into, and a P.S. after them.
+ * The end of the home page, in the middle of the screen: a last word, a P.S.
+ * and the links under them.
  */
 export function Outro() {
   return (
@@ -123,8 +123,8 @@ export function Outro() {
         Contact
       </h2>
       <Lines lines={outroText} className="outro__text" />
-      <GlassLinks />
       <Lines lines={outroPostscript} className="outro__text outro__ps" />
+      <GlassLinks />
     </section>
   );
 }

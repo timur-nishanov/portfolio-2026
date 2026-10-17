@@ -49,6 +49,7 @@ uniform vec3 uBg;
 uniform vec2 uCenter;
 uniform float uRadius;
 uniform float uScale;
+uniform float uSoft;
 varying vec2 vUv;
 
 const float IOR = ${IOR.toFixed(3)};
@@ -101,20 +102,22 @@ void main() {
   col *= 1.0 - band * 0.14;
   // What it reflects: a soft sky, mostly at the rim where glass mirrors; a
   // small window light up and to the left; and the light the rim gathers,
-  // a crescent on that side and a fainter one opposite.
+  // a crescent on that side and a fainter one opposite. uSoft (0 to 1)
+  // blurs the window and the crescents: the window spreads into a glow, the
+  // crescents fade in from further inside the rim.
   vec3 R = reflect(I, n);
   float F = 0.04 + 0.96 * pow(1.0 - z, 5.0);
   vec3 env = mix(vec3(0.99, 0.995, 1.0), vec3(1.0), smoothstep(-0.4, 1.0, R.y * 0.8 - R.x * 0.25));
   col = mix(col, env, F * 0.3);
   vec3 L = normalize(vec3(-0.5, 0.65, 0.6));
   float dl = max(dot(R, L), 0.0);
-  float light = pow(dl, 160.0) * 0.45 + pow(dl, 24.0) * 0.04;
+  float light = pow(dl, mix(160.0, 20.0, uSoft)) * mix(0.45, 0.32, uSoft) + pow(dl, 24.0) * 0.04;
   vec2 dir = p / max(r, 1e-4);
   float up = max(dot(dir, normalize(vec2(-0.5, 0.85))), 0.0);
   light += smoothstep(0.3, 1.0, rr) * up * up * 0.1;
-  light += smoothstep(0.9, 1.0, rr) * up * up * up * 0.45;
+  light += smoothstep(mix(0.9, 0.6, uSoft), 1.0, rr) * up * up * up * 0.45;
   float down = max(dot(dir, normalize(vec2(0.6, -0.8))), 0.0);
-  light += smoothstep(0.9, 1.0, rr) * down * down * down * 0.2;
+  light += smoothstep(mix(0.9, 0.7, uSoft), 1.0, rr) * down * down * down * 0.2;
   col += light;
   col = mix(col, vec3(1.0), smoothstep(0.984, 1.0, rr) * 0.85);
   gl_FragColor = vec4(col * alpha, alpha);
@@ -165,7 +168,8 @@ export type Glass = {
  * A sphere of glass over each element in root that `selector` finds, drawn on
  * `canvas`, which covers root and a margin round it for the lean. Root wears
  * data-gl while the glass is drawn, so its stylesheet can hide what the glass
- * now shows. Nothing where WebGL can't start.
+ * now shows. `soft` (0 to 1) blurs the highlights, for small spheres, where
+ * the sharp ones read as a drawn line. Nothing where WebGL can't start.
  */
 export function startGlassSpheres(
   THREE: Three,
@@ -173,6 +177,7 @@ export function startGlassSpheres(
   canvas: HTMLCanvasElement,
   selector: string,
   paint: GlassPaint,
+  { soft = 0 }: { soft?: number } = {},
 ): Glass | undefined {
   let renderer: import('three').WebGLRenderer;
   try {
@@ -226,6 +231,7 @@ export function startGlassSpheres(
         uCenter: { value: new THREE.Vector2() },
         uRadius: { value: 1 },
         uScale: { value: 1 },
+        uSoft: { value: soft },
       },
     });
     const mesh = new THREE.Mesh(geometry, material);

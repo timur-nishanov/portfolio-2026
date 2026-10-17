@@ -7,8 +7,9 @@
    =========================================================================== */
 
 .outro {
-  /* The spheres' room between them, wider than the lean takes, so they
-     never touch. */
+  /* The spheres: as large as this, and the room between them, wider than
+     the lean takes, so they never touch. */
+  --d-max: 88px;
   --gap: 16px;
   display: flex;
   flex-direction: column;
@@ -35,9 +36,9 @@
   display: block;
   text-wrap: balance;
 }
-/* The P.S., after the links, as far from them as the words above. */
+/* The P.S., a paragraph's space after the words, as the about block's are. */
 .outro__ps {
-  margin-top: 40px;
+  margin-top: 1.5em;
 }
 
 /* --- the links -------------------------------------------------------------- */
@@ -45,10 +46,10 @@
   position: relative;
   margin-top: 40px;
 }
-/* The spheres, --n of them across (Outro sets it): 120px, or what a phone's
-   width leaves them. */
+/* The spheres, --n of them across (Outro sets it): --d-max, or what a
+   phone's width leaves them. */
 .outro__list {
-  --d: min(120px, calc((100vw / var(--site-zoom, 1) - 32px - (var(--n) - 1) * var(--gap)) / var(--n)));
+  --d: min(var(--d-max), calc((100vw / var(--site-zoom, 1) - 32px - (var(--n) - 1) * var(--gap)) / var(--n)));
   display: flex;
   gap: var(--gap);
   margin: 0;
@@ -150,11 +151,11 @@
 /* --- phones ---------------------------------------------------------------- */
 @media (max-width: 899px) {
   .outro {
+    --d-max: 76px;
     --gap: 12px;
     padding: 72px 16px;
   }
-  .outro__links,
-  .outro__ps {
+  .outro__links {
     margin-top: 32px;
   }
 }
