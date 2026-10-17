@@ -1,6 +1,7 @@
 import type { ComponentType } from 'react';
 import { AliceArticle } from './AliceArticle';
 import { ChumsArticle } from './ChumsArticle';
+import { KritikaArticle } from './KritikaArticle';
 import { UrbantigerArticle } from './UrbantigerArticle';
 import { YandexCloudArticle } from './YandexCloudArticle';
 
@@ -17,6 +18,7 @@ type CaseEntry = {
 /** The cases with a study, by showcase id. The card itself, and the case's
     address, come from the showcase data. */
 export const CASES: Record<string, CaseEntry> = {
+  kritika: { title: 'Kritika', Article: KritikaArticle },
   chums: { title: 'Chums messenger', Article: ChumsArticle },
   urbantiger: { title: 'Urbantiger', Article: UrbantigerArticle },
   alice: { title: 'Yandex Alice', Article: AliceArticle },
