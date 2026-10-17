@@ -54,6 +54,7 @@ export function YandexCloudArticle({ onBack, backHref }: ArticleProps) {
           The front end is mine, written with Claude Code. The backend and the production build were on the client’s
           side.
         </p>
+        <Figure slot={media.firstScreen} frame="stage" />
       </div>
 
       {/* --- 01 ------------------------------------------------------------ */}
@@ -63,12 +64,17 @@ export function YandexCloudArticle({ onBack, backHref }: ArticleProps) {
           People at a booth stop for a minute or two. Nobody reads instructions, and the next person is already
           waiting. So every screen has to explain itself.
         </p>
-        <Figure slot={media.booth} frame="wide" />
+        <Figure slot={media.booth} frame="stage" />
         <p className="cp-reveal">
           There are two modes: build the chain yourself, or pick one of three ready bundles. The second is shorter and
           earns points for the merch contest.
         </p>
-        <Figure slot={media.buildYourself} frame="desktop" />
+        <Figure slot={media.buildYourself} frame="stage" />
+        <p className="cp-reveal">
+          Every task has two minutes. When they run out, the screen doesn’t say you lost: it shows the right order, so
+          even an unfinished task teaches something.
+        </p>
+        <Figure slot={media.timesUp} frame="stage" />
       </section>
 
       {/* --- 02 ------------------------------------------------------------ */}
@@ -87,13 +93,16 @@ export function YandexCloudArticle({ onBack, backHref }: ArticleProps) {
         <Heading id="cp-03">Turn every result into a lead</Heading>
         <p className="cp-reveal">
           Points are the reason to finish. In the short mode a right bundle earns them, and the screen sends you to the
-          booth staff to exchange them. Build it yourself gives no points, so its result offers the short mode with one
-          button.
+          booth staff to exchange them.
         </p>
+        <Figure slot={media.readyBundle} frame="stage" />
+        <p className="cp-reveal">
+          Build it yourself gives no points, so its result offers the short mode with one button.
+        </p>
+        <Figure slot={media.goToReady} frame="stage" />
         <p className="cp-reveal">
           Every result also has a QR code. It leads to a request form for materials or a consultation.
         </p>
-        <Figure slot={media.readyBundle} frame="desktop" />
       </section>
 
       {/* --- 04 ------------------------------------------------------------ */}
@@ -115,7 +124,7 @@ export function YandexCloudArticle({ onBack, backHref }: ArticleProps) {
         {/* The players and the requests through the QR code join this line
             once there are numbers. */}
         <Results items={[['Booth', 'The game ran at the Yandex Cloud booth at Yandex Scale 2026.']]} />
-        <Figure slot={media.team} frame="wide" />
+        <Figure slot={media.team} frame="stage" />
       </section>
     </article>
   );

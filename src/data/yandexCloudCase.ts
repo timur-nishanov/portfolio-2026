@@ -2,39 +2,71 @@ import { assets } from './assets';
 import type { CaseSlot } from './caseSlot';
 
 /** The media in the Yandex Cloud case study (YandexCloudArticle): see
-    CaseSlot. What each stand-in waits for is noted with it. */
+    CaseSlot. The recordings are each the whole of their white stage, the
+    game's screen at 1280×800, as the Chums case's are; the booth's photo and
+    the clip of the game being played stand upright, at 4:5. */
 type YandexCloudMedia = {
-  /** 01: the booth at Yandex Scale 2026, the game on its 55-inch screen.
-      To come: the best photo from the conference, the booth and the screen
-      with the game in it. */
+  /** Opening: the first screen, the choice of mode, the task wheel and a
+      task opened. */
+  firstScreen: CaseSlot;
+  /** 01: the booth at Yandex Scale 2026, the game on its screen. */
   booth: CaseSlot;
-  /** 01: "Build it yourself". To come: a 10–15 s recording: one service
-      dragged into a slot, a second placed with two taps, one slot wrong, so
-      the result shows green and red chips. */
+  /** 01: "Build it yourself": services into the slots, the result marked
+      slot by slot. */
   buildYourself: CaseSlot;
+  /** 01: the two minutes running out, and the right order shown. */
+  timesUp: CaseSlot;
   /** 02: the task wheel, in the iMac: the loop the home page's card plays. */
   wheel: CaseSlot;
-  /** 03: "Choose from ready-made". To come: a 6–8 s recording from the
-      prototype: a tap on the best bundle, the "Great choice!" result, the
-      points banner and the QR card sliding in on the right. */
+  /** 03: "Choose from ready-made": the best bundle, the points, the QR code. */
   readyBundle: CaseSlot;
-  /** Where it landed: people from Yandex playing it on the touchscreen.
-      To come: a 15–25 s loop, no sound. Check the faces may be shown; if not,
-      a second photo of the booth instead. */
+  /** 03: from a "Build it yourself" result to the short mode in one tap. */
+  goToReady: CaseSlot;
+  /** Where it landed: the game played on the touchscreen. */
   team: CaseSlot;
 };
 
+/** A recording in /cases/yandex-cloud, its poster its first frame. */
+const clip = (name: string, w: number, h: number, alt: string, caption: string): CaseSlot => ({
+  kind: 'video',
+  src: `/cases/yandex-cloud/${name}.mp4`,
+  poster: `/cases/yandex-cloud/${name}.webp`,
+  w,
+  h,
+  alt,
+  caption,
+});
+
 export const yandexCloudMedia: YandexCloudMedia = {
+  firstScreen: clip(
+    '01-first-screen',
+    1280,
+    800,
+    'The first screen, the choice between building it yourself and a ready bundle, the task wheel, and a task opened',
+    'From the first screen to a task',
+  ),
   booth: {
     kind: 'image',
-    alt: 'The Yandex Cloud booth at Yandex Scale 2026, with the game on a 55-inch touchscreen',
+    src: '/cases/yandex-cloud/02-booth.webp',
+    w: 960,
+    h: 1200,
+    alt: 'The Yandex Cloud data platform booth at Yandex Scale 2026, a visitor playing the game on its touchscreen',
     caption: 'The booth at Yandex Scale 2026',
   },
-  buildYourself: {
-    kind: 'video',
-    alt: 'Build it yourself: a service dragged into a slot, another placed with two taps, then the result marked slot by slot',
-    caption: 'Building the chain yourself',
-  },
+  buildYourself: clip(
+    '03-build-yourself',
+    1280,
+    800,
+    'Build it yourself: two services put into the slots, then the result with the wrong one marked and the right order',
+    'Building the chain yourself',
+  ),
+  timesUp: clip(
+    '04-times-up',
+    1280,
+    800,
+    'The timer running out on a task, then “Time’s up!” with the right order for it',
+    'When the two minutes run out',
+  ),
   wheel: {
     kind: 'video',
     src: assets.ycCaseVideo,
@@ -42,10 +74,25 @@ export const yandexCloudMedia: YandexCloudMedia = {
     alt: 'The task wheel sweeping through the cards and snapping to one',
     caption: 'The task wheel',
   },
-  readyBundle: {
-    kind: 'video',
-    alt: 'Choose from ready-made: a tap on a bundle, then the result with points and a QR code on the right',
-    caption: 'Picking a ready bundle',
-  },
-  team: { kind: 'video', alt: 'Yandex team members playing the game on the touchscreen', caption: 'The Yandex team playing' },
+  readyBundle: clip(
+    '05-ready-bundle',
+    1280,
+    800,
+    'Choose from ready-made: a tap on the best of three bundles, then “Great choice!”, the points banner and the QR code',
+    'Picking a ready bundle',
+  ),
+  goToReady: clip(
+    '06-go-to-ready',
+    1280,
+    800,
+    'A Build it yourself result, then “Go” leading to the ready-made mode and a task with three bundles',
+    'From a result to the short mode in one tap',
+  ),
+  team: clip(
+    '07-team',
+    720,
+    900,
+    'The game played on the touchscreen: a mode, a task, the services and the result',
+    'The Yandex team playing',
+  ),
 };
