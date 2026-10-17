@@ -112,11 +112,15 @@ export function Outro() {
       <h2 id="outro-heading" className="sr-only">
         Contact
       </h2>
-      <p className="outro__text">
-        {outroText.map((line) => (
-          <span key={line}>{line}</span>
+      <div className="outro__text">
+        {outroText.map((lines) => (
+          <p key={lines[0]}>
+            {lines.map((line) => (
+              <span key={line}>{line}</span>
+            ))}
+          </p>
         ))}
-      </p>
+      </div>
       <GlassLinks />
     </section>
   );

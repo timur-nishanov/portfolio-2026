@@ -19,9 +19,10 @@
   padding: 96px 16px;
 }
 
-/* The case cards' title style: SF Pro 20 / 132%, a line to a line. */
+/* The about block's text (about.css): SF Pro 20 / 132%, centred, a line to
+   a line, the paragraphs apart by a line and a half. */
 .outro__text {
-  margin: 0;
+  max-width: 560px;
   font-family: var(--font-sf);
   font-size: 20px;
   font-weight: 400;
@@ -29,6 +30,12 @@
   letter-spacing: 0;
   color: var(--ink-strong, #08080a);
   text-align: center;
+}
+.outro__text p {
+  margin: 0;
+}
+.outro__text p + p {
+  margin-top: 1.5em;
 }
 .outro__text span {
   display: block;
