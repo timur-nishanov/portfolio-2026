@@ -1,8 +1,8 @@
 'use client';
 
 import Image from 'next/image';
-import type { PhoneScreen } from '@/data/cases';
 import { assets } from '@/data/assets';
+import type { PhoneScreen } from '@/data/showcase';
 import { useLazyVideo } from '@/hooks/useLazyVideo';
 
 // Screen cutout inside the frame PNG, measured from iphone-frame.png (a
@@ -101,17 +101,6 @@ export function PhoneMockup({ phone }: { phone: PhoneScreen }) {
         sizes="(max-width: 767px) 45vw, 340px"
         className="pointer-events-none object-contain"
       />
-    </div>
-  );
-}
-
-/** Two phones side by side, centred, filling the media slot. */
-export function PhoneStrip({ phones }: { phones: PhoneScreen[] }) {
-  return (
-    <div className="flex h-full w-full items-center justify-center gap-[3%]">
-      {phones.map((p, i) => (
-        <PhoneMockup key={i} phone={p} />
-      ))}
     </div>
   );
 }

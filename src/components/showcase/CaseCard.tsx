@@ -2,9 +2,9 @@
 
 import { useRef } from 'react';
 import type { ShowcaseCase } from '@/data/showcase';
-import { PhoneMockup } from '@/components/cases/PhoneMockup';
 import { openCase } from '@/components/case/caseStore';
 import { MonitorMockup } from './MonitorMockup';
+import { PhoneMockup } from './PhoneMockup';
 import { RotatingNotes } from './RotatingNotes';
 import { CursorChip } from './CursorChip';
 import './showcase.css';

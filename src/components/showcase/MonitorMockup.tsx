@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import type { PhoneScreen } from '@/data/cases';
+import type { PhoneScreen } from '@/data/showcase';
 import { assets } from '@/data/assets';
 import { useLazyVideo, type VideoWatch } from '@/hooks/useLazyVideo';
 

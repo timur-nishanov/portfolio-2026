@@ -4,6 +4,7 @@ import { memo, useCallback, useEffect, useImperativeHandle, useRef, useState, ty
 import { menuLinks, menuSections } from '@/data/menu';
 import { useSmoothScroll } from '@/components/providers/SmoothScrollProvider';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { copyText } from '@/lib/clipboard';
 import { CheckGlyph, CopyGlyph, RowChevron } from './icons';
 
 export type MenuContentHandle = {
@@ -27,27 +28,6 @@ type Props = {
 const COPIED_MS = 1400;
 const CLOSE_AFTER_COPY_MS = 1000;
 const SCROLL_OFFSET = -72;
-
-async function copyText(value: string) {
-  try {
-    await navigator.clipboard.writeText(value);
-  } catch {
-    // Clipboard API refused (insecure context, old engine): legacy path.
-    const ta = document.createElement('textarea');
-    ta.value = value;
-    ta.setAttribute('readonly', '');
-    ta.style.position = 'fixed';
-    ta.style.opacity = '0';
-    document.body.appendChild(ta);
-    ta.select();
-    try {
-      document.execCommand('copy');
-    } catch {
-      /* nothing else to try */
-    }
-    document.body.removeChild(ta);
-  }
-}
 
 function MenuContentInner({ id, labelledBy, open, contentRef, handleRef, onClose }: Props) {
   const { scrollTo } = useSmoothScroll();

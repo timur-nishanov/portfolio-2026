@@ -1,5 +1,20 @@
-import type { PhoneScreen } from './cases';
 import { assets } from './assets';
+
+// The screen in a card's device.
+// framed=true wraps the source in the iPhone frame (for a bare screen);
+// framed=false draws it as-is (a render / video that already IS a mockup).
+export type PhoneScreen = {
+  framed: boolean;
+  type: 'image' | 'video';
+  src: string;
+  poster?: string;
+  alt: string;
+  /**
+   * Zoom for an unframed source whose phone sits inset in its own canvas —
+   * scales it up so the phone reads at the same size as its neighbour.
+   */
+  scale?: number;
+};
 
 export type ShowcaseCase = {
   id: string;
@@ -20,7 +35,7 @@ export type ShowcaseCase = {
 };
 
 // The cases after the hero, one card each (CaseShowcase). The notes condense
-// the case-study copy in cases.ts: role, then the problem, then the result.
+// each case: role, then the problem, then the result.
 export const showcase: ShowcaseCase[] = [
   {
     id: 'kritika',
