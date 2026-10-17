@@ -2,16 +2,18 @@
 
 import { useRef } from 'react';
 import { aliceMedia as media } from '@/data/aliceCase';
+import { AliceDay, AliceJobs } from './AliceBoards';
 import { Facts, Figure, Heading, Mark, Results, useReveal } from './blocks';
 import { CaseIndex } from './CaseIndex';
 import type { ArticleProps } from './registry';
 
 const INDEX = [
-  { id: 'cp-01', label: 'Turn several concepts into one' },
-  { id: 'cp-02', label: 'Take Alice out of the chat' },
-  { id: 'cp-03', label: 'Stay with you all day' },
-  { id: 'cp-04', label: 'Set Alice up once' },
-  { id: 'cp-05', label: 'Show it in motion' },
+  { id: 'cp-01', label: 'Pick one idea out of many' },
+  { id: 'cp-02', label: 'Turn several concepts into one' },
+  { id: 'cp-03', label: 'Take Alice out of the chat' },
+  { id: 'cp-04', label: 'Stay with you all day' },
+  { id: 'cp-05', label: 'Be there at the desk too' },
+  { id: 'cp-06', label: 'Set Alice up once' },
   { id: 'cp-landed', label: 'Where it landed' },
 ];
 
@@ -41,8 +43,7 @@ export function AliceArticle({ onBack, backHref }: ArticleProps) {
           <a className="cp-a" href="https://www.kaifconf.ru/kaiferenciya-2025" target="_blank" rel="noopener noreferrer">
             Kaiference
           </a>{' '}
-          conference. The question was: what could an AI assistant be with no technical limits? It had to be built
-          around the phone.
+          conference. The brief: imagine an AI product with no technical limits, built around the phone.
         </p>
         <p className="cp-reveal">
           Our studio team took <Mark>2nd place, one point behind the winner</Mark>.
@@ -51,27 +52,48 @@ export function AliceArticle({ onBack, backHref }: ArticleProps) {
           items={[
             ['Role', 'Senior Designer'],
             ['Team', 'Studio team of five, with an art director'],
-            ['Timeline', '2025'],
+            ['Timeline', 'July 2025'],
           ]}
         />
         <p className="cp-reveal">
           I worked on the idea, the scenario and the screens. The team presented it live at the conference, and I
           worked remotely.
         </p>
+        <Figure slot={media.morning} frame="phone" />
       </div>
 
       {/* --- 01 ------------------------------------------------------------ */}
       <section className="cp-chapter cp-col" aria-labelledby="cp-01">
-        <Heading id="cp-01">Turn several concepts into one</Heading>
+        <Heading id="cp-01">Pick one idea out of many</Heading>
         <p className="cp-reveal">
-          We read the brief together and brainstormed. Then we made several concepts and merged them into one.
+          We started with a brainstorm. There was a tutor for anything, dreams turned into a series, a guard against
+          phone scams, worlds built from a prompt.
         </p>
-        <Figure slot={media.concepts} frame="wide" />
+        <p className="cp-reveal">
+          We chose the broadest one: <Mark>an assistant across all your apps</Mark> that does things for you, not only
+          answers. A real Jarvis, an AI butler.
+        </p>
+        <Figure slot={media.ideas} frame="stage" />
+        <p className="cp-reveal">
+          Then we wrote down the jobs people would hire it for, from a social media detox to a summary after every
+          call. Each job became a card Alice shows at the right moment.
+        </p>
+        <AliceJobs />
       </section>
 
       {/* --- 02 ------------------------------------------------------------ */}
       <section className="cp-chapter cp-col" aria-labelledby="cp-02">
-        <Heading id="cp-02">Take Alice out of the chat</Heading>
+        <Heading id="cp-02">Turn several concepts into one</Heading>
+        <p className="cp-reveal">
+          Each of us made a concept. We kept the strongest parts of each: cards instead of a chat, a greeting that
+          knows your day, and Alice’s purple.
+        </p>
+        <Figure slot={media.concepts} frame="stage" />
+      </section>
+
+      {/* --- 03 ------------------------------------------------------------ */}
+      <section className="cp-chapter cp-col" aria-labelledby="cp-03">
+        <Heading id="cp-03">Take Alice out of the chat</Heading>
         <p className="cp-reveal">
           A chat works like a queue of requests. You have to know what to ask and remember to open the app.
         </p>
@@ -86,38 +108,47 @@ export function AliceArticle({ onBack, backHref }: ArticleProps) {
         <Figure slot={media.lockScreen} frame="phone" />
       </section>
 
-      {/* --- 03 ------------------------------------------------------------ */}
-      <section className="cp-chapter cp-col" aria-labelledby="cp-03">
-        <Heading id="cp-03">Stay with you all day</Heading>
-        <p className="cp-reveal">
-          Alice is with you all day. She suggests a warm-up after a short night, orders breakfast, prepares you for a
-          call and sums it up after, plans a weekend trip and asks how you feel before bed.
-        </p>
-        <p className="cp-reveal">She doesn’t only suggest. She orders, books and writes drafts. You confirm with one&nbsp;tap.</p>
-        <Figure slot={media.day} frame="wide" />
-        <p className="cp-reveal">On a Mac she sits in the notch, so she’s there at the desk too.</p>
-        <Figure slot={media.notch} frame="desktop" />
-      </section>
-
       {/* --- 04 ------------------------------------------------------------ */}
       <section className="cp-chapter cp-col" aria-labelledby="cp-04">
-        <Heading id="cp-04">Set Alice up once</Heading>
+        <Heading id="cp-04">Stay with you all day</Heading>
+        <p className="cp-reveal">
+          We planned the day hour by hour: what Alice can notice at each point, from sleep, the calendar, steps and
+          screen time, and what she brings.
+        </p>
+        <AliceDay />
+        <p className="cp-reveal">
+          She doesn’t only suggest. She orders, books and writes drafts. You confirm with one&nbsp;tap.
+        </p>
+        <p className="cp-reveal">
+          Before a call she gathers what you need for it. After the call she sums it up: the key points, the next
+          steps and the recording.
+        </p>
+        <Figure slot={media.meeting} frame="phone" />
+        <p className="cp-reveal">Before bed she asks how the day went, and the shape takes on the mood.</p>
+        <Figure slot={media.evening} frame="phone" />
+      </section>
+
+      {/* --- 05 ------------------------------------------------------------ */}
+      <section className="cp-chapter cp-col" aria-labelledby="cp-05">
+        <Heading id="cp-05">Be there at the desk too</Heading>
+        <p className="cp-reveal">
+          On a Mac, Alice sits in the notch. Paste a link to a Figma frame, say what you need, and she writes the
+          feedback while the orb thinks.
+        </p>
+        <Figure slot={media.macFeedback} frame="desktop" />
+        <p className="cp-reveal">When a call ends, the summary is already waiting in the notch.</p>
+        <Figure slot={media.macSummary} frame="desktop" />
+      </section>
+
+      {/* --- 06 ------------------------------------------------------------ */}
+      <section className="cp-chapter cp-col" aria-labelledby="cp-06">
+        <Heading id="cp-06">Set Alice up once</Heading>
         <p className="cp-reveal">
           At the start you sign in with Yandex&nbsp;ID and pick an avatar and a character for Alice. Then you connect
           services: Yandex apps, work tools, messengers, food delivery. The more she can see, the more useful her
           cards are.
         </p>
-        <Figure slot={media.onboarding} frame="wide" />
-      </section>
-
-      {/* --- 05 ------------------------------------------------------------ */}
-      <section className="cp-chapter cp-col" aria-labelledby="cp-05">
-        <Heading id="cp-05">Show it in motion</Heading>
-        <p className="cp-reveal">
-          Visuals and storytelling were two of the five things the jury scored. So we presented the concept in
-          motion, not as static screens.
-        </p>
-        <Figure slot={media.presentation} frame="desktop" />
+        <Figure slot={media.onboarding} frame="phone" />
       </section>
 
       {/* --- outcome ------------------------------------------------------- */}
