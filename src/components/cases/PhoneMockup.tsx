@@ -68,8 +68,11 @@ export function PhoneMockup({ phone }: { phone: PhoneScreen }) {
   return (
     <div className="relative h-full" style={{ aspectRatio: PHONE_AR }}>
       {/* Content sits UNDER the frame, clipped to the screen rect with a
-          matching corner radius so nothing bleeds past the bezel edge. */}
-      {phone.type === 'video' ? (
+          matching corner radius so nothing bleeds past the bezel edge. With
+          no file yet, the screen stands blank, in the cases' stand-in grey. */}
+      {!phone.src ? (
+        <div className="absolute" style={{ ...screenStyle, background: 'linear-gradient(180deg, #f1f1f1, #e9e9ea)' }} />
+      ) : phone.type === 'video' ? (
         <video
           ref={videoRef}
           className="absolute object-cover"
