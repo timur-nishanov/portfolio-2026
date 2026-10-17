@@ -85,7 +85,7 @@ export function YandexCloudArticle({ onBack, backHref }: ArticleProps) {
           until it felt right under a finger. It sweeps through all the cards once, so you see how many there are, and a
           throw snaps to the nearest card.
         </p>
-        <Figure slot={media.wheel} frame="imac" />
+        <Figure slot={media.wheel} frame="stage" />
       </section>
 
       {/* --- 03 ------------------------------------------------------------ */}
