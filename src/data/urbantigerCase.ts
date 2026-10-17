@@ -6,7 +6,7 @@ import type { CaseSlot } from './caseSlot';
 type UrbantigerMedia = {
   /** 01: the store as one flow, from the catalog round to loyalty. */
   flow: CaseSlot;
-  /** 01: the three concept directions. */
+  /** 01: the three concept directions, then the fourth that grew out of them. */
   concepts: CaseSlot;
   /** 02: the new home page. */
   home: CaseSlot;
@@ -51,7 +51,11 @@ export const urbantigerMedia: UrbantigerMedia = {
     alt: 'The store as one flow: catalog, product page, cart and checkout, then account and loyalty, and back to the catalog',
     caption: 'The whole store as one flow',
   },
-  concepts: clip('02-concepts', 'The three concept directions for the home page, one after another', 'Three concept directions'),
+  concepts: clip(
+    '02-concepts',
+    'The three concept directions for the home page, then the fourth that grew out of them, scrolled from its hero to the brand’s eco numbers',
+    'Three concepts, and the fourth that became the design',
+  ),
   home: clip(
     '03-home',
     'The new home page scrolled: the tennis capsule, the collections, bestsellers and the brand’s eco numbers',
