@@ -42,7 +42,16 @@ function GlassLinks() {
     let gone = false;
     import('three').then((THREE) => {
       if (gone) return;
-      glass = startGlassSpheres(THREE, root, canvas, '.outro__orb', paintLogos, { soft: 1 });
+      // Buttons rather than the questions' floating glass: each logo moves
+      // with its sphere, the row holds still and level, and only the sphere
+      // under the cursor leans, a little further, coming straight back.
+      glass = startGlassSpheres(THREE, root, canvas, '.outro__orb', paintLogos, {
+        soft: 1,
+        carry: true,
+        float: 0,
+        reach: 8,
+        lean: 0.1,
+      });
       // The logos are drawn again once they are all in.
       const logos = [...root.querySelectorAll<HTMLImageElement>('.outro__logo')];
       Promise.all(logos.map((img) => img.decode().catch(() => {}))).then(() => !gone && glass?.repaint());

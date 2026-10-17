@@ -164,12 +164,27 @@ export type Glass = {
   stop: () => void;
 };
 
+/** How the spheres look and move; each left out is as the questions' are. */
+export type GlassOptions = {
+  /** 0 to 1: blurs the highlights, for small spheres, where the sharp ones
+      read as a drawn line. */
+  soft?: number;
+  /** What lies under a sphere moves with it, as a logo in a button does,
+      rather than staying on the page while the glass leans over it. */
+  carry?: boolean;
+  /** How far each sphere rises and falls, in px; 0 holds it still. */
+  float?: number;
+  /** How far past its edge the cursor pulls a sphere, in px. */
+  reach?: number;
+  /** How much of the cursor's distance a sphere leans toward it. */
+  lean?: number;
+};
+
 /**
  * A sphere of glass over each element in root that `selector` finds, drawn on
  * `canvas`, which covers root and a margin round it for the lean. Root wears
  * data-gl while the glass is drawn, so its stylesheet can hide what the glass
- * now shows. `soft` (0 to 1) blurs the highlights, for small spheres, where
- * the sharp ones read as a drawn line. Nothing where WebGL can't start.
+ * now shows. Nothing where WebGL can't start.
  */
 export function startGlassSpheres(
   THREE: Three,
@@ -177,7 +192,7 @@ export function startGlassSpheres(
   canvas: HTMLCanvasElement,
   selector: string,
   paint: GlassPaint,
-  { soft = 0 }: { soft?: number } = {},
+  { soft = 0, carry = false, float = FLOAT, reach = REACH, lean = LEAN }: GlassOptions = {},
 ): Glass | undefined {
   let renderer: import('three').WebGLRenderer;
   try {
@@ -282,14 +297,22 @@ export function startGlassSpheres(
     place(performance.now());
     render(true);
   };
-  // Where each sphere is this frame: its place, its lean, its float.
+  // Where each sphere is this frame: its place, its lean, its float. It
+  // reads the page round where it is, or, carrying what lies under it, round
+  // where it rests.
+  const pos = orbs.map(() => [0, 0]);
   const place = (now: number) => {
     orbs.forEach((orb, i) => {
-      const bob = motion ? Math.sin(now / 1000 * 0.9 + i * 2.1) * FLOAT : 0;
+      const bob = motion && float ? Math.sin(now / 1000 * 0.9 + i * 2.1) * float : 0;
       const x = orb.cx + orb.lean[0];
       const y = orb.cy + orb.lean[1] - bob;
+      pos[i][0] = x;
+      pos[i][1] = y;
       meshes[i].position.set(x, H - y, 0);
-      (meshes[i].material as import('three').ShaderMaterial).uniforms.uCenter.value.set(x, y);
+      (meshes[i].material as import('three').ShaderMaterial).uniforms.uCenter.value.set(
+        carry ? orb.cx : x,
+        carry ? orb.cy : y,
+      );
     });
   };
   // Drawn only once a sphere has moved REDRAW_STEP since it was last drawn
@@ -297,16 +320,11 @@ export function startGlassSpheres(
   const step = REDRAW_STEP / dpr;
   const drawnAt = orbs.map(() => [NaN, NaN]);
   const render = (force = false) => {
-    const centre = (i: number) => (meshes[i].material as import('three').ShaderMaterial).uniforms.uCenter.value;
-    const moved = orbs.some((_, i) => {
-      const c = centre(i);
-      return !(Math.abs(c.x - drawnAt[i][0]) < step && Math.abs(c.y - drawnAt[i][1]) < step);
-    });
+    const moved = pos.some((p, i) => !(Math.abs(p[0] - drawnAt[i][0]) < step && Math.abs(p[1] - drawnAt[i][1]) < step));
     if (!force && !moved) return;
-    orbs.forEach((_, i) => {
-      const c = centre(i);
-      drawnAt[i][0] = c.x;
-      drawnAt[i][1] = c.y;
+    pos.forEach((p, i) => {
+      drawnAt[i][0] = p[0];
+      drawnAt[i][1] = p[1];
     });
     renderer.render(scene, camera);
   };
@@ -321,8 +339,12 @@ export function startGlassSpheres(
       orb.lean[0] += (orb.target[0] - orb.lean[0]) * k;
       orb.lean[1] += (orb.target[1] - orb.lean[1]) * k;
     }
+    // Settled, the spheres come to rest exactly where they started, not the
+    // hair of lean the easing leaves.
+    const rest = settled();
+    if (rest) for (const orb of orbs) orb.lean = [0, 0];
     place(now);
-    const going = visible && (motion || !settled());
+    const going = visible && ((motion && float > 0) || !rest);
     // The last frame before it stops is drawn exactly where it settled.
     render(!going);
     if (going) raf = requestAnimationFrame(loop);
@@ -344,22 +366,42 @@ export function startGlassSpheres(
   });
   ro.observe(root);
   // The lean, as the page's buttons had it: toward a cursor within reach,
-  // back when it goes.
-  const onMove = (e: PointerEvent) => {
-    if (!visible) return;
+  // back when it goes, off the window too, and when the page scrolls the
+  // spheres out from under a cursor that stays put.
+  let pointer: [number, number] | null = null;
+  const capped = (v: number) => Math.max(-LEAN_MAX, Math.min(LEAN_MAX, v * lean));
+  const aim = () => {
     const b = canvas.getBoundingClientRect();
     for (const orb of orbs) {
-      const dx = e.clientX - (b.left + orb.cx);
-      const dy = e.clientY - (b.top + orb.cy);
-      const out = Math.max(0, Math.hypot(dx, dy) - orb.r);
-      orb.engaged = out <= REACH;
-      orb.target = orb.engaged
-        ? [Math.max(-LEAN_MAX, Math.min(LEAN_MAX, dx * LEAN)), Math.max(-LEAN_MAX, Math.min(LEAN_MAX, dy * LEAN))]
-        : [0, 0];
+      const dx = pointer ? pointer[0] - (b.left + orb.cx) : 0;
+      const dy = pointer ? pointer[1] - (b.top + orb.cy) : 0;
+      orb.engaged = !!pointer && Math.max(0, Math.hypot(dx, dy) - orb.r) <= reach;
+      orb.target = orb.engaged ? [capped(dx), capped(dy)] : [0, 0];
     }
     wake();
   };
-  if (hover && motion) window.addEventListener('pointermove', onMove);
+  const onMove = (e: PointerEvent) => {
+    pointer = [e.clientX, e.clientY];
+    if (visible) aim();
+  };
+  const onOut = (e: PointerEvent) => {
+    if (e.relatedTarget) return;
+    pointer = null;
+    aim();
+  };
+  const onBlur = () => {
+    pointer = null;
+    aim();
+  };
+  const onScroll = () => {
+    if (pointer && visible) aim();
+  };
+  if (hover && motion) {
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerout', onOut);
+    window.addEventListener('blur', onBlur);
+    window.addEventListener('scroll', onScroll, { passive: true });
+  }
   root.setAttribute('data-gl', '');
   measure();
 
@@ -373,6 +415,9 @@ export function startGlassSpheres(
       io.disconnect();
       ro.disconnect();
       window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerout', onOut);
+      window.removeEventListener('blur', onBlur);
+      window.removeEventListener('scroll', onScroll);
       root.removeAttribute('data-gl');
       meshes.forEach((m) => (m.material as import('three').ShaderMaterial).dispose());
       geometry.dispose();
