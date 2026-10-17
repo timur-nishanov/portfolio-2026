@@ -346,8 +346,7 @@ export function Head3D() {
       };
     };
 
-    // Same affordance as the footer spheres: an open hand over the head, a
-    // closed one while it is held. The head floats over text and links, whose
+    // An open hand over the head, a closed one while it is held. The head floats over text and links, whose
     // own cursors would win over anything set on an ancestor — hence the
     // documentElement classes with !important rules (globals.css). The alpha
     // hit test keeps the hand strictly on opaque head pixels, so links stay

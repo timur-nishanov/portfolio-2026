@@ -1,6 +1,5 @@
 import { site } from '@/data/site';
 import { FloatingHead } from './FloatingHead';
-// HeroStatus (Bangkok time line) is off the new first screen — kept for later.
 
 export function Hero() {
   return (

@@ -1,7 +1,6 @@
 import type { Metadata } from 'next';
-import { hoves, inter, interItalic, pixel } from './fonts';
+import { inter, interItalic } from './fonts';
 import { site } from '@/data/site';
-import { LiquidGlassFilter } from '@/components/ui/LiquidGlassFilter';
 import { PillGlassFilter } from '@/components/header/menu/PillGlassFilter';
 import './globals.css';
 
@@ -15,9 +14,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} ${interItalic.variable} ${hoves.variable} ${pixel.variable}`}>
+    <html lang="en" className={`${inter.variable} ${interItalic.variable}`}>
       <body>
-        <LiquidGlassFilter />
         {/* The 20px round chevron buttons' glass (.glass-disc): the header's,
             the chip over a case card, the case page's back button. */}
         <PillGlassFilter id="lg-disc" width={20} height={20} scale={0.42} />

@@ -6,16 +6,6 @@ import { RandomCollage } from '@/components/random/RandomCollage';
 import { Outro } from '@/components/outro/Outro';
 import { CaseLayer } from '@/components/case/CaseLayer';
 import { SmoothScrollProvider } from '@/components/providers/SmoothScrollProvider';
-// The older sections stay hidden until Timur brings them back. Code stays in
-// place; restore these imports and the block below.
-// import { Header } from '@/components/header/Header';
-// import { CasesSection } from '@/components/cases/CasesSection';
-// import { AwardsSection } from '@/components/awards/AwardsSection';
-// import { RandomSection } from '@/components/random/RandomSection';
-// import { AboutBlock } from '@/components/random/AboutBlock';
-// import { LifeSection } from '@/components/life/LifeSection';
-// import { CareerSection } from '@/components/career/CareerSection';
-// import { Footer } from '@/components/ui/Footer';
 
 export default function Home() {
   return (
@@ -30,22 +20,6 @@ export default function Home() {
       </main>
       {/* A case opens over the page, out of its card. */}
       <CaseLayer />
-      {/* Previous full page, not rendered yet:
-      <SmoothScrollProvider>
-        <Header />
-        <main className="page-curtain">
-          <Hero />
-          <CasesSection />
-          <AwardsSection />
-          <RandomSection />
-          <AboutBlock />
-          <LifeSection />
-          <CareerSection />
-          <div aria-hidden="true" className="curtain-lift-sentinel" />
-        </main>
-        <Footer />
-      </SmoothScrollProvider>
-      */}
     </SmoothScrollProvider>
   );
 }

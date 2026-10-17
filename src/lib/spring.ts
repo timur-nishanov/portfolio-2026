@@ -1,7 +1,7 @@
 /**
- * Tiny semi-implicit spring integrator for hand-rolled rAF animations
- * (magnetic buttons, head follow). motion's springs cover the pill/FLIP; this
- * is for the per-frame value chasing where a library call per frame is wasteful.
+ * Tiny semi-implicit spring integrator for hand-rolled rAF animations (the
+ * head's follow, the menu's morph): per-frame value chasing, where a library
+ * call per frame is wasteful.
  */
 export type SpringConfig = { stiffness: number; damping: number; mass?: number };
 
@@ -22,6 +22,3 @@ export function stepSpring(
   const value = state.value + velocity * h;
   return { value, velocity };
 }
-
-export const settled = (state: SpringState, target: number, eps = 0.01): boolean =>
-  Math.abs(state.value - target) < eps && Math.abs(state.velocity) < eps;

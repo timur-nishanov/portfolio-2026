@@ -1,5 +1,5 @@
 /**
- * The site's one glass: the material of the case's spheres (case/GlassOrbs),
+ * The site's one glass: the material of the spheres (lib/glassSpheres),
  * worn by the flat surfaces too — the 20px disc, the header pill and the
  * menu that grows out of the disc. A sphere's bevel is its whole face; a
  * slab's is a band along its edge, scaled to its corner radius R, and its
