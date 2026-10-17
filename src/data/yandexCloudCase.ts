@@ -1,4 +1,3 @@
-import { assets } from './assets';
 import type { CaseSlot } from './caseSlot';
 
 /** The media in the Yandex Cloud case study (YandexCloudArticle): see
@@ -16,7 +15,8 @@ type YandexCloudMedia = {
   buildYourself: CaseSlot;
   /** 01: the two minutes running out, and the right order shown. */
   timesUp: CaseSlot;
-  /** 02: the task wheel, in the iMac: the loop the home page's card plays. */
+  /** 02: the task wheel: the loop the home page's card plays in its iMac,
+      set on the stage as the recordings are. */
   wheel: CaseSlot;
   /** 03: "Choose from ready-made": the best bundle, the points, the QR code. */
   readyBundle: CaseSlot;
@@ -67,29 +67,23 @@ export const yandexCloudMedia: YandexCloudMedia = {
     'The timer running out on a task, then “Time’s up!” with the right order for it',
     'When the two minutes run out',
   ),
-  wheel: {
-    kind: 'video',
-    src: assets.ycCaseVideo,
-    poster: assets.ycCasePoster,
-    alt: 'The task wheel sweeping through the cards and snapping to one',
-    caption: 'The task wheel',
-  },
+  wheel: clip('05-wheel', 1280, 800, 'The task wheel sweeping through the cards and snapping to one', 'The task wheel'),
   readyBundle: clip(
-    '05-ready-bundle',
+    '06-ready-bundle',
     1280,
     800,
     'Choose from ready-made: a tap on the best of three bundles, then “Great choice!”, the points banner and the QR code',
     'Picking a ready bundle',
   ),
   goToReady: clip(
-    '06-go-to-ready',
+    '07-go-to-ready',
     1280,
     800,
     'A Build it yourself result, then “Go” leading to the ready-made mode and a task with three bundles',
     'From a result to the short mode in one tap',
   ),
   team: clip(
-    '07-team',
+    '08-team',
     720,
     900,
     'The game played on the touchscreen: a mode, a task, the services and the result',
