@@ -3,6 +3,7 @@ import { Hero } from '@/components/hero/Hero';
 import { CaseShowcase } from '@/components/showcase/CaseShowcase';
 import { AboutAwards } from '@/components/about/AboutAwards';
 import { RandomCollage } from '@/components/random/RandomCollage';
+import { Outro } from '@/components/outro/Outro';
 import { CaseLayer } from '@/components/case/CaseLayer';
 import { SmoothScrollProvider } from '@/components/providers/SmoothScrollProvider';
 // The older sections stay hidden until Timur brings them back. Code stays in
@@ -25,6 +26,7 @@ export default function Home() {
         <CaseShowcase />
         <AboutAwards />
         <RandomCollage />
+        <Outro />
       </main>
       {/* A case opens over the page, out of its card. */}
       <CaseLayer />

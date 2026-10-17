@@ -1,0 +1,151 @@
+/* ===========================================================================
+   The end of the home page (Outro): a last word in the middle of the screen
+   and, under it, the menu's links, each logo under a small sphere of glass
+   (lib/glassSpheres) drawn on a canvas over the row. Without WebGL the
+   canvas stays empty and a lit disc is painted behind each logo, as under
+   the Chums case's questions (glass-orbs.css).
+   =========================================================================== */
+
+.outro {
+  /* The spheres, four across: 120px, or what a phone's width leaves them.
+     Apart by --gap, under the room the lean takes, so they never touch. */
+  --gap: 16px;
+  --d: min(120px, calc((100vw / var(--site-zoom, 1) - 32px - 3 * var(--gap)) / 4));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100svh / var(--site-zoom, 1));
+  padding: 96px 16px;
+}
+
+/* The case cards' title style: SF Pro 20 / 132%, a line to a line. */
+.outro__text {
+  margin: 0;
+  font-family: var(--font-sf);
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 1.32;
+  letter-spacing: 0;
+  color: var(--ink-strong, #08080a);
+  text-align: center;
+}
+.outro__text span {
+  display: block;
+  text-wrap: balance;
+}
+
+/* --- the links -------------------------------------------------------------- */
+.outro__links {
+  position: relative;
+  margin-top: 40px;
+}
+.outro__list {
+  display: flex;
+  gap: var(--gap);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.outro__orb {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: var(--d);
+  aspect-ratio: 1;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.outro__orb:focus-visible {
+  outline: 2px solid var(--ink-strong, #08080a);
+  outline-offset: 4px;
+}
+/* The menu's 16px disc, at two fifths of the sphere. */
+.outro__logo {
+  display: block;
+  width: 40%;
+  height: auto;
+  pointer-events: none;
+  user-select: none;
+}
+/* The canvas, over the row and the lean's reach round it. */
+.outro__canvas {
+  position: absolute;
+  top: -20px;
+  left: -20px;
+  width: calc(100% + 40px);
+  height: calc(100% + 40px);
+  pointer-events: none;
+}
+/* With the glass drawn, the logos under it are the texture's: the page's
+   own stay for the fallback. */
+.outro__links[data-gl] .outro__logo {
+  opacity: 0;
+}
+/* "Copied", under the mail's sphere for a moment after a click. */
+.outro__note {
+  position: absolute;
+  top: calc(100% + 12px);
+  left: 50%;
+  translate: -50% 0;
+  font-size: 13px;
+  line-height: 16px;
+  color: var(--ink-muted, #8a8a8a);
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+.outro__note[data-on] {
+  opacity: 1;
+}
+
+/* --- without WebGL ---------------------------------------------------------- */
+/* A disc of glass painted behind the logo: clear in the middle, denser at the
+   edge where a sphere turns away, lit up and to the left. */
+.outro__links:not([data-gl]) .outro__orb::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: 50%;
+  background:
+    radial-gradient(46% 20% at 50% 90%, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0) 100%),
+    radial-gradient(
+      closest-side,
+      rgba(255, 255, 255, 0) 0,
+      rgba(255, 255, 255, 0.06) 55%,
+      rgba(160, 168, 186, 0.1) 78%,
+      rgba(128, 136, 156, 0.22) 93%,
+      rgba(128, 136, 156, 0.3) 97.6%,
+      rgba(255, 255, 255, 0.95) 100%
+    );
+  box-shadow:
+    inset 1.5px 2px 2px -0.5px rgba(255, 255, 255, 1),
+    inset -1.5px -2px 2px -0.5px rgba(255, 255, 255, 0.85);
+}
+.outro__links:not([data-gl]) .outro__canvas {
+  display: none;
+}
+@media (forced-colors: active) {
+  .outro__orb::before {
+    border: 1px solid CanvasText;
+  }
+}
+
+/* --- phones ---------------------------------------------------------------- */
+@media (max-width: 899px) {
+  .outro {
+    --gap: 12px;
+    padding: 72px 16px;
+  }
+  .outro__links {
+    margin-top: 32px;
+  }
+}
