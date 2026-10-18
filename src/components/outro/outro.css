@@ -41,10 +41,12 @@
 
 /* --- the balls -------------------------------------------------------------- */
 /* The stage is the whole screen; the balls fall in through its top and rest
-   on its bottom. Big, but five side by side still fit a wide screen's floor,
-   under the words; on a phone they heap, below them. */
+   on its bottom: five abreast on a wide screen, three on a phone with two on
+   top of them. --ball is the most a ball may be (a fifth of a wide screen
+   less a little, so five fit its floor; a third of a phone's), and Outro's
+   sim brings it down to what the room under the words allows. */
 .outro__stage {
-  --ball: min(18vw / var(--site-zoom, 1), 30svh / var(--site-zoom, 1));
+  --ball: calc(19vw / var(--site-zoom, 1));
   position: absolute;
   inset: 0;
   overflow: hidden;
@@ -164,6 +166,6 @@
     padding: 72px 16px;
   }
   .outro__stage {
-    --ball: min(30vw / var(--site-zoom, 1), 15svh / var(--site-zoom, 1));
+    --ball: calc(32vw / var(--site-zoom, 1));
   }
 }
