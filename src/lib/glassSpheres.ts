@@ -2,19 +2,19 @@ type Three = typeof import('three');
 
 /*
  * Spheres of glass over the page (as on wabi.ai): the three questions in the
- * Chums case (case/GlassOrbs) and the links at the end of the home page
- * (outro/Outro). The glass is real: a solid ball of a light glass floating a
- * touch above the page, drawn on a canvas over it. Rays are bent in at its
- * front and out at its back, and where they land on the page is what the
- * glass shows — the page read a little larger through the middle, pulled out
- * toward the rim, where the colours part. Twelve rays of different colours
- * per pixel make the rainbow at the edge continuous rather than three copies.
+ * Chums case (case/GlassOrbs, through startGlassSpheres) and the balls at the
+ * end of the home page (outro/Outro, which moves them itself). The glass is
+ * real: a solid ball of a light glass floating a touch above the page, drawn
+ * on a canvas over it. Rays are bent in at its front and out at its back, and
+ * where they land on the page is what the glass shows — the page read a
+ * little larger through the middle, pulled out toward the rim, where the
+ * colours part. Twelve rays of different colours per pixel make the rainbow
+ * at the edge continuous rather than three copies.
  *
- * What lies under each sphere is the page's own (its words, its logo), and
- * the canvas draws the same into a texture (the caller's paint), smaller by
- * what the glass magnifies, so it comes out at size. The spheres lean toward
- * the cursor, as the page's buttons do, and float a little; nothing is drawn
- * while they are off screen, and nothing outside the spheres at all.
+ * What lies under each sphere is the page's own (its words), and the canvas
+ * draws the same into a texture (the caller's paint). A sphere can also carry
+ * something inside it, a logo, from a texture of its own, which goes where it
+ * goes. Nothing is drawn outside the spheres at all.
  */
 
 // The glass: how much it bends (its index), how far the colours part across
@@ -50,6 +50,10 @@ uniform vec2 uCenter;
 uniform float uRadius;
 uniform float uScale;
 uniform float uSoft;
+uniform sampler2D uCarry;
+uniform vec2 uCarrySize;
+uniform vec2 uHome;
+uniform float uCarries;
 varying vec2 vUv;
 
 const float IOR = ${IOR.toFixed(3)};
@@ -57,13 +61,21 @@ const float DISP = ${DISPERSION.toFixed(4)};
 const float GAP = ${GAP.toFixed(3)};
 
 // The page at a point, in radii from the sphere's centre: its colour, and
-// what is drawn over it. Only the sphere's own, and only from the middle: a
-// neighbour's, or its own brought back round the rim, read as noise.
+// what is drawn over it. Only from the middle: a neighbour's words, or its
+// own brought back round the rim, read as noise. What the sphere carries
+// lies over the page, read round its own place in its own texture.
 vec3 pageAt(vec2 p) {
-  vec2 q = uCenter + vec2(p.x, -p.y) * uRadius;
+  vec2 o = vec2(p.x, -p.y) * uRadius;
+  vec2 q = uCenter + o;
   vec4 t = texture2D(uTex, vec2(q.x / uSize.x, 1.0 - q.y / uSize.y));
   t.a *= 1.0 - smoothstep(0.76, 0.92, length(p));
-  return mix(uBg, t.rgb, t.a);
+  vec3 c = mix(uBg, t.rgb, t.a);
+  if (uCarries > 0.5) {
+    vec2 h = uHome + o;
+    vec4 k = texture2D(uCarry, vec2(h.x / uCarrySize.x, 1.0 - h.y / uCarrySize.y));
+    c = mix(c, k.rgb, k.a * (1.0 - smoothstep(0.76, 0.92, length(p))));
+  }
+  return c;
 }
 
 void main() {
@@ -148,8 +160,153 @@ function magnification() {
   return x / (P2[0] + d2[0] * s);
 }
 
-/** A sphere: the element on the page it stands over, and its centre and
-    radius on the canvas, in CSS px. */
+/** Draws into a sheet at CSS px; shrink is how much larger the glass shows
+    its middle, for what should read at its size through it. */
+export type SheetPaint = (ctx: CanvasRenderingContext2D, shrink: number) => void;
+
+/**
+ * The glass itself, for a caller that places the spheres: `count` spheres on
+ * `canvas`, over the page drawn into one sheet, each perhaps carrying
+ * something drawn into another. Nothing is drawn until render(). Nothing
+ * where WebGL can't start.
+ */
+export type GlassView = {
+  /** The canvas's drawing size, in CSS px. */
+  size: (W: number, H: number) => void;
+  /** The page under the spheres, w×h CSS px, as the canvas lies over it;
+      finer than the screen by up to `fine`. */
+  page: (w: number, h: number, paint: SheetPaint, fine?: number) => void;
+  /** What the spheres carry, w×h CSS px of their own. */
+  carry: (w: number, h: number, paint: SheetPaint, fine?: number) => void;
+  /** Sphere i: its centre and radius on the canvas, the page read round
+      (px, py), and what it carries round (hx, hy) in the carried sheet, or
+      nothing. */
+  set: (i: number, x: number, y: number, r: number, px: number, py: number, home?: [number, number]) => void;
+  render: () => void;
+  dispose: () => void;
+};
+
+export function createGlass(
+  THREE: Three,
+  canvas: HTMLCanvasElement,
+  count: number,
+  /** Where to read the page's colour (--bg) from. */
+  from: HTMLElement,
+  soft = 0,
+): GlassView | undefined {
+  let renderer: import('three').WebGLRenderer;
+  try {
+    renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: false, powerPreference: 'low-power' });
+  } catch {
+    return;
+  }
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setClearColor(0x000000, 0);
+  // The page's colour as the screen shows it (three.js would take a Color
+  // into linear light, and the glass would come out darker than the page).
+  const bg = new THREE.Vector3(0.97, 0.97, 0.96);
+  {
+    const probe = document.createElement('canvas').getContext('2d');
+    if (probe) {
+      probe.fillStyle = getComputedStyle(from).getPropertyValue('--bg').trim() || '#f7f7f5';
+      probe.fillRect(0, 0, 1, 1);
+      const [r, g, b] = probe.getImageData(0, 0, 1, 1).data;
+      bg.set(r / 255, g / 255, b / 255);
+    }
+  }
+  const sheet = () => {
+    const c = document.createElement('canvas');
+    const ctx = c.getContext('2d');
+    const tex = new THREE.CanvasTexture(c);
+    tex.minFilter = THREE.LinearFilter;
+    tex.magFilter = THREE.LinearFilter;
+    tex.generateMipmaps = false;
+    return { c, ctx, tex };
+  };
+  const pageSheet = sheet();
+  const carrySheet = sheet();
+  if (!pageSheet.ctx || !carrySheet.ctx) return;
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.OrthographicCamera(0, 1, 1, 0, -1, 1);
+  const geometry = new THREE.PlaneGeometry(1, 1);
+  const meshes = Array.from({ length: count }, (_, i) => {
+    const material = new THREE.ShaderMaterial({
+      vertexShader: VERT,
+      fragmentShader: FRAG,
+      transparent: true,
+      depthTest: false,
+      depthWrite: false,
+      premultipliedAlpha: true,
+      uniforms: {
+        uTex: { value: pageSheet.tex },
+        uSize: { value: new THREE.Vector2(1, 1) },
+        uBg: { value: bg },
+        uCenter: { value: new THREE.Vector2() },
+        uRadius: { value: 1 },
+        uScale: { value: 1 },
+        uSoft: { value: soft },
+        uCarry: { value: carrySheet.tex },
+        uCarrySize: { value: new THREE.Vector2(1, 1) },
+        uHome: { value: new THREE.Vector2() },
+        uCarries: { value: 0 },
+      },
+    });
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.renderOrder = i;
+    scene.add(mesh);
+    return mesh;
+  });
+  const uniforms = (i: number) => (meshes[i].material as import('three').ShaderMaterial).uniforms;
+  const shrink = 1 / magnification();
+  let H = 1;
+  // Drawn finer than the screen (up to the texture's limit), as the glass
+  // reads it at the screen's pixels and a touch between.
+  const paintSheet = (s: typeof pageSheet, w: number, h: number, paint: SheetPaint, fine: number, sizeOf: 'uSize' | 'uCarrySize') => {
+    const scale = Math.min((window.devicePixelRatio || 1) * 2, 4096 / w, fine);
+    s.c.width = Math.round(w * scale);
+    s.c.height = Math.round(h * scale);
+    s.ctx!.setTransform(scale, 0, 0, scale, 0, 0);
+    s.ctx!.clearRect(0, 0, w, h);
+    paint(s.ctx!, shrink);
+    s.tex.needsUpdate = true;
+    meshes.forEach((_, i) => uniforms(i)[sizeOf].value.set(w, h));
+  };
+
+  return {
+    size: (w, h) => {
+      H = h;
+      renderer.setSize(w, h, false);
+      camera.right = w;
+      camera.top = h;
+      camera.updateProjectionMatrix();
+    },
+    page: (w, h, paint, fine = 4) => paintSheet(pageSheet, w, h, paint, fine, 'uSize'),
+    carry: (w, h, paint, fine = 4) => paintSheet(carrySheet, w, h, paint, fine, 'uCarrySize'),
+    set: (i, x, y, r, px, py, home) => {
+      const size = r * 2 * 1.04; // a little over the sphere, for its soft edge
+      meshes[i].scale.set(size, size, 1);
+      meshes[i].position.set(x, H - y, 0);
+      const u = uniforms(i);
+      u.uRadius.value = r;
+      u.uScale.value = size / r;
+      u.uCenter.value.set(px, py);
+      u.uCarries.value = home ? 1 : 0;
+      if (home) u.uHome.value.set(home[0], home[1]);
+    },
+    render: () => renderer.render(scene, camera),
+    dispose: () => {
+      meshes.forEach((m) => (m.material as import('three').ShaderMaterial).dispose());
+      geometry.dispose();
+      pageSheet.tex.dispose();
+      carrySheet.tex.dispose();
+      renderer.dispose();
+    },
+  };
+}
+
+/** A sphere over an element: the element, and its centre and radius on the
+    canvas, in CSS px. */
 export type Sphere = { el: HTMLElement; cx: number; cy: number; r: number };
 type Orb = Sphere & { lean: [number, number]; target: [number, number]; engaged: boolean };
 
@@ -164,27 +321,13 @@ export type Glass = {
   stop: () => void;
 };
 
-/** How the spheres look and move; each left out is as the questions' are. */
-export type GlassOptions = {
-  /** 0 to 1: blurs the highlights, for small spheres, where the sharp ones
-      read as a drawn line. */
-  soft?: number;
-  /** What lies under a sphere moves with it, as a logo in a button does,
-      rather than staying on the page while the glass leans over it. */
-  carry?: boolean;
-  /** How far each sphere rises and falls, in px; 0 holds it still. */
-  float?: number;
-  /** How far past its edge the cursor pulls a sphere, in px. */
-  reach?: number;
-  /** How much of the cursor's distance a sphere leans toward it. */
-  lean?: number;
-};
-
 /**
  * A sphere of glass over each element in root that `selector` finds, drawn on
- * `canvas`, which covers root and a margin round it for the lean. Root wears
- * data-gl while the glass is drawn, so its stylesheet can hide what the glass
- * now shows. Nothing where WebGL can't start.
+ * `canvas`, which covers root and a margin round it for the lean: the
+ * spheres stand where the elements are, lean toward the cursor, as the
+ * page's buttons did, and float a little; nothing is drawn while they are off
+ * screen. Root wears data-gl while the glass is drawn, so its stylesheet can
+ * hide what the glass now shows. Nothing where WebGL can't start.
  */
 export function startGlassSpheres(
   THREE: Three,
@@ -192,127 +335,43 @@ export function startGlassSpheres(
   canvas: HTMLCanvasElement,
   selector: string,
   paint: GlassPaint,
-  { soft = 0, carry = false, float = FLOAT, reach = REACH, lean = LEAN }: GlassOptions = {},
 ): Glass | undefined {
-  let renderer: import('three').WebGLRenderer;
-  try {
-    renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: false, powerPreference: 'low-power' });
-  } catch {
-    return;
-  }
+  const items = Array.from(root.querySelectorAll<HTMLElement>(selector));
+  const view = createGlass(THREE, canvas, items.length, root);
+  if (!view) return;
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
-  renderer.setPixelRatio(dpr);
-  renderer.setClearColor(0x000000, 0);
   const motion = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const hover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-  // The page's colour as the screen shows it (three.js would take a Color
-  // into linear light, and the glass would come out darker than the page).
-  const bg = new THREE.Vector3(0.97, 0.97, 0.96);
-  {
-    const probe = document.createElement('canvas').getContext('2d');
-    if (probe) {
-      probe.fillStyle = getComputedStyle(root).getPropertyValue('--bg').trim() || '#f7f7f5';
-      probe.fillRect(0, 0, 1, 1);
-      const [r, g, b] = probe.getImageData(0, 0, 1, 1).data;
-      bg.set(r / 255, g / 255, b / 255);
-    }
-  }
-
-  const sheet = document.createElement('canvas');
-  const ctx = sheet.getContext('2d');
-  if (!ctx) return;
-  const tex = new THREE.CanvasTexture(sheet);
-  tex.minFilter = THREE.LinearFilter;
-  tex.magFilter = THREE.LinearFilter;
-  tex.generateMipmaps = false;
-
-  const scene = new THREE.Scene();
-  const camera = new THREE.OrthographicCamera(0, 1, 1, 0, -1, 1);
-  const geometry = new THREE.PlaneGeometry(1, 1);
-  const items = Array.from(root.querySelectorAll<HTMLElement>(selector));
   const orbs: Orb[] = items.map((el) => ({ el, cx: 0, cy: 0, r: 1, lean: [0, 0], target: [0, 0], engaged: false }));
-  const meshes = orbs.map((_, i) => {
-    const material = new THREE.ShaderMaterial({
-      vertexShader: VERT,
-      fragmentShader: FRAG,
-      transparent: true,
-      depthTest: false,
-      depthWrite: false,
-      premultipliedAlpha: true,
-      uniforms: {
-        uTex: { value: tex },
-        uSize: { value: new THREE.Vector2(1, 1) },
-        uBg: { value: bg },
-        uCenter: { value: new THREE.Vector2() },
-        uRadius: { value: 1 },
-        uScale: { value: 1 },
-        uSoft: { value: soft },
-      },
-    });
-    const mesh = new THREE.Mesh(geometry, material);
-    mesh.renderOrder = i;
-    scene.add(mesh);
-    return mesh;
-  });
-  const shrink = 1 / magnification();
 
   let W = 1;
   let H = 1;
-  let box = canvas.getBoundingClientRect();
-  // What lies under the spheres, drawn into the texture where it is on the
-  // page, smaller by what the glass adds. Drawn finer than the screen (up to
-  // the texture's limit), as the glass reads it at the screen's pixels and a
-  // touch between.
-  const draw = () => {
-    const scale = Math.min((window.devicePixelRatio || 1) * 2, 4096 / W, 4);
-    sheet.width = Math.round(W * scale);
-    sheet.height = Math.round(H * scale);
-    ctx.setTransform(scale, 0, 0, scale, 0, 0);
-    ctx.clearRect(0, 0, W, H);
-    paint(ctx, orbs, shrink);
-    tex.needsUpdate = true;
-  };
+  const draw = () => view.page(W, H, (ctx, shrink) => paint(ctx, orbs, shrink));
   const measure = () => {
-    box = canvas.getBoundingClientRect();
+    const box = canvas.getBoundingClientRect();
     W = Math.max(1, Math.round(box.width));
     H = Math.max(1, Math.round(box.height));
-    renderer.setSize(W, H, false);
-    camera.right = W;
-    camera.top = H;
-    camera.updateProjectionMatrix();
-    orbs.forEach((orb, i) => {
+    view.size(W, H);
+    orbs.forEach((orb) => {
       const r = orb.el.getBoundingClientRect();
       orb.cx = r.left - box.left + r.width / 2;
       orb.cy = r.top - box.top + r.height / 2;
       orb.r = r.width / 2;
-      const size = orb.r * 2 * 1.04; // a little over the sphere, for its soft edge
-      const m = meshes[i];
-      m.scale.set(size, size, 1);
-      const u = (m.material as import('three').ShaderMaterial).uniforms;
-      u.uSize.value.set(W, H);
-      u.uRadius.value = orb.r;
-      u.uScale.value = size / orb.r;
     });
     draw();
     place(performance.now());
     render(true);
   };
-  // Where each sphere is this frame: its place, its lean, its float. It
-  // reads the page round where it is, or, carrying what lies under it, round
-  // where it rests.
+  // Where each sphere is this frame: its place, its lean, its float.
   const pos = orbs.map(() => [0, 0]);
   const place = (now: number) => {
     orbs.forEach((orb, i) => {
-      const bob = motion && float ? Math.sin(now / 1000 * 0.9 + i * 2.1) * float : 0;
+      const bob = motion ? Math.sin(now / 1000 * 0.9 + i * 2.1) * FLOAT : 0;
       const x = orb.cx + orb.lean[0];
       const y = orb.cy + orb.lean[1] - bob;
       pos[i][0] = x;
       pos[i][1] = y;
-      meshes[i].position.set(x, H - y, 0);
-      (meshes[i].material as import('three').ShaderMaterial).uniforms.uCenter.value.set(
-        carry ? orb.cx : x,
-        carry ? orb.cy : y,
-      );
+      view.set(i, x, y, orb.r, x, y);
     });
   };
   // Drawn only once a sphere has moved REDRAW_STEP since it was last drawn
@@ -326,7 +385,7 @@ export function startGlassSpheres(
       drawnAt[i][0] = p[0];
       drawnAt[i][1] = p[1];
     });
-    renderer.render(scene, camera);
+    view.render();
   };
 
   let raf = 0;
@@ -344,7 +403,7 @@ export function startGlassSpheres(
     const rest = settled();
     if (rest) for (const orb of orbs) orb.lean = [0, 0];
     place(now);
-    const going = visible && ((motion && float > 0) || !rest);
+    const going = visible && (motion || !rest);
     // The last frame before it stops is drawn exactly where it settled.
     render(!going);
     if (going) raf = requestAnimationFrame(loop);
@@ -369,13 +428,13 @@ export function startGlassSpheres(
   // back when it goes, off the window too, and when the page scrolls the
   // spheres out from under a cursor that stays put.
   let pointer: [number, number] | null = null;
-  const capped = (v: number) => Math.max(-LEAN_MAX, Math.min(LEAN_MAX, v * lean));
+  const capped = (v: number) => Math.max(-LEAN_MAX, Math.min(LEAN_MAX, v * LEAN));
   const aim = () => {
     const b = canvas.getBoundingClientRect();
     for (const orb of orbs) {
       const dx = pointer ? pointer[0] - (b.left + orb.cx) : 0;
       const dy = pointer ? pointer[1] - (b.top + orb.cy) : 0;
-      orb.engaged = !!pointer && Math.max(0, Math.hypot(dx, dy) - orb.r) <= reach;
+      orb.engaged = !!pointer && Math.max(0, Math.hypot(dx, dy) - orb.r) <= REACH;
       orb.target = orb.engaged ? [capped(dx), capped(dy)] : [0, 0];
     }
     wake();
@@ -419,10 +478,7 @@ export function startGlassSpheres(
       window.removeEventListener('blur', onBlur);
       window.removeEventListener('scroll', onScroll);
       root.removeAttribute('data-gl');
-      meshes.forEach((m) => (m.material as import('three').ShaderMaterial).dispose());
-      geometry.dispose();
-      tex.dispose();
-      renderer.dispose();
+      view.dispose();
     },
   };
 }

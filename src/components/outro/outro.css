@@ -1,16 +1,14 @@
 /* ===========================================================================
-   The end of the home page (Outro): a last word in the middle of the screen
-   and, under it, the menu's links, each logo under a small sphere of glass
-   (lib/glassSpheres) drawn on a canvas over the row. Without WebGL the
-   canvas stays empty and a lit disc is painted behind each logo, as under
-   the Chums case's questions (glass-orbs.css).
+   The end of the home page (Outro): a last word in the middle of the screen,
+   and the links as big balls of glass (lib/glassSpheres) that fall in round
+   it and settle on the floor, moved by Outro's sim. The balls are the page's
+   own links; the glass is drawn on a canvas over the stage. Without WebGL the
+   canvas stays empty and a lit disc is painted behind each logo instead, as
+   under the Chums case's questions (glass-orbs.css).
    =========================================================================== */
 
 .outro {
-  /* The spheres: as large as this, and the room between them, wider than
-     the lean takes, so they never touch. */
-  --d-max: 88px;
-  --gap: 16px;
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -41,26 +39,38 @@
   margin-top: 1.5em;
 }
 
-/* --- the links -------------------------------------------------------------- */
-.outro__links {
-  position: relative;
-  margin-top: 40px;
+/* --- the balls -------------------------------------------------------------- */
+/* The stage is the whole screen; the balls fall in through its top and rest
+   on its bottom. Big, but five side by side still fit a wide screen's floor,
+   under the words; on a phone they heap, below them. */
+.outro__stage {
+  --ball: min(18vw / var(--site-zoom, 1), 30svh / var(--site-zoom, 1));
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
 }
-/* The spheres, --n of them across (Outro sets it): --d-max, or what a
-   phone's width leaves them. */
-.outro__list {
-  --d: min(var(--d-max), calc((100vw / var(--site-zoom, 1) - 32px - (var(--n) - 1) * var(--gap)) / var(--n)));
-  display: flex;
-  gap: var(--gap);
+.outro__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.outro__balls {
   margin: 0;
   padding: 0;
   list-style: none;
 }
-.outro__orb {
-  position: relative;
+/* Placed by the sim (a transform from the stage's top left); parked above it
+   until then. */
+.outro__ball {
+  position: absolute;
+  top: 0;
+  left: 0;
   display: grid;
   place-items: center;
-  width: var(--d);
+  width: var(--ball);
   aspect-ratio: 1;
   padding: 0;
   border: 0;
@@ -68,14 +78,23 @@
   background: none;
   color: inherit;
   font: inherit;
-  cursor: pointer;
+  transform: translate3d(0, -200%, 0);
+  will-change: transform;
+  pointer-events: auto;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
   -webkit-tap-highlight-color: transparent;
 }
-.outro__orb:focus-visible {
+.outro__ball:active {
+  cursor: grabbing;
+}
+.outro__ball:focus-visible {
   outline: 2px solid var(--ink-strong, #08080a);
   outline-offset: 4px;
 }
-/* The menu's 16px disc, at two fifths of the sphere. */
+/* The menu's 16px disc, at two fifths of the ball. */
 .outro__logo {
   display: block;
   width: 40%;
@@ -83,24 +102,15 @@
   pointer-events: none;
   user-select: none;
 }
-/* The canvas, over the row and the lean's reach round it. */
-.outro__canvas {
-  position: absolute;
-  top: -20px;
-  left: -20px;
-  width: calc(100% + 40px);
-  height: calc(100% + 40px);
-  pointer-events: none;
-}
-/* With the glass drawn, the logos under it are the texture's: the page's
-   own stay for the fallback. */
-.outro__links[data-gl] .outro__logo {
+/* With the glass drawn, the logos are in it: the page's own stay for the
+   fallback. */
+.outro__stage[data-gl] .outro__logo {
   opacity: 0;
 }
-/* "Copied", under the mail's sphere for a moment after a click. */
+/* "Copied", over the mail's ball for a moment after a tap. */
 .outro__note {
   position: absolute;
-  top: calc(100% + 12px);
+  bottom: calc(100% + 10px);
   left: 50%;
   translate: -50% 0;
   font-size: 13px;
@@ -117,8 +127,8 @@
 
 /* --- without WebGL ---------------------------------------------------------- */
 /* A disc of glass painted behind the logo: clear in the middle, denser at the
-   edge where a sphere turns away, lit up and to the left. */
-.outro__links:not([data-gl]) .outro__orb::before {
+   edge where a ball turns away, lit up and to the left. */
+.outro__stage:not([data-gl]) .outro__ball::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -139,11 +149,11 @@
     inset 1.5px 2px 2px -0.5px rgba(255, 255, 255, 1),
     inset -1.5px -2px 2px -0.5px rgba(255, 255, 255, 0.85);
 }
-.outro__links:not([data-gl]) .outro__canvas {
+.outro__stage:not([data-gl]) .outro__canvas {
   display: none;
 }
 @media (forced-colors: active) {
-  .outro__orb::before {
+  .outro__ball::before {
     border: 1px solid CanvasText;
   }
 }
@@ -151,11 +161,9 @@
 /* --- phones ---------------------------------------------------------------- */
 @media (max-width: 899px) {
   .outro {
-    --d-max: 76px;
-    --gap: 12px;
     padding: 72px 16px;
   }
-  .outro__links {
-    margin-top: 32px;
+  .outro__stage {
+    --ball: min(30vw / var(--site-zoom, 1), 15svh / var(--site-zoom, 1));
   }
 }
