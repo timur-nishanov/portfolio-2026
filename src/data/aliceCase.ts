@@ -9,7 +9,8 @@ type AliceMedia = {
   ideas: CaseSlot;
   /** 02: five early concepts drawing together into the one we built. */
   concepts: CaseSlot;
-  /** 03: the lock screen at 8:03, Alice's card coming up with a warm-up. */
+  /** 03: the lock screen through a day: a warm-up at 8:03, the weekend at 18:36,
+      the evening at 19:56, each card opening into Alice's sheet. */
   lockScreen: CaseSlot;
   /** 03: Alice opened over the home screen: the day's greeting, the cards,
       breakfast ordered. */
@@ -20,7 +21,7 @@ type AliceMedia = {
   evening: CaseSlot;
   /** 05: a Figma link given to Alice in a MacBook's notch, feedback back. */
   macFeedback: CaseSlot;
-  /** 05: a call ends, the summary comes out of the notch. */
+  /** 05: after a call, the summary comes out of the notch. */
   macSummary: CaseSlot;
   /** 06: onboarding: signing in, the avatar, the services. */
   onboarding: CaseSlot;
@@ -58,8 +59,8 @@ export const aliceMedia: AliceMedia = {
     poster: '/mockups/alice-case.webp',
     w: 780,
     h: 1688,
-    alt: 'The lock screen at 8:03: Alice’s card comes up and suggests a warm-up',
-    caption: 'A card on the lock screen',
+    alt: 'The lock screen through a day: a warm-up after a short night at 8:03, the weekend planned at 18:36, ideas for the evening at 19:56, each card opening into Alice’s sheet',
+    caption: 'Cards on the lock screen',
   },
   morning: clip(
     '03-morning',
@@ -93,7 +94,7 @@ export const aliceMedia: AliceMedia = {
     '07-mac-summary',
     1280,
     830,
-    'A call ends, Alice writes it up in the notch and the summary opens out of it',
+    'After a call, Alice writes it up in the notch, and the summary with the recording opens out of it',
     'The summary of a call',
   ),
   onboarding: clip(
