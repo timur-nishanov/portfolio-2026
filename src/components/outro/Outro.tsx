@@ -21,45 +21,54 @@ const COPIED_MS = 1400;
  * edge, 1 = right); `lift` is how far above the stage it waits, in radii.
  */
 const DROPS = [
-  { delay: 0.0, slot: 0.0, lift: 0.4, drift: 55, bounce: 0.56 },
-  { delay: 0.46, slot: 0.25, lift: 3.4, drift: 40, bounce: 0.52 },
-  { delay: 0.34, slot: 0.5, lift: 2.6, drift: -85, bounce: 0.46 },
-  { delay: 0.62, slot: 0.75, lift: 1.9, drift: -50, bounce: 0.62 },
-  { delay: 0.15, slot: 1.0, lift: 1.3, drift: 35, bounce: 0.6 },
+  { delay: 0.0, slot: 0.0, lift: 0.4, drift: 55, bounce: 0.7 },
+  { delay: 0.46, slot: 0.25, lift: 3.4, drift: 40, bounce: 0.66 },
+  { delay: 0.34, slot: 0.5, lift: 2.6, drift: -85, bounce: 0.6 },
+  { delay: 0.62, slot: 0.75, lift: 1.9, drift: -50, bounce: 0.76 },
+  { delay: 0.15, slot: 1.0, lift: 1.3, drift: 35, bounce: 0.72 },
 ];
 
-// --- physics (the old footer's, as tuned there) -----------------------------
-// The balls fall in and live on the floor, so gravity is always on. Holding
-// one suspends it — it moves only while the button is down — and letting go
-// hands its momentum back to the sim, which is where the bounce comes from.
+// --- size --------------------------------------------------------------------
+// Clear air between the last line of the words and the balls under them.
+const CLEARANCE = 28; // px
+// The least a ball comes down to; past it, it may touch the words.
+const MIN_BALL = 64; // px
+// The gap between balls laid out at rest (reduced motion).
+const REST_GAP = 12; // px
+
+// --- physics ------------------------------------------------------------------
+// Balls of glass: they knock and spring apart, slide off one another and roll
+// on along the floor; nothing holds them but the floor, the sides and each
+// other. Holding one suspends it — it moves only while the button is down —
+// and letting go hands its momentum back to the sim.
 const GRAVITY = 2000; // px/s²
-const WALL_BOUNCE = 0.58; // sides and floor
-const BALL_BOUNCE = 0.82; // balls spring off each other, they don't just knock
-// Below this closing speed a contact stops instead of bouncing: gravity pumps
-// a resting ball into its neighbour every frame and 0.82 of that came back
-// out, so the crown of a pile vibrated for ever.
-const BOUNCE_MIN_SPEED = 150;
-// Friction where two balls touch: barely at all on an impact, in full once
-// they are just leaning on each other, so a heap stops creeping without the
-// collisions going dead.
-const BALL_FRICTION = 0.55;
-const BALL_FRICTION_HIT = 0.06;
-const FRICTION_HIT_SPEED = 190; // px/s of closing speed that counts as an impact
-const AIR = 0.995;
-const GROUND_FRICTION = 0.9; // horizontal bleed while rolling along the floor
-const REST_SPEED = 22; // below this, a supported ball is simply parked
-// A ball already resting on something and moving slower than this is
-// creeping, not rolling, and is bled toward a stop.
-const CREEP_SPEED = REST_SPEED * 3;
-const CREEP_DAMP = 0.9;
-// Overlaps resolve in full past a 1.5px allowance, immediately.
-const CONTACT_SLOP = 1.5;
-// Contact is detected a hair before the surfaces meet, so an exact touch
-// still counts as support on the next frame.
-const CONTACT_SKIN = 2;
+// How much of a knock comes back, off the sides and off another ball (off the
+// floor it is each ball's own, in DROPS).
+const WALL_BOUNCE = 0.7;
+const BALL_BOUNCE = 0.8;
+// Slower than this, a contact is a ball resting on something rather than a
+// knock, and gives nothing back: a heap would never stop trembling otherwise.
+const BOUNCE_MIN = 40; // px/s
+// Friction across a knock between two balls, as a share of the knock: enough
+// to send them off at a slant, too little to hold one on another, so a ball
+// that lands on another's shoulder rolls off it into a hollow.
+const BALL_FRICTION = 0.1;
+// The floor: a knock on it keeps this much of a ball's roll, and resting on
+// it, a ball is held back by up to this share of what presses it there, as
+// much as a rolling ball is. A roll dies away in a second or two; a ball
+// with another leaning on it rolls aside and lets it down, if there is room.
+const FLOOR_GRIP = 0.9;
+const FLOOR_FRICTION = 0.07;
+// What is left of a ball's speed in the air after a second.
+const AIR = 0.92;
+// Steps a frame: even a hard throw moves a ball well under its radius a step.
+const SUBSTEPS = 4;
 const MAX_THROW = 2600;
 // The knock that rings: only real ones, not grazes or settling.
 const CHIME_MIN = 320; // px/s
+// At rest: every ball within a pixel of one spot for this long. The loop then
+// parks itself until a grab, a resize or a fresh drop.
+const QUIET_S = 0.6;
 
 type Body = {
   x: number;
@@ -71,13 +80,7 @@ type Body = {
   /** Seconds until it is released from above; <= 0 means it is falling. */
   wait: number;
   bounce: number;
-  /** Touched the floor, a wall or another ball on this tick. */
-  contact: boolean;
-  /** Standing on the floor this tick: the root of the support chain. */
-  onFloor: boolean;
-  /** Asleep: integration skips it. Woken by a real hit or a grab. */
-  sleep: boolean;
-  /** Seconds it has stayed within a few px of (px, py). */
+  /** Seconds it has stayed within a pixel of (px, py). */
   quietT: number;
   px: number;
   py: number;
@@ -161,6 +164,37 @@ function Balls() {
     let zi = 1;
     const bodies: Body[] = [];
 
+    // How big the balls are: from the stylesheet's --ball down, a pixel at a
+    // time, until what stands under the words clears the last line. On a
+    // wide screen that is the row on the floor (the words leave room beside
+    // them for anything heaped higher); where they take the whole width (a
+    // phone), it is the whole heap: rows of as many as fit, each nested into
+    // the one below (laid flat, with gaps, when the balls only rest, as
+    // rest() lays them).
+    const fit = () => {
+      const section = stage.parentElement;
+      if (!section) return;
+      stage.style.removeProperty('--ball');
+      const w = stage.clientWidth;
+      let words = 0;
+      let wide = 0;
+      section.querySelectorAll<HTMLElement>('.outro__text').forEach((p) => {
+        words = Math.max(words, p.offsetTop + p.offsetHeight);
+        wide = Math.max(wide, p.offsetWidth);
+      });
+      const room = stage.clientHeight - words - CLEARANCE;
+      const tall = (d: number) => {
+        if (!reduced && (w - wide) / 2 >= d) return d;
+        const gap = reduced ? REST_GAP : 0;
+        const rows = Math.ceil(els.length / Math.max(1, Math.floor((w + gap) / (d + gap))));
+        return reduced ? rows * d + (rows - 1) * gap : d * (1 + ((rows - 1) * Math.sqrt(3)) / 2);
+      };
+      let d = Math.floor(els[0].offsetWidth);
+      while (d > MIN_BALL && tall(d) > room) d--;
+      stage.style.setProperty('--ball', `${d}px`);
+    };
+    fit();
+
     const layout = (initial: boolean) => {
       W = stage.clientWidth;
       H = stage.clientHeight;
@@ -177,9 +211,6 @@ function Balls() {
             r,
             wait: d.delay,
             bounce: d.bounce,
-            contact: false,
-            onFloor: false,
-            sleep: false,
             quietT: 0,
             px: 0,
             py: 0,
@@ -194,7 +225,7 @@ function Balls() {
     // Reduced motion: no drop, the balls rest on the floor at once, in rows
     // from the bottom, centred.
     const rest = () => {
-      const gap = 12;
+      const gap = REST_GAP;
       let i = 0;
       let floor = H;
       while (i < bodies.length) {
@@ -207,7 +238,6 @@ function Balls() {
           b.y = floor - b.r;
           b.vx = b.vy = 0;
           b.wait = 0;
-          b.sleep = true;
         });
         floor -= d + gap;
         i += per;
@@ -316,10 +346,7 @@ function Balls() {
           lastPY = p.y;
           lastT = performance.now();
           b.vx = b.vy = 0;
-          for (const o of bodies) {
-            o.sleep = false;
-            o.quietT = 0;
-          }
+          for (const o of bodies) o.quietT = 0;
           wake();
           break;
         }
@@ -388,56 +415,24 @@ function Balls() {
     let last = performance.now();
     let running = false;
 
-    const step = (now: number) => {
-      const dt = Math.min((now - last) / 1000, 1 / 30);
-      last = now;
-
+    // One step of the sim, dt seconds long.
+    const tick = (dt: number) => {
+      const air = AIR ** dt;
       for (let i = 0; i < bodies.length; i++) {
-        if (i === dragging) continue;
         const b = bodies[i];
-        // Held above the stage until the screen is in view and its own delay
-        // has run out, so they arrive out of step.
-        if (!running || b.wait > 0) {
-          if (running) b.wait -= dt;
-          continue;
-        }
-        if (b.sleep) continue;
-
+        if (i === dragging || b.wait > 0) continue;
         b.vy += GRAVITY * zi * dt;
-        b.vx *= AIR;
-        b.vy *= AIR;
+        b.vx *= air;
+        b.vy *= air;
         b.x += b.vx * dt;
         b.y += b.vy * dt;
-
-        // Sides and floor. The top stays open: balls arrive through it, and a
-        // good throw may leave that way and come back down.
-        if (b.x < b.r) {
-          if (Math.abs(b.vx) > CHIME_MIN * zi) chime(b, Math.abs(b.vx));
-          b.x = b.r;
-          b.vx = Math.abs(b.vx) * WALL_BOUNCE;
-          b.contact = true;
-        } else if (b.x > W - b.r) {
-          if (Math.abs(b.vx) > CHIME_MIN * zi) chime(b, Math.abs(b.vx));
-          b.x = W - b.r;
-          b.vx = -Math.abs(b.vx) * WALL_BOUNCE;
-          b.contact = true;
-        }
-        if (b.y > H - b.r - CONTACT_SKIN) {
-          b.contact = true;
-          b.onFloor = true;
-        }
-        if (b.y > H - b.r) {
-          if (Math.abs(b.vy) > CHIME_MIN * zi) chime(b, Math.abs(b.vy));
-          b.y = H - b.r;
-          // Each keeps its own restitution, so they stop tossing in sync.
-          b.vy = -Math.abs(b.vy) * b.bounce;
-          b.vx *= GROUND_FRICTION;
-          if (Math.abs(b.vy) < REST_SPEED * zi) b.vy = 0;
-        }
       }
 
-      // Ball against ball: separate the overlap, then swap the normal part.
-      const touching: [number, number][] = [];
+      // Ball against ball: pushed apart, then the knock along the line between
+      // their centres, as much of it given back as glass gives. Only a knock
+      // has friction across it; a ball merely resting on another slides, as
+      // it would roll, off its shoulder and into a hollow. The held ball is
+      // the pointer's, and gives way to nothing.
       for (let i = 0; i < bodies.length; i++) {
         for (let j = i + 1; j < bodies.length; j++) {
           const a = bodies[i];
@@ -447,155 +442,95 @@ function Balls() {
           const dy = b.y - a.y;
           const d = Math.hypot(dx, dy);
           const min = a.r + b.r;
-          if (d === 0 || d >= min + CONTACT_SKIN) continue;
-          a.contact = true;
-          b.contact = true;
-          touching.push([i, j]);
-          // Two sleepers lean on each other without renegotiating it. A ball
-          // striking a sleeper at speed wakes it; a slow one is pushed back
-          // out one-sidedly — the sleeper is a wall, never a door.
-          if (a.sleep && b.sleep) continue;
+          if (d === 0 || d >= min) continue;
+          const ia = i === dragging ? 0 : 1;
+          const ib = j === dragging ? 0 : 1;
           const nx = dx / d;
           const ny = dy / d;
-          if (a.sleep || b.sleep) {
-            const hit = Math.hypot(a.vx - b.vx, a.vy - b.vy);
-            if (hit > REST_SPEED * 3 * zi) {
-              a.sleep = b.sleep = false;
-              a.quietT = b.quietT = 0;
-            } else {
-              const overlap1 = Math.max(0, min - d - CONTACT_SLOP);
-              const mover = a.sleep ? b : a;
-              const sign = a.sleep ? 1 : -1;
-              mover.x += sign * nx * overlap1;
-              mover.y += sign * ny * overlap1;
-              const closing = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
-              if (closing < 0) {
-                mover.vx -= sign * closing * nx;
-                mover.vy -= sign * closing * ny;
-              }
-              // Static friction against the sleeper: a slow slider is held.
-              if (Math.hypot(mover.vx, mover.vy) < CREEP_SPEED * 2 * zi) {
-                mover.vx = 0;
-                mover.vy = 0;
-              }
-              continue;
-            }
+          const push = (min - d) / (ia + ib);
+          a.x -= nx * push * ia;
+          a.y -= ny * push * ia;
+          b.x += nx * push * ib;
+          b.y += ny * push * ib;
+          const vn = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
+          if (vn >= 0) continue; // already parting
+          if (-vn > CHIME_MIN * zi) chime(a, -vn);
+          const knock = -vn > BOUNCE_MIN * zi;
+          const jn = (-(1 + (knock ? BALL_BOUNCE : 0)) * vn) / (ia + ib);
+          let jt = 0;
+          if (knock) {
+            const vt = (b.vx - a.vx) * -ny + (b.vy - a.vy) * nx;
+            jt = clamp(-vt / (ia + ib), -BALL_FRICTION * jn, BALL_FRICTION * jn);
           }
-          if (d >= min) continue; // touching, not overlapping
-          const overlap = Math.max(0, min - d - CONTACT_SLOP);
-          const aFixed = i === dragging;
-          const bFixed = j === dragging;
-          if (!aFixed && !bFixed) {
-            a.x -= nx * overlap * 0.5;
-            a.y -= ny * overlap * 0.5;
-            b.x += nx * overlap * 0.5;
-            b.y += ny * overlap * 0.5;
-          } else if (aFixed) {
-            b.x += nx * overlap;
-            b.y += ny * overlap;
-          } else {
-            a.x -= nx * overlap;
-            a.y -= ny * overlap;
-          }
-          const sep = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
-          if (sep > 0) continue; // already parting
-          if (-sep > CHIME_MIN * zi) chime(a, -sep);
-          const e = -sep > BOUNCE_MIN_SPEED * zi ? BALL_BOUNCE : 0;
-          const imp = -(1 + e) * sep * 0.5;
-          if (!aFixed) {
-            a.vx -= imp * nx;
-            a.vy -= imp * ny;
-          }
-          if (!bFixed) {
-            b.vx += imp * nx;
-            b.vy += imp * ny;
-          }
-          // Friction along the contact, or a ball resting on two others
-          // slides down between them and never stops.
-          const tx = -ny;
-          const ty = nx;
-          const grip = -sep > FRICTION_HIT_SPEED * zi ? BALL_FRICTION_HIT : BALL_FRICTION;
-          const slide = ((b.vx - a.vx) * tx + (b.vy - a.vy) * ty) * grip * 0.5;
-          if (!aFixed) {
-            a.vx += slide * tx;
-            a.vy += slide * ty;
-          }
-          if (!bFixed) {
-            b.vx -= slide * tx;
-            b.vy -= slide * ty;
-          }
+          const jx = jn * nx - jt * ny;
+          const jy = jn * ny + jt * nx;
+          a.vx -= jx * ia;
+          a.vy -= jy * ia;
+          b.vx += jx * ib;
+          b.vy += jy * ib;
         }
       }
 
-      // Separating an overlap can shove a ball back through a wall, so the
-      // sides and the floor are enforced once more.
+      // The sides and the floor, after the push apart, which may have shoved
+      // a ball into them. The top stays open: balls arrive through it, and a
+      // good throw may leave that way and come back down.
       for (let i = 0; i < bodies.length; i++) {
-        if (i === dragging || bodies[i].wait > 0) continue;
         const b = bodies[i];
-        b.x = clamp(b.x, b.r, Math.max(b.r, W - b.r));
-        b.y = Math.min(b.y, H - b.r);
+        if (i === dragging || b.wait > 0) continue;
+        if (b.x < b.r || b.x > W - b.r) {
+          const out = b.x < b.r ? -1 : 1;
+          const into = b.vx * out;
+          b.x = out < 0 ? b.r : W - b.r;
+          if (into > CHIME_MIN * zi) chime(b, into);
+          if (into > 0) b.vx = into > BOUNCE_MIN * zi ? -b.vx * WALL_BOUNCE : 0;
+        }
+        if (b.y >= H - b.r) {
+          b.y = H - b.r;
+          if (b.vy <= 0) continue;
+          if (b.vy > CHIME_MIN * zi) chime(b, b.vy);
+          if (b.vy > BOUNCE_MIN * zi) {
+            // Each keeps its own give, so they stop tossing in step; a knock
+            // on the floor takes a little of the roll.
+            b.vy = -b.vy * b.bounce;
+            b.vx *= FLOOR_GRIP;
+          } else {
+            // Resting on the floor: friction up to a share of what presses it
+            // there, so a roll dies away and a ball under a load stands firm.
+            const press = b.vy;
+            b.vy = 0;
+            b.vx -= clamp(b.vx, -FLOOR_FRICTION * press, FLOOR_FRICTION * press);
+          }
+        }
       }
+    };
 
+    const step = (now: number) => {
+      const frame = Math.min((now - last) / 1000, 1 / 30);
+      last = now;
+      // Held above the stage until the screen is in view and their own delays
+      // have run out, so they arrive out of step.
+      if (running) {
+        for (const b of bodies) if (b.wait > 0) b.wait -= frame;
+        for (let s = 0; s < SUBSTEPS; s++) tick(frame / SUBSTEPS);
+      }
       paint();
 
-      // --- settling --------------------------------------------------------
-      // Slow, supported balls are brought to a stop, and once nothing moves
-      // the loop parks itself; a grab, a resize or a fresh drop wakes it.
-      // Support starts at the floor (or the held pointer, or sleep) and
-      // climbs the heap: only a ball leaning on a supported one below its
-      // centre is held up, so a cluster colliding in mid-air keeps falling.
-      const supported = bodies.map((b) => b.onFloor || b.sleep);
-      if (dragging >= 0) supported[dragging] = true;
-      for (let pass = 0; pass < 2; pass++) {
-        for (const [i, j] of touching) {
-          const lower = bodies[i].y > bodies[j].y ? i : j;
-          const upper = lower === i ? j : i;
-          if (supported[lower]) supported[upper] = true;
+      // At rest once every ball has kept within a pixel of one spot for a
+      // while: the loop then parks itself.
+      let moving = dragging >= 0;
+      bodies.forEach((b, i) => {
+        if (b.wait > 0 || i === dragging || Math.hypot(b.x - b.px, b.y - b.py) > zi) {
+          b.px = b.x;
+          b.py = b.y;
+          b.quietT = 0;
+        } else {
+          b.quietT += frame;
         }
-      }
-
-      let awake = dragging >= 0 || !running;
-      for (let i = 0; i < bodies.length; i++) {
-        const b = bodies[i];
-        if (b.wait > 0) {
-          awake = true;
-          continue;
-        }
-        // A ball that has stayed within a few px of one spot for most of a
-        // second is at rest, whatever its velocity says.
-        if (i !== dragging && !b.sleep) {
-          if (Math.hypot(b.x - b.px, b.y - b.py) > 4 * zi) {
-            b.px = b.x;
-            b.py = b.y;
-            b.quietT = 0;
-          } else {
-            b.quietT += dt;
-          }
-          if (b.quietT > 0.7 && supported[i]) {
-            b.sleep = true;
-            b.vx = 0;
-            b.vy = 0;
-          }
-        }
-        if (b.sleep) {
-          b.contact = false;
-          b.onFloor = false;
-          continue;
-        }
-        const speed = Math.hypot(b.vx, b.vy);
-        if (supported[i] && speed < REST_SPEED * zi) {
-          b.vx = 0;
-          b.vy = 0;
-        } else if (supported[i] && speed < CREEP_SPEED * zi) {
-          b.vx *= CREEP_DAMP;
-          b.vy *= CREEP_DAMP;
-        }
-        awake = true;
-        b.contact = false;
-        b.onFloor = false;
-      }
-      // Off screen and parked, it waits for the next reveal.
-      raf = awake && running ? requestAnimationFrame(step) : 0;
+        if (b.quietT < QUIET_S) moving = true;
+      });
+      if (!moving) for (const b of bodies) b.vx = b.vy = 0;
+      // Off screen, it waits for the next reveal.
+      raf = moving && running ? requestAnimationFrame(step) : 0;
     };
     const wake = () => {
       if (raf || reduced) return;
@@ -624,18 +559,24 @@ function Balls() {
     );
     io.observe(stage);
 
-    const ro = new ResizeObserver(() => {
+    // A new size of screen, or the words set again in their own face, may
+    // leave other room under them.
+    const refit = () => {
+      fit();
       layout(false);
       if (reduced) rest();
-      for (const o of bodies) {
-        o.sleep = reduced;
-        o.quietT = 0;
-      }
+      for (const o of bodies) o.quietT = 0;
       sheets();
       paint();
       if (running) wake();
-    });
+    };
+    const ro = new ResizeObserver(refit);
     ro.observe(stage);
+    document.fonts?.ready
+      .then(() => {
+        if (!gone) refit();
+      })
+      .catch(() => {});
 
     return () => {
       gone = true;
