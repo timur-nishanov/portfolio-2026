@@ -164,13 +164,14 @@ function Balls() {
     let zi = 1;
     const bodies: Body[] = [];
 
-    // How big the balls are: from the stylesheet's --ball down, a pixel at a
-    // time, until what stands under the words clears the last line. On a
-    // wide screen that is the row on the floor (the words leave room beside
-    // them for anything heaped higher); where they take the whole width (a
-    // phone), it is the whole heap: rows of as many as fit, each nested into
-    // the one below (laid flat, with gaps, when the balls only rest, as
-    // rest() lays them).
+    // How big the balls are. On a wide screen, as big as the stylesheet has
+    // them: the words leave room beside them, and the ball that heaps on top
+    // of the others may as well come to rest on them, glass that they show
+    // through. Where the words take the whole width (a phone) a ball on them
+    // would hide them, so there, and when the balls only rest (reduced
+    // motion), the size comes down a pixel at a time until the heap they
+    // would make stands clear of the last line: rows of as many as fit, each
+    // nested into the one below (laid flat, with gaps, as rest() lays them).
     const fit = () => {
       const section = stage.parentElement;
       if (!section) return;
@@ -182,9 +183,9 @@ function Balls() {
         words = Math.max(words, p.offsetTop + p.offsetHeight);
         wide = Math.max(wide, p.offsetWidth);
       });
+      if (!reduced && (w - wide) / 2 >= els[0].offsetWidth) return;
       const room = stage.clientHeight - words - CLEARANCE;
       const tall = (d: number) => {
-        if (!reduced && (w - wide) / 2 >= d) return d;
         const gap = reduced ? REST_GAP : 0;
         const rows = Math.ceil(els.length / Math.max(1, Math.floor((w + gap) / (d + gap))));
         return reduced ? rows * d + (rows - 1) * gap : d * (1 + ((rows - 1) * Math.sqrt(3)) / 2);
