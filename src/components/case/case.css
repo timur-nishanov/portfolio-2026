@@ -702,6 +702,33 @@
 .cp-note__title {
   font-weight: 600;
 }
+/* Alice's own notes (AliceBoards), in her violet; the device a note is on in
+   the quieter grey under it. */
+.cp-note--alice {
+  background: #ebe3ff;
+}
+.cp-note__tag {
+  margin-top: 4px;
+  color: var(--cp-mute);
+}
+.cp-board__time {
+  color: var(--cp-ink);
+  font-weight: 600;
+}
+/* A board read in rows (AliceJobs): the three labels over three columns, and
+   each row's notes side by side, as tall as the tallest of them. */
+.cp-board--rows {
+  gap: 12px 16px;
+}
+.cp-board--rows .cp-board__label {
+  margin: 0;
+}
+.cp-board__row {
+  display: contents;
+}
+.cp-board--rows .cp-note {
+  margin: 0;
+}
 
 /* --- links ---------------------------------------------------------------- */
 /* Where to get the app: the menu's rows, each logo's disc on the column's
@@ -824,6 +851,22 @@
   .cp-board {
     grid-template-columns: minmax(0, 1fr);
     padding: 24px 16px;
+  }
+  /* A board in rows: each row its three notes one under another, the labels
+     gone (the order says it), a little room between the rows. */
+  .cp-board--rows {
+    gap: 6px;
+  }
+  .cp-board--rows .cp-board__label {
+    display: none;
+  }
+  .cp-board__row {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .cp-board__row + .cp-board__row {
+    margin-top: 12px;
   }
 }
 

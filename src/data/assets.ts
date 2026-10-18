@@ -20,7 +20,7 @@ export const assets = {
   chumsCasePoster: '/mockups/chums-case-3.webp', // its first frame
   urbantigerCaseVideo: '/mockups/urbantiger-case.mp4', // urban-tiger-gift-card-60fps-2x.mp4, browser bar cropped, padded white to the iMac's 16:9 (1600x900, 60fps)
   urbantigerCasePoster: '/mockups/urbantiger-case.webp', // its first frame
-  aliceCaseVideo: '/mockups/alice-case.mp4', // alice-lockscreen-60fps-v3.mp4 scaled to 780x1688 (60fps, CRF 23) — inside the iPhone frame
+  aliceCaseVideo: '/mockups/alice-case.mp4', // alice-lockscreen.mp4 (the iOS 26 lock screen through a day) scaled to 780x1688 (60fps, CRF 23) — inside the iPhone frame
   aliceCasePoster: '/mockups/alice-case.webp', // its first frame
   ycCaseVideo: '/mockups/yc-case-2.mp4', // yc-bundle-spring-2560x1440-60fps.mp4, 16:9 like the iMac's screen (1600x900)
   ycCasePoster: '/mockups/yc-case-2.webp', // its first frame
