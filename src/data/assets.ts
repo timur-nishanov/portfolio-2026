@@ -24,6 +24,8 @@ export const assets = {
   aliceCasePoster: '/mockups/alice-case.webp', // its first frame
   ycCaseVideo: '/mockups/yc-case-2.mp4', // yc-bundle-spring-2560x1440-60fps.mp4, 16:9 like the iMac's screen (1600x900)
   ycCasePoster: '/mockups/yc-case-2.webp', // its first frame
+  kritikaCaseVideo: '/mockups/kritika-case.mp4', // 03-peel.mp4, as in the case at 0.95 of its pace, scaled to 780x1692 (CRF 23) — inside the iPhone frame
+  kritikaCasePoster: '/mockups/kritika-case.webp', // its first frame
   imacFrame: '/mockups/imac-frame.webp', // iMac 27" Silver — bezel with transparent screen (for recordings)
 } as const;
 
