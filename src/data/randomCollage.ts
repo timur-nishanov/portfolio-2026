@@ -15,7 +15,7 @@ export type CollageItem = {
 export const collage: CollageItem[] = [
   {
     id: 'kritika',
-    title: 'Kritika, a film review app I built in Swift',
+    title: 'Kritika, a film review app I’m building in SwiftUI',
     side: 'left',
     video: {
       src: '/random/kritika.mp4', // C0418.mp4, unsqueezed to 1400×978, no audio
@@ -39,7 +39,7 @@ export const collage: CollageItem[] = [
   },
   {
     id: 'opus-experiment',
-    title: 'Quick experiment with Opus 5.5',
+    title: 'Quick experiment with Claude Opus 5.5',
     side: 'left',
     video: {
       src: '/random/opus-experiment.mp4', // D4OzCiDYGSrnN6HD.mp4, 960×1200 (4:5), 60fps, no audio
@@ -63,7 +63,7 @@ export const collage: CollageItem[] = [
   },
   {
     id: 'kritika-review',
-    title: 'A piece of interaction from my film review app',
+    title: 'Adding a review in Kritika',
     side: 'left',
     video: {
       src: '/random/kritika-review.mp4', // BtJr5050gdQcQBWs.mp4, 960×1200 (4:5), 60fps, no audio
@@ -75,7 +75,7 @@ export const collage: CollageItem[] = [
   },
   {
     id: 'moneta',
-    title: 'Site for Moneta, a payment platform',
+    title: 'Home page and journal for Moneta, a payment platform',
     side: 'right',
     video: {
       src: '/random/moneta-site.mp4', // moneta_mockup_1080p60_1.mp4, 1600×900, 60fps, no audio

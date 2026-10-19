@@ -22,7 +22,7 @@ type YandexCloudMedia = {
   readyBundle: CaseSlot;
   /** 03: from a "Build it yourself" result to the short mode in one tap. */
   goToReady: CaseSlot;
-  /** Where it landed: the game played on the touchscreen. */
+  /** Where it landed: the Yandex team testing the game on the touchscreen. */
   team: CaseSlot;
 };
 
@@ -86,7 +86,7 @@ export const yandexCloudMedia: YandexCloudMedia = {
     '08-team',
     720,
     900,
-    'The game played on the touchscreen: a mode, a task, the services and the result',
-    'The Yandex team playing',
+    'The Yandex team testing the game on the touchscreen: a mode, a task, the services and the result',
+    'The Yandex team testing it',
   ),
 };

@@ -18,7 +18,7 @@ export function CaseCard({ item }: { item: ShowcaseCase }) {
   const ref = useRef<HTMLElement>(null);
   const { href } = item;
   return (
-    // data-scroll-frame: the menu's "Works" lands with the first card centred.
+    // data-scroll-frame: the menu's "Work" lands with the first card centred.
     <article
       ref={ref}
       className="cs-card"

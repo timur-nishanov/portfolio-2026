@@ -8,7 +8,7 @@ type KritikaMedia = {
   inHand: CaseSlot;
   /** 01: tapping the rating icons, the illustration bursting. */
   ratings: CaseSlot;
-  /** 02: adding a review, the photo becoming a stamp; peeling the stamp off
+  /** 02: adding a review, the poster becoming a stamp; peeling the stamp off
       into the collection (it goes if that recording isn't ready). */
   addReview: CaseSlot;
   peel: CaseSlot;
@@ -33,7 +33,7 @@ export const kritikaMedia: KritikaMedia = {
   },
   addReview: {
     kind: 'video',
-    alt: 'Adding a review: the photo becomes a stamp, the title fades in from blur',
+    alt: 'Adding a review: the poster becomes a stamp, the title fades in from blur',
     caption: 'Adding a review',
   },
   peel: {

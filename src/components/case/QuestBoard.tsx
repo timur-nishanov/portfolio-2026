@@ -25,7 +25,7 @@ const COLUMNS: Column[] = [
     label: 'What we mapped',
     notes: [
       { title: 'Explore tab' },
-      { title: 'Quest hub', text: 'What the quests are and why do them' },
+      { title: 'Quest hub', text: 'What the quests are and why they’re worth doing' },
       { title: 'First steps', text: 'The same steps as before, each with a reason' },
       { title: 'Regular quests', text: 'Total points, quest history, rooms' },
       { title: 'Invite a friend', text: 'Share link' },

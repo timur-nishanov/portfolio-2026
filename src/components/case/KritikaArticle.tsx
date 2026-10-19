@@ -50,9 +50,9 @@ export function KritikaArticle({ onBack, backHref }: ArticleProps) {
       <section className="cp-chapter cp-col" aria-labelledby="cp-01">
         <Heading id="cp-01">Rate films with character</Heading>
         <p className="cp-reveal">
-          Stars say nothing about a film. So the scale in Kritika goes from Shit to Oscar, with a tomato for a flop
-          and popcorn for “fine”. Three of them, for plot, action and acting, because a film can have a great story
-          and terrible acting.
+          Stars say nothing about a film. So the scale in Kritika goes from Shit to Oscar, with a tomato for Flop and
+          popcorn for OK. You rate plot, acting and action separately, because a film can have a great story and
+          terrible acting.
         </p>
         <Figure slot={media.ratings} frame="phone" />
       </section>
@@ -61,9 +61,9 @@ export function KritikaArticle({ onBack, backHref }: ArticleProps) {
       <section className="cp-chapter cp-col" aria-labelledby="cp-02">
         <Heading id="cp-02">A poster that becomes a stamp</Heading>
         <p className="cp-reveal">
-          Adding a review is one screen: pick a film, drop in a photo, rate it, write. The photo turns into a stamp
-          with a perforated edge. That stamp is the film’s face everywhere in the app, and you can peel it off into
-          your collection.
+          Adding a review is one screen: pick a film, add a poster, rate it, write. The poster turns into a stamp with a
+          perforated edge. That stamp is the film’s face everywhere in the app, and you can peel it off into your
+          collection.
         </p>
         <Figure slot={media.addReview} frame="phone" />
         <Figure slot={media.peel} frame="phone" />
@@ -89,7 +89,6 @@ export function KritikaArticle({ onBack, backHref }: ArticleProps) {
           Kritika isn’t in the App Store yet. The feed, the review screen, the ratings and the collection work on my
           phone. Accounts and search are next.
         </p>
-        <p className="cp-reveal">The feed already works, with other people’s reviews to like.</p>
         <Figure slot={media.feed} frame="phone" />
       </section>
     </article>

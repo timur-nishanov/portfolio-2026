@@ -19,8 +19,8 @@ type CaseEntry = {
     address, come from the showcase data. */
 export const CASES: Record<string, CaseEntry> = {
   kritika: { title: 'Kritika', Article: KritikaArticle },
-  chums: { title: 'Chums messenger', Article: ChumsArticle },
+  chums: { title: 'Chums', Article: ChumsArticle },
   urbantiger: { title: 'Urbantiger', Article: UrbantigerArticle },
   alice: { title: 'Yandex Alice', Article: AliceArticle },
-  'yandex-cloud': { title: 'Yandex Cloud at Scale 2026', Article: YandexCloudArticle },
+  'yandex-cloud': { title: 'Yandex Cloud', Article: YandexCloudArticle },
 };

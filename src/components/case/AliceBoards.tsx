@@ -47,7 +47,7 @@ const DAY: Time[] = [
     moments: [
       { title: 'You wake up', text: 'How you slept, and a short warm-up', on: 'Phone' },
       { title: 'Breakfast time', text: 'A menu from your usual orders, here in 15 minutes', on: 'Phone' },
-      { title: 'The daily is soon', text: 'Yesterday in short, and a countdown to join', on: 'Phone' },
+      { title: 'Standup soon', text: 'Yesterday in short, and a countdown to join', on: 'Phone' },
     ],
   },
   {
@@ -63,7 +63,7 @@ const DAY: Time[] = [
     time: '19:00',
     label: 'Evening',
     moments: [
-      { title: 'Steps, sleep, screen time', text: 'A weekend away: a route, tickets, a hotel', on: 'Phone' },
+      { title: 'A tiring week', text: 'A weekend away: a route, tickets, a hotel', on: 'Phone' },
       { title: 'A free evening', text: 'A film, and dinner to go with it', on: 'Phone' },
       { title: 'Before bed', text: 'How was your day?', on: 'Phone' },
     ],

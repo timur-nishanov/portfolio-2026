@@ -15,7 +15,7 @@ export type MenuSection = {
 
 // Order as drawn in the menu mockup — independent of the page order.
 export const menuSections: MenuSection[] = [
-  { label: 'Works', id: 'works' },
+  { label: 'Work', id: 'works' },
   { label: 'Awards', id: 'awards' },
   { label: 'Random', id: 'random' },
   // The CV is a PDF, opened in a new tab.
@@ -34,7 +34,7 @@ export type Optical = { scale?: number; dy?: number; labelDx?: number };
 // Icons are 16px brand discs (public/icons), all drawn at one size — the same
 // 16px circle each, nudged onto the label's cap-height centre together.
 export const menuLinks: MenuLink[] = [
-  { kind: 'external', label: 'Linkedin', icon: '/icons/linkedin.svg', optical: { dy: -0.5 }, href: site.linkedin },
+  { kind: 'external', label: 'LinkedIn', icon: '/icons/linkedin.svg', optical: { dy: -0.5 }, href: site.linkedin },
   { kind: 'external', label: 'X', icon: '/icons/x.svg', optical: { dy: -0.5, labelDx: -1 }, href: 'https://x.com/nem_etis' },
   { kind: 'external', label: 'GitHub', icon: '/icons/github.svg', optical: { dy: -0.5 }, href: 'https://github.com/timur-nishanov' },
   // Gmail copies rather than opening a mail client — most visitors on a

@@ -35,7 +35,7 @@ export function SiteHeader() {
   // How the menu was opened decides whether its first row shows the keyboard
   // ring. Not :focus-visible — Chromium passes that on to programmatic focus
   // from whatever had keyboard focus before, so a click after a Tab (or after
-  // Escape handed focus back to the button) lit the ring on "Works".
+  // Escape handed focus back to the button) lit the ring on "Work".
   const openedBy = useRef<'keyboard' | 'pointer'>('pointer');
   const [refs] = useState<MorphRefs>(() => ({
     root: createRef<HTMLElement>(),

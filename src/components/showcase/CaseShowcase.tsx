@@ -25,7 +25,7 @@ const SETTLE = 32;
 // to shrink, dim and fade.
 const RECEDE_FROM = 0.4;
 
-/** The cases after the hero (#works, the menu's "Works"). */
+/** The cases after the hero (#works, the menu's "Work"). */
 export function CaseShowcase() {
   const ref = useRef<HTMLElement>(null);
 
@@ -178,7 +178,7 @@ export function CaseShowcase() {
   }, []);
 
   return (
-    <section ref={ref} id="works" aria-label="Works" className="cs">
+    <section ref={ref} id="works" aria-label="Work" className="cs">
       {showcase.map((item) => (
         <CaseCard key={item.id} item={item} />
       ))}

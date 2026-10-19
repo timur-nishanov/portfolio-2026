@@ -5,11 +5,11 @@ export const site = {
   hero: {
     // New first screen (Figma 2:384): the title rides the top bar, the
     // tagline sits at the bottom, two authored lines.
-    title: "Hey! I'm Timur",
-    tagline: ['interface designer from Bangkok', 'who builds in code'],
+    title: 'Hey! I’m Timur',
+    tagline: ['product designer based in Bangkok', 'who builds in code'],
   },
   meta: {
-    title: 'Timur Nishanov',
-    description: 'Senior Product Designer. Worked with Yandex, Stepik, HSE, Meama, Sber, and Moneta.',
+    title: 'Timur Nishanov · Product Designer',
+    description: 'Senior Product Designer. Worked with Yandex, Stepik, HSE, Meama and Moneta.',
   },
 } as const;
