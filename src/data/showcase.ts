@@ -48,7 +48,7 @@ export const showcase: ShowcaseCase[] = [
       type: 'video',
       src: assets.kritikaCaseVideo,
       poster: assets.kritikaCasePoster,
-      alt: 'Kritika: peeling a film’s stamp off into the collection',
+      alt: 'Kritika: peeling a film’s stamp into the collection, then opening the collection',
     },
     notes: [
       'A film review app I’m building alone: concept, design and SwiftUI with Claude Code. Work in\u00a0progress.',

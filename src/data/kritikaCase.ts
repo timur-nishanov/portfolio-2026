@@ -12,7 +12,7 @@ type KritikaMedia = {
   ratings: CaseSlot;
   /** 02: adding a review, the poster becoming a stamp, the ratings, the text. */
   addReview: CaseSlot;
-  /** 02: peeling the stamp off into the collection. */
+  /** 02: peeling the stamp off into the collection, then opening it. */
   peel: CaseSlot;
   /** 04: scrolling the feed and liking a review. */
   feed: CaseSlot;
@@ -51,8 +51,8 @@ export const kritikaMedia: KritikaMedia = {
   ),
   peel: clip(
     '03-peel',
-    'Peeling the stamp off a film, and the stamp waiting in the collection',
-    'Peeling a stamp into the collection',
+    'Peeling the stamp off Poor Things into the collection, then opening the collection and swiping through its stamps',
+    'Peeling a stamp and opening the collection',
   ),
   feed: clip('04-feed', 'Scrolling the feed and liking a review', 'Scrolling the feed and liking a review'),
 };
