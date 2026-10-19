@@ -38,12 +38,12 @@ const REST_GAP = 12; // px
 
 // --- physics ------------------------------------------------------------------
 // Balls of glass: they knock and spring apart, slide off one another and roll
-// on along the floor; nothing holds them but the stage's edges and each
+// on along the floor; nothing holds them but the floor, the sides and each
 // other. Holding one suspends it — it moves only while the button is down —
 // and letting go hands its momentum back to the sim.
 const GRAVITY = 2000; // px/s²
-// How much of a knock comes back, off the sides and the top and off another
-// ball (off the floor it is each ball's own, in DROPS).
+// How much of a knock comes back, off the sides and off another ball (off the
+// floor it is each ball's own, in DROPS).
 const WALL_BOUNCE = 0.8;
 const BALL_BOUNCE = 0.86;
 // Slower than this, a contact is a ball resting on something rather than a
@@ -84,8 +84,6 @@ type Body = {
   quietT: number;
   px: number;
   py: number;
-  /** Wholly on the stage since it dropped in: the top holds it from then on. */
-  inside: boolean;
 };
 
 /** Lines set one under another, each wrapping within itself. */
@@ -217,7 +215,6 @@ function Balls() {
             quietT: 0,
             px: 0,
             py: 0,
-            inside: false,
           };
         } else {
           bodies[i].r = r;
@@ -242,7 +239,6 @@ function Balls() {
           b.y = floor - b.r;
           b.vx = b.vy = 0;
           b.wait = 0;
-          b.inside = true;
         });
         floor -= d + gap;
         i += per;
@@ -476,20 +472,12 @@ function Balls() {
         }
       }
 
-      // The sides, the top and the floor, after the push apart, which may have
-      // shoved a ball into them. The balls drop in through the top; once a
-      // ball is wholly in, the top holds it as the sides do, so a bounce or a
-      // throw never takes it off the screen.
+      // The sides and the floor, after the push apart, which may have shoved
+      // a ball into them. The top stays open: balls arrive through it, and a
+      // good throw may leave that way and come back down.
       for (let i = 0; i < bodies.length; i++) {
         const b = bodies[i];
         if (i === dragging || b.wait > 0) continue;
-        if (!b.inside && b.y >= b.r) b.inside = true;
-        if (b.inside && b.y < b.r) {
-          const into = -b.vy;
-          b.y = b.r;
-          if (into > CHIME_MIN * zi) chime(b, into);
-          if (into > 0) b.vy = into > BOUNCE_MIN * zi ? into * WALL_BOUNCE : 0;
-        }
         if (b.x < b.r || b.x > W - b.r) {
           const out = b.x < b.r ? -1 : 1;
           const into = b.vx * out;
