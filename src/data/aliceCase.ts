@@ -80,7 +80,7 @@ export const aliceMedia: AliceMedia = {
     '05-evening',
     600,
     1300,
-    'The mood check-in before bed: the slider goes from Irritated to Good and the shape changes colour',
+    'The mood check-in before bed: the slider goes from Irritated to Good and the little face changes color',
     'How was your day?',
   ),
   macFeedback: clip(

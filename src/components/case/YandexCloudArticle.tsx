@@ -29,12 +29,12 @@ export function YandexCloudArticle({ onBack, backHref }: ArticleProps) {
 
       {/* --- overview ---------------------------------------------------- */}
       <div className="cp-col cp-intro">
-        <h1 className="cp-title cp-reveal">Yandex Cloud at Scale 2026</h1>
+        <h1 className="cp-title cp-reveal">Yandex Cloud</h1>
         <p className="cp-subtitle cp-reveal">A touchscreen game for a conference booth</p>
         <p className="cp-reveal">
           For the Yandex Cloud booth at Yandex Scale 2026, I designed a touchscreen game about its data platform and
-          built the front end in code. A visitor picks a business task on a 55&#8209;inch screen and puts together the
-          services that solve it.
+          built the front end with Claude Code. A visitor picks a business task on a 55-&#8288;inch screen and puts
+          together the services that solve it.
         </p>
         <p className="cp-reveal">
           Yandex Cloud wanted the game to show what its 20+ data services are for, pull visitors into the merch contest
@@ -50,10 +50,7 @@ export function YandexCloudArticle({ onBack, backHref }: ArticleProps) {
             ['Timeline', 'August–September 2026'],
           ]}
         />
-        <p className="cp-reveal">
-          The front end is mine, written with Claude Code. The backend and the production build were on the client’s
-          side.
-        </p>
+        <p className="cp-reveal">The backend and the production build were on the contractor’s side.</p>
         <Figure slot={media.firstScreen} frame="stage" />
       </div>
 
@@ -66,8 +63,9 @@ export function YandexCloudArticle({ onBack, backHref }: ArticleProps) {
         </p>
         <Figure slot={media.booth} frame="stage" />
         <p className="cp-reveal">
-          There are two modes: build the chain yourself, or pick one of three ready bundles. The second is shorter and
-          earns points for the merch contest.
+          There are two modes: “Build it yourself”, where you put the chain together, and “Choose from
+          ready-&#8288;made”, where you pick one of three bundles. The second is shorter and earns points for the merch
+          contest.
         </p>
         <Figure slot={media.buildYourself} frame="stage" />
         <p className="cp-reveal">
@@ -92,12 +90,12 @@ export function YandexCloudArticle({ onBack, backHref }: ArticleProps) {
       <section className="cp-chapter cp-col" aria-labelledby="cp-03">
         <Heading id="cp-03">Turn every result into a lead</Heading>
         <p className="cp-reveal">
-          Points are the reason to finish. In the short mode a right bundle earns them, and the screen sends you to the
-          booth staff to exchange them.
+          Points are the reason to finish. In the short mode the right bundle earns them, and the screen sends you to
+          the booth staff to trade them for merch.
         </p>
         <Figure slot={media.readyBundle} frame="stage" />
         <p className="cp-reveal">
-          Build it yourself gives no points, so its result offers the short mode with one button.
+          “Build it yourself” gives no points, so its result offers the short mode with one button.
         </p>
         <Figure slot={media.goToReady} frame="stage" />
         <p className="cp-reveal">
@@ -113,8 +111,8 @@ export function YandexCloudArticle({ onBack, backHref }: ArticleProps) {
           Yandex Cloud reviewed a live game, not pictures, and approved the design, the flow and the motion right in it.
         </p>
         <p className="cp-reveal">
-          The contractor’s engineers took my code as the base for the production version, so design review on a tight
-          deadline took almost no time.
+          The contractor’s engineers took my code as the base for the production version, so on a tight deadline,
+          checking the build against the design took almost no time.
         </p>
       </section>
 

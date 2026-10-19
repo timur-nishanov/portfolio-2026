@@ -51,9 +51,9 @@ export const showcase: ShowcaseCase[] = [
       alt: 'Kritika on an iPhone',
     },
     notes: [
-      'A film review app I’m building alone: concept, design and SwiftUI code with Claude Code. Work in\u00a0progress.',
+      'A film review app I’m building alone: concept, design and SwiftUI with Claude Code. Work in\u00a0progress.',
       'Films are rated from Shit to Oscar, and the poster becomes a stamp you peel off into your\u00a0collection.',
-      'Building it myself changed how I design: empty states first, and motion I can\u00a0afford.',
+      'Building it myself changed how I design: empty states first, and motion that wouldn’t survive a\u00a0handoff.',
     ],
   },
   {
@@ -61,7 +61,7 @@ export const showcase: ShowcaseCase[] = [
     href: '/cases/urbantiger',
     device: 'imac',
     title: 'Urbantiger',
-    subtitle: 'Eco ecommerce',
+    subtitle: 'Eco clothing store',
     phone: {
       framed: true,
       type: 'video',
@@ -79,8 +79,8 @@ export const showcase: ShowcaseCase[] = [
     id: 'chums',
     href: '/cases/chums',
     device: 'phone',
-    title: 'Chums messenger',
-    subtitle: 'Safe crypto chatting',
+    title: 'Chums',
+    subtitle: 'Web3 messenger with a built-\u2060in wallet',
     phone: {
       framed: true,
       type: 'video',
@@ -92,7 +92,7 @@ export const showcase: ShowcaseCase[] = [
     // note's last two words together, wherever the line breaks fall.
     notes: [
       'The desktop app was the mobile app stretched across a big window. Quests were rooms in the chat list, and nothing said what you’d\u00a0get.',
-      'Rebuilt desktop and shipped it to beta in three months. Attaching a file went from 6\u00a0steps\u00a0to\u00a01.',
+      'Redesigned the desktop app. It was in beta three months later. Attaching a file went from 6\u00a0steps\u00a0to\u00a01.',
       'Led design for a year and mentored a junior designer. Together we designed threads for an AI assistant and a rewards system. The concept you see here is\u00a0mine.',
     ],
   },
@@ -100,8 +100,8 @@ export const showcase: ShowcaseCase[] = [
     id: 'yandex-cloud',
     href: '/cases/yandex-cloud',
     device: 'imac',
-    title: 'Yandex Cloud at Scale 2026',
-    subtitle: 'Touchscreen game for a conference booth',
+    title: 'Yandex Cloud',
+    subtitle: 'Touchscreen game at Yandex Scale 2026',
     phone: {
       framed: true,
       type: 'video',
@@ -110,9 +110,9 @@ export const showcase: ShowcaseCase[] = [
       alt: 'Yandex Cloud booth game: choosing a business task',
     },
     notes: [
-      'Designed the game and built the front end myself, with Claude Code, in a week and a half. The production version was built on my\u00a0code.',
-      'Visitors pick a business task on a 55\u2011inch touchscreen and put together the Yandex Cloud services that solve\u00a0it.',
-      'Every result leads somewhere: points you exchange with the booth staff, and a QR code for a\u00a0consultation.',
+      'Designed the game and built the front end myself, with Claude Code, in a week and a half. The production version is based on my\u00a0code.',
+      'Visitors pick a business task on a 55-\u2060inch touchscreen and put together the Yandex Cloud services that solve\u00a0it.',
+      'Every result leads somewhere: points you trade for merch at the booth, and a QR code for a\u00a0consultation.',
     ],
   },
   {
@@ -131,7 +131,7 @@ export const showcase: ShowcaseCase[] = [
     notes: [
       'A chat works like a queue of requests: you have to know what to ask and remember to open the app. We moved Alice to the lock screen, where she shows up when something is about to\u00a0happen.',
       'Alice is with you all day, from a morning warm-up to a mood check-in before bed. She orders, books and writes drafts, and you confirm with one\u00a0tap.',
-      '2nd place at a Yandex design battle, one point behind the winner and ahead of the other product teams. Senior designer in a studio team of five; I worked on the idea, the scenario and the\u00a0screens.',
+      '2nd place at a Yandex design battle, one point behind the winner and ahead of the other in-\u2060house teams. Senior designer in a studio team of five; I worked on the idea, the scenario and the\u00a0screens.',
     ],
   },
 ];

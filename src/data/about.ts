@@ -9,16 +9,16 @@ export type AboutLine = string | { text: string; href: string };
 // long for a phone wraps within itself, evenly.
 export const aboutText: AboutLine[][] = [
   [
-    'Experienced mostly in B2C, fintech and Web3.',
-    'Focused on visuals and complex user flows.',
-    // Kept whole where the line has to wrap (a phone): it breaks after
-    // "research," instead.
-    'Skilled in research, prototyping and front-end in code,',
-    'and AI generation.',
+    'Mostly B2C, fintech and Web3.',
+    'I focus on visuals and complex user flows.',
+    // A word joiner after the hyphen keeps "front-end" whole where the
+    // line wraps (a phone), as the outro keeps "part-time" (outro.ts).
+    'I research, prototype and write front-\u2060end code,',
+    'and make 3D, icons, motion and video with AI.',
   ],
   [
     'I love to mix craft and systems.',
-    'Always trying to keep interfaces and concepts',
+    'I always try to keep interfaces and concepts',
     'balanced between emotion and usability.',
     'But I still prefer a bit more craft :)',
   ],

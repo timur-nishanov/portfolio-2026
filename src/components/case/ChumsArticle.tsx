@@ -10,7 +10,7 @@ import { QuestBoard } from './QuestBoard';
 import type { ArticleProps } from './registry';
 
 const INDEX = [
-  { id: 'cp-01', label: 'Give Chums its own flow' },
+  { id: 'cp-01', label: 'Make switching servers easy' },
   { id: 'cp-02', label: 'Make desktop work like desktop' },
   { id: 'cp-03', label: 'Give every AI request its own thread' },
   { id: 'cp-04', label: 'Turn a vague brief into a rewards system' },
@@ -35,7 +35,7 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
 
       {/* --- overview ---------------------------------------------------- */}
       <div className="cp-col cp-intro">
-        <h1 className="cp-title cp-reveal">Chums Messenger</h1>
+        <h1 className="cp-title cp-reveal">Chums</h1>
         <p className="cp-subtitle cp-reveal">Making a Web3 messenger easier to use</p>
         <p className="cp-reveal">
           I led design at Chums, a messenger on the open Matrix protocol with crypto wallets, NFTs, domains and dApps
@@ -45,15 +45,16 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
         <Facts
           items={[
             ['Role', 'Senior Product Designer & Design Lead'],
-            ['Team', <>Founders, PM, Art Director, 1&nbsp;developer, junior designer</>],
+            ['Team', 'Founders, PM, art director, one developer, junior designer'],
             ['Timeline', 'Concept in 2024 · Design lead in 2025'],
           ]}
         />
+        <p className="cp-reveal">Chums was a client of the studio I worked at.</p>
       </div>
 
       {/* --- 01 ------------------------------------------------------------ */}
       <section className="cp-chapter cp-col" aria-labelledby="cp-01">
-        <Heading id="cp-01">Give Chums its own flow</Heading>
+        <Heading id="cp-01">Make switching servers easy</Heading>
         <p className="cp-reveal">
           On Matrix, every community can have its own server. In Chums you could pick a server only when signing in, so
           switching was slow.
@@ -61,7 +62,7 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
         <p className="cp-reveal">In early 2024 I designed a concept for the main mobile screens:</p>
         <ul className="cp-list cp-list--short cp-reveal">
           <li>Servers at the top. Switch in one tap.</li>
-          <li>Sign&#8209;in in a sheet. Join a server without leaving the chat list.</li>
+          <li>Sign-&#8288;in in a sheet. Join a server without leaving the chat list.</li>
           <li>Direct messages apart from server spaces. You see where a chat lives.</li>
           <li>Coins in the attachment menu, next to photos and files.</li>
         </ul>
@@ -83,10 +84,12 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
           The PM and I each audited the desktop app. We found the same thing: it was the mobile app stretched across a
           big window.
         </p>
-        <p className="cp-reveal">Contacts used to open in a full window. Now it’s a small window over the chat.</p>
+        <p className="cp-reveal">
+          Contacts used to open in a full window. Now they open in a small one over the chat.
+        </p>
         <BeforeAfter {...media.contacts} frame="stage" />
         <p className="cp-reveal">
-          Emoji used to open as a panel across the whole window. Now it’s a small window above the message field.
+          The emoji panel used to cover the whole window. Now it’s a small window above the message field.
         </p>
         <BeforeAfter {...media.emoji} frame="stage" />
         <p className="cp-reveal">
@@ -134,7 +137,7 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
       <section className="cp-chapter cp-col" aria-labelledby="cp-04">
         <Heading id="cp-04">Turn a vague brief into a rewards system</Heading>
         <p className="cp-reveal">
-          The PM wanted XP for activity in the messenger, plus time&#8209;limited quests from Venom, a blockchain
+          The PM wanted XP for activity in the messenger, plus time-&#8288;limited quests from Venom, a blockchain
           network Chums worked with.
         </p>
         <p className="cp-reveal">
@@ -143,8 +146,8 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
         </p>
         <QuestBoard />
         <p className="cp-reveal">
-          We also looked at how Matrix clients, Telegram, Discord and Family do it. Then we built the screens around
-          three questions.
+          We also looked at how Matrix clients, Telegram, Discord and the Family wallet do it. Then we built the screens
+          around three questions.
         </p>
         <GlassOrbs
           items={[
@@ -171,7 +174,7 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
         <Heading id="cp-landed">Where it landed</Heading>
         <Results
           items={[
-            ['Concept', 'Approved. Only the look reached the product, the server flow stayed the same.'],
+            ['Concept', 'Approved. Only the look reached the product; the server flow stayed the same.'],
             ['Desktop', 'In beta three months after approval. Attaching a file went from six steps to one.'],
             ['Assistant', 'Designed for desktop and mobile.'],
             ['Rewards', 'Approved and handed to development.'],

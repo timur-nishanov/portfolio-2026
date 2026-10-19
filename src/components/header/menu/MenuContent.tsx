@@ -136,7 +136,7 @@ function MenuContentInner({ id, labelledBy, open, contentRef, handleRef, onClose
     onClose(true);
     const el = document.getElementById(sectionId);
     if (!el) return; // section not on the page yet — just close
-    // A section can name the block that frames it (Works: the first case
+    // A section can name the block that frames it (Work: the first case
     // card). When that block fits the screen it lands in the middle of it;
     // otherwise the section starts just under the header.
     const frame = el.querySelector<HTMLElement>('[data-scroll-frame]');

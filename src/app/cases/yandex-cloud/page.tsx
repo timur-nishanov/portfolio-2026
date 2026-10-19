@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { CasePage } from '@/components/case/CasePage';
 
 export const metadata: Metadata = {
-  title: 'Yandex Cloud at Scale 2026 · Timur Nishanov',
+  title: 'Yandex Cloud · Timur Nishanov',
 };
 
 export default function YandexCloudCase() {

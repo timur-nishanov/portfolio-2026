@@ -38,11 +38,11 @@ export function UrbantigerArticle({ onBack, backHref }: ArticleProps) {
             urbantiger.ru
           </a>
           , the online store of a Russian premium
-          clothing brand that makes most of its collections from eco materials.
+          clothing brand that makes most of its collections from sustainable materials.
         </p>
         <p className="cp-reveal">
-          The old store was built in 2021 and designed in a hurry by an in&#8209;house graphic designer. In 2022 the
-          team fixed the most obvious UX errors and conversion went up. After 2023 nobody touched the UX. The site no
+          The old store was built in 2021 and designed in a hurry by an in-&#8288;house graphic designer. In 2022 the
+          team fixed the most obvious UX issues and conversion went up. After 2023 nobody touched the UX. The site no
           longer matched the brand, and people had few reasons to come back.
         </p>
         <p className="cp-reveal">
@@ -117,13 +117,13 @@ export function UrbantigerArticle({ onBack, backHref }: ArticleProps) {
       <section className="cp-chapter cp-col" aria-labelledby="cp-03">
         <Heading id="cp-03">Design every state, not just the happy path</Heading>
         <p className="cp-reveal">
-          Another team was building the store, so the mockups had to answer their questions. We designed what happens
-          when something goes wrong:
+          Another team was building the store, so the mockups had to answer their questions. We designed the less
+          obvious flows too, and what happens when something goes wrong:
         </p>
         <ul className="cp-list cp-list--short cp-reveal">
-          <li>Sign&#8209;in by phone, confirmed through Telegram, VK or a call.</li>
+          <li>Sign-&#8288;in by phone, confirmed through Telegram, VK or a call.</li>
           <li>Promo code and bonus errors.</li>
-          <li>Restock alerts for sold&#8209;out sizes.</li>
+          <li>Restock alerts for sold-&#8288;out sizes.</li>
           <li>Empty cart, wishlist and alerts.</li>
           <li>Changing an email or phone number.</li>
           <li>Returns in six steps. If you pick an exchange instead of a return, you get an extra 10% off.</li>
