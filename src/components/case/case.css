@@ -621,9 +621,13 @@
   aspect-ratio: var(--ar);
   object-fit: cover;
 }
+/* The phone's corners as round as iOS draws a sheet's: concentric with the
+   display, on a continuous curve that runs further along the edges than a
+   circle does. A smaller circle left what lies behind the sheet showing in
+   each corner, a grey sliver round the curve. */
 .cp-shot--phone {
   width: 240px;
-  border-radius: 12% / 5.6%;
+  border-radius: 18% / 8.3%;
 }
 .cp-shot--desktop,
 .cp-shot--wide {
@@ -633,13 +637,17 @@
 .cp-shot--stage {
   width: 100%;
 }
-/* A screen's file lifts off the box a little; a wide picture (a diagram,
-   several screens laid out) is drawn on it, flat and square. */
+/* A screen's file lifts off the box a little, on a soft shadow in layers: a
+   hairline edge, a close one, and two wider ones that fade out within the
+   box's room under it (32px on a phone) and beside it (16px). A wide picture
+   (a diagram, several screens laid out) is drawn on it, flat and square. */
 .cp-figure img.cp-shot,
 .cp-figure video.cp-shot {
   box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.06),
-    0 16px 32px -16px rgba(0, 0, 0, 0.2);
+    0 0 0 0.5px rgba(8, 8, 10, 0.06),
+    0 1px 3px rgba(8, 8, 10, 0.05),
+    0 6px 12px -4px rgba(8, 8, 10, 0.06),
+    0 14px 24px -10px rgba(8, 8, 10, 0.08);
 }
 .cp-figure img.cp-shot--wide,
 .cp-figure video.cp-shot--wide,
