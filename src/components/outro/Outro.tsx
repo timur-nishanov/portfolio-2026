@@ -21,11 +21,11 @@ const COPIED_MS = 1400;
  * edge, 1 = right); `lift` is how far above the stage it waits, in radii.
  */
 const DROPS = [
-  { delay: 0.0, slot: 0.0, lift: 0.4, drift: 55, bounce: 0.7 },
-  { delay: 0.46, slot: 0.25, lift: 3.4, drift: 40, bounce: 0.66 },
-  { delay: 0.34, slot: 0.5, lift: 2.6, drift: -85, bounce: 0.6 },
-  { delay: 0.62, slot: 0.75, lift: 1.9, drift: -50, bounce: 0.76 },
-  { delay: 0.15, slot: 1.0, lift: 1.3, drift: 35, bounce: 0.72 },
+  { delay: 0.0, slot: 0.0, lift: 0.4, drift: 55, bounce: 0.77 },
+  { delay: 0.46, slot: 0.25, lift: 3.4, drift: 40, bounce: 0.73 },
+  { delay: 0.34, slot: 0.5, lift: 2.6, drift: -85, bounce: 0.68 },
+  { delay: 0.62, slot: 0.75, lift: 1.9, drift: -50, bounce: 0.82 },
+  { delay: 0.15, slot: 1.0, lift: 1.3, drift: 35, bounce: 0.79 },
 ];
 
 // --- size --------------------------------------------------------------------
@@ -44,8 +44,8 @@ const REST_GAP = 12; // px
 const GRAVITY = 2000; // px/s²
 // How much of a knock comes back, off the sides and off another ball (off the
 // floor it is each ball's own, in DROPS).
-const WALL_BOUNCE = 0.7;
-const BALL_BOUNCE = 0.8;
+const WALL_BOUNCE = 0.8;
+const BALL_BOUNCE = 0.86;
 // Slower than this, a contact is a ball resting on something rather than a
 // knock, and gives nothing back: a heap would never stop trembling otherwise.
 const BOUNCE_MIN = 40; // px/s
@@ -57,10 +57,10 @@ const BALL_FRICTION = 0.1;
 // it, a ball is held back by up to this share of what presses it there, as
 // much as a rolling ball is. A roll dies away in a second or two; a ball
 // with another leaning on it rolls aside and lets it down, if there is room.
-const FLOOR_GRIP = 0.9;
+const FLOOR_GRIP = 0.94;
 const FLOOR_FRICTION = 0.07;
 // What is left of a ball's speed in the air after a second.
-const AIR = 0.92;
+const AIR = 0.95;
 // Steps a frame: even a hard throw moves a ball well under its radius a step.
 const SUBSTEPS = 4;
 const MAX_THROW = 2600;
