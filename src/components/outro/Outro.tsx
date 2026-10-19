@@ -165,9 +165,9 @@ function Balls() {
     const bodies: Body[] = [];
 
     // How big the balls are. On a wide screen, as big as the stylesheet has
-    // them: the words leave room beside them, and the ball that heaps on top
-    // of the others may as well come to rest on them, glass that they show
-    // through. Where the words take the whole width (a phone) a ball on them
+    // them: the words leave room beside them, and the balls that heap on top
+    // of the others may as well come to rest partly on them, glass that they
+    // show through. Where the words take the whole width (a phone) a ball on them
     // would hide them, so there, and when the balls only rest (reduced
     // motion), the size comes down a pixel at a time until the heap they
     // would make stands clear of the last line: rows of as many as fit, each
