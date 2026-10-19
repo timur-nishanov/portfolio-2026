@@ -43,12 +43,12 @@ export const showcase: ShowcaseCase[] = [
     device: 'phone',
     title: 'Kritika',
     subtitle: 'Film review app, built solo',
-    // No recording yet: the phone stands with a blank screen until it comes.
     phone: {
       framed: true,
-      type: 'image',
-      src: '',
-      alt: 'Kritika on an iPhone',
+      type: 'video',
+      src: assets.kritikaCaseVideo,
+      poster: assets.kritikaCasePoster,
+      alt: 'Kritika: peeling a film’s stamp off into the collection',
     },
     notes: [
       'A film review app I’m building alone: concept, design and SwiftUI with Claude Code. Work in\u00a0progress.',
