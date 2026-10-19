@@ -51,7 +51,7 @@ export function KritikaArticle({ onBack, backHref }: ArticleProps) {
         <Heading id="cp-01">Rate films with character</Heading>
         <p className="cp-reveal">
           Stars say nothing about a film. So the scale in Kritika goes from Shit to Oscar, with a tomato for Flop and
-          popcorn for OK. You rate plot, acting and action separately, because a film can have a great story and
+          popcorn for OK. You rate plot, action and acting separately, because a film can have a great story and
           terrible acting.
         </p>
         <Figure slot={media.ratings} frame="phone" />
@@ -61,8 +61,8 @@ export function KritikaArticle({ onBack, backHref }: ArticleProps) {
       <section className="cp-chapter cp-col" aria-labelledby="cp-02">
         <Heading id="cp-02">A poster that becomes a stamp</Heading>
         <p className="cp-reveal">
-          Adding a review is one screen: pick a film, add a poster, rate it, write. The poster turns into a stamp with a
-          perforated edge. That stamp is the film’s face everywhere in the app, and you can peel it off into your
+          Adding a review is one screen: add a poster, type the title, rate it, write. The poster turns into a stamp
+          with a perforated edge. That stamp is the film’s face everywhere in the app, and you can peel it off into your
           collection.
         </p>
         <Figure slot={media.addReview} frame="phone" />
