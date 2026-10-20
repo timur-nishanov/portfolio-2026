@@ -21,12 +21,11 @@ export const aboutText: AboutLine[][] = [
     'I care about systems,',
     'but I still prefer a bit more craft:',
     'a poster that peels off like a stamp,',
-    'a timer that shows the answer',
-    'instead of telling you that you lost.',
+    'a timer that shows the answer instead of telling you that you lost.',
   ],
   [
-    'With the Salt\u00a0and\u00a0Pepper team,',
-    'I made the concept and every screen',
+    // A no-break space ties "I" to "made", so a phone never ends a line on it.
+    'With the Salt\u00a0and\u00a0Pepper team, I\u00a0made the concept and every screen',
     'of a site for film director Artem Shcherbakov.',
     'It got Site of the Day on Awwwards, FWA and CSSDA.',
     { text: 'artemartemartem.com', href: 'https://artemartemartem.com' },
