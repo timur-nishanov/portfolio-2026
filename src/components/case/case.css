@@ -588,7 +588,7 @@
 .cp-figure--wide .cp-figure__box {
   padding: 48px 36px;
 }
-.cp-figure--imac .cp-figure__box {
+.cp-figure--monitor .cp-figure__box {
   padding: 40px 36px;
 }
 /* A recording composed on its own white stage is the box itself: no room
@@ -656,11 +656,11 @@
   border-radius: 0;
   box-shadow: none;
 }
-/* The iMac, its screen and stand drawn by the home page's mockup: as wide
-   as the box allows, in the frame's own shape. */
-.cp-shot--imac {
+/* The monitor, its screen and stand drawn by the home page's mockup: as
+   wide as the box allows, in the frame's own shape (monitor-frame.webp). */
+.cp-shot--monitor {
   width: 100%;
-  aspect-ratio: 1600 / 1288;
+  aspect-ratio: 1600 / 1232;
 }
 /* The stand-in, until the file is in: a grey screen, blank. */
 .cp-ph {
@@ -849,7 +849,7 @@
   .cp-figure--wide .cp-figure__box {
     padding: 40px 20px;
   }
-  .cp-figure--imac .cp-figure__box {
+  .cp-figure--monitor .cp-figure__box {
     padding: 32px 16px;
   }
   .cp-shot--phone {

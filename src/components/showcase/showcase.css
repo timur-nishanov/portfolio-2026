@@ -146,19 +146,20 @@
   max-width: 340px;
 }
 
-/* The iMac card, measured from its reference (same 1440 frame, same card):
-   the iMac is 83.8% of the card's height, 5.7% in from the left and a hair
-   below centre; the title sits at the top of the 71% column, the notes at its
-   bottom — the notes' block is pinned by its bottom edge, and inside it every
-   note starts on the same first line, so nothing jumps as they take turns. */
-.cs-card__imac {
+/* The monitor card, placed as its reference placed an iMac (same 1440 frame,
+   same card): the monitor is 83.8% of the card's height, 5.7% in from the left
+   and a hair below centre; the title sits at the top of the 71% column, the
+   notes at its bottom — the notes' block is pinned by its bottom edge, and
+   inside it every note starts on the same first line, so nothing jumps as they
+   take turns. */
+.cs-card__monitor {
   position: absolute;
   left: 5.74%;
   top: 51%;
   height: 83.8%;
   transform: translateY(-50%);
 }
-.cs-card[data-device='imac'] .cs-card__head {
+.cs-card[data-device='monitor'] .cs-card__head {
   left: 71%;
   top: 10.6%;
   transform: none;
@@ -175,7 +176,7 @@
 .cs-card__sub {
   text-wrap: balance;
 }
-.cs-card[data-device='imac'] .cs-card__notes {
+.cs-card[data-device='monitor'] .cs-card__notes {
   top: auto;
   bottom: 8.8%;
 }
@@ -373,18 +374,18 @@
   }
   .cs-card__head,
   .cs-card__phone,
-  .cs-card__imac,
+  .cs-card__monitor,
   .cs-card__notes,
-  .cs-card[data-device='imac'] .cs-card__head,
-  .cs-card[data-device='imac'] .cs-card__notes {
+  .cs-card[data-device='monitor'] .cs-card__head,
+  .cs-card[data-device='monitor'] .cs-card__notes {
     position: static;
     transform: none;
   }
-  .cs-card__imac {
+  .cs-card__monitor {
     width: 100%;
     height: auto;
   }
-  .cs-card__imac > div {
+  .cs-card__monitor > div {
     width: 100%;
     height: auto;
   }
