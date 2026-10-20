@@ -7,6 +7,8 @@
  * follows where it struck, so a knock on the right rings from the right.
  */
 
+import { audioContext } from '@/lib/audio';
+
 // Mode ratios of a struck glass — deliberately inharmonic. Whole-number
 // ratios ring like an organ pipe; these ring like a tumbler.
 const MODES = [1, 2.32, 4.25];
@@ -14,7 +16,6 @@ const MODES = [1, 2.32, 4.25];
 // machine-gun the chime into a buzz — one ring per beat is plenty.
 const MIN_GAP_MS = 110;
 
-let ctx: AudioContext | null = null;
 let lastAt = 0;
 
 export function playChime(
@@ -33,15 +34,13 @@ export function playChime(
   if (impact < 0.18) return;
   const now = performance.now();
   if (now - lastAt < MIN_GAP_MS) return;
-  if (!ctx) {
-    if (typeof window === 'undefined' || !('AudioContext' in window)) return;
-    ctx = new AudioContext();
-  }
-  // Browsers keep a fresh context suspended until the user has interacted
-  // with the page. Ask it to wake and skip this hit rather than schedule
-  // into a stopped clock — a chime queued now would burst out, stale, on
-  // the first click. The first grab unlocks it; every hit after that rings.
-  if (ctx.state === 'suspended') {
+  // The page's one context (lib/audio), unlocked by the first gesture
+  // anywhere: a click on a card, the head thrown, a key. Until then (a
+  // visitor who has only scrolled) skip the hit rather than schedule it into
+  // a stopped clock, where it would burst out, stale, on the first click.
+  const ctx = audioContext();
+  if (!ctx) return;
+  if (ctx.state !== 'running') {
     void ctx.resume();
     return;
   }
@@ -58,10 +57,10 @@ export function playChime(
   panner.connect(ctx.destination);
 
   MODES.forEach((ratio, i) => {
-    const osc = ctx!.createOscillator();
+    const osc = ctx.createOscillator();
     osc.type = 'sine';
     osc.frequency.value = base * ratio * (1 + (Math.random() - 0.5) * 0.02);
-    const g = ctx!.createGain();
+    const g = ctx.createGain();
     const peak = level / (1 + i * 1.6); // upper modes quieter,
     const decay = 0.14 / (1 + i * 0.8); // and gone sooner — that's the glass
     g.gain.setValueAtTime(peak, t);
