@@ -3,11 +3,19 @@
 import { useRef } from 'react';
 import type { ShowcaseCase } from '@/data/showcase';
 import { openCase } from '@/components/case/caseStore';
+import type { VideoWatch } from '@/hooks/useLazyVideo';
 import { MonitorMockup } from './MonitorMockup';
 import { PhoneMockup } from './PhoneMockup';
 import { RotatingNotes } from './RotatingNotes';
 import { CursorChip } from './CursorChip';
 import './showcase.css';
+
+/** A card's recording plays once the card is nearly all on screen, a moment
+    after, so it starts as the card comes to rest rather than while it is
+    still sliding in, whichever device it holds; and from its first frame
+    whenever it comes back (a card uncovered in the stack starts over too,
+    see CaseShowcase). */
+const CARD_WATCH: VideoWatch = { share: 0.85, hold: 200, restart: true, within: '.cs-card' };
 
 /**
  * One case after the hero. A card with a case study opens it: the card
@@ -35,11 +43,11 @@ export function CaseCard({ item }: { item: ShowcaseCase }) {
       </div>
       {item.device === 'imac' ? (
         <div className="cs-card__imac">
-          <MonitorMockup screen={item.phone} />
+          <MonitorMockup screen={item.phone} watch={CARD_WATCH} />
         </div>
       ) : (
         <div className="cs-card__phone">
-          <PhoneMockup phone={item.phone} />
+          <PhoneMockup phone={item.phone} watch={CARD_WATCH} />
         </div>
       )}
       {href && (

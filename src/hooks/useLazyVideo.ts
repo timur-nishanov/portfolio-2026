@@ -7,11 +7,14 @@ import { useEffect, useRef } from 'react';
  * of it is (of the screen's height, for a clip taller than the screen), with
  * `line` only once its top has come up past that share of the screen's
  * height, `hold` ms after that, and with `restart` from its first frame
- * whenever it comes back after leaving the screen altogether. The cases'
- * clips are set so (CASE_WATCH): an After under its Before would otherwise
- * have played half through while the Before was still being looked at.
+ * whenever it comes back after leaving the screen altogether. With `within`
+ * (a selector) all of that is read off the nearest box round the clip that
+ * matches it rather than the clip itself: a case card, whose screen sits
+ * higher or lower in it by the device. The cases' clips are set so
+ * (CASE_WATCH): an After under its Before would otherwise have played half
+ * through while the Before was still being looked at.
  */
-export type VideoWatch = { share: number; hold: number; restart: boolean; line?: number };
+export type VideoWatch = { share: number; hold: number; restart: boolean; line?: number; within?: string };
 
 /** Steps of a twentieth, so the share is seen as it is crossed. */
 const STEPS = Array.from({ length: 21 }, (_, i) => i / 20);
@@ -35,10 +38,13 @@ export function useLazyVideo(src: string, poster?: string, watch?: VideoWatch) {
   const hold = watch?.hold ?? 0;
   const restart = watch?.restart ?? false;
   const line = watch?.line;
+  const within = watch?.within;
 
   useEffect(() => {
     const v = ref.current;
     if (!v) return;
+    // What is watched for being on screen: the clip, or the box round it.
+    const target = (within && v.closest<HTMLElement>(within)) || v;
 
     let attached = false;
     // Whether it is on screen enough to play, as the play observer last saw it.
@@ -103,7 +109,7 @@ export function useLazyVideo(src: string, poster?: string, watch?: VideoWatch) {
       },
       { threshold: watched ? STEPS : 0.1 },
     );
-    play.observe(v);
+    play.observe(target);
     // Whether its top has come up past the line: it meets the screen's part
     // above the line.
     const rise =
@@ -116,7 +122,7 @@ export function useLazyVideo(src: string, poster?: string, watch?: VideoWatch) {
             },
             { rootMargin: `0px 0px ${-(1 - line) * 100}% 0px` },
           );
-    rise?.observe(v);
+    rise?.observe(target);
 
     return () => {
       window.clearTimeout(held);
@@ -124,7 +130,7 @@ export function useLazyVideo(src: string, poster?: string, watch?: VideoWatch) {
       play.disconnect();
       rise?.disconnect();
     };
-  }, [src, poster, watched, share, hold, restart, line]);
+  }, [src, poster, watched, share, hold, restart, line, within]);
 
   return ref;
 }
