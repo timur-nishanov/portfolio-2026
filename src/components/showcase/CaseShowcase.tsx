@@ -24,6 +24,10 @@ const SETTLE = 32;
 // How far the next card has come over (0..1) before the one beneath starts
 // to shrink, dim and fade.
 const RECEDE_FROM = 0.4;
+// How far back out from under the next card a covered one has to come
+// (of its recede, 1 covered) before its clip starts over: half way, where it
+// is three quarters there, not the moment the first sliver shows.
+const UNCOVERED = 0.5;
 
 /** The cases after the hero (#works, the menu's "Work"). */
 export function CaseShowcase() {
@@ -76,8 +80,10 @@ export function CaseShowcase() {
     // A card fully covered by the next one (opacity 0) drops its filter, and
     // its clip waits: videos decoding under the stack were the worst of the
     // scroll's cost. It stays in the page for the keyboard and
-    // screen readers, as before.
-    const heldBack = cards.map(() => false);
+    // screen readers, as before. Uncovered, its clip starts over, as a card
+    // coming back into view does (whether or not it had been playing: one
+    // that came back on screen still covered may have been started there).
+    const covered = cards.map(() => false);
     const softplus = (x: number) => (x > 30 ? x : Math.log1p(Math.exp(x)));
     let sectionTop = 0;
     const tops = cards.map(() => 0);
@@ -137,11 +143,12 @@ export function CaseShowcase() {
           const gone = p === 1;
           const video = videos[i];
           if (!video) continue;
-          if (gone && !video.paused) {
-            video.pause();
-            heldBack[i] = true;
-          } else if (!gone && heldBack[i]) {
-            heldBack[i] = false;
+          if (gone) {
+            covered[i] = true;
+            if (!video.paused) video.pause();
+          } else if (covered[i] && p < UNCOVERED) {
+            covered[i] = false;
+            video.currentTime = 0;
             video.play().catch(() => {});
           }
         }

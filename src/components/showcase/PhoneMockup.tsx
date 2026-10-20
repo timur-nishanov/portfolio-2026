@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { assets } from '@/data/assets';
 import type { PhoneScreen } from '@/data/showcase';
-import { useLazyVideo } from '@/hooks/useLazyVideo';
+import { useLazyVideo, type VideoWatch } from '@/hooks/useLazyVideo';
 
 // Screen cutout inside the frame PNG, measured from iphone-frame.png (a
 // 1310×2710 canvas with a fully transparent screen — the frame sits ON TOP of
@@ -23,10 +23,11 @@ const PHONE_AR = '1310 / 2710';
 const BLEED = '1.5px';
 
 /** One phone in the media strip — either a live frame with content, or a
- *  pre-composited render drawn as-is. */
-export function PhoneMockup({ phone }: { phone: PhoneScreen }) {
+ *  pre-composited render drawn as-is. A case card's recording waits to be
+ *  well in view (watch, see VideoWatch). */
+export function PhoneMockup({ phone, watch }: { phone: PhoneScreen; watch?: VideoWatch }) {
   // Source and poster are attached on approach, not in the markup — see useLazyVideo.
-  const videoRef = useLazyVideo(phone.src, phone.poster);
+  const videoRef = useLazyVideo(phone.src, phone.poster, watch);
 
   // Already-a-mockup render: draw as-is, no iPhone frame layered on top.
   if (!phone.framed) {
