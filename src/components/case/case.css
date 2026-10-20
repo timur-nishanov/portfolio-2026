@@ -235,24 +235,12 @@
   font-weight: 600;
 }
 /* A part's heading, as benji.org's: the text's size in semibold ink, so it
-   stands clear of the text under it; a faint rule runs from it out to the
-   column's edge. */
+   stands clear of the text under it. No rule after it: the only lines left
+   in a case are the facts' under its opening. */
 .cp-h {
-  display: flex;
-  align-items: center;
-  gap: 8px;
   font-weight: 600;
   letter-spacing: -0.009em;
   scroll-margin-top: 112px;
-}
-.cp-h__name {
-  flex: none;
-}
-.cp-h::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: rgba(8, 8, 10, 0.06);
 }
 /* The small size: the index, the facts' labels, a figure's caption, the
    board. */
