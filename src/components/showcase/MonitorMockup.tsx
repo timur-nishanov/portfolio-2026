@@ -23,24 +23,31 @@ const BLEED = '1.5px';
 export function MonitorMockup({ screen, watch }: { screen: PhoneScreen; watch?: VideoWatch }) {
   // Source and poster are attached on approach, not in the markup — see useLazyVideo.
   const videoRef = useLazyVideo(screen.src, screen.poster, watch);
+  const screenStyle: React.CSSProperties = {
+    top: `calc(${SCREEN.top}% - ${BLEED})`,
+    left: `calc(${SCREEN.left}% - ${BLEED})`,
+    width: `calc(${SCREEN.width}% + 2 * ${BLEED})`,
+    height: `calc(${SCREEN.height}% + 2 * ${BLEED})`,
+  };
   return (
     <div className="relative h-full" style={{ aspectRatio: FRAME_AR }}>
-      <video
-        ref={videoRef}
-        className="absolute bg-white object-cover"
-        style={{
-          top: `calc(${SCREEN.top}% - ${BLEED})`,
-          left: `calc(${SCREEN.left}% - ${BLEED})`,
-          width: `calc(${SCREEN.width}% + 2 * ${BLEED})`,
-          height: `calc(${SCREEN.height}% + 2 * ${BLEED})`,
-        }}
-        autoPlay
-        muted
-        loop
-        playsInline
-        preload="none"
-        aria-label={screen.alt}
-      />
+      {/* With no recording yet, the screen stands blank, in the cases'
+          stand-in grey, as the phone's does (PhoneMockup). */}
+      {!screen.src ? (
+        <div className="absolute" style={{ ...screenStyle, background: 'linear-gradient(180deg, #f1f1f1, #e9e9ea)' }} />
+      ) : (
+        <video
+          ref={videoRef}
+          className="absolute bg-white object-cover"
+          style={screenStyle}
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="none"
+          aria-label={screen.alt}
+        />
+      )}
       <Image
         src={assets.imacFrame}
         alt=""

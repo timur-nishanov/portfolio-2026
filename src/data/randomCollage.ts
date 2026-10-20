@@ -32,7 +32,7 @@ export const collage: CollageItem[] = [
   },
   {
     id: 'artem',
-    title: 'Site for director Artem Shcherbakov',
+    title: 'Artem Shcherbakov’s site. Yes, this is the 404 page.',
     side: 'right',
     video: {
       src: '/random/artem-site.mp4', // artem_404_1600x1200_60.mp4, 1600×1200 (4:3), 60fps, no audio
@@ -44,7 +44,7 @@ export const collage: CollageItem[] = [
   },
   {
     id: 'opus-experiment',
-    title: 'Quick experiment with Claude Opus 5.5',
+    title: 'Hold to unlock: a reward screen I prototyped in code',
     side: 'left',
     video: {
       src: '/random/opus-experiment.mp4', // D4OzCiDYGSrnN6HD.mp4, 960×1200 (4:5), 60fps, no audio
@@ -56,7 +56,7 @@ export const collage: CollageItem[] = [
   },
   {
     id: 'stepicon',
-    title: 'Site for the Stepicon 2026 conference',
+    title: 'Stepicon 2026: the conference landing page, from concept to code',
     side: 'right',
     video: {
       src: '/random/stepicon-site.mp4', // stepicon_mockup_1080p60.mp4, 1600×900, 60fps, no audio
@@ -68,7 +68,7 @@ export const collage: CollageItem[] = [
   },
   {
     id: 'kritika-review',
-    title: 'Adding a review in Kritika',
+    title: 'Adding a review in Kritika: poster in, stamp out',
     side: 'left',
     video: {
       src: '/random/kritika-review.mp4', // BtJr5050gdQcQBWs.mp4, 960×1200 (4:5), 60fps, no audio
@@ -80,7 +80,7 @@ export const collage: CollageItem[] = [
   },
   {
     id: 'moneta',
-    title: 'Home page and journal for Moneta, a payment platform',
+    title: 'Moneta, a payment platform: home page and journal concepts',
     side: 'right',
     video: {
       src: '/random/moneta-site.mp4', // moneta_mockup_1080p60_1.mp4, 1600×900, 60fps, no audio

@@ -20,7 +20,7 @@ const CARD_WATCH: VideoWatch = { share: 0.85, hold: 200, restart: true, within: 
 /**
  * One case after the hero. A card with a case study opens it: the card
  * itself grows into the case's page (CaseLayer); the chip by the cursor
- * says so.
+ * says so. A card without one (no href yet) has no chip either.
  */
 export function CaseCard({ item }: { item: ShowcaseCase }) {
   const ref = useRef<HTMLElement>(null);
@@ -66,7 +66,7 @@ export function CaseCard({ item }: { item: ShowcaseCase }) {
         </a>
       )}
       <RotatingNotes notes={item.notes} className="cs-card__notes" />
-      <CursorChip zoneRef={ref} />
+      {href && <CursorChip zoneRef={ref} />}
     </article>
   );
 }

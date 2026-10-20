@@ -39,5 +39,5 @@ export const menuLinks: MenuLink[] = [
   { kind: 'external', label: 'GitHub', icon: '/icons/github.svg', optical: { dy: -0.5 }, href: 'https://github.com/timur-nishanov' },
   // Gmail copies rather than opening a mail client — most visitors on a
   // desktop have no handler set up, and a dead mailto reads as a broken link.
-  { kind: 'copy', label: 'Gmail', icon: '/icons/google.svg', optical: { dy: -0.5, labelDx: -0.5 }, value: site.email, copiedLabel: 'Copied' },
+  { kind: 'copy', label: 'Email', icon: '/icons/google.svg', optical: { dy: -0.5, labelDx: -0.5 }, value: site.email, copiedLabel: 'Copied' },
 ];
