@@ -147,16 +147,17 @@
 }
 
 /* The monitor card, placed as its reference placed an iMac (same 1440 frame,
-   same card): the monitor is 83.8% of the card's height, 5.7% in from the left
-   and a hair below centre; the title sits at the top of the 71% column, the
-   notes at its bottom — the notes' block is pinned by its bottom edge, and
-   inside it every note starts on the same first line, so nothing jumps as they
-   take turns. */
+   same card): the monitor is 83.8% of the card's height, 5.7% in from the left,
+   its top 9.1% down; the frame runs on under the stand for its shadow (1256 to
+   the monitor's 1232), so the box is that much taller, centred that much
+   lower. The title sits at the top of the 71% column, the notes at its
+   bottom — the notes' block is pinned by its bottom edge, and inside it every
+   note starts on the same first line, so nothing jumps as they take turns. */
 .cs-card__monitor {
   position: absolute;
   left: 5.74%;
-  top: 51%;
-  height: 83.8%;
+  top: calc(9.1% + 83.8% * 628 / 1232);
+  height: calc(83.8% * 1256 / 1232);
   transform: translateY(-50%);
 }
 .cs-card[data-device='monitor'] .cs-card__head {

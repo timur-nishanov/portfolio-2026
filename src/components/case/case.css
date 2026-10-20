@@ -660,7 +660,7 @@
    wide as the box allows, in the frame's own shape (monitor-frame.webp). */
 .cp-shot--monitor {
   width: 100%;
-  aspect-ratio: 1600 / 1232;
+  aspect-ratio: 1600 / 1256;
 }
 /* The stand-in, until the file is in: a grey screen, blank. */
 .cp-ph {
