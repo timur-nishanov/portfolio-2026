@@ -79,7 +79,9 @@
   height: 100%;
   object-fit: cover;
   border-radius: 16px;
-  background: #ececea;
+  /* The case cards' grey (.cs-card), the colour the clips' own backgrounds
+     are in, so a clip still loading is the same box. */
+  background: #e6e6e7;
 }
 
 /* The case cards' title style: SF Pro 20 / 132%. */
