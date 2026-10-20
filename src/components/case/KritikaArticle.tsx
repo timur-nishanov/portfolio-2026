@@ -9,7 +9,7 @@ import type { ArticleProps } from './registry';
 const INDEX = [
   { id: 'cp-01', label: 'Rate films with character' },
   { id: 'cp-02', label: 'A poster that becomes a stamp' },
-  { id: 'cp-03', label: 'Build it, not just draw it' },
+  { id: 'cp-03', label: 'Build it myself' },
   { id: 'cp-04', label: 'Work in progress' },
 ];
 
@@ -31,16 +31,18 @@ export function KritikaArticle({ onBack, backHref }: ArticleProps) {
         <h1 className="cp-title cp-reveal">Kritika</h1>
         <p className="cp-subtitle cp-reveal">A film review app, designed and built solo</p>
         <p className="cp-reveal">
-          Kritika is a side project: an iOS app for people who have opinions about films. You add a film, rate it,
-          write a review, and the poster becomes a stamp in your collection.
+          Kritika is my side project: an iOS app for people who come out of a film with opinions. You add a film, rate
+          it, write what you think, and its poster turns into a stamp for your collection.
         </p>
         <p className="cp-reveal">
-          I designed it and built it in SwiftUI with Claude Code. It’s still in progress, and I like it anyway.
+          I design it and build it in SwiftUI with Claude Code. It isn’t finished, and it’s still the first thing I
+          show people.
         </p>
         <Facts
           items={[
             ['Role', 'Everything: concept, design, code'],
             ['Timeline', '2026, ongoing'],
+            ['Status', 'Works on my phone, not in the App Store yet'],
           ]}
         />
         <Figure slot={media.inHand} frame="stage" />
@@ -50,9 +52,9 @@ export function KritikaArticle({ onBack, backHref }: ArticleProps) {
       <section className="cp-chapter cp-col" aria-labelledby="cp-01">
         <Heading id="cp-01">Rate films with character</Heading>
         <p className="cp-reveal">
-          Stars say nothing about a film. So the scale in Kritika goes from Shit to Oscar, with a tomato for Flop and
-          popcorn for OK. You rate plot, action and acting separately, because a film can have a great story and
-          terrible acting.
+          Three and a half stars doesn’t tell you why. Was it the story? The acting? So Kritika has its own scale, from
+          Shit to Oscar, with a tomato for Flop and popcorn for OK. You rate plot, action and acting separately, because
+          a film can have a great story and terrible acting, and now your review can say so.
         </p>
         <Figure slot={media.ratings} frame="phone" />
       </section>
@@ -61,9 +63,9 @@ export function KritikaArticle({ onBack, backHref }: ArticleProps) {
       <section className="cp-chapter cp-col" aria-labelledby="cp-02">
         <Heading id="cp-02">A poster that becomes a stamp</Heading>
         <p className="cp-reveal">
-          Adding a review is one screen: add a poster, type the title, rate it, write. The poster turns into a stamp
-          with a perforated edge. That stamp is the film’s face everywhere in the app, and you can peel it off into your
-          collection.
+          Adding a review takes one screen: a poster, a title, three ratings, a few words. Then the poster turns into a
+          stamp with a perforated edge. That stamp is the film’s face everywhere in the app, and you can peel it off
+          into your collection.
         </p>
         <Figure slot={media.addReview} frame="phone" />
         <Figure slot={media.peel} frame="phone" />
@@ -71,14 +73,16 @@ export function KritikaArticle({ onBack, backHref }: ArticleProps) {
 
       {/* --- 03 ------------------------------------------------------------ */}
       <section className="cp-chapter cp-col" aria-labelledby="cp-03">
-        <Heading id="cp-03">Build it, not just draw it</Heading>
+        <Heading id="cp-03">Build it myself</Heading>
         <p className="cp-reveal">
-          The mockups are in Figma. Claude Code reads them through Figma MCP and builds the screens in SwiftUI. I
-          review every screen on the phone and tune the motion until it feels right.
+          I design in Figma and build in SwiftUI with Claude Code, which reads my mockups through Figma MCP. The part I
+          keep for myself is the feel: I sit with the phone and tune every spring and every delay until the peel feels
+          like paper.
         </p>
         <p className="cp-reveal">
-          Building it myself changed the design. Every screen gets its empty state first. And the stamp only exists
-          because I could build it: in a handoff it would have been “nice to have”.
+          Building it myself changed how I design. Every screen starts with its empty state now, because I’m the first
+          person to see it broken. And the stamp exists only because I could build it. In a handoff, it would have been
+          the first “nice to have” to go.
         </p>
       </section>
 
@@ -86,10 +90,14 @@ export function KritikaArticle({ onBack, backHref }: ArticleProps) {
       <section className="cp-chapter cp-col" aria-labelledby="cp-04">
         <Heading id="cp-04">Work in progress</Heading>
         <p className="cp-reveal">
-          Kritika isn’t in the App Store yet. The feed, the review screen, the ratings and the collection work on my
+          Kritika isn’t in the App Store yet. The feed, the reviews, the ratings and the collection already work on my
           phone. Accounts and search are next.
         </p>
         <Figure slot={media.feed} frame="phone" />
+        <p className="cp-reveal">
+          The question I can’t answer alone is whether people want to rate films this way, or just enjoy watching the
+          stamp peel.
+        </p>
       </section>
     </article>
   );

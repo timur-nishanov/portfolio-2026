@@ -15,6 +15,7 @@ const INDEX = [
   { id: 'cp-05', label: 'Be there at the desk too' },
   { id: 'cp-06', label: 'Set Alice up once' },
   { id: 'cp-landed', label: 'Where it landed' },
+  { id: 'cp-again', label: 'If we did it again' },
 ];
 
 /**
@@ -35,28 +36,29 @@ export function AliceArticle({ onBack, backHref }: ArticleProps) {
         <h1 className="cp-title cp-reveal">Yandex Alice</h1>
         <p className="cp-subtitle cp-reveal">An AI assistant that lives on the lock screen, not in a chat</p>
         <p className="cp-reveal">
-          This is a concept for a design battle run by the{' '}
+          The brief was a dream: imagine an AI product with no technical limits, built around the phone. The{' '}
           <a className="cp-a" href="https://alice.yandex.ru" target="_blank" rel="noopener noreferrer">
             Yandex Alice
           </a>{' '}
-          team at the{' '}
+          team ran it as a design battle at the{' '}
           <a className="cp-a" href="https://www.kaifconf.ru/kaiferenciya-2025" target="_blank" rel="noopener noreferrer">
             Kaiference
           </a>{' '}
-          conference. The brief: imagine an AI product with no technical limits, built around the phone.
+          conference.
         </p>
         <p className="cp-reveal">
-          Our studio team took <Mark>2nd place, one point behind the winner</Mark>.
+          Our studio team of five took <Mark>2nd place, one point behind the winner</Mark>, an in-house product team.
         </p>
         <Facts
           items={[
-            ['Role', 'Senior Designer'],
+            ['Role', 'Senior designer'],
             ['Team', 'Studio team of five, with an art director'],
             ['Timeline', 'July 2025'],
+            ['Outcome', '2nd place, ahead of the other in-house teams'],
           ]}
         />
         <p className="cp-reveal">
-          I worked on the idea, the scenario and the screens. The team presented it live at the conference, and I
+          I worked on the idea, the scenario and the screens. The team presented it live at the conference while I
           worked remotely.
         </p>
         <Figure slot={media.morning} frame="phone" />
@@ -66,12 +68,12 @@ export function AliceArticle({ onBack, backHref }: ArticleProps) {
       <section className="cp-chapter cp-col" aria-labelledby="cp-01">
         <Heading id="cp-01">Pick one idea out of many</Heading>
         <p className="cp-reveal">
-          We started with a brainstorm. Ideas on the board: a tutor for anything, dreams turned into a series, a guard
-          against phone scams, worlds built from a prompt.
+          We started with a brainstorm, and the board got wild: a tutor for anything, last night’s dreams turned into a
+          series, a guard against phone scams, whole worlds built from a prompt.
         </p>
         <p className="cp-reveal">
-          We chose the broadest one: <Mark>an assistant across all your apps</Mark> that does things for you, not only
-          answers. A real Jarvis, an AI butler.
+          We picked the broadest idea, and the hardest: <Mark>an assistant that works across all your apps</Mark> and
+          does things for you, not only answers.
         </p>
         <Figure slot={media.ideas} frame="stage" />
         <p className="cp-reveal">
@@ -85,8 +87,8 @@ export function AliceArticle({ onBack, backHref }: ArticleProps) {
       <section className="cp-chapter cp-col" aria-labelledby="cp-02">
         <Heading id="cp-02">Turn several concepts into one</Heading>
         <p className="cp-reveal">
-          Each of us made a concept, and we kept the strongest parts: cards instead of a chat, a greeting that knows
-          your day, and Alice’s purple.
+          Each of us made a concept, then we laid all five side by side and kept the strongest parts: cards instead of
+          a chat, a greeting that knows your day, and Alice’s purple.
         </p>
         <Figure slot={media.concepts} frame="stage" />
       </section>
@@ -103,7 +105,7 @@ export function AliceArticle({ onBack, backHref }: ArticleProps) {
         </p>
         <p className="cp-reveal">
           <Mark>So we moved Alice to the lock screen.</Mark> She shows a card when something is about to happen. The
-          usual on-&#8288;demand tools stayed in a second tab called&nbsp;Studio.
+          usual tools you call up yourself stayed in a second tab,&nbsp;Studio.
         </p>
         <Figure slot={media.lockScreen} frame="phone" />
       </section>
@@ -112,16 +114,17 @@ export function AliceArticle({ onBack, backHref }: ArticleProps) {
       <section className="cp-chapter cp-col" aria-labelledby="cp-04">
         <Heading id="cp-04">Stay with you all day</Heading>
         <p className="cp-reveal">
-          We planned the day hour by hour: what Alice can notice at each point, from sleep, the calendar, steps and
+          We planned a whole day, hour by hour: what Alice can notice at each point, from sleep, the calendar, steps and
           screen time, and what she brings.
         </p>
         <AliceDay />
         <p className="cp-reveal">
-          She doesn’t only suggest. She orders, books and writes drafts. You confirm with one&nbsp;tap.
+          She doesn’t stop at suggestions. She orders, books and writes drafts, and you confirm with one tap. That tap
+          is the rule: Alice never spends your money or speaks for you without it.
         </p>
         <p className="cp-reveal">
-          Before a call she gathers what you need for it. After the call she sums it up: the key points, the next steps
-          and materials to go with them.
+          Before a call she gathers what you need. After it she sums it up: the key points, the next steps and the
+          materials.
         </p>
         <Figure slot={media.meeting} frame="phone" />
         <p className="cp-reveal">
@@ -138,7 +141,7 @@ export function AliceArticle({ onBack, backHref }: ArticleProps) {
           feedback while the orb thinks.
         </p>
         <Figure slot={media.macFeedback} frame="desktop" />
-        <p className="cp-reveal">When a call ends, Alice writes it up right in the notch.</p>
+        <p className="cp-reveal">When a call ends, Alice writes it up right there in the notch.</p>
         <Figure slot={media.macSummary} frame="desktop" />
       </section>
 
@@ -146,9 +149,8 @@ export function AliceArticle({ onBack, backHref }: ArticleProps) {
       <section className="cp-chapter cp-col" aria-labelledby="cp-06">
         <Heading id="cp-06">Set Alice up once</Heading>
         <p className="cp-reveal">
-          At the start you sign in with Yandex&nbsp;ID and pick an avatar and a character for Alice. Then you connect
-          services: Yandex apps, work tools, messengers, food delivery. The more she can see, the more useful her
-          cards are.
+          You sign in with Yandex&nbsp;ID, pick an avatar and a character for Alice, and connect services: Yandex apps,
+          work tools, messengers, food delivery. The more she can see, the more useful her cards get.
         </p>
         <Figure slot={media.onboarding} frame="phone" />
       </section>
@@ -164,6 +166,14 @@ export function AliceArticle({ onBack, backHref }: ArticleProps) {
             ],
           ]}
         />
+      </section>
+
+      <section className="cp-chapter cp-col" aria-labelledby="cp-again">
+        <Heading id="cp-again">If we did it again</Heading>
+        <p className="cp-reveal">
+          We’d spend less of the pitch on the perfect day and more on the first week: how Alice earns enough trust to be
+          allowed to order your breakfast.
+        </p>
       </section>
     </article>
   );

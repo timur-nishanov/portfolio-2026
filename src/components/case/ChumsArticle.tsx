@@ -38,15 +38,18 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
         <h1 className="cp-title cp-reveal">Chums</h1>
         <p className="cp-subtitle cp-reveal">Making a Web3 messenger easier to use</p>
         <p className="cp-reveal">
-          I led design at Chums, a messenger on the open Matrix protocol with crypto wallets, NFTs, domains and dApps
-          built into the chat. It had <Mark>32k+ wallets and $200k+ in user balances</Mark>. Most of the work wasn’t
-          new features. It was making the existing ones easier to use.
+          For a year I led design at Chums, a messenger on the open Matrix protocol with crypto wallets, NFTs, domains
+          and dApps built into the chat. <Mark>32k+ wallets, $200k+ in user balances.</Mark>
+        </p>
+        <p className="cp-reveal">
+          Chums already had plenty of features. Most of my job was making them easy to find and easy to use.
         </p>
         <Facts
           items={[
-            ['Role', 'Senior Product Designer & Design Lead'],
+            ['Role', 'Product Design Lead'],
             ['Team', 'Founders, PM, art director, one developer, junior designer'],
             ['Timeline', 'Concept in 2024 · Design lead in 2025'],
+            ['Outcome', 'Desktop beta in three months · attaching a file went from six steps to one'],
           ]}
         />
         <p className="cp-reveal">Chums was a client of the studio I worked at.</p>
@@ -56,24 +59,24 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
       <section className="cp-chapter cp-col" aria-labelledby="cp-01">
         <Heading id="cp-01">Make switching servers easy</Heading>
         <p className="cp-reveal">
-          On Matrix, every community can have its own server. In Chums you could pick a server only when signing in, so
-          switching was slow.
+          On Matrix, every community can run its own server. In Chums you picked a server once, when you signed in, and
+          switching later was slow.
         </p>
         <p className="cp-reveal">In early 2024 I designed a concept for the main mobile screens:</p>
         <ul className="cp-list cp-list--short cp-reveal">
-          <li>Servers at the top. Switch in one tap.</li>
-          <li>Sign-&#8288;in in a sheet. Join a server without leaving the chat list.</li>
-          <li>Direct messages apart from server spaces. You see where a chat lives.</li>
-          <li>Coins in the attachment menu, next to photos and files.</li>
+          <li>Servers at the top, one tap to switch.</li>
+          <li>Signing in happens in a sheet, so you join a server without leaving the chat list.</li>
+          <li>Direct messages kept apart from server spaces, so you always know where a chat lives.</li>
+          <li>Coins in the attachment menu, right next to photos and files.</li>
         </ul>
         <BeforeAfter {...media.concept} frame="stage" />
         <p className="cp-reveal">
-          The founders approved it. When the product’s designer left, I took over design and got a junior designer to
+          The founders approved it. Then the product’s designer left, and I took over design, with a junior designer to
           mentor.
         </p>
         <p className="cp-reveal">
-          The server flow stayed the same: you still pick a server at the start. Only the look reached the product, in
-          small steps.
+          The concept itself didn’t ship as designed. The server flow stayed the same, and only the look reached the
+          product, piece by piece. That one stung.
         </p>
       </section>
 
@@ -81,11 +84,12 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
       <section className="cp-chapter cp-col" aria-labelledby="cp-02">
         <Heading id="cp-02">Make desktop work like desktop</Heading>
         <p className="cp-reveal">
-          The PM and I each audited the desktop app. We found the same thing: it was the mobile app stretched across a
-          big window.
+          The PM and I audited the desktop app separately and came back with the same verdict: it was the phone app,
+          stretched across a big window.
         </p>
         <p className="cp-reveal">
-          Contacts used to open in a full window. Now they open in a small one over the chat.
+          Contacts used to open in a full window. Now they open in a small one over the chat, so you don’t lose the
+          conversation.
         </p>
         <BeforeAfter {...media.contacts} frame="stage" />
         <p className="cp-reveal">
@@ -97,23 +101,24 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
         </p>
         <Figure slot={media.drag} frame="stage" />
         <p className="cp-reveal">
-          We didn’t forget the usual way to attach a picture either. The attach button opens a small window above the
-          message field, with your pictures and recent files.
+          The attach button stayed too, for people who don’t drag. It opens a small window with your pictures and
+          recent files.
         </p>
         <Figure slot={media.attach} frame="stage" />
         <p className="cp-reveal">
-          We set rules for window sizes from 1300 to 375px: the chat list keeps its width, the chat stretches, and a
-          narrow window shows one column.
+          For window sizes from 1300 to 375px we set rules: the chat list keeps its width, the chat stretches, and a
+          narrow window becomes one column.
         </p>
         <Figure slot={media.resize} frame="stage" />
         <p className="cp-reveal">
-          The wallet was designed before us. We fitted it to desktop: a popup in a wide window, a full screen in a
-          narrow one.
+          The wallet was designed before us, so we didn’t redesign it. We taught it to behave on desktop: a popup in a
+          wide window, a full screen in a narrow one.
         </p>
         <Figure slot={media.wallet} frame="stage" />
         <p className="cp-reveal">
-          The founders and the PM approved the plan within a week. We had one developer, so some details had to wait.{' '}
-          <Mark>The first beta shipped three months later.</Mark> The new patterns went into the design system.
+          The founders and the PM approved the plan within a week. With one developer on the whole app, some details
+          had to wait. <Mark>The first beta shipped three months later</Mark>, and the new patterns went into the design
+          system.
         </p>
       </section>
 
@@ -121,14 +126,14 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
       <section className="cp-chapter cp-col" aria-labelledby="cp-03">
         <Heading id="cp-03">Give every AI request its own thread</Heading>
         <p className="cp-reveal">
-          Chums was trying out an AI assistant in group chats. You mention it and give it a task. That gets noisy: one
-          person’s chat with a bot fills everyone’s feed.
+          Chums was testing an AI assistant in group chats: you mention it and give it a task. Now picture a group of
+          twelve where one person is planning a meeting with a bot, and everyone else gets every message.
         </p>
-        <p className="cp-reveal">So every request opens its own thread. Chums calls it a discussion.</p>
+        <p className="cp-reveal">So every request opens its own thread, which Chums calls a discussion:</p>
         <ul className="cp-list cp-list--short cp-reveal">
-          <li>You call the assistant with @, like any member.</li>
+          <li>You call the assistant with @, like any other member.</li>
           <li>The answer stays in the thread. The chat shows one line and a counter.</li>
-          <li>All threads of a room are in one list.</li>
+          <li>All threads of a room live in one list.</li>
         </ul>
         <Figure slot={media.assistant} frame="stage" />
       </section>
@@ -137,17 +142,18 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
       <section className="cp-chapter cp-col" aria-labelledby="cp-04">
         <Heading id="cp-04">Turn a vague brief into a rewards system</Heading>
         <p className="cp-reveal">
-          The PM wanted XP for activity in the messenger, plus time-&#8288;limited quests from Venom, a blockchain
-          network Chums worked with.
+          The brief fit in one line: XP for activity in the messenger, plus quests with a deadline from Venom, a
+          blockchain network Chums worked with.
         </p>
         <p className="cp-reveal">
           The old quests were rooms in the chat list, set up by hand. Nothing said what they were for or what you’d
-          get. First we went through the open questions with the PM and mapped how the system should work.
+          get. So before drawing anything, we sat down with the PM and asked the awkward questions, like “Why do quests
+          at all?”
         </p>
         <QuestBoard />
         <p className="cp-reveal">
-          We also looked at how Matrix clients, Telegram, Discord and the Family wallet do it. Then we built the screens
-          around three questions.
+          Then we looked at how Matrix clients, Telegram, Discord and the Family wallet handle this, and built the
+          screens around three questions.
         </p>
         <GlassOrbs
           items={[
@@ -163,7 +169,7 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
           ]}
         />
         <p className="cp-reveal">
-          The junior designer made the screens, I directed the work. The system was{' '}
+          The junior designer drew the screens, and I directed the work. The system was{' '}
           <Mark>approved and handed to development</Mark> before I left the studio in January&nbsp;2026.
         </p>
         <Figure slot={media.rewards} frame="stage" />
@@ -174,8 +180,8 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
         <Heading id="cp-landed">Where it landed</Heading>
         <Results
           items={[
-            ['Concept', 'Approved. Only the look reached the product; the server flow stayed the same.'],
-            ['Desktop', 'In beta three months after approval. Attaching a file went from six steps to one.'],
+            ['Concept', 'Approved. Only the look reached the product; the server flow stayed.'],
+            ['Desktop', 'In beta three months after approval.'],
             ['Assistant', 'Designed for desktop and mobile.'],
             ['Rewards', 'Approved and handed to development.'],
           ]}
@@ -184,11 +190,11 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
 
       <section className="cp-chapter cp-col" aria-labelledby="cp-differently">
         <Heading id="cp-differently">What I’d do differently</Heading>
-        <p className="cp-reveal">Agree on metrics with the PM before starting.</p>
-        <ul className="cp-list cp-list--short cp-reveal">
-          <li>For desktop: steps and time for common actions.</li>
-          <li>For rewards: how many people start a quest and how many finish.</li>
-        </ul>
+        <p className="cp-reveal">
+          Agree on metrics with the PM before the first mockup. I can tell you attaching a file went from six steps to
+          one, but not how many people noticed. For desktop I’d track steps and time for common actions. For rewards,
+          how many people start a quest and how many finish.
+        </p>
       </section>
 
       {/* --- where to get it ----------------------------------------------- */}

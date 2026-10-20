@@ -9,21 +9,25 @@ export type AboutLine = string | { text: string; href: string };
 // long for a phone wraps within itself, evenly.
 export const aboutText: AboutLine[][] = [
   [
-    'Mostly B2C, fintech and Web3.',
-    'I focus on visuals and complex user flows.',
-    // A word joiner after the hyphen keeps "front-end" whole where the
+    // A word joiner after the hyphen keeps "e-commerce" whole where the
     // line wraps (a phone), as the outro keeps "part-time" (outro.ts).
-    'I research, prototype and write front-\u2060end code,',
+    'Mostly B2C: fintech, Web3 and e-\u2060commerce.',
+    'I like the messy flows: payments and onboarding,',
+    'and I like them to look good.',
+    'I research, prototype and build front ends,',
     'and make 3D, icons, motion and video with AI.',
   ],
   [
-    'I love to mix craft and systems.',
-    'I always try to keep interfaces and concepts',
-    'balanced between emotion and usability.',
-    'But I still prefer a bit more craft :)',
+    'I care about systems,',
+    'but I still prefer a bit more craft:',
+    'a poster that peels off like a stamp,',
+    'a timer that shows the answer',
+    'instead of telling you that you lost.',
   ],
   [
-    'I designed a site for film director Artem Shcherbakov.',
+    'With the Salt\u00a0and\u00a0Pepper team,',
+    'I made the concept and every screen',
+    'of a site for film director Artem Shcherbakov.',
     'It got Site of the Day on Awwwards, FWA and CSSDA.',
     { text: 'artemartemartem.com', href: 'https://artemartemartem.com' },
   ],

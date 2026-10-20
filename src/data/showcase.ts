@@ -34,8 +34,10 @@ export type ShowcaseCase = {
   href?: string;
 };
 
-// The cases after the hero, one card each (CaseShowcase). The notes condense
-// each case: role, then the problem, then the result.
+// The cases after the hero, one card each (CaseShowcase). Three notes each,
+// the strongest first: it is the one up as the page loads. A no-break space
+// (\u00a0) keeps every note's last two words together, wherever the line
+// breaks fall.
 export const showcase: ShowcaseCase[] = [
   {
     id: 'kritika',
@@ -51,9 +53,9 @@ export const showcase: ShowcaseCase[] = [
       alt: 'Kritika: peeling a film’s stamp into the collection, then opening the collection',
     },
     notes: [
-      'A film review app I’m building alone: concept, design and SwiftUI with Claude Code. Work in\u00a0progress.',
-      'Films are rated from Shit to Oscar, and the poster becomes a stamp you peel off into your\u00a0collection.',
+      'A film review app I design and build in SwiftUI with Claude Code. Films get rated from Shit to Oscar, and every poster turns into a stamp you can peel\u00a0off.',
       'Building it myself changed how I design: empty states first, and motion that wouldn’t survive a\u00a0handoff.',
+      'Not in the App Store yet, but the feed, the reviews and the stamps already work on my\u00a0phone.',
     ],
   },
   {
@@ -70,9 +72,9 @@ export const showcase: ShowcaseCase[] = [
       alt: 'Urbantiger: choosing a gift card design',
     },
     notes: [
-      'The store was designed in a hurry in 2021, and nobody had touched its UX since 2023. It no longer matched the\u00a0brand.',
-      'The MVP is live. The client reported conversion at about twice the old site’s rate, with traffic down 30–40% over the same\u00a0period.',
-      'Senior designer, leading two junior designers and an illustrator. We designed 28 pages at four breakpoints in three months, plus achievements and gift cards for the loyalty\u00a0section.',
+      'I led a team of three through 28 pages at four breakpoints in three months. The MVP is live, and the client reported conversion at about twice the old\u00a0rate.',
+      'The store went up in a rush in 2021, and nobody touched its UX after 2023. The brand grew up. The site\u00a0didn’t.',
+      'We designed the parts that usually get skipped, like promo code errors and returns, plus loyalty badges such as Night\u00a0Owl, for shopping at\u00a0night.',
     ],
   },
   {
@@ -80,7 +82,7 @@ export const showcase: ShowcaseCase[] = [
     href: '/cases/chums',
     device: 'phone',
     title: 'Chums',
-    subtitle: 'Web3 messenger with a built-\u2060in wallet',
+    subtitle: 'Web3 messenger with its own wallet',
     phone: {
       framed: true,
       type: 'video',
@@ -88,13 +90,30 @@ export const showcase: ShowcaseCase[] = [
       poster: assets.chumsCasePoster,
       alt: 'Chums messenger: the chat list and a conversation',
     },
-    // \u00a0 (no-break space) keeps "6 steps to 1." on one line and every
-    // note's last two words together, wherever the line breaks fall.
     notes: [
-      'The desktop app was the mobile app stretched across a big window. Quests were rooms in the chat list, and nothing said what you’d\u00a0get.',
-      'Redesigned the desktop app. It was in beta three months later. Attaching a file went from 6\u00a0steps\u00a0to\u00a01.',
-      'Led design for a year and mentored a junior designer. Together we designed threads for an AI assistant and a rewards system. The concept you see here is\u00a0mine.',
+      'I led design at Chums for a year. On desktop, attaching a file took six steps. Now you drag it into the\u00a0chat.',
+      'The desktop app was the phone app stretched across a big window. The redesign reached beta three months after the plan was\u00a0approved.',
+      'The phone on this card is my 2024 concept. Later came AI threads and a rewards system, designed with a junior designer I\u00a0mentored.',
     ],
+  },
+  {
+    id: 'lendly',
+    device: 'imac',
+    title: 'Lendly Invest',
+    // Short enough for one line beside the iMac, as the others: "…for a
+    // crowdlending platform" ran to the card's edge and wrapped.
+    subtitle: 'Investment flow for crowdlending',
+    // No recording yet, and no case study: the iMac stands with a blank
+    // screen, and the card opens nothing, until they come.
+    phone: {
+      framed: true,
+      type: 'video',
+      src: '',
+      alt: 'Lendly Invest',
+    },
+    // The other two (what was wrong with the old flow; the role and the
+    // team) are still to be written.
+    notes: ['We split Lendly’s investment flow into steps, and the time it takes to invest nearly\u00a0halved.'],
   },
   {
     id: 'yandex-cloud',
@@ -110,9 +129,9 @@ export const showcase: ShowcaseCase[] = [
       alt: 'Yandex Cloud booth game: choosing a business task',
     },
     notes: [
-      'Designed the game and built the front end myself, with Claude Code, in a week and a half. The production version is based on my\u00a0code.',
-      'Visitors pick a business task on a 55-\u2060inch touchscreen and put together the Yandex Cloud services that solve\u00a0it.',
-      'Every result leads somewhere: points you trade for merch at the booth, and a QR code for a\u00a0consultation.',
+      'I designed the game and built its front end myself, with Claude Code, in a week and a half. The production version is built on my\u00a0code.',
+      'A visitor at a booth has a minute or two and zero patience. So the game explains itself, and even running out of time shows you the right\u00a0answer.',
+      'Every result leads somewhere: a QR code to request materials or a consultation, and in the short mode, points you trade for merch at the\u00a0booth.',
     ],
   },
   {
@@ -120,7 +139,7 @@ export const showcase: ShowcaseCase[] = [
     href: '/cases/alice',
     device: 'phone',
     title: 'Yandex Alice',
-    subtitle: 'Design battle concept',
+    subtitle: 'AI assistant concept for a Yandex design battle',
     phone: {
       framed: true,
       type: 'video',
@@ -129,9 +148,9 @@ export const showcase: ShowcaseCase[] = [
       alt: 'Alice on the lock screen: a warm-up card after a short night',
     },
     notes: [
-      'A chat works like a queue of requests: you have to know what to ask and remember to open the app. We moved Alice to the lock screen, where she shows up when something is about to\u00a0happen.',
-      'Alice is with you all day, from a morning warm-up to a mood check-in before bed. She orders, books and writes drafts, and you confirm with one\u00a0tap.',
-      '2nd place at a Yandex design battle, one point behind the winner and ahead of the other in-\u2060house teams. Senior designer in a studio team of five; I worked on the idea, the scenario and the\u00a0screens.',
+      'Nobody opens a chat after a bad night, or when a call starts in six minutes. So we took Alice out of the chat and put her on the lock\u00a0screen.',
+      'She doesn’t wait to be asked. She orders, books and drafts, and you confirm with one tap. On a Mac she lives in the\u00a0notch.',
+      '2nd place at a Yandex design battle, one point behind the winner. Studio team of five. I worked on the idea, the scenario and the\u00a0screens.',
     ],
   },
 ];

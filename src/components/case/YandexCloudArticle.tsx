@@ -32,22 +32,23 @@ export function YandexCloudArticle({ onBack, backHref }: ArticleProps) {
         <h1 className="cp-title cp-reveal">Yandex Cloud</h1>
         <p className="cp-subtitle cp-reveal">A touchscreen game for a conference booth</p>
         <p className="cp-reveal">
-          For the Yandex Cloud booth at Yandex Scale 2026, I designed a touchscreen game about its data platform and
-          built the front end with Claude Code. A visitor picks a business task on a 55-&#8288;inch screen and puts
-          together the services that solve it.
+          Yandex Cloud wanted its booth at Yandex Scale 2026 to show what its 20+ data services are for, pull visitors
+          into the merch contest and bring in leads.
         </p>
         <p className="cp-reveal">
-          Yandex Cloud wanted the game to show what its 20+ data services are for, pull visitors into the merch contest
-          and bring in leads.
+          I designed a touchscreen game about its data platform. A visitor picks a business task on a 55-&#8288;inch
+          screen and puts together the services that solve it.
         </p>
         <p className="cp-reveal">
-          <Mark>Design and front end took a week and a half.</Mark> The production version was built on my code.
+          I also built the front end myself, with Claude Code. <Mark>Design and front end took a week and a half</Mark>,
+          and the production version was built on my code.
         </p>
         <Facts
           items={[
-            ['Role', 'Senior Designer, design and front end'],
+            ['Role', 'Senior designer, design and front end'],
             ['Team', 'Art director · Yandex Cloud’s product lead and designer · Contractor’s engineers'],
-            ['Timeline', 'August–September 2026'],
+            ['Timeline', 'August to September 2026'],
+            ['Outcome', 'Ran at the booth · production built on my code'],
           ]}
         />
         <p className="cp-reveal">The backend and the production build were on the contractor’s side.</p>
@@ -58,8 +59,11 @@ export function YandexCloudArticle({ onBack, backHref }: ArticleProps) {
       <section className="cp-chapter cp-col" aria-labelledby="cp-01">
         <Heading id="cp-01">Make it work for someone passing by</Heading>
         <p className="cp-reveal">
-          People at a booth stop for a minute or two. Nobody reads instructions, and the next person is already
-          waiting. So every screen has to explain itself.
+          People stop at a booth for a minute or two, and someone is already waiting behind them. Nobody reads
+          instructions. So every screen had to explain itself.
+        </p>
+        <p className="cp-reveal">
+          The tasks are real business problems and need a few sentences. Everything around them had to need none.
         </p>
         <Figure slot={media.booth} frame="stage" />
         <p className="cp-reveal">
@@ -69,8 +73,8 @@ export function YandexCloudArticle({ onBack, backHref }: ArticleProps) {
         </p>
         <Figure slot={media.buildYourself} frame="stage" />
         <p className="cp-reveal">
-          Every task has two minutes. When they run out, the screen doesn’t say you lost: it shows the right order, so
-          even an unfinished task teaches something.
+          Every task has two minutes. When time runs out, the game doesn’t tell you that you lost. It shows the right
+          order, so even an unfinished task teaches something, and you don’t get embarrassed in front of the queue.
         </p>
         <Figure slot={media.timesUp} frame="stage" />
       </section>
@@ -79,9 +83,10 @@ export function YandexCloudArticle({ onBack, backHref }: ArticleProps) {
       <section className="cp-chapter cp-col" aria-labelledby="cp-02">
         <Heading id="cp-02">Make the wheel feel right</Heading>
         <p className="cp-reveal">
-          Tasks sit on a wheel of cards. The idea came from Yandex Cloud’s designer and our art director, and I tuned it
-          until it felt right under a finger. It sweeps through all the cards once, so you see how many there are, and a
-          throw snaps to the nearest card.
+          Tasks sit on a wheel of cards. The idea came from Yandex Cloud’s designer and our art director. My part was
+          the feel. On a 55-&#8288;inch screen a wheel can feel like a toy or like a fridge door, and I tuned it until
+          it felt like neither. It sweeps through all the cards once, so you see how many there are, and a flick snaps
+          to the nearest card.
         </p>
         <Figure slot={media.wheel} frame="stage" />
       </section>
@@ -90,38 +95,42 @@ export function YandexCloudArticle({ onBack, backHref }: ArticleProps) {
       <section className="cp-chapter cp-col" aria-labelledby="cp-03">
         <Heading id="cp-03">Turn every result into a lead</Heading>
         <p className="cp-reveal">
-          Points are the reason to finish. In the short mode the right bundle earns them, and the screen sends you to
-          the booth staff to trade them for merch.
+          Points are the reason to finish, and everyone knows it. In the short mode the right bundle earns them, and the
+          screen sends you to the booth staff to trade them for merch.
         </p>
         <Figure slot={media.readyBundle} frame="stage" />
         <p className="cp-reveal">
           “Build it yourself” gives no points, so its result offers the short mode with one button.
         </p>
         <Figure slot={media.goToReady} frame="stage" />
-        <p className="cp-reveal">
-          Every result also has a QR code. It leads to a request form for materials or a consultation.
-        </p>
+        <p className="cp-reveal">Every result also has a QR code: a request form for materials or a consultation.</p>
       </section>
 
       {/* --- 04 ------------------------------------------------------------ */}
       <section className="cp-chapter cp-col" aria-labelledby="cp-04">
         <Heading id="cp-04">Hand over code, not mockups</Heading>
         <p className="cp-reveal">
-          The plan was the usual one: I design, developers build. The art director suggested I build it myself. So
-          Yandex Cloud reviewed a live game, not pictures, and approved the design, the flow and the motion right in it.
+          The plan was the usual one: I design, developers build. Then our art director asked why I didn’t build it
+          myself. I said yes before doing the math on a week and a half.
         </p>
         <p className="cp-reveal">
-          The contractor’s engineers took my code as the base for the production version, so on a tight deadline,
-          checking the build against the design took almost no time.
+          So Yandex Cloud reviewed a live game instead of pictures, and approved the design, the flow and the motion
+          right on the screen. The contractor’s engineers took my code as the base for production. On a tight
+          deadline, checking the build against the design took almost no time: the design was already code.
         </p>
       </section>
 
       {/* --- outcome ------------------------------------------------------- */}
       <section className="cp-chapter cp-col" aria-labelledby="cp-landed">
         <Heading id="cp-landed">Where it landed</Heading>
-        {/* The players and the requests through the QR code join this line
+        {/* The players and the requests through the QR code join these lines
             once there are numbers. */}
-        <Results items={[['Booth', 'The game ran at the Yandex Cloud booth at Yandex Scale 2026.']]} />
+        <Results
+          items={[
+            ['Booth', 'The game ran at the Yandex Cloud booth at Yandex Scale 2026.'],
+            ['Code', 'Production shipped on my code, with minor changes.'],
+          ]}
+        />
         <Figure slot={media.team} frame="stage" />
       </section>
     </article>

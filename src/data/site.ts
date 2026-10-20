@@ -6,10 +6,11 @@ export const site = {
     // New first screen (Figma 2:384): the title rides the top bar, the
     // tagline sits at the bottom, two authored lines.
     title: 'Hey! I’m Timur',
-    tagline: ['product designer based in Bangkok', 'who builds in code'],
+    tagline: ['senior product designer in Bangkok', 'who builds in code'],
   },
   meta: {
     title: 'Timur Nishanov · Product Designer',
-    description: 'Senior Product Designer. Worked with Yandex, Stepik, HSE, Meama and Moneta.',
+    description:
+      'Senior product designer in Bangkok who builds in code. Projects for Yandex Cloud, Chums, Urbantiger and Lendly.',
   },
 } as const;
