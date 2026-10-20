@@ -55,7 +55,9 @@
   position: absolute;
   /* Low enough that the first diplomas come up over it while it still reads. */
   inset: 30svh 0 auto;
-  max-width: 560px;
+  /* Room for the longest line as written (about.ts, 633px) to stay one line
+     on a desktop; on a phone a line wraps within itself, evenly. */
+  max-width: 700px;
   margin: 0 auto;
   padding: 0 20px;
   /* The case cards' title style: SF Pro 20 / 132%. */

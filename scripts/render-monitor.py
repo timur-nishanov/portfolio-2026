@@ -7,8 +7,11 @@ artwork: each edge gets its coverage from a signed distance, at SS times the
 size, and the result is scaled down. The sizes are the product's, in the
 output's pixels: the display is 623 mm wide, so 1 mm is 1600 / 623 = 2.57 px.
 
-The screen's box below (SCREEN) is what MonitorMockup puts the recording in;
-change one, change the other.
+Under the stand, a soft shadow on whatever the monitor stands on: the frame
+runs on 28 px below the foot for it.
+
+The screen's box below (SCREEN) and the frame's size are what MonitorMockup
+puts the recording in; change one, change the other.
 
 usage: python3 scripts/render-monitor.py public/mockups/monitor-frame.webp
 needs numpy, scipy and Pillow.
@@ -19,8 +22,9 @@ import sys
 import numpy as np
 from PIL import Image
 from scipy import ndimage
+from scipy.special import erf
 
-W, H = 1600, 1232
+W, H = 1600, 1256
 SS = 3  # supersampling
 
 # The display: the whole width, 362 mm tall, small round corners.
@@ -57,6 +61,14 @@ def circle(cx, cy, r):
     return np.hypot(X - cx, Y - cy) - r
 
 
+def soft_rect(x0, y0, x1, y1, sx, sy):
+    """A rectangle blurred by a Gaussian sx across and sy down, as 0..1."""
+    k = np.float32(1 / np.sqrt(2))
+    fx = erf((X - x0) * k / sx) - erf((X - x1) * k / sx)
+    fy = erf((Y - y0) * k / sy) - erf((Y - y1) * k / sy)
+    return (0.25 * fx * fy).astype(np.float32)
+
+
 def profile(v, stops):
     """Piecewise linear through (position, value) stops."""
     p, q = zip(*stops)
@@ -87,8 +99,21 @@ def over(rgb, a):
     canvas[..., 3:] = a + canvas[..., 3:] * (1 - a)
 
 
-# --- the stand -------------------------------------------------------------------
+# --- the shadow under the stand ------------------------------------------------
 x0, x1 = ARM
+# Faint, as on a light desk lit from above: a tight dark line where the foot
+# meets the surface, a soft haze round the foot that runs a little past its
+# ends, a wider and fainter one round that, and a touch more under each
+# rubber foot. Painted first; the foot covers its top.
+shade = 0.45 * soft_rect(x0 + 4, FOOT[0], x1 - 4, FOOT[1] + 0.5, 6, 2.6)
+shade += 0.22 * soft_rect(x0, FOOT[0] + 4, x1, FOOT[1] + 2, 55, 9)
+shade += 0.06 * soft_rect(x0 - 40, FOOT[0], x1 + 40, FOOT[1] + 2, 120, 14)
+for fx in (x0 + 7, x1 - 41):
+    shade += 0.16 * soft_rect(fx, FOOT[1], fx + 34, FOOT[1] + 2.6, 3, 1.5)
+over(np.zeros((H * SS, W * SS, 3), np.float32), np.clip(shade, 0, 1))
+del shade
+
+# --- the stand -------------------------------------------------------------------
 u = (X - (x0 + x1) / 2) / ((x1 - x0) / 2)  # -1..1 across the sheet
 edge = np.minimum(X - x0, x1 - X)  # px in from its nearer side
 

@@ -5,16 +5,16 @@ import type { PhoneScreen } from '@/data/showcase';
 import { assets } from '@/data/assets';
 import { useLazyVideo, type VideoWatch } from '@/hooks/useLazyVideo';
 
-// The 16:9 screen inside monitor-frame.webp (1600 x 1232), as drawn
+// The 16:9 screen inside monitor-frame.webp (1600 x 1256), as drawn
 // (scripts/render-monitor.py): x 33..1567, y 33..896. The bezel round it is
-// black glass.
+// black glass; the frame's last 28px are the shadow under the stand.
 const SCREEN = {
-  top: (33 / 1232) * 100,
+  top: (33 / 1256) * 100,
   left: (33 / 1600) * 100,
   width: (1534 / 1600) * 100,
-  height: (863 / 1232) * 100,
+  height: (863 / 1256) * 100,
 };
-const FRAME_AR = '1600 / 1232';
+const FRAME_AR = '1600 / 1256';
 // Same as the phone: the recording runs a little under the bezel, so the
 // seam only ever holds the screen's own pixels.
 const BLEED = '1.5px';

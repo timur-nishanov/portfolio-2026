@@ -99,7 +99,7 @@ export function AboutAwards() {
         measure();
         // A phone fires resize whenever its toolbar slides in or out as the
         // page scrolls, but the stage (100svh) and the curves stay the same:
-        // resampling and restarting seven animations then is only a stall in
+        // resampling and restarting every animation then is only a stall in
         // the middle of the scroll.
         const screen = `${vh} ${phone}`;
         if (screen === sampled) return;
