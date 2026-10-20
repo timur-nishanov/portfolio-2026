@@ -10,6 +10,8 @@
  * checked without a browser.
  */
 
+import { audioContext, onAudioGesture } from '@/lib/audio';
+
 export type SoundKind = 'thump' | 'heavy' | 'khm' | 'crunch';
 
 /**
@@ -205,24 +207,9 @@ interface Take {
   offset: number;
 }
 
-let ctx: AudioContext | null = null;
 let loading: Promise<void> | null = null;
 const takes = new Map<string, Take>();
 const state = createPlanState();
-
-function getContext() {
-  if (!ctx) {
-    if (typeof window === 'undefined' || !('AudioContext' in window)) return null;
-    const c = new AudioContext();
-    // iOS stops a running context for a call or a trip to the background
-    // ('interrupted'); it then needs a gesture again.
-    c.addEventListener('statechange', () => {
-      if (c.state !== 'running' && c.state !== 'closed') arm();
-    });
-    ctx = c;
-  }
-  return ctx;
-}
 
 /**
  * Where a take really starts. MP3 encoders pad the start with silence, and
@@ -271,7 +258,7 @@ function prefetch() {
 /** Decode every take once (~40 KB in all), in the background, as soon as a
     context exists (decoding works on a suspended one too). */
 function load() {
-  const c = getContext();
+  const c = audioContext();
   if (!c || loading) return;
   loading = Promise.all(
     ALL.map(async ({ kind, name }) => {
@@ -287,54 +274,12 @@ function load() {
   ).then(() => undefined);
 }
 
-/**
- * Browsers keep audio locked until the user interacts, and they disagree on
- * what counts: a touch's pointerdown is not a user activation (pointerup,
- * touchend and click are), and WebKit has long unlocked only on touchend. So
- * every kind of gesture tries, and the listeners only stand down once the
- * context really runs — a one-shot on the first press could leave an iPhone
- * silent for the whole visit, since a resume from the animation loop is
- * refused. The first gesture also creates the context, and with it the
- * decoding of the prefetched takes.
- */
-const GESTURES = ['pointerdown', 'pointerup', 'touchend', 'click', 'keydown'] as const;
-let armed = false;
-
-function arm() {
-  if (armed || typeof window === 'undefined') return;
-  armed = true;
-  for (const type of GESTURES) window.addEventListener(type, unlock, true);
-}
-
-function disarm() {
-  armed = false;
-  for (const type of GESTURES) window.removeEventListener(type, unlock, true);
-}
-
-function unlock() {
-  const c = getContext();
-  if (!c) return disarm();
-  load();
-  if (c.state === 'running') return disarm();
-  try {
-    // Older iOS also wants a sound started inside the gesture: one silent sample.
-    const src = c.createBufferSource();
-    src.buffer = c.createBuffer(1, 1, c.sampleRate);
-    src.connect(c.destination);
-    src.start();
-  } catch {
-    /* resume() below is what matters */
-  }
-  c.resume().then(
-    () => {
-      if (c.state === 'running') disarm();
-    },
-    () => {},
-  );
-}
+// The page's audio is unlocked by the first gesture anywhere (lib/audio);
+// that gesture also makes the context, and with it starts the decoding of
+// the prefetched takes.
+onAudioGesture(load);
 
 if (typeof window !== 'undefined') {
-  arm();
   // Fetch the takes once the page has settled (idle, or 1.5 s where there is
   // no idle callback — Safari), well before anyone can throw the head.
   const soon = () => {
@@ -343,13 +288,6 @@ if (typeof window !== 'undefined') {
   };
   if (document.readyState === 'complete') soon();
   else window.addEventListener('load', soon, { once: true });
-  // Back from the background: try to pick up where it was (the gestures are
-  // armed again anyway if this is refused).
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible' && ctx && ctx.state !== 'running' && ctx.state !== 'closed') {
-      ctx.resume().catch(() => {});
-    }
-  });
 }
 
 /**
@@ -357,7 +295,7 @@ if (typeof window !== 'undefined') {
  * graze … 2.6 a full flick), `pan` -1..1 toward the wall that was hit.
  */
 export function playImpact(impact: number, pan: number, opts?: { blood?: boolean }): void {
-  const c = getContext();
+  const c = audioContext();
   if (!c) return;
   // Still locked: ask to wake and skip this hit rather than queue it into a
   // stopped clock, where it would burst out stale on the first click.
