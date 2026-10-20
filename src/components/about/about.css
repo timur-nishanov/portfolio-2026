@@ -55,9 +55,9 @@
   position: absolute;
   /* Low enough that the first diplomas come up over it while it still reads. */
   inset: 30svh 0 auto;
-  /* Room for the longest line as written (about.ts, 633px) to stay one line
-     on a desktop; on a phone a line wraps within itself, evenly. */
-  max-width: 700px;
+  /* The column the paragraphs are set in: each comes out in four or five
+     even lines of 400px or so. */
+  max-width: 520px;
   margin: 0 auto;
   padding: 0 20px;
   /* The case cards' title style: SF Pro 20 / 132%. */
@@ -73,11 +73,17 @@
 .aw__text p {
   margin: 0;
 }
-/* One line of the paragraph (about.ts); when it has to wrap, the two halves
-   come out even rather than a full line and a stray word. */
+/* A paragraph (about.ts), its lines evened out to a like width. On a phone
+   the first runs to seven lines, past the six the browser evens out, so
+   there they are only kept from ending on a stray word. */
 .aw__text span {
   display: block;
   text-wrap: balance;
+}
+@media (max-width: 899px) {
+  .aw__text span {
+    text-wrap: pretty;
+  }
 }
 /* The site's secondary grey (the case subtitles). */
 .aw__link {
