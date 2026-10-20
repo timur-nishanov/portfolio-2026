@@ -17,11 +17,10 @@
   padding: 96px 16px;
 }
 
-/* The about block's text (about.css): SF Pro 20 / 132%, centred, each part
-   evened out in a narrow column, so the words, the address and the P.S.
-   come out in lines of a like width. */
+/* The about block's text (about.css): SF Pro 20 / 132%, centred, a line to
+   a line. */
 .outro__text {
-  max-width: 300px;
+  max-width: 560px;
   margin: 0;
   font-family: var(--font-sf);
   font-size: 20px;

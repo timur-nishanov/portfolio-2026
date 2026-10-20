@@ -5,22 +5,27 @@
 // subtitles).
 export type AboutLine = string | { text: string; href: string };
 
-// Each paragraph runs on as one line of text, set in the column's width and
-// evened out there (about.css), so it comes out as a block of lines of a like
-// width; the link has a line of its own. No-break spaces keep a name or a
-// phrase whole ("Site of the Day", "Artem Shcherbakov", "front ends"), keep
-// "I" and "a" off a line's end and the last two words together; a word joiner
-// after the hyphen keeps "e-commerce" whole, as the outro keeps "part-time"
-// (outro.ts).
+// Each paragraph set line by line, broken where the sense breaks, the lines
+// of a like length; a line too long for a phone wraps within itself, evenly.
 export const aboutText: AboutLine[][] = [
   [
-    'Mostly B2C: fintech, Web3 and e-\u2060commerce. I\u00a0like the messy flows: payments and onboarding, and I\u00a0like them to look good. I\u00a0research, prototype and build front\u00a0ends, and make 3D, icons, motion and video with\u00a0AI.',
+    // A word joiner after the hyphen keeps "e-commerce" whole where the
+    // line wraps (a phone), as the outro keeps "part-time" (outro.ts).
+    'Mostly B2C: fintech, Web3 and e-\u2060commerce.',
+    'I like messy flows and making them look good.',
+    'I research, prototype and build front ends,',
+    'and make 3D, icons, motion and video with AI.',
   ],
   [
-    'I\u00a0care about systems, but I\u00a0still prefer a\u00a0bit more craft: a\u00a0poster that peels off like a\u00a0stamp, a\u00a0timer that shows the answer instead of telling you that you\u00a0lost.',
+    'I care about systems, but I still prefer',
+    'a bit more craft: a poster that peels off like a stamp,',
+    // On a phone, "the answer" stays together where the line wraps.
+    'a timer that shows the\u00a0answer, not “you lost”.',
   ],
   [
-    'With the Salt\u00a0and\u00a0Pepper team, I\u00a0made the concept and every screen of a\u00a0site for film\u00a0director Artem\u00a0Shcherbakov. It got Site\u00a0of\u00a0the\u00a0Day on Awwwards, FWA and\u00a0CSSDA.',
+    'With the Salt\u00a0and\u00a0Pepper team, I designed',
+    'a site for film director Artem Shcherbakov.',
+    'It got Site of the Day on Awwwards, FWA and CSSDA.',
     { text: 'artemartemartem.com', href: 'https://artemartemartem.com' },
   ],
 ];
