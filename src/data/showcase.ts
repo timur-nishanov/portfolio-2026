@@ -21,9 +21,9 @@ export type ShowcaseCase = {
   title: string;
   subtitle: string;
   /** The device in the middle of the card: an iPhone (title left, notes
-   *  right, all centred) or an iMac (iMac left; title top right, notes
+   *  right, all centred) or a monitor (monitor left; title top right, notes
    *  bottom right). */
-  device: 'phone' | 'imac';
+  device: 'phone' | 'monitor';
   /** The screen recording that plays inside it. */
   phone: PhoneScreen;
   /** The right-hand notes, shown one at a time (RotatingNotes). Each one is
@@ -61,7 +61,7 @@ export const showcase: ShowcaseCase[] = [
   {
     id: 'urbantiger',
     href: '/cases/urbantiger',
-    device: 'imac',
+    device: 'monitor',
     title: 'Urbantiger',
     subtitle: 'Eco clothing store',
     phone: {
@@ -98,12 +98,12 @@ export const showcase: ShowcaseCase[] = [
   },
   {
     id: 'lendly',
-    device: 'imac',
+    device: 'monitor',
     title: 'Lendly Invest',
-    // Short enough for one line beside the iMac, as the others: "…for a
+    // Short enough for one line beside the monitor, as the others: "…for a
     // crowdlending platform" ran to the card's edge and wrapped.
     subtitle: 'Investment flow for crowdlending',
-    // No recording yet, and no case study: the iMac stands with a blank
+    // No recording yet, and no case study: the monitor stands with a blank
     // screen, and the card opens nothing, until they come.
     phone: {
       framed: true,
@@ -118,7 +118,7 @@ export const showcase: ShowcaseCase[] = [
   {
     id: 'yandex-cloud',
     href: '/cases/yandex-cloud',
-    device: 'imac',
+    device: 'monitor',
     title: 'Yandex Cloud',
     subtitle: 'Touchscreen game at Yandex Scale 2026',
     phone: {

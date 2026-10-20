@@ -15,7 +15,7 @@ type YandexCloudMedia = {
   buildYourself: CaseSlot;
   /** 01: the two minutes running out, and the right order shown. */
   timesUp: CaseSlot;
-  /** 02: the task wheel: the loop the home page's card plays in its iMac,
+  /** 02: the task wheel: the loop the home page's card plays in its monitor,
       set on the stage as the recordings are. */
   wheel: CaseSlot;
   /** 03: "Choose from ready-made": the best bundle, the points, the QR code. */

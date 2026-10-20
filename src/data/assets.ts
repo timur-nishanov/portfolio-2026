@@ -18,15 +18,15 @@ export const assets = {
   phoneFrame: '/mockups/iphone-frame.webp', // mockup iphone.png — bezel with a fully transparent screen cutout
   chumsCaseVideo: '/mockups/chums-case-3.mp4', // chums80.mp4 (780x1688, 60fps, sharp on retina) — first case after the hero, inside the frame
   chumsCasePoster: '/mockups/chums-case-3.webp', // its first frame
-  urbantigerCaseVideo: '/mockups/urbantiger-case.mp4', // urban-tiger-gift-card-60fps-2x.mp4, browser bar cropped, padded white to the iMac's 16:9 (1600x900, 60fps)
+  urbantigerCaseVideo: '/mockups/urbantiger-case.mp4', // urban-tiger-gift-card-60fps-2x.mp4, browser bar cropped, padded white to the monitor's 16:9 (1600x900, 60fps)
   urbantigerCasePoster: '/mockups/urbantiger-case.webp', // its first frame
   aliceCaseVideo: '/mockups/alice-case.mp4', // alice-lockscreen.mp4 (the iOS 26 lock screen through a day) scaled to 780x1688 (60fps, CRF 23) — inside the iPhone frame
   aliceCasePoster: '/mockups/alice-case.webp', // its first frame
-  ycCaseVideo: '/mockups/yc-case-2.mp4', // yc-bundle-spring-2560x1440-60fps.mp4, 16:9 like the iMac's screen (1600x900)
+  ycCaseVideo: '/mockups/yc-case-2.mp4', // yc-bundle-spring-2560x1440-60fps.mp4, 16:9 like the monitor's screen (1600x900)
   ycCasePoster: '/mockups/yc-case-2.webp', // its first frame
   kritikaCaseVideo: '/mockups/kritika-case-3.mp4', // 03-peel_2.mp4 (1178x2556), as in the case at 0.95 of its pace, scaled to 780x1692 (CRF 23) — inside the iPhone frame, its own dynamic island painted out (delogo) so only the frame's shows
   kritikaCasePoster: '/mockups/kritika-case-3.webp', // its first frame
-  imacFrame: '/mockups/imac-frame.webp', // iMac 27" Silver — bezel with transparent screen (for recordings)
+  monitorFrame: '/mockups/monitor-frame.webp', // a 27" display on its stand, the screen transparent (for recordings); drawn by scripts/render-monitor.py
 } as const;
 
 export type AssetKey = keyof typeof assets;

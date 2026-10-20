@@ -5,21 +5,23 @@ import type { PhoneScreen } from '@/data/showcase';
 import { assets } from '@/data/assets';
 import { useLazyVideo, type VideoWatch } from '@/hooks/useLazyVideo';
 
-// The 16:9 screen inside imac-frame.webp (1600 x 1288), measured at the rim's
-// half-alpha line: x 74..1525, y 71..887. The bezel around it is black.
+// The 16:9 screen inside monitor-frame.webp (1600 x 1232), as drawn
+// (scripts/render-monitor.py): x 33..1567, y 33..896. The bezel round it is
+// black glass.
 const SCREEN = {
-  top: (71 / 1288) * 100,
-  left: (74 / 1600) * 100,
-  width: (1451 / 1600) * 100,
-  height: (816 / 1288) * 100,
+  top: (33 / 1232) * 100,
+  left: (33 / 1600) * 100,
+  width: (1534 / 1600) * 100,
+  height: (863 / 1232) * 100,
 };
-const FRAME_AR = '1600 / 1288';
+const FRAME_AR = '1600 / 1232';
 // Same as the phone: the recording runs a little under the bezel, so the
 // seam only ever holds the screen's own pixels.
 const BLEED = '1.5px';
 
-/** An iMac with a screen recording playing in it; the frame sits on top. In a
-    case, the recording waits to be well in view (watch, see VideoWatch). */
+/** A desktop display with a screen recording playing in it; the frame sits on
+    top. In a case, the recording waits to be well in view (watch, see
+    VideoWatch). */
 export function MonitorMockup({ screen, watch }: { screen: PhoneScreen; watch?: VideoWatch }) {
   // Source and poster are attached on approach, not in the markup — see useLazyVideo.
   const videoRef = useLazyVideo(screen.src, screen.poster, watch);
@@ -49,7 +51,7 @@ export function MonitorMockup({ screen, watch }: { screen: PhoneScreen; watch?: 
         />
       )}
       <Image
-        src={assets.imacFrame}
+        src={assets.monitorFrame}
         alt=""
         aria-hidden="true"
         fill

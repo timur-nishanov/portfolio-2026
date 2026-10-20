@@ -41,8 +41,8 @@ export function CaseCard({ item }: { item: ShowcaseCase }) {
         </h2>
         <p className="cs-card__sub">{item.subtitle}</p>
       </div>
-      {item.device === 'imac' ? (
-        <div className="cs-card__imac">
+      {item.device === 'monitor' ? (
+        <div className="cs-card__monitor">
           <MonitorMockup screen={item.phone} watch={CARD_WATCH} />
         </div>
       ) : (

@@ -7,10 +7,10 @@ import { MonitorMockup } from '@/components/showcase/MonitorMockup';
 
 /** A phone's screen, a desktop window, a wide picture of several things at
     once (a diagram, concepts side by side) that sits on the box as it is, a
-    recording playing in the iMac the home page's cards show, or a recording
+    recording playing in the monitor the home page's cards show, or a recording
     composed on its own white stage (a window or a phone on white, the camera
     moving in it), drawn whole. */
-type Frame = 'phone' | 'desktop' | 'wide' | 'imac' | 'stage';
+type Frame = 'phone' | 'desktop' | 'wide' | 'monitor' | 'stage';
 
 const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -61,10 +61,10 @@ function Clip({
 /** One screen, as it is: no device around it, a phone's corners or a
     window's. Until its file is in, a lighter shape of the same size. */
 function Shot({ slot, frame, watch }: { slot: CaseSlot; frame: Frame; watch: VideoWatch }) {
-  // The iMac is the home page's (MonitorMockup), the recording in its screen.
-  if (frame === 'imac' && slot.src) {
+  // The monitor is the home page's (MonitorMockup), the recording in its screen.
+  if (frame === 'monitor' && slot.src) {
     return (
-      <div className="cp-shot cp-shot--imac">
+      <div className="cp-shot cp-shot--monitor">
         <MonitorMockup
           screen={{ framed: true, type: 'video', src: slot.src, poster: slot.poster, alt: slot.alt }}
           watch={watch}
@@ -72,7 +72,7 @@ function Shot({ slot, frame, watch }: { slot: CaseSlot; frame: Frame; watch: Vid
       </div>
     );
   }
-  const className = `cp-shot cp-shot--${frame === 'imac' ? 'desktop' : frame}`;
+  const className = `cp-shot cp-shot--${frame === 'monitor' ? 'desktop' : frame}`;
   const style = shape(slot, frame);
   if (!slot.src) return <div className={`${className} cp-ph`} style={style} role="img" aria-label={slot.alt} />;
   if (slot.kind === 'video') return <Clip slot={slot} className={className} style={style} watch={watch} />;
