@@ -17,15 +17,15 @@ export const aboutText: AboutLine[][] = [
     'and make 3D, icons, motion and video with AI.',
   ],
   [
-    'I care about systems, but I still prefer',
-    'a bit more craft: a poster that peels off like a stamp,',
-    // On a phone, "the answer" stays together where the line wraps.
-    'a timer that shows the\u00a0answer, not “you lost”.',
+    // A pause between the two longer ones, the turn on its second line.
+    'I care about systems,',
+    'but I still prefer a bit more craft.',
   ],
   [
-    'With the Salt\u00a0and\u00a0Pepper team, I designed',
-    'a site for film director Artem Shcherbakov.',
-    'It got Site of the Day on Awwwards, FWA and CSSDA.',
+    // A short line in, then the two the old block had: the site, the awards.
+    'With the Salt\u00a0and\u00a0Pepper team,',
+    'I designed a site for film director Artem\u00a0Shcherbakov.',
+    'It got Site\u00a0of\u00a0the\u00a0Day on Awwwards, FWA and CSSDA.',
     { text: 'artemartemartem.com', href: 'https://artemartemartem.com' },
   ],
 ];
