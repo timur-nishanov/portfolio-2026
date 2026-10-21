@@ -98,12 +98,12 @@ export const showcase: ShowcaseCase[] = [
   },
   {
     id: 'lendly',
+    href: '/cases/lendly',
     device: 'monitor',
     title: 'Lendly Invest',
     // Short enough for one line beside the monitor, as the others: "…for a
     // crowdlending platform" ran to the card's edge and wrapped.
     subtitle: 'Investment flow for crowdlending',
-    // No case study yet: the card opens nothing until it comes.
     phone: {
       framed: true,
       type: 'video',
@@ -111,9 +111,11 @@ export const showcase: ShowcaseCase[] = [
       poster: assets.lendlyCasePoster,
       alt: 'Lendly Invest: a loan’s page, the documents signed with a code from an SMS, and the investment in the portfolio',
     },
-    // The other two (what was wrong with the old flow; the role and the
-    // team) are still to be written.
-    notes: ['We split Lendly’s investment flow into steps, and the time it takes to invest nearly\u00a0halved.'],
+    notes: [
+      'We split Lendly’s investment flow into steps, and the time it takes to invest nearly\u00a0halved.',
+      'Qualified investor status and a notarized power of attorney used to mean emails to support. Now both live in the investor’s\u00a0account.',
+      'I designed the marketplace, analytics and the flows where money and documents change hands, with our lead designer, analyst and two\u00a0PMs.',
+    ],
   },
   {
     id: 'yandex-cloud',
