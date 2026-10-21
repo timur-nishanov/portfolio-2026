@@ -16,7 +16,7 @@
   --cp-col: 560px; /* the about block's measure */
   /* The spacing, measured off benji.org's case: */
   --cp-chapter: 56px; /* text to the next part's heading */
-  --cp-head: 28px; /* a part's heading to its text */
+  --cp-head: 12px; /* a part's heading to its text: close, with no rule to hold the two together */
   --cp-step: 40px; /* text to the figure it leads to */
   --cp-after: 64px; /* a figure to what follows it */
   --cp-ease: cubic-bezier(0.22, 1, 0.36, 1);
@@ -815,7 +815,7 @@
   .cp,
   .cp-page {
     --cp-chapter: 48px;
-    --cp-head: 24px;
+    --cp-head: 10px;
     --cp-step: 32px;
     --cp-after: 48px;
   }
