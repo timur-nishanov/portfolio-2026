@@ -68,7 +68,7 @@ export function AliceArticle({ onBack, backHref }: ArticleProps) {
       <section className="cp-chapter cp-col" aria-labelledby="cp-01">
         <Heading id="cp-01">Pick one idea out of many</Heading>
         <p className="cp-reveal">
-          We started with a brainstorm, and the board got wild: a tutor for anything, last night’s dreams turned into a
+          We started with a brainstorm, and the ideas got wild: a tutor for anything, last night’s dreams turned into a
           series, a guard against phone scams, whole worlds built from a prompt.
         </p>
         <p className="cp-reveal">
@@ -77,8 +77,8 @@ export function AliceArticle({ onBack, backHref }: ArticleProps) {
         </p>
         <Figure slot={media.ideas} frame="stage" />
         <p className="cp-reveal">
-          Then we wrote down the jobs people would hire it for, from a social media detox to a summary after every
-          call. Each job became a card Alice shows at the right moment.
+          Then we listed what people would use it for, from a social media detox to a summary after every call. Each one
+          became a card Alice shows at the right moment.
         </p>
         <AliceJobs />
       </section>

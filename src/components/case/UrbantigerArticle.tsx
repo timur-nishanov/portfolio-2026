@@ -74,10 +74,10 @@ export function UrbantigerArticle({ onBack, backHref }: ArticleProps) {
           also said we could change anything, as long as we could argue for it.
         </p>
         <p className="cp-reveal">
-          Before any visuals we went through the stores Urbantiger sits next to, from 12&nbsp;Storeez and Monochrome to
-          Moncler and Stone&nbsp;Island. We stole the wishlist idea from Zara, then checked how marketplaces run theirs.
-          The gift card flow came from Zolotoe&nbsp;Yabloko, a Russian beauty chain. Then I mapped the whole store as
-          one flow and built clickable prototypes, so we could argue about structure while it was still cheap to change.
+          Before any visuals we went through stores like Urbantiger, from 12&nbsp;Storeez and Monochrome to Moncler and
+          Stone&nbsp;Island. We stole the wishlist idea from Zara, then checked how marketplaces run theirs. The gift
+          card flow came from Zolotoe&nbsp;Yabloko, a Russian beauty chain. Then I mapped the whole store as one flow
+          and built clickable prototypes, so we could argue about structure while it was still cheap to change.
         </p>
         <Figure slot={media.flow} frame="wide" />
         <p className="cp-reveal">
@@ -105,8 +105,7 @@ export function UrbantigerArticle({ onBack, backHref }: ArticleProps) {
             so the page stays short.
           </li>
           <li>
-            Cart. Related products, promo codes and gift wrapping in one place. A quick cart opens from any page, so you
-            never lose your place.
+            Cart. Related products, promo codes and gift wrapping in one place. A quick cart opens from any page.
           </li>
           <li>
             Checkout. Three delivery options, and each says plainly what you get. Store pickup comes with a fitting
@@ -129,7 +128,7 @@ export function UrbantigerArticle({ onBack, backHref }: ArticleProps) {
           <li>Signing in by phone, confirmed through Telegram, VK or a call.</li>
           <li>Promo code and bonus errors, each with its own message.</li>
           <li>Restock alerts for sizes that sold out.</li>
-          <li>Empty cart, wishlist and alerts. The empty cart suggests what to try instead of just shrugging.</li>
+          <li>Empty cart, wishlist and alerts. The empty cart suggests products instead of just saying it’s empty.</li>
           <li>Changing an email or phone number.</li>
           <li>
             Returns in six steps. The old returns were hard to start, couldn’t be tracked, and you printed the forms
