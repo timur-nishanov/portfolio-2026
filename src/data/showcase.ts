@@ -54,7 +54,7 @@ export const showcase: ShowcaseCase[] = [
     },
     notes: [
       'A film review app I design and build in SwiftUI with Claude Code. Films get rated from Shit to Oscar, and every poster turns into a stamp you can peel\u00a0off.',
-      'Building it myself changed how I design: empty states first, and motion that wouldn’t survive a\u00a0handoff.',
+      'Building it myself changed how I design: I start with empty states, and I keep animations that a handoff would\u00a0cut.',
       'Not in the App Store yet, but the feed, the reviews and the stamps already work on my\u00a0phone.',
     ],
   },
@@ -73,7 +73,7 @@ export const showcase: ShowcaseCase[] = [
     },
     notes: [
       'Redesign of the online store: 28 pages at four breakpoints in three months. The MVP is live, and the client reported conversion at about twice the old\u00a0rate.',
-      'The store went up in a rush in 2021, and nobody touched its UX after 2023. The brand grew up. The site\u00a0didn’t.',
+      'The store went up in a rush in 2021, and nobody touched its UX after 2023, so it no longer matched the\u00a0brand.',
       'We designed the parts that usually get skipped, like promo code errors and returns, plus loyalty badges such as Night\u00a0Owl, for shopping at\u00a0night.',
     ],
   },

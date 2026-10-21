@@ -63,7 +63,7 @@ export function YandexCloudArticle({ onBack, backHref }: ArticleProps) {
           instructions. So every screen had to explain itself.
         </p>
         <p className="cp-reveal">
-          The tasks are real business problems and need a few sentences. Everything around them had to need none.
+          The tasks are real business problems and need a few sentences. Everything else had to work without any text.
         </p>
         <Figure slot={media.booth} frame="stage" />
         <p className="cp-reveal">
@@ -84,9 +84,9 @@ export function YandexCloudArticle({ onBack, backHref }: ArticleProps) {
         <Heading id="cp-02">Make the wheel feel right</Heading>
         <p className="cp-reveal">
           Tasks sit on a wheel of cards. The idea came from Yandex Cloud’s designer and our art director. My part was
-          the feel. On a 55-&#8288;inch screen a wheel can feel like a toy or like a fridge door, and I tuned it until
-          it felt like neither. It sweeps through all the cards once, so you see how many there are, and a flick snaps
-          to the nearest card.
+          the feel. On a 55-&#8288;inch screen a wheel easily feels too light or too heavy, and I tuned it until it felt
+          right. It sweeps through all the cards once, so you see how many there are, and a flick snaps to the nearest
+          card.
         </p>
         <Figure slot={media.wheel} frame="stage" />
       </section>
@@ -95,8 +95,8 @@ export function YandexCloudArticle({ onBack, backHref }: ArticleProps) {
       <section className="cp-chapter cp-col" aria-labelledby="cp-03">
         <Heading id="cp-03">Turn every result into a lead</Heading>
         <p className="cp-reveal">
-          Points are the reason to finish, and everyone knows it. In the short mode the right bundle earns them, and the
-          screen sends you to the booth staff to trade them for merch.
+          Points are the reason to finish. In the short mode the right bundle earns them, and the screen sends you to
+          the booth staff to trade them for merch.
         </p>
         <Figure slot={media.readyBundle} frame="stage" />
         <p className="cp-reveal">
@@ -111,7 +111,7 @@ export function YandexCloudArticle({ onBack, backHref }: ArticleProps) {
         <Heading id="cp-04">Hand over code, not mockups</Heading>
         <p className="cp-reveal">
           The plan was the usual one: I design, developers build. Then our art director asked why I didn’t build it
-          myself. I said yes before doing the math on a week and a half.
+          myself. I said yes right away, even with a week and a half for everything.
         </p>
         <p className="cp-reveal">
           So Yandex Cloud reviewed a live game instead of pictures, and approved the design, the flow and the motion

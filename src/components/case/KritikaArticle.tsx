@@ -31,12 +31,12 @@ export function KritikaArticle({ onBack, backHref }: ArticleProps) {
         <h1 className="cp-title cp-reveal">Kritika</h1>
         <p className="cp-subtitle cp-reveal">A film review app, designed and built solo</p>
         <p className="cp-reveal">
-          Kritika is my side project: an iOS app for people who come out of a film with opinions. You add a film, rate
-          it, write what you think, and its poster turns into a stamp for your collection.
+          Kritika is my side project, a film review app for iOS. You add a film, rate it, write what you think, and its
+          poster turns into a stamp for your collection.
         </p>
         <p className="cp-reveal">
-          I design it and build it in SwiftUI with Claude Code. It isn’t finished, and it’s still the first thing I
-          show people.
+          I design it and build it in SwiftUI with Claude Code. It’s not finished yet, but I already show it to
+          everyone.
         </p>
         <Facts
           items={[
@@ -64,8 +64,8 @@ export function KritikaArticle({ onBack, backHref }: ArticleProps) {
         <Heading id="cp-02">A poster that becomes a stamp</Heading>
         <p className="cp-reveal">
           Adding a review takes one screen: a poster, a title, three ratings, a few words. Then the poster turns into a
-          stamp with a perforated edge. That stamp is the film’s face everywhere in the app, and you can peel it off
-          into your collection.
+          stamp with a perforated edge. You see that stamp everywhere in the app, and you can peel it off into your
+          collection.
         </p>
         <Figure slot={media.addReview} frame="phone" />
         <Figure slot={media.peel} frame="phone" />
@@ -75,9 +75,8 @@ export function KritikaArticle({ onBack, backHref }: ArticleProps) {
       <section className="cp-chapter cp-col" aria-labelledby="cp-03">
         <Heading id="cp-03">Build it myself</Heading>
         <p className="cp-reveal">
-          I design in Figma and build in SwiftUI with Claude Code, which reads my mockups through Figma MCP. The part I
-          keep for myself is the feel: I sit with the phone and tune every spring and every delay until the peel feels
-          like paper.
+          I design in Figma and build in SwiftUI with Claude Code, which reads my mockups through Figma MCP. I tune the
+          animations myself, right on the phone, until the peel feels like paper.
         </p>
         <p className="cp-reveal">
           Building it myself changed how I design. Every screen starts with its empty state now, because I’m the first
@@ -95,8 +94,7 @@ export function KritikaArticle({ onBack, backHref }: ArticleProps) {
         </p>
         <Figure slot={media.feed} frame="phone" />
         <p className="cp-reveal">
-          The question I can’t answer alone is whether people want to rate films this way, or just enjoy watching the
-          stamp peel.
+          What I don’t know yet is whether people want to rate films this way, or just like peeling the stamps.
         </p>
       </section>
     </article>
