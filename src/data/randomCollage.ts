@@ -44,7 +44,7 @@ export const collage: CollageItem[] = [
   },
   {
     id: 'opus-experiment',
-    title: 'Hold to unlock: a reward screen I prototyped in code',
+    title: 'Quick experiment with Opus 5.5',
     side: 'left',
     video: {
       src: '/random/opus-experiment.mp4', // D4OzCiDYGSrnN6HD.mp4, 960×1200 (4:5), 60fps, no audio
