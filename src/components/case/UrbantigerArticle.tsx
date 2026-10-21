@@ -50,8 +50,11 @@ export function UrbantigerArticle({ onBack, backHref }: ArticleProps) {
         </p>
         <Facts
           items={[
-            ['Role', 'Senior designer, leading two junior designers and an illustrator'],
-            ['Team', 'Client’s product strategist and head of the online store · Studio’s design lead'],
+            ['Role', 'Senior designer'],
+            [
+              'Team',
+              'Client’s product strategist and head of the online store · Studio’s design lead, two junior designers and an illustrator',
+            ],
             ['Timeline', 'Three months of design, handed over in July 2025'],
             ['Outcome', 'MVP live. The client reported conversion at about twice the old site’s rate'],
           ]}
@@ -139,8 +142,8 @@ export function UrbantigerArticle({ onBack, backHref }: ArticleProps) {
         <Figure slot={media.emptyCart} frame="stage" />
         <Figure slot={media.returns} frame="stage" />
         <p className="cp-reveal">
-          Everything sits on one UI kit, so 28 pages at four breakpoints stay consistent. I led two junior designers and
-          an illustrator and reviewed their work.
+          Everything sits on one UI kit, so 28 pages at four breakpoints stay consistent. I worked on it with two junior
+          designers and an illustrator.
         </p>
         <Figure slot={media.breakpoints} frame="stage" />
         <Figure slot={media.devices} frame="stage" />

@@ -72,7 +72,7 @@ export const showcase: ShowcaseCase[] = [
       alt: 'Urbantiger: choosing a gift card design',
     },
     notes: [
-      'I led a team of three through 28 pages at four breakpoints in three months. The MVP is live, and the client reported conversion at about twice the old\u00a0rate.',
+      'We redesigned the store in three months: 28 pages at four breakpoints. The MVP is live, and the client reported conversion at about twice the old\u00a0rate.',
       'The store went up in a rush in 2021, and nobody touched its UX after 2023. The brand grew up. The site\u00a0didn’t.',
       'We designed the parts that usually get skipped, like promo code errors and returns, plus loyalty badges such as Night\u00a0Owl, for shopping at\u00a0night.',
     ],
