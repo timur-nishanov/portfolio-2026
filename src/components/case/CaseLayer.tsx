@@ -7,11 +7,11 @@ import { showcase } from '@/data/showcase';
 import { useSmoothScroll } from '@/components/providers/SmoothScrollProvider';
 import { CaseBar } from './CaseBar';
 import { CaseScroll } from './blocks';
-import { CASES } from './registry';
+import { CASES, loadCase, type Article } from './registry';
 import { onOpenCase } from './caseStore';
 import './case.css';
 
-type Opened = { id: string; card: HTMLElement | null; seq: number };
+type Opened = { id: string; card: HTMLElement | null; seq: number; Article: Article };
 type CaseState = { case?: string; layer?: string } | null;
 
 // Marks the history entries this page load put there itself. A case's
@@ -53,11 +53,21 @@ export function CaseLayer() {
   const contentRef = useRef<HTMLDivElement>(null);
   const barRef = useRef<HTMLElement>(null);
 
+  // The article is fetched first where it is not in yet (registry): a card
+  // under the pointer, or any card once the cards are near, has asked for
+  // it already, so the case is on screen the frame after the click.
   const begin = useCallback((id: string, card: HTMLElement | null) => {
     if (openedRef.current || !CASES[id]) return;
-    const o = { id, card, seq: ++seq.current };
-    openedRef.current = o;
-    setOpened(o);
+    const ask = ++seq.current;
+    loadCase(id)
+      .then((Article) => {
+        // Another case asked for since, or this one closed before it came.
+        if (openedRef.current || ask !== seq.current) return;
+        const o = { id, card, seq: ask, Article };
+        openedRef.current = o;
+        setOpened(o);
+      })
+      .catch(() => {});
   }, []);
 
   // The way out, once the address has gone back (or straight away).
@@ -219,7 +229,7 @@ export function CaseLayer() {
   if (!opened) return null;
   const entry = CASES[opened.id];
   if (!entry) return null;
-  const { Article } = entry;
+  const { Article } = opened;
 
   return createPortal(
     <div

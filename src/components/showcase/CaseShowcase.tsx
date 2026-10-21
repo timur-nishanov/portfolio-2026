@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { showcase } from '@/data/showcase';
+import { loadAllCases } from '@/components/case/registry';
 import { cancelFrame, scheduleFrame, type FrameJob } from '@/lib/frame';
 import { CaseCard } from './CaseCard';
 import './showcase.css';
@@ -181,10 +182,16 @@ export function CaseShowcase() {
     };
     // Only while the section is anywhere near the screen.
     let near = false;
+    let asked = false;
     const io = new IntersectionObserver(
       ([e]) => {
         near = e.isIntersecting;
         if (near) scheduleFrame(job);
+        // The cases' articles, for the first card that is clicked (registry).
+        if (near && !asked) {
+          asked = true;
+          loadAllCases();
+        }
       },
       { rootMargin: '50% 0px' },
     );
