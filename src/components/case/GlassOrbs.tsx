@@ -117,7 +117,9 @@ export function GlassOrbs({ items }: { items: Item[] }) {
           document.fonts?.ready.then(() => !gone && glass?.repaint()).catch(() => {});
         });
       },
-      { rootMargin: '150% 0px' },
+      // The case layer's own scroll box as the root, else its margin is
+      // clipped off by that box (useLazyVideo).
+      { root: root.closest<HTMLElement>('.cp__scroll'), rootMargin: '150% 0px' },
     );
     nearby.observe(root);
     return () => {

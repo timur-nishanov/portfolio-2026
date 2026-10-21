@@ -137,7 +137,7 @@
     --W: min(72vw, 60svh);
   }
   .aw__text {
-    inset: 12svh 0 auto;
+    inset: 16svh 0 auto; /* just under the top fade */
     max-width: 640px;
   }
 }

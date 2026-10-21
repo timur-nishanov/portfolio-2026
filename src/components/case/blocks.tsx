@@ -59,11 +59,13 @@ function Clip({
         playsInline
         preload="none"
         controls={reduced}
-        aria-hidden="true"
+        aria-hidden={reduced ? undefined : true}
+        aria-label={reduced ? slot.alt : undefined}
       />
       {/* What the clip shows, as text: a video with no controls has no role,
-          and a label on it is not read by every screen reader. */}
-      <span className="sr-only">{slot.alt}</span>
+          and a label on it is not read by every screen reader. With
+          controls it is a real control, so it is in the tree with its name. */}
+      {!reduced && <span className="sr-only">{slot.alt}</span>}
     </>
   );
 }

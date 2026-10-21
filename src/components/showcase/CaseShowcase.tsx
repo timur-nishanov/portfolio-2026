@@ -161,9 +161,12 @@ export function CaseShowcase() {
           const gone = p === 1;
           // Faded out it still stood in the pointer's way: its top 56px rise
           // above the parked card, where a click on what looks like the page
-          // opened a case nobody could see. It keeps its place in the tab
-          // order and for screen readers, as before.
-          put(i, 'pointer-events', gone ? 'none' : '');
+          // opened a case nobody could see. From nineteen twentieths on
+          // (under a tenth of its opacity), not from the snap: the parked
+          // card's glide keeps the recede short of 1 for a hundred pixels
+          // more. It keeps its place in the tab order and for screen
+          // readers, as before.
+          put(i, 'pointer-events', p >= 0.95 ? 'none' : '');
           const video = videos[i];
           if (!video) continue;
           if (gone) {
@@ -175,7 +178,9 @@ export function CaseShowcase() {
             covered[i] = false;
             cards[i].toggleAttribute('data-covered', false);
             video.currentTime = 0;
-            video.play().catch(() => {});
+            // With motion reduced the clip waits for the pointer, as
+            // everywhere (useLazyVideo).
+            if (!reduced) video.play().catch(() => {});
           }
         }
       },

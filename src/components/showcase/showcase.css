@@ -123,8 +123,10 @@
 /* On a touch screen there is no hand and no chip to say the notes are not
    the card: a tap on the note just read went nowhere, and the card looked
    like it would not open. There the notes let the tap through to the link
-   under them, and the whole card opens the case. */
-@media (pointer: coarse) {
+   under them, and the whole card opens the case. Not with motion reduced:
+   there the notes take no turns on their own (RotatingNotes), so a tap on
+   them brings the next one, as a click does. */
+@media (pointer: coarse) and (prefers-reduced-motion: no-preference) {
   .cs-card__notes {
     pointer-events: none;
   }
@@ -387,19 +389,6 @@
   transform: rotate(90deg) translateY(0.5px);
 }
 
-/* Too short a screen for a card to park and the next to slide over it (a
-   phone held sideways, a laptop at twice its size): the cards simply follow
-   one another, and CaseShowcase leaves them alone. */
-@media (max-width: 899px) and (max-height: 520px) {
-  .cs-card {
-    position: relative;
-    top: auto;
-  }
-  .cs-card + .cs-card {
-    margin-top: 24px;
-  }
-}
-
 /* --- stacked (tablet portrait and phones) ---------------------------------- */
 @media (max-width: 899px) {
   .cs {
@@ -457,5 +446,19 @@
   }
   .rn__track {
     left: -16px;
+  }
+}
+
+/* Too short a screen for a card to park and the next to slide over it (a
+   phone held sideways, a laptop at twice its size): the cards simply follow
+   one another, and CaseShowcase leaves them alone. After the stacked rules,
+   whose sticky top it undoes. */
+@media (max-width: 899px) and (max-height: 520px) {
+  .cs-card {
+    position: relative;
+    top: auto;
+  }
+  .cs-card + .cs-card {
+    margin-top: 24px;
   }
 }

@@ -38,10 +38,18 @@ export function loadCase(id: string): Promise<Article> {
   if (!p) {
     const entry = CASES[id];
     if (!entry) return Promise.reject(new Error(`no case ${id}`));
-    p = entry.load().then((Article) => {
-      loaded.set(id, Article);
-      return Article;
-    });
+    p = entry.load().then(
+      (Article) => {
+        loaded.set(id, Article);
+        return Article;
+      },
+      // A fetch that failed (a phone's connection dropping) is asked for
+      // again next time, not remembered as failed for the whole visit.
+      (e) => {
+        loading.delete(id);
+        throw e;
+      },
+    );
     loading.set(id, p);
   }
   return p;

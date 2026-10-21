@@ -30,6 +30,35 @@ const STEPS = Array.from({ length: 21 }, (_, i) => i / 20);
  * before it plays anyway.
  */
 let settled: Promise<void> | null = null;
+
+/**
+ * A play the browser refused (an iPhone in Low Power Mode, Safari set never
+ * to autoplay: a muted clip is refused there until the visitor has touched
+ * the page) is tried again on the first gesture, for every clip still on
+ * screen that was refused. One try and the clips stayed stills all visit.
+ * A pointerdown is not a gesture to a browser (lib/audio); these are.
+ */
+const refused = new Set<HTMLVideoElement>();
+let armed = false;
+const GESTURES = ['pointerup', 'touchend', 'click', 'keydown'] as const;
+function retry() {
+  for (const v of Array.from(refused)) {
+    refused.delete(v);
+    v.play().catch(() => refused.add(v));
+  }
+  if (!refused.size) {
+    armed = false;
+    for (const t of GESTURES) window.removeEventListener(t, retry, true);
+  }
+}
+function tryPlay(v: HTMLVideoElement) {
+  v.play().catch(() => {
+    refused.add(v);
+    if (armed) return;
+    armed = true;
+    for (const t of GESTURES) window.addEventListener(t, retry, true);
+  });
+}
 function heroSettled(): Promise<void> {
   if (settled) return settled;
   settled = new Promise((resolve) => {
@@ -78,6 +107,11 @@ export function useLazyVideo(src: string, poster?: string, watch?: VideoWatch) {
     if (!v) return;
     // What is watched for being on screen: the clip, or the box round it.
     const target = (within && v.closest<HTMLElement>(within)) || v;
+    // The case layer scrolls its own box (.cp__scroll, CaseLayer): with the
+    // screen as the root, a margin past the screen is clipped off by that
+    // box first, and nothing below its fold was ever 'near'. The box is the
+    // root there, the screen elsewhere.
+    const root = v.closest<HTMLElement>('.cp__scroll');
 
     let attached = false;
     // Whether it is on screen enough to play, as the play observer last saw it.
@@ -110,7 +144,7 @@ export function useLazyVideo(src: string, poster?: string, watch?: VideoWatch) {
           near.disconnect();
         }
       },
-      { rootMargin: '150% 0px 150% 0px' },
+      { root, rootMargin: '150% 0px 150% 0px' },
     );
     let live = true;
     heroSettled().then(() => live && near.observe(v));
@@ -135,17 +169,21 @@ export function useLazyVideo(src: string, poster?: string, watch?: VideoWatch) {
         if (restart && gone) v.currentTime = 0;
         gone = false;
         if (still && !wanted) return;
-        if (hold) held = window.setTimeout(() => v.play().catch(() => {}), hold);
-        else v.play().catch(() => {});
+        if (hold) held = window.setTimeout(() => tryPlay(v), hold);
+        else tryPlay(v);
       } else {
+        refused.delete(v);
         v.pause();
       }
     };
     const want = (on: boolean) => {
       wanted = on;
       if (!visible) return;
-      if (on) v.play().catch(() => {});
-      else v.pause();
+      if (on) tryPlay(v);
+      else {
+        refused.delete(v);
+        v.pause();
+      }
     };
     const onWant = () => want(true);
     const onLeave = () => want(false);
@@ -162,7 +200,7 @@ export function useLazyVideo(src: string, poster?: string, watch?: VideoWatch) {
         enough = e.isIntersecting && e.intersectionRect.height >= room * share - 1;
         decide();
       },
-      { threshold: watched ? STEPS : 0.1 },
+      { root, threshold: watched ? STEPS : 0.1 },
     );
     play.observe(target);
     // Whether its top has come up past the line: it meets the screen's part
@@ -175,12 +213,13 @@ export function useLazyVideo(src: string, poster?: string, watch?: VideoWatch) {
               risen = e.isIntersecting;
               decide();
             },
-            { rootMargin: `0px 0px ${-(1 - line) * 100}% 0px` },
+            { root, rootMargin: `0px 0px ${-(1 - line) * 100}% 0px` },
           );
     rise?.observe(target);
 
     return () => {
       live = false;
+      refused.delete(v);
       window.clearTimeout(held);
       near.disconnect();
       play.disconnect();
