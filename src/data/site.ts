@@ -1,4 +1,7 @@
 export const site = {
+  name: 'Timur Nishanov',
+  // The site's own address: canonical links, the sitemap, the share cards.
+  url: 'https://timurdesigner.vercel.app',
   // TODO: confirm the real contact address with Timur.
   email: 'timanemetis@gmail.com',
   linkedin: 'https://www.linkedin.com/in/timur-nishanov-3a7510428/',
@@ -12,5 +15,13 @@ export const site = {
     title: 'Timur Nishanov · Product Designer',
     description:
       'Senior product designer in Bangkok who builds in code. Projects for Yandex Cloud, Chums, Urbantiger and Lendly.',
+  },
+  // The card a link unfurls into (lib/metadata): the first screen, drawn
+  // still, 1200×630 (public/og.png).
+  og: {
+    image: '/og.png',
+    width: 1200,
+    height: 630,
+    alt: 'Hey! I’m Timur: senior product designer in Bangkok who builds in code',
   },
 } as const;
