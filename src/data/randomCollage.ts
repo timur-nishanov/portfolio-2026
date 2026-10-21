@@ -32,7 +32,7 @@ export const collage: CollageItem[] = [
   },
   {
     id: 'artem',
-    title: 'Artem Shcherbakov’s site. Yes, this is the 404 page.',
+    title: 'Artem Shcherbakov’s site',
     side: 'right',
     video: {
       src: '/random/artem-site.mp4', // artem_404_1600x1200_60.mp4, 1600×1200 (4:3), 60fps, no audio
