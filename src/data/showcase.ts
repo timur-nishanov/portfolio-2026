@@ -112,7 +112,7 @@ export const showcase: ShowcaseCase[] = [
       alt: 'Lendly Invest: a loan’s page, the documents signed with a code from an SMS, and the investment in the portfolio',
     },
     notes: [
-      'We split Lendly’s investment flow into steps, and the time it takes to invest nearly\u00a0halved.',
+      'Buying into a new loan takes a signature for every document. We split it into numbered steps, with a stepper that shows how many signatures are\u00a0left.',
       'Qualified investor status and a notarized power of attorney used to mean emails to support. Now both live in the investor’s\u00a0account.',
       'I designed the marketplace, analytics and the flows where money and documents change hands, with our lead designer, analyst and two\u00a0PMs.',
     ],
