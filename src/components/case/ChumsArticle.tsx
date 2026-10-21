@@ -46,7 +46,7 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
         </p>
         <Facts
           items={[
-            ['Role', 'Product Design Lead'],
+            ['Role', 'Product design lead'],
             ['Team', 'Founders, PM, art director, one developer, junior designer'],
             ['Timeline', 'Concept in 2024 · Design lead in 2025'],
             ['Outcome', 'Desktop beta in three months · attaching a file went from six steps to one'],

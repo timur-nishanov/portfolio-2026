@@ -54,7 +54,7 @@ export function AliceArticle({ onBack, backHref }: ArticleProps) {
             ['Role', 'Senior designer'],
             ['Team', 'Studio team of five, with an art director'],
             ['Timeline', 'July 2025'],
-            ['Outcome', '2nd place, ahead of the other in-house teams'],
+            ['Outcome', '2nd place, one point behind the winner'],
           ]}
         />
         <p className="cp-reveal">

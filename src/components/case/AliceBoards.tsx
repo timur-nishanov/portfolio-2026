@@ -55,7 +55,7 @@ const DAY: Time[] = [
     label: 'Work',
     moments: [
       { title: 'A mockup to review', text: 'Feedback on a Figma frame, in the notch', on: 'Mac' },
-      { title: 'A call in 6 minutes', text: 'Everything for it on one card', on: 'Phone' },
+      { title: 'A call in six minutes', text: 'Everything for it on one card', on: 'Phone' },
       { title: 'Hours at the desk', text: 'A break, and a timer for it', on: 'Mac' },
     ],
   },
