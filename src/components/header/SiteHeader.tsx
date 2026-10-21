@@ -108,6 +108,24 @@ export function SiteHeader() {
   // still tucks the menu away, as on iOS.
   const [keyboardIn, setKeyboardIn] = useState(false);
   const hidden = (scrollHidden || idleHidden) && !keyboardIn;
+  // The pin lets go at the first sign of a pointer (a wheel, a press): the
+  // keyboard gave the button its focus (Escape hands it back there), and a
+  // mouse user scrolling on would otherwise find the bar pinned under a
+  // ring. The focus goes with it, so the ring does too.
+  useEffect(() => {
+    if (!keyboardIn) return;
+    const release = () => {
+      const active = document.activeElement;
+      if (active instanceof HTMLElement && refs.root.current?.contains(active)) active.blur();
+      setKeyboardIn(false);
+    };
+    window.addEventListener('wheel', release, { passive: true });
+    window.addEventListener('pointerdown', release, { passive: true });
+    return () => {
+      window.removeEventListener('wheel', release);
+      window.removeEventListener('pointerdown', release);
+    };
+  }, [keyboardIn, refs]);
   useLiquidMorph(open, reduced, refs);
 
   const close = useCallback(
