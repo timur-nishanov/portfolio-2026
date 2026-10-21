@@ -47,7 +47,7 @@ export function LendlyArticle({ onBack, backHref }: ArticleProps) {
             ['Outcome', 'Platform designed and handed to Lendly’s developers'],
           ]}
         />
-        <p className="cp-reveal">Lendly was a client of the studio I worked at.</p>
+        <p className="cp-reveal">Lendly was a client of Cedro Agency, the studio I worked at.</p>
       </div>
 
       {/* --- 01 ------------------------------------------------------------ */}

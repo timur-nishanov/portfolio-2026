@@ -40,7 +40,7 @@ export function AliceArticle({ onBack, backHref }: ArticleProps) {
           <a className="cp-a" href="https://alice.yandex.ru" target="_blank" rel="noopener noreferrer">
             Yandex Alice
           </a>{' '}
-          team ran it as a design battle at the{' '}
+          team ran it as a design battle, a concept contest between studios and in-house teams, at the{' '}
           <a className="cp-a" href="https://www.kaifconf.ru/kaiferenciya-2025" target="_blank" rel="noopener noreferrer">
             Kaiference
           </a>{' '}

@@ -51,7 +51,10 @@ export function YandexCloudArticle({ onBack, backHref }: ArticleProps) {
             ['Outcome', 'Ran at the booth · production built on my code'],
           ]}
         />
-        <p className="cp-reveal">The back end and the production build were on the contractor’s side.</p>
+        <p className="cp-reveal">
+          I came in through Rabotyagi Studio, which designs for Yandex. The back end and the production build were on
+          the contractor’s side.
+        </p>
         <Figure slot={media.firstScreen} frame="stage" />
       </div>
 

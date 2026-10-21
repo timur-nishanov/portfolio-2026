@@ -52,7 +52,7 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
             ['Outcome', 'Desktop beta in three months · attaching a file went from six steps to one'],
           ]}
         />
-        <p className="cp-reveal">Chums was a client of the studio I worked at.</p>
+        <p className="cp-reveal">Chums was a client of Cedro Agency, the studio I worked at.</p>
       </div>
 
       {/* --- 01 ------------------------------------------------------------ */}

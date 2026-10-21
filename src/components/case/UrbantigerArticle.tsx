@@ -56,12 +56,12 @@ export function UrbantigerArticle({ onBack, backHref }: ArticleProps) {
               'Client’s product strategist and head of the online store · studio’s design lead, two junior designers and an illustrator',
             ],
             ['Timeline', 'Three months of design, handed over in July 2025'],
-            ['Outcome', 'MVP live. The client reported conversion at about twice the old site’s rate'],
+            ['Outcome', 'MVP live · conversion at about twice the old site’s rate, as the client reported'],
           ]}
         />
         <p className="cp-reveal">
-          Urbantiger was a client of the studio I worked at. We won the tender for the design, and another team built
-          it.
+          Urbantiger was a client of Cedro Agency, the studio I worked at. We won the tender for the design, and another
+          team built it.
         </p>
       </div>
 
