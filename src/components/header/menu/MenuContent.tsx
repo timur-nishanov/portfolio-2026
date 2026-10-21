@@ -141,10 +141,16 @@ function MenuContentInner({ id, labelledBy, open, contentRef, handleRef, onClose
     // otherwise the section starts just under the header.
     const frame = el.querySelector<HTMLElement>('[data-scroll-frame]');
     const fh = frame ? frame.getBoundingClientRect().height : 0;
+    // The frame's place in flow, not where it is: parked (sticky) under the
+    // cards that followed, its box is wherever the page has scrolled to, and
+    // Work chosen from below the cards landed on the last of them. A section
+    // that frames nothing lands under the header, or flush with the top
+    // where its own stage parks there (data-scroll-flush: Awards).
+    const flush = el.hasAttribute('data-scroll-flush');
     const top =
       frame && fh < window.innerHeight
-        ? frame.getBoundingClientRect().top + window.scrollY - (window.innerHeight - fh) / 2
-        : el.getBoundingClientRect().top + window.scrollY + SCROLL_OFFSET;
+        ? el.getBoundingClientRect().top + window.scrollY + parseFloat(getComputedStyle(el).paddingTop) - (window.innerHeight - fh) / 2
+        : el.getBoundingClientRect().top + window.scrollY + (flush ? 0 : SCROLL_OFFSET);
     if (document.documentElement.classList.contains('lenis')) {
       scrollTo(top, { offset: 0, duration: 1.1 });
     } else {

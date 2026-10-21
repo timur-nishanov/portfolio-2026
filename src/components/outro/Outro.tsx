@@ -7,6 +7,7 @@ import { createGlass, type GlassView } from '@/lib/glassSpheres';
 import { clamp, lerp } from '@/lib/lerp';
 import { zoomOf } from '@/lib/zoom';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { useSmoothScroll } from '@/components/providers/SmoothScrollProvider';
 import { playChime } from './chime';
 import './outro.css';
 
@@ -154,6 +155,7 @@ function Balls() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const elsRef = useRef<(HTMLElement | null)[]>([]);
   const reduced = useReducedMotion();
+  const { scrollTo } = useSmoothScroll();
   const [copied, setCopied] = useState(false);
   const copiedTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
@@ -327,6 +329,16 @@ function Balls() {
         view = createGlass(THREE, canvas, els.length, stage, 1);
         if (!view) return;
         stage.setAttribute('data-gl', '');
+        // A context the browser took back (a tab left in the background on
+        // a phone): the logos show plain until it is given back, then the
+        // glass is drawn once more, as the loop at rest would not.
+        canvas.addEventListener('webglcontextlost', () => stage.removeAttribute('data-gl'));
+        canvas.addEventListener('webglcontextrestored', () => {
+          if (gone) return;
+          stage.setAttribute('data-gl', '');
+          sheets();
+          glass();
+        });
         sheets();
         glass();
         // The words and the logos drawn again once their face and pictures
@@ -591,6 +603,16 @@ function Balls() {
       { threshold: [0, 0.75] },
     );
     io.observe(stage);
+    // The keyboard: a Tab onto a ball still parked above the stage (the
+    // screen not yet three quarters in view) had the browser scroll up to
+    // where the ball waits, out of sight, five presses in a row. The screen
+    // comes into view instead, and the drop plays as for a scroll (io).
+    const onFocusIn = () => {
+      const r = stage.getBoundingClientRect();
+      if (r.top >= 0 && r.bottom <= window.innerHeight) return;
+      scrollTo(r.top + window.scrollY, { offset: 0 });
+    };
+    stage.addEventListener('focusin', onFocusIn);
 
     // A new size of screen, or the words set again in their own face, may
     // leave other room under them.
@@ -616,6 +638,7 @@ function Balls() {
       cancelAnimationFrame(raf);
       io.disconnect();
       ro.disconnect();
+      stage.removeEventListener('focusin', onFocusIn);
       nearby.disconnect();
       window.removeEventListener('scroll', load);
       stage.removeEventListener('pointerdown', onDown);
@@ -628,7 +651,7 @@ function Balls() {
       stage.removeAttribute('data-gl');
       view?.dispose();
     };
-  }, [reduced]);
+  }, [reduced, scrollTo]);
 
   const copy = async (value: string) => {
     await copyText(value);

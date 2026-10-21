@@ -35,12 +35,16 @@ export const CaseBar = forwardRef<HTMLElement, Props>(function CaseBar({ title, 
     // band stops short of it.
     if (el) setGutter(el.offsetWidth - el.clientWidth);
     let last = y();
+    const end = () =>
+      el ? el.scrollHeight - el.clientHeight : document.documentElement.scrollHeight - window.innerHeight;
     const onScroll = () => {
       const now = y();
       // Written on the bar at once rather than through a render, so the
       // band starts coming in on the very frame the page first moves.
       barRef.current?.toggleAttribute('data-glass', now > 0);
-      if (now < 120) setHidden(false);
+      // Back at the top, and at the end, where there is nothing left to
+      // read under it and the way back is wanted.
+      if (now < 120 || now >= end() - 48) setHidden(false);
       else if (now > last + 2) setHidden(true);
       else if (now < last - 2) setHidden(false);
       last = now;

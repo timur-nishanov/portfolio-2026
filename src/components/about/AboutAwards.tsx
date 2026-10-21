@@ -195,6 +195,9 @@ export function AboutAwards() {
       id="awards"
       aria-labelledby="about-heading"
       className="aw"
+      // The menu's "Awards" lands the section flush with the top: its stage
+      // parks there (MenuContent).
+      data-scroll-flush
       style={{ '--n': awardPosters.length, '--lead': LEAD, '--per': PER, '--dwell': DWELL } as React.CSSProperties}
     >
       <div className="aw__stage">
