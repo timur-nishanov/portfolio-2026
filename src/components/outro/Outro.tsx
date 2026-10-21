@@ -42,6 +42,11 @@ const REST_GAP = 12; // px
 // other. Holding one suspends it — it moves only while the button is down —
 // and letting go hands its momentum back to the sim.
 const GRAVITY = 2000; // px/s²
+// Gone wholly off the top, after a throw or a knock, a ball is pulled back
+// this many times harder: there is no ceiling, it still flies out of sight,
+// but it turns there in a moment and comes back as fast as it left, rather
+// than from somewhere high in the sky seconds later.
+const ABOVE_PULL = 5;
 // How much of a knock comes back, off the sides and off another ball (off the
 // floor it is each ball's own, in DROPS).
 const WALL_BOUNCE = 0.8;
@@ -84,6 +89,9 @@ type Body = {
   quietT: number;
   px: number;
   py: number;
+  /** Wholly on the stage since it dropped in: off the top from then on, it
+   *  is pulled back harder (ABOVE_PULL). Its drop in is plain gravity. */
+  entered: boolean;
 };
 
 /** Lines set one under another, each wrapping within itself. */
@@ -215,6 +223,7 @@ function Balls() {
             quietT: 0,
             px: 0,
             py: 0,
+            entered: false,
           };
         } else {
           bodies[i].r = r;
@@ -239,6 +248,7 @@ function Balls() {
           b.y = floor - b.r;
           b.vx = b.vy = 0;
           b.wait = 0;
+          b.entered = true;
         });
         floor -= d + gap;
         i += per;
@@ -422,7 +432,9 @@ function Balls() {
       for (let i = 0; i < bodies.length; i++) {
         const b = bodies[i];
         if (i === dragging || b.wait > 0) continue;
-        b.vy += GRAVITY * zi * dt;
+        if (!b.entered && b.y >= b.r) b.entered = true;
+        const pull = b.entered && b.y < -b.r ? ABOVE_PULL : 1;
+        b.vy += GRAVITY * pull * zi * dt;
         b.vx *= air;
         b.vy *= air;
         b.x += b.vx * dt;
