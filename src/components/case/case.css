@@ -244,6 +244,10 @@
   letter-spacing: -0.009em;
   scroll-margin-top: 112px;
 }
+/* Focused from the index (CaseIndex), never by a Tab: no ring. */
+.cp-h:focus {
+  outline: none;
+}
 /* The small size: the index, the facts' labels, a figure's caption, the
    board. */
 .cp-index,

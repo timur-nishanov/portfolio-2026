@@ -33,6 +33,8 @@ export function MonitorMockup({ screen, watch }: { screen: PhoneScreen; watch?: 
   };
   return (
     <div className="relative h-full" style={{ aspectRatio: FRAME_AR }}>
+      {/* What the recording shows, as text (see PhoneMockup). */}
+      {screen.src && <span className="sr-only">{screen.alt}</span>}
       {/* With no recording yet, the screen stands blank, in the cases'
           stand-in grey, as the phone's does (PhoneMockup). */}
       {!screen.src ? (
@@ -47,7 +49,7 @@ export function MonitorMockup({ screen, watch }: { screen: PhoneScreen; watch?: 
           loop
           playsInline
           preload="none"
-          aria-label={screen.alt}
+          aria-hidden="true"
         />
       )}
       <Image

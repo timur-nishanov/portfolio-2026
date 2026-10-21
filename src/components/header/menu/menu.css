@@ -331,6 +331,16 @@
   .hb-chev {
     display: none;
   }
+  /* The rings are drawn as shadows and the pill as a background, and the
+     forced palette strips both: the system's own outline instead. */
+  .lgm-button {
+    border: 1px solid ButtonText;
+  }
+  .lgm-button:focus-visible,
+  .lgm-item:focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
 }
 
 /* --- the glass blob --------------------------------------------------------

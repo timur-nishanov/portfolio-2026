@@ -56,7 +56,11 @@ export function CaseShowcase() {
     let gaps: number[] = [];
     let heights: number[] = [];
     let park: number[] = [];
+    // Whether the cards stack at all: on a screen too short for it they
+    // follow one another (showcase.css), and there is nothing to drive.
+    let stacking = true;
     const measure = () => {
+      stacking = getComputedStyle(cards[0]).position === 'sticky';
       const cs = getComputedStyle(root);
       let y = parseFloat(cs.paddingTop);
       gaps = cards.map((c, i) => (i > 0 ? parseFloat(getComputedStyle(c).marginTop) : 0));
@@ -95,6 +99,16 @@ export function CaseShowcase() {
         });
       },
       write: () => {
+        if (!stacking) {
+          cards.forEach((_, i) => {
+            for (const prop of ['transform', '--dim', 'opacity', 'will-change', 'pointer-events', '--lift']) put(i, prop, '');
+            if (covered[i]) {
+              covered[i] = false;
+              cards[i].toggleAttribute('data-covered', false);
+            }
+          });
+          return;
+        }
         // The glide: where each card would be in flow, and its eased place.
         const settle = cards.map((_, i) => {
           if (!glides) return 0;

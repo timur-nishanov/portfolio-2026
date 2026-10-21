@@ -129,6 +129,15 @@
   opacity: 1;
 }
 
+/* With motion reduced the balls only rest (Outro), so a finger on one
+   scrolls the page as anywhere else, and there is nothing to grab. */
+@media (prefers-reduced-motion: reduce) {
+  .outro__ball {
+    touch-action: auto;
+    cursor: default;
+  }
+}
+
 /* --- without WebGL ---------------------------------------------------------- */
 /* A disc of glass painted behind the logo: clear in the middle, denser at the
    edge where a ball turns away, lit up and to the left. */

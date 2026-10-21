@@ -12,18 +12,23 @@ export const metadata: Metadata = {
  */
 export default function NotFound() {
   return (
-    <main className="relative grid min-h-svh place-items-center px-4 text-center">
-      <Link href="/" className="t-title absolute inset-x-4 top-[18px] text-ink-strong">
-        {site.hero.title}
-      </Link>
-      <div>
-        <p className="t-title text-ink-strong">There’s no page at this address.</p>
-        <p className="t-title mt-1">
-          <Link href="/" className="text-[#ababab] transition-colors hover:text-ink-strong">
-            Back to the start
-          </Link>
-        </p>
-      </div>
-    </main>
+    <>
+      <header className="absolute inset-x-4 top-[18px] text-center">
+        <Link href="/" className="t-title text-ink-strong">
+          {site.hero.title}
+        </Link>
+      </header>
+      <main className="grid min-h-svh place-items-center px-4 text-center">
+        <div>
+          <h1 className="t-title text-ink-strong">There’s no page at this address.</h1>
+          <p className="t-title mt-1">
+            {/* The case pages' quieter grey: readable, and ink under the pointer. */}
+            <Link href="/" className="text-[rgba(8,8,10,0.57)] transition-colors hover:text-ink-strong">
+              Back to the start
+            </Link>
+          </p>
+        </div>
+      </main>
+    </>
   );
 }

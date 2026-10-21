@@ -16,18 +16,22 @@ const CLIP_WATCH: VideoWatch = { share: 0.5, hold: 0, restart: false };
 function Clip({ video }: { video: CollageItem['video'] }) {
   const ref = useLazyVideo(video.src, video.poster, CLIP_WATCH);
   return (
-    <video
-      ref={ref}
-      className="rc__video"
-      width={video.width}
-      height={video.height}
-      autoPlay
-      muted
-      loop
-      playsInline
-      preload="none"
-      aria-label={video.alt}
-    />
+    <>
+      <video
+        ref={ref}
+        className="rc__video"
+        width={video.width}
+        height={video.height}
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="none"
+        aria-hidden="true"
+      />
+      {/* What the clip shows, as text (see PhoneMockup). */}
+      <span className="sr-only">{video.alt}</span>
+    </>
   );
 }
 

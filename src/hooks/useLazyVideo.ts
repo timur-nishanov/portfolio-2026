@@ -119,6 +119,12 @@ export function useLazyVideo(src: string, poster?: string, watch?: VideoWatch) {
     // both wasted decode work and wasted battery.
     let enough = false;
     let risen = line === undefined;
+    // Motion to be reduced: a clip on screen shows its first frame and runs
+    // only while the pointer is on it (its card, its figure) or the keyboard
+    // is in it, and stops when they leave. Nothing else on the page moves
+    // on its own there either.
+    const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let wanted = false;
     const decide = () => {
       const seen = enough && risen;
       if (seen === visible) return;
@@ -128,12 +134,27 @@ export function useLazyVideo(src: string, poster?: string, watch?: VideoWatch) {
         attach();
         if (restart && gone) v.currentTime = 0;
         gone = false;
+        if (still && !wanted) return;
         if (hold) held = window.setTimeout(() => v.play().catch(() => {}), hold);
         else v.play().catch(() => {});
       } else {
         v.pause();
       }
     };
+    const want = (on: boolean) => {
+      wanted = on;
+      if (!visible) return;
+      if (on) v.play().catch(() => {});
+      else v.pause();
+    };
+    const onWant = () => want(true);
+    const onLeave = () => want(false);
+    if (still) {
+      target.addEventListener('pointerenter', onWant);
+      target.addEventListener('pointerleave', onLeave);
+      target.addEventListener('focusin', onWant);
+      target.addEventListener('focusout', onLeave);
+    }
     const play = new IntersectionObserver(
       ([e]) => {
         if (!e.isIntersecting) gone = true;
@@ -164,6 +185,12 @@ export function useLazyVideo(src: string, poster?: string, watch?: VideoWatch) {
       near.disconnect();
       play.disconnect();
       rise?.disconnect();
+      if (still) {
+        target.removeEventListener('pointerenter', onWant);
+        target.removeEventListener('pointerleave', onLeave);
+        target.removeEventListener('focusin', onWant);
+        target.removeEventListener('focusout', onLeave);
+      }
     };
   }, [src, poster, watched, share, hold, restart, line, within]);
 
