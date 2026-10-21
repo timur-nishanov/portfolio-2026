@@ -195,10 +195,10 @@ export function createGlass(
   soft = 0,
 ): GlassView | undefined {
   let renderer: import('@/lib/three').WebGLRenderer;
-  // Not on a software renderer: twelve rays a pixel over five balls, on the
-  // CPU, stalled the last screen for seconds. Refused, the context throws,
-  // and the discs painted by the stylesheet stand in, as the still head
-  // does for the head (hero/FloatingHead).
+  // Not on a software renderer (the callers ask lib/webgl first; this is
+  // the browser's own word on it): twelve rays a pixel over five balls, on
+  // the CPU, stalled the last screen for seconds. Refused, the context
+  // throws, and the discs painted by the stylesheet stand in.
   try {
     renderer = new THREE.WebGLRenderer({
       canvas,

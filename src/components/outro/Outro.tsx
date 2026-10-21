@@ -8,6 +8,7 @@ import { clamp, lerp } from '@/lib/lerp';
 import { zoomOf } from '@/lib/zoom';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useSmoothScroll } from '@/components/providers/SmoothScrollProvider';
+import { hasFastWebGL } from '@/lib/webgl';
 import { playChime } from './chime';
 import './outro.css';
 
@@ -324,6 +325,9 @@ function Balls() {
       asked = true;
       nearby.disconnect();
       window.removeEventListener('scroll', load);
+      // No GPU (lib/webgl): the discs the stylesheet paints stand in, as the
+      // still head does for the head, and three.js is not fetched at all.
+      if (!hasFastWebGL()) return;
       import('@/lib/three').then((THREE) => {
         if (gone) return;
         view = createGlass(THREE, canvas, els.length, stage, 1);

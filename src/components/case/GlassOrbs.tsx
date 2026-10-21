@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { startGlassSpheres, type Glass, type GlassPaint } from '@/lib/glassSpheres';
+import { hasFastWebGL } from '@/lib/webgl';
 import './glass-orbs.css';
 
 type Item = { title: string; text: string };
@@ -100,6 +101,8 @@ export function GlassOrbs({ items }: { items: Item[] }) {
     // one that follows the setting.
     if (window.matchMedia('(forced-colors: active)').matches) return;
     if (window.matchMedia('(prefers-reduced-transparency: reduce)').matches) return;
+    // No GPU (lib/webgl): the plain orbs stay, and three.js is not fetched.
+    if (!hasFastWebGL()) return;
     let glass: Glass | undefined;
     let gone = false;
     // three.js (lib/three) comes in only here, and only once the spheres are a screen

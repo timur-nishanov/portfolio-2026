@@ -3,6 +3,7 @@
 import dynamic from 'next/dynamic';
 import { useEffect, useState } from 'react';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { hasFastWebGL } from '@/lib/webgl';
 import { StaticHead } from './StaticHead';
 
 // three.js head — lazy chunk, client-only, loaded after first paint so it never
@@ -12,41 +13,12 @@ import { StaticHead } from './StaticHead';
 // step of the chain that kept the head off a phone's screen for seconds.
 const Head3D = dynamic(() => (early ?? import('./Head3D')).then((m) => m.Head3D), { ssr: false });
 
-/**
- * Whether this browser draws WebGL 2 on a GPU. Without one (no GPU, a
- * blocklisted driver, or a headless test browser such as PageSpeed's) WebGL
- * falls back to a software renderer that draws every frame on the main
- * thread: the live head then blocks the page for seconds on end. The browser
- * itself reports that case as a "major performance caveat"; the renderer's
- * name is checked as well, for the ones that don't. WebGL 2 only: three.js
- * (r163 and up) draws with nothing less, and on a browser with only the
- * first WebGL (iOS 14 and older) its renderer throws instead of drawing.
- */
-let fast: boolean | null = null;
-function hasFastWebGL() {
-  if (fast !== null) return fast;
-  return (fast = probeWebGL());
-}
-function probeWebGL() {
-  try {
-    const canvas = document.createElement('canvas');
-    const gl = canvas.getContext('webgl2', { failIfMajorPerformanceCaveat: true });
-    if (!gl) return false;
-    const info = gl.getExtension('WEBGL_debug_renderer_info');
-    const renderer = info ? String(gl.getParameter(info.UNMASKED_RENDERER_WEBGL)) : '';
-    gl.getExtension('WEBGL_lose_context')?.loseContext();
-    return !/swiftshader|llvmpipe|softpipe|software|basic render/i.test(renderer);
-  } catch {
-    return false;
-  }
-}
-
 /** The live head, unless motion is to be reduced or there is no GPU for it. */
 function wantsLiveHead() {
   return !window.matchMedia('(prefers-reduced-motion: reduce)').matches && hasFastWebGL();
 }
 // The head's chunk, asked for as this module runs (see Head3D above). After
-// the functions it calls and what they keep, which must exist by now.
+// the function it calls, which must exist by now.
 const early = typeof window !== 'undefined' && wantsLiveHead() ? import('./Head3D') : null;
 
 /**
