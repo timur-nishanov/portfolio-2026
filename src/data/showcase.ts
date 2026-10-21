@@ -103,13 +103,13 @@ export const showcase: ShowcaseCase[] = [
     // Short enough for one line beside the monitor, as the others: "…for a
     // crowdlending platform" ran to the card's edge and wrapped.
     subtitle: 'Investment flow for crowdlending',
-    // No recording yet, and no case study: the monitor stands with a blank
-    // screen, and the card opens nothing, until they come.
+    // No case study yet: the card opens nothing until it comes.
     phone: {
       framed: true,
       type: 'video',
-      src: '',
-      alt: 'Lendly Invest',
+      src: assets.lendlyCaseVideo,
+      poster: assets.lendlyCasePoster,
+      alt: 'Lendly Invest: a loan’s page, the documents signed with a code from an SMS, and the investment in the portfolio',
     },
     // The other two (what was wrong with the old flow; the role and the
     // team) are still to be written.
