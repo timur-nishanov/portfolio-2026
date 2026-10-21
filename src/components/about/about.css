@@ -77,9 +77,10 @@
   display: block;
   text-wrap: balance;
 }
-/* The site's secondary grey (the case subtitles). */
+/* The site's secondary grey (the case subtitles, the case pages' quieter
+   line): 4.9:1 on the page, where #ababab read at 2.2:1. */
 .aw__link {
-  color: #ababab;
+  color: rgba(8, 8, 10, 0.57);
   text-decoration: none;
   transition: color 0.2s ease;
 }

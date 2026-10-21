@@ -160,8 +160,11 @@
 .cs-card__title {
   color: var(--ink-strong, #08080a);
 }
+/* The case pages' quieter grey (rgba(8, 8, 10, 0.57), their --cp-mute): on the
+   card's grey it reads at 4.8:1, where #ababab read at 1.7:1, under the
+   3:1 even large type is asked for. */
 .cs-card__sub {
-  color: #ababab;
+  color: rgba(8, 8, 10, 0.57);
 }
 
 .cs-card__phone {
