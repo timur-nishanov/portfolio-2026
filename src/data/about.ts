@@ -22,8 +22,7 @@ export const aboutText: AboutLine[][] = [
     'but I still prefer a bit more craft.',
   ],
   [
-    // A short line in, then the two the old block had: the site, the awards.
-    'With the Salt\u00a0and\u00a0Pepper team,',
+    // The two lines the old block had: the site, the awards.
     'I designed a site for film director Artem\u00a0Shcherbakov.',
     'It got Site\u00a0of\u00a0the\u00a0Day on Awwwards, FWA and CSSDA.',
     { text: 'artemartemartem.com', href: 'https://artemartemartem.com' },
