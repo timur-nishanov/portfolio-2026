@@ -102,16 +102,27 @@ export function GlassOrbs({ items }: { items: Item[] }) {
     if (window.matchMedia('(prefers-reduced-transparency: reduce)').matches) return;
     let glass: Glass | undefined;
     let gone = false;
-    // three.js comes in only here, and only once the spheres are on the page.
-    import('three').then((THREE) => {
-      if (gone) return;
-      glass = startGlassSpheres(THREE, root, canvas, '.go__orb', paintWords);
-      // The words are drawn again once the face is in: before, the texture
-      // held the fallback face. Shown at once, not on the next move.
-      document.fonts?.ready.then(() => !gone && glass?.repaint()).catch(() => {});
-    });
+    // three.js (lib/three) comes in only here, and only once the spheres are a screen
+    // and a half off: the case opens on its words, and the chapters before
+    // this one are read before the glass is wanted.
+    const nearby = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        nearby.disconnect();
+        import('@/lib/three').then((THREE) => {
+          if (gone) return;
+          glass = startGlassSpheres(THREE, root, canvas, '.go__orb', paintWords);
+          // The words are drawn again once the face is in: before, the texture
+          // held the fallback face. Shown at once, not on the next move.
+          document.fonts?.ready.then(() => !gone && glass?.repaint()).catch(() => {});
+        });
+      },
+      { rootMargin: '150% 0px' },
+    );
+    nearby.observe(root);
     return () => {
       gone = true;
+      nearby.disconnect();
       glass?.stop();
     };
   }, []);

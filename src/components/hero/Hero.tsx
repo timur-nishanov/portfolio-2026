@@ -1,7 +1,17 @@
+import { preload } from 'react-dom';
+import { assets } from '@/data/assets';
 import { site } from '@/data/site';
 import { FloatingHead } from './FloatingHead';
 
 export function Hero() {
+  // The head's picture goes on the wire with the page, not after it: the
+  // head is drawn from script, so without this the browser only learned of
+  // its texture after the scripts had arrived, run and asked for it, and on
+  // a phone the first screen stood empty for seconds. Either head draws it
+  // (the still one too), and as three.js asks for it (crossOrigin
+  // anonymous), so the preload is the same cache entry. The depth map is
+  // small and the live head's alone: it comes with the head's own script.
+  preload(assets.headColor, { as: 'image', fetchPriority: 'high', crossOrigin: 'anonymous' });
   return (
     <section
       id="main"

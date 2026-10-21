@@ -293,6 +293,10 @@ function MenuContentInner({ id, labelledBy, open, contentRef, handleRef, onClose
               alt=""
               width={16}
               height={16}
+              // Not a preload in the page's head (React hoists one for every
+              // picture it serves, ahead of the scripts): the menu is closed
+              // as the page opens.
+              fetchPriority="low"
               draggable={false}
               style={
                 l.optical && (l.optical.scale || l.optical.dy)

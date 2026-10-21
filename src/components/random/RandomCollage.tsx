@@ -2,13 +2,19 @@
 
 import { useEffect, useRef } from 'react';
 import { collage, type CollageItem } from '@/data/randomCollage';
-import { useLazyVideo } from '@/hooks/useLazyVideo';
+import { useLazyVideo, type VideoWatch } from '@/hooks/useLazyVideo';
 import { cancelFrame, scheduleFrame, type FrameJob } from '@/lib/frame';
 import './random-collage.css';
 
+/** A clip runs while at least half of it is on the screen (of the screen's
+    height, for one taller than it). Started on its first sliver, three or
+    four of these 60fps clips decoded at once on a phone, two of them
+    showing an edge. */
+const CLIP_WATCH: VideoWatch = { share: 0.5, hold: 0, restart: false };
+
 /** A project's clip; its source and poster are attached on approach (useLazyVideo). */
 function Clip({ video }: { video: CollageItem['video'] }) {
-  const ref = useLazyVideo(video.src, video.poster);
+  const ref = useLazyVideo(video.src, video.poster, CLIP_WATCH);
   return (
     <video
       ref={ref}

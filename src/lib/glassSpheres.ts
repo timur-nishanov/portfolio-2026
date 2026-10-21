@@ -1,4 +1,4 @@
-type Three = typeof import('three');
+type Three = typeof import('@/lib/three');
 
 /*
  * Spheres of glass over the page (as on wabi.ai): the three questions in the
@@ -194,7 +194,7 @@ export function createGlass(
   from: HTMLElement,
   soft = 0,
 ): GlassView | undefined {
-  let renderer: import('three').WebGLRenderer;
+  let renderer: import('@/lib/three').WebGLRenderer;
   try {
     renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: false, powerPreference: 'low-power' });
   } catch {
@@ -257,7 +257,7 @@ export function createGlass(
     scene.add(mesh);
     return mesh;
   });
-  const uniforms = (i: number) => (meshes[i].material as import('three').ShaderMaterial).uniforms;
+  const uniforms = (i: number) => (meshes[i].material as import('@/lib/three').ShaderMaterial).uniforms;
   const shrink = 1 / magnification();
   let H = 1;
   // Drawn finer than the screen (up to the texture's limit), as the glass
@@ -296,7 +296,7 @@ export function createGlass(
     },
     render: () => renderer.render(scene, camera),
     dispose: () => {
-      meshes.forEach((m) => (m.material as import('three').ShaderMaterial).dispose());
+      meshes.forEach((m) => (m.material as import('@/lib/three').ShaderMaterial).dispose());
       geometry.dispose();
       pageSheet.tex.dispose();
       carrySheet.tex.dispose();
@@ -346,7 +346,11 @@ export function startGlassSpheres(
 
   let W = 1;
   let H = 1;
-  const draw = () => view.page(W, H, (ctx, shrink) => paint(ctx, orbs, shrink));
+  // The words' sheet at a reading density: the glass shows them at most a
+  // third larger than the page sets them, so three times the screen's
+  // pixels is still oversampled. At the default four, the sheet behind
+  // three short labels ran to tens of megabytes on a phone.
+  const draw = () => view.page(W, H, (ctx, shrink) => paint(ctx, orbs, shrink), Math.min(dpr * 1.5, 3));
   const measure = () => {
     const box = canvas.getBoundingClientRect();
     W = Math.max(1, Math.round(box.width));

@@ -6,22 +6,31 @@ import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { StaticHead } from './StaticHead';
 
 // three.js head — lazy chunk, client-only, loaded after first paint so it never
-// blocks LCP (TZ §7.2 / §14).
-const Head3D = dynamic(() => import('./Head3D').then((m) => m.Head3D), { ssr: false });
+// blocks LCP (TZ §7.2 / §14). Asked for as soon as this module runs, with the
+// page's own scripts, where it will be wanted (below): asked for from the
+// first effect instead, it waited for the whole page to hydrate first, a
+// step of the chain that kept the head off a phone's screen for seconds.
+const Head3D = dynamic(() => (early ?? import('./Head3D')).then((m) => m.Head3D), { ssr: false });
 
 /**
- * Whether this browser draws WebGL on a GPU. Without one (no GPU, a
+ * Whether this browser draws WebGL 2 on a GPU. Without one (no GPU, a
  * blocklisted driver, or a headless test browser such as PageSpeed's) WebGL
  * falls back to a software renderer that draws every frame on the main
  * thread: the live head then blocks the page for seconds on end. The browser
  * itself reports that case as a "major performance caveat"; the renderer's
- * name is checked as well, for the ones that don't.
+ * name is checked as well, for the ones that don't. WebGL 2 only: three.js
+ * (r163 and up) draws with nothing less, and on a browser with only the
+ * first WebGL (iOS 14 and older) its renderer throws instead of drawing.
  */
+let fast: boolean | null = null;
 function hasFastWebGL() {
+  if (fast !== null) return fast;
+  return (fast = probeWebGL());
+}
+function probeWebGL() {
   try {
     const canvas = document.createElement('canvas');
-    const opts = { failIfMajorPerformanceCaveat: true };
-    const gl = (canvas.getContext('webgl2', opts) ?? canvas.getContext('webgl', opts)) as WebGLRenderingContext | null;
+    const gl = canvas.getContext('webgl2', { failIfMajorPerformanceCaveat: true });
     if (!gl) return false;
     const info = gl.getExtension('WEBGL_debug_renderer_info');
     const renderer = info ? String(gl.getParameter(info.UNMASKED_RENDERER_WEBGL)) : '';
@@ -31,6 +40,14 @@ function hasFastWebGL() {
     return false;
   }
 }
+
+/** The live head, unless motion is to be reduced or there is no GPU for it. */
+function wantsLiveHead() {
+  return !window.matchMedia('(prefers-reduced-motion: reduce)').matches && hasFastWebGL();
+}
+// The head's chunk, asked for as this module runs (see Head3D above). After
+// the functions it calls and what they keep, which must exist by now.
+const early = typeof window !== 'undefined' && wantsLiveHead() ? import('./Head3D') : null;
 
 /**
  * Mounts the head inside the hero. It drifts around the hero box on its own,
@@ -48,12 +65,13 @@ export function FloatingHead() {
   // Decided after mount (the server can't know).
   const [mode, setMode] = useState<'pending' | 'live' | 'still'>('pending');
   useEffect(() => {
-    const motion = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    setMode(motion && hasFastWebGL() ? 'live' : 'still');
+    setMode(wantsLiveHead() ? 'live' : 'still');
   }, []);
 
   if (mode === 'pending') return null;
-  if (mode === 'live' && !reduced) return <Head3D />;
+  // The renderer can still refuse a context the check allowed (too many on
+  // the page, a GPU that just went away): the still head then, not a blank.
+  if (mode === 'live' && !reduced) return <Head3D onFail={() => setMode('still')} />;
   return (
     <div
       aria-hidden="true"

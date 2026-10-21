@@ -310,9 +310,19 @@ function Balls() {
     const flat =
       window.matchMedia('(forced-colors: active)').matches ||
       window.matchMedia('(prefers-reduced-transparency: reduce)').matches;
-    if (!flat) {
-      // three.js comes in only here, and only once the balls are on the page.
-      import('three').then((THREE) => {
+    // three.js (lib/three) comes in only here, and only once the visitor is on the way
+    // down: on the first scroll, or with this screen three screens off.
+    // Fetched at mount, it was 175KB of script run on every visit to the
+    // page, balls seen or not, and the heaviest task of the first seconds on
+    // a phone; the live head fetches the same chunks anyway wherever it
+    // runs, so nothing is later where the glass is wanted.
+    let asked = false;
+    const load = () => {
+      if (asked || gone) return;
+      asked = true;
+      nearby.disconnect();
+      window.removeEventListener('scroll', load);
+      import('@/lib/three').then((THREE) => {
         if (gone) return;
         view = createGlass(THREE, canvas, els.length, stage, 1);
         if (!view) return;
@@ -330,6 +340,16 @@ function Balls() {
           })
           .catch(() => {});
       });
+    };
+    const nearby = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) load();
+      },
+      { rootMargin: '300% 0px' },
+    );
+    if (!flat) {
+      nearby.observe(stage);
+      window.addEventListener('scroll', load, { passive: true });
     }
 
     // --- grab / throw (only while the pointer is held down on a ball) -------
@@ -596,6 +616,8 @@ function Balls() {
       cancelAnimationFrame(raf);
       io.disconnect();
       ro.disconnect();
+      nearby.disconnect();
+      window.removeEventListener('scroll', load);
       stage.removeEventListener('pointerdown', onDown);
       window.removeEventListener('pointermove', onMove);
       window.removeEventListener('pointerup', onUp);
@@ -622,7 +644,9 @@ function Balls() {
         {outroLinks.map((l, i) => {
           const logo = (
             // eslint-disable-next-line @next/next/no-img-element
-            <img className="outro__logo" src={l.icon} alt="" width={16} height={16} draggable={false} />
+            // fetchPriority: no preload in the page's head for a logo five
+            // screens down (React hoists one for every picture it serves).
+            <img className="outro__logo" src={l.icon} alt="" width={16} height={16} fetchPriority="low" draggable={false} />
           );
           const ref = (n: HTMLElement | null) => {
             elsRef.current[i] = n;

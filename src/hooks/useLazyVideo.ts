@@ -20,6 +20,39 @@ export type VideoWatch = { share: number; hold: number; restart: boolean; line?:
 const STEPS = Array.from({ length: 21 }, (_, i) => i / 20);
 
 /**
+ * When a clip near the screen, but not yet on it, may go on the wire. On a
+ * wide screen at once. On a phone the first cards are 'near' the moment the
+ * page opens (the hero is one screen tall), and their clips, a megabyte or
+ * two each, went on the wire beside the head's own picture: on 4G the first
+ * screen waited seconds for them. There they wait for the first scroll, or
+ * for the page to have loaded and sat a moment idle, whichever comes first;
+ * the poster covers the rest, and a card's clip waits to be well in view
+ * before it plays anyway.
+ */
+let settled: Promise<void> | null = null;
+function heroSettled(): Promise<void> {
+  if (settled) return settled;
+  settled = new Promise((resolve) => {
+    if (!window.matchMedia('(max-width: 899px)').matches || window.scrollY > 0) return resolve();
+    let done = false;
+    const go = () => {
+      if (done) return;
+      done = true;
+      window.removeEventListener('scroll', go);
+      resolve();
+    };
+    window.addEventListener('scroll', go, { passive: true });
+    const idle = () => {
+      if ('requestIdleCallback' in window) window.requestIdleCallback(go, { timeout: 2500 });
+      else setTimeout(go, 1500);
+    };
+    if (document.readyState === 'complete') idle();
+    else window.addEventListener('load', idle, { once: true });
+  });
+  return settled;
+}
+
+/**
  * Attaches a video's source (and its poster) only once it is near the
  * viewport, then plays it while it is on screen.
  *
@@ -79,7 +112,8 @@ export function useLazyVideo(src: string, poster?: string, watch?: VideoWatch) {
       },
       { rootMargin: '150% 0px 150% 0px' },
     );
-    near.observe(v);
+    let live = true;
+    heroSettled().then(() => live && near.observe(v));
 
     // Play only while actually visible — seven clips running off-screen is
     // both wasted decode work and wasted battery.
@@ -125,6 +159,7 @@ export function useLazyVideo(src: string, poster?: string, watch?: VideoWatch) {
     rise?.observe(target);
 
     return () => {
+      live = false;
       window.clearTimeout(held);
       near.disconnect();
       play.disconnect();
