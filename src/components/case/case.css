@@ -11,7 +11,9 @@
 .cp-page,
 .cp-bar {
   --cp-ink: var(--ink-strong, #08080a);
-  --cp-mute: rgba(8, 8, 10, 0.45); /* the quieter line: a subject, a label, a note, the index */
+  /* The quieter line: a subject, a label, a note, the index. Dark enough to
+     read at the small size (4.5:1 on the page and in a figure's box). */
+  --cp-mute: rgba(8, 8, 10, 0.57);
   --cp-hair: rgba(8, 8, 10, 0.08);
   --cp-col: 560px; /* the about block's measure */
   /* The spacing, measured off benji.org's case: */
@@ -329,7 +331,7 @@
    kept in view as the case scrolls; the chapter being read in ink. Only
    where there is room beside the column: there the bar is not shown. */
 .cp-index-host {
-  --cp-index-w: 264px; /* the longest chapter name of any case, on one line */
+  --cp-index-w: 280px; /* the longest chapter name of any case, on one line */
   position: sticky;
   top: 128px;
   z-index: 2;

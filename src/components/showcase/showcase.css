@@ -50,6 +50,28 @@
   inherits: false;
   initial-value: 0;
 }
+/* --dim (0..0.06, CaseShowcase): how much darker the card beneath has gone
+   as the next one slides over it. Black at this opacity over the card is
+   the same picture as brightness(1 - dim), without a filter pass over the
+   whole card (its clip still playing) on every frame of the slide. Not
+   inherited, for the same reason as --lift. */
+@property --dim {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 0;
+}
+.cs-card::before {
+  --dim: inherit;
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  border-radius: inherit;
+  background: #000;
+  opacity: var(--dim, 0);
+  pointer-events: none;
+  will-change: opacity;
+}
 /* The edge: the top of the card, down past the corners' curve (the edge never
    reaches lower), with the card's own corners, so it draws the same line.
    Nothing the card holds reaches up there but the chip, so it sits over the
@@ -98,15 +120,29 @@
   z-index: 2;
   cursor: pointer;
 }
+/* On a touch screen there is no hand and no chip to say the notes are not
+   the card: a tap on the note just read went nowhere, and the card looked
+   like it would not open. There the notes let the tap through to the link
+   under them, and the whole card opens the case. */
+@media (pointer: coarse) {
+  .cs-card__notes {
+    pointer-events: none;
+  }
+}
 .cs-card:has(.cs-card__notes:hover) .cs-chip__dot {
   opacity: 0;
   transform: scale(0.4);
   visibility: hidden;
 }
 
+/* Bounded on the right: the phone's left edge is 37% in, and a subtitle
+   left to shrink-to-fit ran under the phone on a laptop ("AI assistant
+   concept for a Yandex design battle" at 1280). Within the bound a long one
+   breaks into two even lines instead. */
 .cs-card__head {
   position: absolute;
   left: 4.7%;
+  right: 63%;
   top: 50%;
   transform: translateY(-50%);
 }
@@ -160,19 +196,17 @@
   height: calc(83.8% * 1256 / 1232);
   transform: translateY(-50%);
 }
+/* The monitor card's head runs to the card's edge, never past it: on a
+   narrow desktop a subtitle breaks into even lines there. (No nowrap: since
+   text-wrap became a shorthand it was reset by the balance below anyway,
+   and in the engines where it still held, the line ran out of the card.) */
 .cs-card[data-device='monitor'] .cs-card__head {
   left: 71%;
+  right: 0;
   top: 10.6%;
   transform: none;
 }
-/* On desktop the title and subtitle stay one line each, as drawn; stacked on
-   a phone they wrap in even lines. */
-@media (min-width: 900px) {
-  .cs-card__title,
-  .cs-card__sub {
-    white-space: nowrap;
-  }
-}
+/* A title or subtitle that has to wrap does so in even lines. */
 .cs-card__title,
 .cs-card__sub {
   text-wrap: balance;
@@ -390,16 +424,22 @@
     width: 100%;
     height: auto;
   }
+  /* No taller than leaves room for the rest of the card on the screen
+     (the head, the gaps, a four-line note): on a small phone (an SE, a 13
+     with its toolbars) the parked card ran past the bottom and its notes
+     were out of sight. */
   .cs-card__phone {
     align-self: center;
-    height: min(560px, 118vw);
+    height: min(560px, 118vw, calc(100svh - 300px));
   }
   /* No room left of the column here: the track moves inside it. Still above
      the card's link. */
   .cs-card__notes {
     position: relative;
     inset: auto; /* the desktop column's offsets don't apply in the stack */
-    max-width: none;
+    /* A reading measure on a tablet, where the card is wide: at the full
+       width a note ran to a hundred characters a line. */
+    max-width: 36em;
     padding-left: 16px;
   }
   .rn__track {

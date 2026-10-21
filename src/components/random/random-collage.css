@@ -100,11 +100,13 @@
 @media (max-width: 899px) {
   .rc {
     --gutter: 12px;
-    --clip-w: calc(100vw - 2 * var(--gutter) - 10vw);
+    /* And never taller than the screen: a phone held sideways. */
+    --clip-w: min(calc(100vw - 2 * var(--gutter) - 10vw), 150svh);
     padding: 96px 0 120px;
   }
   .rc__item[data-side='right'] {
-    margin-left: calc(var(--gutter) + 10vw);
+    margin-right: var(--gutter);
+    margin-left: auto;
   }
   .rc__item[data-shape='upright'] {
     width: min(var(--clip-w), 56svh);

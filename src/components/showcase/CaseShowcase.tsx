@@ -124,7 +124,7 @@ export function CaseShowcase() {
           if (p === 0) {
             rise[i] = 0;
             put(i, 'transform', settle[i] > 0.05 ? `translateY(${settle[i].toFixed(2)}px)` : '');
-            put(i, 'filter', '');
+            put(i, '--dim', '');
             put(i, 'opacity', '');
             put(i, 'will-change', '');
           } else {
@@ -136,18 +136,29 @@ export function CaseShowcase() {
               // full size and only scaled: a touch soft by the end, as a card
               // going back into the stack may well be.
               put(i, 'will-change', 'transform');
-              put(i, 'filter', p < 1 ? `brightness(${(1 - COVERED_DIM * p).toFixed(3)})` : '');
+              // The dimming is a black veil over the card (showcase.css),
+              // not a filter: a filter had the whole card, clip and all,
+              // drawn through it again on every frame of the slide.
+              put(i, '--dim', p < 1 ? (COVERED_DIM * p).toFixed(3) : '');
             }
             put(i, 'opacity', String(1 - p * p));
           }
           const gone = p === 1;
+          // Faded out it still stood in the pointer's way: its top 56px rise
+          // above the parked card, where a click on what looks like the page
+          // opened a case nobody could see. It keeps its place in the tab
+          // order and for screen readers, as before.
+          put(i, 'pointer-events', gone ? 'none' : '');
           const video = videos[i];
           if (!video) continue;
           if (gone) {
             covered[i] = true;
+            // The notes read it too, and stop taking turns under the stack.
+            cards[i].toggleAttribute('data-covered', true);
             if (!video.paused) video.pause();
           } else if (covered[i] && p < UNCOVERED) {
             covered[i] = false;
+            cards[i].toggleAttribute('data-covered', false);
             video.currentTime = 0;
             video.play().catch(() => {});
           }

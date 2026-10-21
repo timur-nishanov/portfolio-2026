@@ -59,7 +59,11 @@ export function RotatingNotes({ notes, className = '' }: Props) {
     // the card has landed and filled, so none changes as it comes back.
     let covered = html.hasAttribute('data-case-open');
     let uncover = 0;
-    const update = () => setActive(inView && !covered && document.visibilityState === 'visible');
+    // A card wholly under the next one in the stack (CaseShowcase marks it)
+    // is in view too, and its notes took their turns unseen.
+    const card = el.closest('.cs-card');
+    let stacked = !!card?.hasAttribute('data-covered');
+    const update = () => setActive(inView && !covered && !stacked && document.visibilityState === 'visible');
     const io = new IntersectionObserver(
       ([e]) => {
         inView = e.isIntersecting;
@@ -81,10 +85,16 @@ export function RotatingNotes({ notes, className = '' }: Props) {
       }
     });
     caseWatch.observe(html, { attributes: true, attributeFilter: ['data-case-open'] });
+    const stackWatch = new MutationObserver(() => {
+      stacked = !!card?.hasAttribute('data-covered');
+      update();
+    });
+    if (card) stackWatch.observe(card, { attributes: true, attributeFilter: ['data-covered'] });
     document.addEventListener('visibilitychange', update);
     return () => {
       io.disconnect();
       caseWatch.disconnect();
+      stackWatch.disconnect();
       window.clearTimeout(uncover);
       document.removeEventListener('visibilitychange', update);
     };

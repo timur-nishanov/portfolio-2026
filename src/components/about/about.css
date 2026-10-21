@@ -129,6 +129,18 @@
     padding: 0 16px;
   }
 }
+/* A phone held sideways: the text starts higher and runs wider, so the
+   three paragraphs fit the short stage, and the diplomas keep a card's size
+   rather than a thumbnail's. */
+@media (max-width: 899px) and (max-height: 500px) {
+  .aw {
+    --W: min(72vw, 60svh);
+  }
+  .aw__text {
+    inset: 12svh 0 auto;
+    max-width: 640px;
+  }
+}
 
 /* --- reduced motion: no scroll-driven movement — the text, then the
    diplomas as a still stack, each overlapping the one before. ------------- */
