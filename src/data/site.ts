@@ -5,6 +5,10 @@ export const site = {
   // TODO: confirm the real contact address with Timur.
   email: 'timanemetis@gmail.com',
   linkedin: 'https://www.linkedin.com/in/timur-nishanov-3a7510428/',
+  x: 'https://x.com/nem_etis',
+  // The card's author on X.
+  xHandle: '@nem_etis',
+  github: 'https://github.com/timur-nishanov',
   hero: {
     // New first screen (Figma 2:384): the title rides the top bar, the
     // tagline sits at the bottom, two authored lines.

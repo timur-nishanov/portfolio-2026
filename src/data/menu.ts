@@ -35,8 +35,8 @@ export type Optical = { scale?: number; dy?: number; labelDx?: number };
 // 16px circle each, nudged onto the label's cap-height centre together.
 export const menuLinks: MenuLink[] = [
   { kind: 'external', label: 'LinkedIn', icon: '/icons/linkedin.svg', optical: { dy: -0.5 }, href: site.linkedin },
-  { kind: 'external', label: 'X', icon: '/icons/x.svg', optical: { dy: -0.5, labelDx: -1 }, href: 'https://x.com/nem_etis' },
-  { kind: 'external', label: 'GitHub', icon: '/icons/github.svg', optical: { dy: -0.5 }, href: 'https://github.com/timur-nishanov' },
+  { kind: 'external', label: 'X', icon: '/icons/x.svg', optical: { dy: -0.5, labelDx: -1 }, href: site.x },
+  { kind: 'external', label: 'GitHub', icon: '/icons/github.svg', optical: { dy: -0.5 }, href: site.github },
   // Gmail copies rather than opening a mail client — most visitors on a
   // desktop have no handler set up, and a dead mailto reads as a broken link.
   { kind: 'copy', label: 'Email', icon: '/icons/google.svg', optical: { dy: -0.5, labelDx: -0.5 }, value: site.email, copiedLabel: 'Copied' },

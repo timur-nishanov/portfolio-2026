@@ -22,6 +22,13 @@ export function pageMetadata({ path, title, description }: Page): Metadata {
       description,
       images: [{ url: site.og.image, width: site.og.width, height: site.og.height, alt: site.og.alt }],
     },
-    twitter: { card: 'summary_large_image', title, description, images: [site.og.image] },
+    twitter: {
+      card: 'summary_large_image',
+      site: site.xHandle,
+      creator: site.xHandle,
+      title,
+      description,
+      images: [{ url: site.og.image, alt: site.og.alt }],
+    },
   };
 }
