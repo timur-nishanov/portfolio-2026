@@ -50,6 +50,28 @@
   inherits: false;
   initial-value: 0;
 }
+/* --dim (0..0.06, CaseShowcase): how much darker the card beneath has gone
+   as the next one slides over it. Black at this opacity over the card is
+   the same picture as brightness(1 - dim), without a filter pass over the
+   whole card (its clip still playing) on every frame of the slide. Not
+   inherited, for the same reason as --lift. */
+@property --dim {
+  syntax: '<number>';
+  inherits: false;
+  initial-value: 0;
+}
+.cs-card::before {
+  --dim: inherit;
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  border-radius: inherit;
+  background: #000;
+  opacity: var(--dim, 0);
+  pointer-events: none;
+  will-change: opacity;
+}
 /* The edge: the top of the card, down past the corners' curve (the edge never
    reaches lower), with the card's own corners, so it draws the same line.
    Nothing the card holds reaches up there but the chip, so it sits over the
@@ -98,15 +120,36 @@
   z-index: 2;
   cursor: pointer;
 }
-.cs-card:has(.cs-card__notes:hover) .cs-chip__dot {
+/* On a touch screen there is no hand and no chip to say the notes are not
+   the card: a tap on the note just read went nowhere, and the card looked
+   like it would not open. There the notes let the tap through to the link
+   under them, and the whole card opens the case. Not with motion reduced:
+   there the notes take no turns on their own (RotatingNotes), so a tap on
+   them brings the next one, as a click does. */
+@media (pointer: coarse) and (prefers-reduced-motion: no-preference) {
+  .cs-card__notes {
+    pointer-events: none;
+  }
+}
+/* And wherever the pill itself would land on the notes (data-aside,
+   CursorChip): beside the column, or pushed back over it by the card's
+   edge, it covered the very note being read. [data-on] for weight: the
+   rule that shows the pill has it too. */
+.cs-card:has(.cs-card__notes:hover) .cs-chip__pill,
+.cs-chip[data-on][data-aside] .cs-chip__pill {
   opacity: 0;
   transform: scale(0.4);
   visibility: hidden;
 }
 
+/* Bounded on the right: the phone's left edge is 37% in, and a subtitle
+   left to shrink-to-fit ran under the phone on a laptop ("AI assistant
+   concept for a Yandex design battle" at 1280). Within the bound a long one
+   breaks into two even lines instead. */
 .cs-card__head {
   position: absolute;
   left: 4.7%;
+  right: 63%;
   top: 50%;
   transform: translateY(-50%);
 }
@@ -122,8 +165,11 @@
 .cs-card__title {
   color: var(--ink-strong, #08080a);
 }
+/* The case pages' quieter grey (rgba(8, 8, 10, 0.57), their --cp-mute): on the
+   card's grey it reads at 4.8:1, where #ababab read at 1.7:1, under the
+   3:1 even large type is asked for. */
 .cs-card__sub {
-  color: #ababab;
+  color: rgba(8, 8, 10, 0.57);
 }
 
 .cs-card__phone {
@@ -160,19 +206,17 @@
   height: calc(83.8% * 1256 / 1232);
   transform: translateY(-50%);
 }
+/* The monitor card's head runs to the card's edge, never past it: on a
+   narrow desktop a subtitle breaks into even lines there. (No nowrap: since
+   text-wrap became a shorthand it was reset by the balance below anyway,
+   and in the engines where it still held, the line ran out of the card.) */
 .cs-card[data-device='monitor'] .cs-card__head {
   left: 71%;
+  right: 0;
   top: 10.6%;
   transform: none;
 }
-/* On desktop the title and subtitle stay one line each, as drawn; stacked on
-   a phone they wrap in even lines. */
-@media (min-width: 900px) {
-  .cs-card__title,
-  .cs-card__sub {
-    white-space: nowrap;
-  }
-}
+/* A title or subtitle that has to wrap does so in even lines. */
 .cs-card__title,
 .cs-card__sub {
   text-wrap: balance;
@@ -305,52 +349,68 @@
 }
 
 /* --- the cursor chip -------------------------------------------------------
-   The menu button's twin — the 20px disc and its 12px chevron, #1C1C1E —
-   turned to point right. White rather than the button's grey: on the grey
-   card the grey would vanish. */
+   A glass pill that says what a click on the card does: the header pill's
+   glass and ink (#1C1C1E), at the card notes' 15px. White glass rather than
+   the button's grey: on the grey card the grey would vanish. Its box is
+   fixed (CHIP, CursorChip) so the liquid glass fits it exactly. */
 .cs-chip {
   position: absolute;
   left: 0;
   top: 0;
   z-index: 2;
-  width: 20px;
-  height: 20px;
   pointer-events: none;
   will-change: transform;
 }
-/* Glass (.glass-disc, globals.css): the same disc as the header's button. */
-.cs-chip__dot {
-  display: grid;
-  place-items: center;
-  width: 100%;
-  height: 100%;
+/* Glass (.glass-disc, globals.css): the same frost and edge light as the
+   header's button, drawn as a pill. */
+.cs-chip .cs-chip__pill {
+  display: block;
+  border-radius: 999px;
   color: #1c1c1e;
+  font-family: var(--font-sf);
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 30px;
+  letter-spacing: 0.2px;
+  text-align: center;
+  white-space: nowrap;
   opacity: 0;
+  /* Grows out of the pointer's side, not its own middle. */
   transform: scale(0.4);
-  /* Hidden, not only transparent, while it is off: a transparent disc still
+  transform-origin: 0 0;
+  /* Hidden, not only transparent, while it is off: a transparent pill still
      ran its glass (a backdrop filter, reading and bending what lies behind
      it) every frame on every card. Visibility turns at the very start of the
-     fade in and the very end of the fade out, so the disc looks the same. */
+     fade in and the very end of the fade out, so the pill looks the same. */
   visibility: hidden;
   transition:
     opacity 160ms ease,
     transform 260ms cubic-bezier(0.3, 1.4, 0.5, 1),
     visibility 160ms;
 }
-.cs-chip[data-on] .cs-chip__dot {
+.cs-chip[data-on] .cs-chip__pill {
   opacity: 1;
   transform: scale(1);
   visibility: visible;
 }
-.cs-chip[data-on][data-down] .cs-chip__dot {
-  transform: scale(0.86);
+.cs-chip[data-on][data-down] .cs-chip__pill {
+  transform: scale(0.94);
   transition-duration: 120ms;
 }
-/* Drawn pointing up. A quarter turn points it right, and the same half pixel
-   toward its open side that the button gives its down chevron. */
-.cs-chip__chevron {
-  display: block;
-  transform: rotate(90deg) translateY(0.5px);
+/* Chromium: the liquid glass, as the header pill's (#lg-chip, CaseShowcase).
+   The same test as the disc's (globals.css): other engines keep the frost. */
+@supports (backdrop-filter: url('#lg')) and (not (background: -webkit-named-image(apple-pay-logo-black))) and
+  (not (-moz-appearance: none)) {
+  .cs-chip .cs-chip__pill {
+    backdrop-filter: url(#lg-chip);
+    -webkit-backdrop-filter: url(#lg-chip);
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .cs-chip .cs-chip__pill {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
 }
 
 /* --- stacked (tablet portrait and phones) ---------------------------------- */
@@ -390,19 +450,39 @@
     width: 100%;
     height: auto;
   }
+  /* No taller than leaves room for the rest of the card on the screen
+     (the head, the gaps, a four-line note): on a small phone (an SE, a 13
+     with its toolbars) the parked card ran past the bottom and its notes
+     were out of sight. */
   .cs-card__phone {
     align-self: center;
-    height: min(560px, 118vw);
+    height: clamp(220px, min(560px, 118vw), calc(100svh - 300px));
   }
   /* No room left of the column here: the track moves inside it. Still above
      the card's link. */
   .cs-card__notes {
     position: relative;
     inset: auto; /* the desktop column's offsets don't apply in the stack */
-    max-width: none;
+    /* A reading measure on a tablet, where the card is wide: at the full
+       width a note ran to a hundred characters a line. */
+    max-width: 36em;
     padding-left: 16px;
   }
   .rn__track {
     left: -16px;
+  }
+}
+
+/* Too short a screen for a card to park and the next to slide over it (a
+   phone held sideways, a laptop at twice its size): the cards simply follow
+   one another, and CaseShowcase leaves them alone. After the stacked rules,
+   whose sticky top it undoes. */
+@media (max-width: 899px) and (max-height: 520px) {
+  .cs-card {
+    position: relative;
+    top: auto;
+  }
+  .cs-card + .cs-card {
+    margin-top: 24px;
   }
 }

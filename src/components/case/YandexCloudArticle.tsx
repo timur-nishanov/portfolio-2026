@@ -46,12 +46,15 @@ export function YandexCloudArticle({ onBack, backHref }: ArticleProps) {
         <Facts
           items={[
             ['Role', 'Senior designer, design and front end'],
-            ['Team', 'Art director · Yandex Cloud’s product lead and designer · Contractor’s engineers'],
+            ['Team', 'Art director · Yandex Cloud’s product lead and designer · contractor’s engineers'],
             ['Timeline', 'August to September 2026'],
             ['Outcome', 'Ran at the booth · production built on my code'],
           ]}
         />
-        <p className="cp-reveal">The backend and the production build were on the contractor’s side.</p>
+        <p className="cp-reveal">
+          I came in through Rabotyagi Studio, which designs for Yandex. The back end and the production build were on
+          the contractor’s side.
+        </p>
         <Figure slot={media.firstScreen} frame="stage" />
       </div>
 

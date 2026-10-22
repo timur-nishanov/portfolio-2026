@@ -10,7 +10,7 @@
  * rectangles the blood occupies; the field is stage-sized half floats,
  * allocated on the first splash and released after a quiet spell.
  */
-import * as THREE from 'three';
+import * as THREE from '@/lib/three';
 import { Splash, K_STRIDE, P_STRIDE, F_STRIDE, type Wall, type HeadCovers, type KeepOut, type SplashInput } from './splash';
 import * as S from './shaders';
 

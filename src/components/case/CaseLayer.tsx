@@ -7,11 +7,11 @@ import { showcase } from '@/data/showcase';
 import { useSmoothScroll } from '@/components/providers/SmoothScrollProvider';
 import { CaseBar } from './CaseBar';
 import { CaseScroll } from './blocks';
-import { CASES } from './registry';
+import { CASES, loadCase, type Article } from './registry';
 import { onOpenCase } from './caseStore';
 import './case.css';
 
-type Opened = { id: string; card: HTMLElement | null; seq: number };
+type Opened = { id: string; card: HTMLElement | null; seq: number; Article: Article };
 type CaseState = { case?: string; layer?: string } | null;
 
 // Marks the history entries this page load put there itself. A case's
@@ -53,11 +53,30 @@ export function CaseLayer() {
   const contentRef = useRef<HTMLDivElement>(null);
   const barRef = useRef<HTMLElement>(null);
 
-  const begin = useCallback((id: string, card: HTMLElement | null) => {
+  // The article is fetched first where it is not in yet (registry): a card
+  // under the pointer, or any card once the cards are near, has asked for
+  // it already, so the case is on screen the frame after the click.
+  // With `href`, the case's address goes into the history as the layer
+  // opens (a card's click); without it, the address is there already (back
+  // and forward). If the article never comes (the connection gone), the
+  // case's own page is asked for instead: it has the article in its HTML.
+  const begin = useCallback((id: string, card: HTMLElement | null, href?: string) => {
     if (openedRef.current || !CASES[id]) return;
-    const o = { id, card, seq: ++seq.current };
-    openedRef.current = o;
-    setOpened(o);
+    const ask = ++seq.current;
+    loadCase(id)
+      .then((Article) => {
+        // Another case asked for since, or this one closed before it came.
+        if (openedRef.current || ask !== seq.current) return;
+        if (href) window.history.pushState({ case: id, layer: LAYER }, '', href);
+        const o = { id, card, seq: ask, Article };
+        openedRef.current = o;
+        setOpened(o);
+      })
+      .catch(() => {
+        if (ask !== seq.current) return;
+        const page = href ?? showcase.find((s) => s.id === id)?.href;
+        if (page) window.location.assign(page);
+      });
   }, []);
 
   // The way out, once the address has gone back (or straight away).
@@ -110,8 +129,7 @@ export function CaseLayer() {
     () =>
       onOpenCase(({ id, href, card }) => {
         if (openedRef.current) return;
-        window.history.pushState({ case: id, layer: LAYER }, '', href);
-        begin(id, card);
+        begin(id, card, href);
       }),
     [begin],
   );
@@ -122,6 +140,8 @@ export function CaseLayer() {
       leaving.current = false;
       const item = caseByPath(window.location.pathname);
       const o = openedRef.current;
+      // Whatever was still on its way in is not wanted here any more.
+      seq.current++;
       if (o && o.id !== item?.id) close();
       else if (!o && item && ours(e.state, item.id))
         begin(item.id, document.querySelector<HTMLElement>(`#works [data-case="${item.id}"]`));
@@ -219,7 +239,7 @@ export function CaseLayer() {
   if (!opened) return null;
   const entry = CASES[opened.id];
   if (!entry) return null;
-  const { Article } = entry;
+  const { Article } = opened;
 
   return createPortal(
     <div

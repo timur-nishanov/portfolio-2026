@@ -29,7 +29,7 @@ export function LendlyArticle({ onBack, backHref }: ArticleProps) {
 
       {/* --- overview ---------------------------------------------------- */}
       <div className="cp-col cp-intro">
-        <h1 className="cp-title cp-reveal">Lendly</h1>
+        <h1 className="cp-title cp-reveal">Lendly Invest</h1>
         <p className="cp-subtitle cp-reveal">An investor platform for real estate crowdlending</p>
         <p className="cp-reveal">
           On Lendly, people invest in business loans, mostly backed by real estate, and can sell their stakes to other
@@ -47,7 +47,7 @@ export function LendlyArticle({ onBack, backHref }: ArticleProps) {
             ['Outcome', 'Platform designed and handed to Lendly’s developers'],
           ]}
         />
-        <p className="cp-reveal">Lendly was a client of the studio I worked at.</p>
+        <p className="cp-reveal">Lendly was a client of Cedro Agency, the studio I worked at.</p>
       </div>
 
       {/* --- 01 ------------------------------------------------------------ */}

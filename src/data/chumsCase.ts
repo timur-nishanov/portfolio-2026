@@ -51,9 +51,9 @@ export const chumsMedia: ChumsMedia = {
       src: '/cases/chums/02-before-contacts.webp',
       w: 1440,
       h: 900,
-      alt: 'Before: contacts open in a full window',
+      alt: 'Contacts open in a full window',
     },
-    after: clip('02-after-contacts', 1280, 800, 'After: a small contacts window opens over the chat'),
+    after: clip('02-after-contacts', 1280, 800, 'A small contacts window opens over the chat'),
   },
   emoji: {
     before: {
@@ -61,9 +61,9 @@ export const chumsMedia: ChumsMedia = {
       src: '/cases/chums/03-before-emoji.webp',
       w: 1440,
       h: 900,
-      alt: 'Before: the emoji panel across the whole window',
+      alt: 'The emoji panel across the whole window',
     },
-    after: clip('03-after-emoji', 1280, 800, 'After: a small emoji window above the message field'),
+    after: clip('03-after-emoji', 1280, 800, 'A small emoji window above the message field'),
   },
   drag: clip('04-after-drag', 1280, 800, 'A file dragged into the chat window and attached', 'Dragging a file into the chat'),
   attach: clip(
@@ -107,5 +107,5 @@ export const chumsMedia: ChumsMedia = {
 export const chumsLinks = [
   { label: 'Google Play', href: 'https://play.google.com/store/apps/details?id=rocks.bf.chums', icon: '/icons/google-play.svg' },
   { label: 'chums.chat', href: 'https://chums.chat/#download', icon: '/logos/chums.webp' },
-  { label: 'App Store', href: 'https://apps.apple.com/no/app/chums-chat/id6458741197', icon: '/icons/app-store.svg' },
+  { label: 'App Store', href: 'https://apps.apple.com/app/chums-chat/id6458741197', icon: '/icons/app-store.svg' },
 ];

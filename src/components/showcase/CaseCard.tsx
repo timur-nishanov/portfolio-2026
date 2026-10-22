@@ -3,6 +3,7 @@
 import { useRef } from 'react';
 import type { ShowcaseCase } from '@/data/showcase';
 import { openCase } from '@/components/case/caseStore';
+import { loadCase } from '@/components/case/registry';
 import type { VideoWatch } from '@/hooks/useLazyVideo';
 import { MonitorMockup } from './MonitorMockup';
 import { PhoneMockup } from './PhoneMockup';
@@ -34,6 +35,10 @@ export function CaseCard({ item }: { item: ShowcaseCase }) {
       data-case={item.id}
       aria-labelledby={`cs-${item.id}`}
       data-scroll-frame
+      // The pointer, or the keyboard, on the card: its article comes in now,
+      // so a click opens the case at once (registry).
+      onPointerEnter={href ? () => loadCase(item.id) : undefined}
+      onFocus={href ? () => loadCase(item.id) : undefined}
     >
       <div className="cs-card__head">
         <h2 id={`cs-${item.id}`} className="cs-card__title">

@@ -3,8 +3,13 @@ import { FloatingHead } from '@/components/hero/FloatingHead';
 
 export const metadata: Metadata = {
   title: 'blank',
-  // A recording stage, not a page of the site — keep crawlers off it.
+  // A recording stage, not a page of the site: not indexed, and none of the
+  // site's own metadata (the share card, the canonical address) inherited
+  // from the layout onto it.
   robots: { index: false, follow: false },
+  alternates: null,
+  openGraph: null,
+  twitter: null,
 };
 
 /**

@@ -77,9 +77,10 @@
   display: block;
   text-wrap: balance;
 }
-/* The site's secondary grey (the case subtitles). */
+/* The site's secondary grey (the case subtitles, the case pages' quieter
+   line): 4.9:1 on the page, where #ababab read at 2.2:1. */
 .aw__link {
-  color: #ababab;
+  color: rgba(8, 8, 10, 0.57);
   text-decoration: none;
   transition: color 0.2s ease;
 }
@@ -127,6 +128,18 @@
   .aw__text {
     inset: 22svh 0 auto;
     padding: 0 16px;
+  }
+}
+/* A phone held sideways: the text starts higher and runs wider, so the
+   three paragraphs fit the short stage, and the diplomas keep a card's size
+   rather than a thumbnail's. */
+@media (max-width: 899px) and (max-height: 500px) {
+  .aw {
+    --W: min(72vw, 60svh);
+  }
+  .aw__text {
+    inset: 16svh 0 auto; /* just under the top fade */
+    max-width: 640px;
   }
 }
 

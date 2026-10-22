@@ -101,7 +101,31 @@ export function SiteHeader() {
       clearTimeout(idleTimer.current);
     };
   }, [armIdle]);
-  const hidden = scrollHidden || idleHidden;
+  // Keyboard focus on the bar brings it back and keeps it: hidden, the bar
+  // is only moved off the screen, and a Tab still landed on its button,
+  // where Enter opened a menu the hide-on-open effect below closed at once.
+  // Pointer focus (a click on the button) is not a pin: scrolling down then
+  // still tucks the menu away, as on iOS.
+  const [keyboardIn, setKeyboardIn] = useState(false);
+  const hidden = (scrollHidden || idleHidden) && !keyboardIn;
+  // The pin lets go at the first sign of a pointer (a wheel, a press): the
+  // keyboard gave the button its focus (Escape hands it back there), and a
+  // mouse user scrolling on would otherwise find the bar pinned under a
+  // ring. The focus goes with it, so the ring does too.
+  useEffect(() => {
+    if (!keyboardIn) return;
+    const release = () => {
+      const active = document.activeElement;
+      if (active instanceof HTMLElement && refs.root.current?.contains(active)) active.blur();
+      setKeyboardIn(false);
+    };
+    window.addEventListener('wheel', release, { passive: true });
+    window.addEventListener('pointerdown', release, { passive: true });
+    return () => {
+      window.removeEventListener('wheel', release);
+      window.removeEventListener('pointerdown', release);
+    };
+  }, [keyboardIn, refs]);
   useLiquidMorph(open, reduced, refs);
 
   const close = useCallback(
@@ -191,6 +215,12 @@ export function SiteHeader() {
         data-hidden={hidden && !open ? '' : undefined}
         data-glass={overContent ? '' : undefined}
         style={{ '--title-w': `${pillW}px` } as React.CSSProperties}
+        onFocus={(e) => {
+          if (e.target instanceof HTMLElement && e.target.matches(':focus-visible')) setKeyboardIn(true);
+        }}
+        onBlur={(e) => {
+          if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setKeyboardIn(false);
+        }}
       >
         <MenuGlassFilter
           filterRef={refs.filter}

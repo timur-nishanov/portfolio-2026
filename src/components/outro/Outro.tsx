@@ -7,6 +7,8 @@ import { createGlass, type GlassView } from '@/lib/glassSpheres';
 import { clamp, lerp } from '@/lib/lerp';
 import { zoomOf } from '@/lib/zoom';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { useSmoothScroll } from '@/components/providers/SmoothScrollProvider';
+import { hasFastWebGL } from '@/lib/webgl';
 import { playChime } from './chime';
 import './outro.css';
 
@@ -154,6 +156,7 @@ function Balls() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const elsRef = useRef<(HTMLElement | null)[]>([]);
   const reduced = useReducedMotion();
+  const { scrollTo } = useSmoothScroll();
   const [copied, setCopied] = useState(false);
   const copiedTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
@@ -310,13 +313,36 @@ function Balls() {
     const flat =
       window.matchMedia('(forced-colors: active)').matches ||
       window.matchMedia('(prefers-reduced-transparency: reduce)').matches;
-    if (!flat) {
-      // three.js comes in only here, and only once the balls are on the page.
-      import('three').then((THREE) => {
+    // three.js (lib/three) comes in only here, and only once the visitor is on the way
+    // down: on the first scroll, or with this screen three screens off.
+    // Fetched at mount, it was 175KB of script run on every visit to the
+    // page, balls seen or not, and the heaviest task of the first seconds on
+    // a phone; the live head fetches the same chunks anyway wherever it
+    // runs, so nothing is later where the glass is wanted.
+    let asked = false;
+    const load = () => {
+      if (asked || gone) return;
+      asked = true;
+      nearby.disconnect();
+      window.removeEventListener('scroll', load);
+      // No GPU (lib/webgl): the discs the stylesheet paints stand in, as the
+      // still head does for the head, and three.js is not fetched at all.
+      if (!hasFastWebGL()) return;
+      import('@/lib/three').then((THREE) => {
         if (gone) return;
         view = createGlass(THREE, canvas, els.length, stage, 1);
         if (!view) return;
         stage.setAttribute('data-gl', '');
+        // A context the browser took back (a tab left in the background on
+        // a phone): the logos show plain until it is given back, then the
+        // glass is drawn once more, as the loop at rest would not.
+        canvas.addEventListener('webglcontextlost', () => stage.removeAttribute('data-gl'));
+        canvas.addEventListener('webglcontextrestored', () => {
+          if (gone) return;
+          stage.setAttribute('data-gl', '');
+          sheets();
+          glass();
+        });
         sheets();
         glass();
         // The words and the logos drawn again once their face and pictures
@@ -330,6 +356,16 @@ function Balls() {
           })
           .catch(() => {});
       });
+    };
+    const nearby = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) load();
+      },
+      { rootMargin: '300% 0px' },
+    );
+    if (!flat) {
+      nearby.observe(stage);
+      window.addEventListener('scroll', load, { passive: true });
     }
 
     // --- grab / throw (only while the pointer is held down on a ball) -------
@@ -571,6 +607,16 @@ function Balls() {
       { threshold: [0, 0.75] },
     );
     io.observe(stage);
+    // The keyboard: a Tab onto a ball still parked above the stage (the
+    // screen not yet three quarters in view) had the browser scroll up to
+    // where the ball waits, out of sight, five presses in a row. The screen
+    // comes into view instead, and the drop plays as for a scroll (io).
+    const onFocusIn = () => {
+      const r = stage.getBoundingClientRect();
+      if (r.top >= 0 && r.bottom <= window.innerHeight) return;
+      scrollTo(r.top + window.scrollY, { offset: 0 });
+    };
+    stage.addEventListener('focusin', onFocusIn);
 
     // A new size of screen, or the words set again in their own face, may
     // leave other room under them.
@@ -596,6 +642,9 @@ function Balls() {
       cancelAnimationFrame(raf);
       io.disconnect();
       ro.disconnect();
+      stage.removeEventListener('focusin', onFocusIn);
+      nearby.disconnect();
+      window.removeEventListener('scroll', load);
       stage.removeEventListener('pointerdown', onDown);
       window.removeEventListener('pointermove', onMove);
       window.removeEventListener('pointerup', onUp);
@@ -606,7 +655,7 @@ function Balls() {
       stage.removeAttribute('data-gl');
       view?.dispose();
     };
-  }, [reduced]);
+  }, [reduced, scrollTo]);
 
   const copy = async (value: string) => {
     await copyText(value);
@@ -622,7 +671,9 @@ function Balls() {
         {outroLinks.map((l, i) => {
           const logo = (
             // eslint-disable-next-line @next/next/no-img-element
-            <img className="outro__logo" src={l.icon} alt="" width={16} height={16} draggable={false} />
+            // fetchPriority: no preload in the page's head for a logo five
+            // screens down (React hoists one for every picture it serves).
+            <img className="outro__logo" src={l.icon} alt="" width={16} height={16} fetchPriority="low" draggable={false} />
           );
           const ref = (n: HTMLElement | null) => {
             elsRef.current[i] = n;

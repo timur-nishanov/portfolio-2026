@@ -110,6 +110,10 @@ export function CaseIndex({ items, onBack, backHref }: { items: IndexItem[] } & 
     // The layer's own scroll, or the page's.
     if (caseScroll) caseScroll.glide(caseScroll.get() + y);
     else scrollTo(window.scrollY + y, { offset: 0 });
+    // The keyboard goes with it: the next Tab lands in the chapter, not on
+    // the next line of the index (the anchor jump that would have moved it
+    // is the one cancelled above).
+    head.focus({ preventScroll: true });
   };
 
   return (

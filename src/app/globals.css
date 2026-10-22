@@ -153,15 +153,16 @@ html.lenis body {
 }
 
 /* ---------------------------------------------------------------------------
-   Glass disc: the 20px round chevron buttons — the header's, the chip that
-   rides the cursor over a case card, the case page's back button — in the
-   site's glass (glassMaterial.ts, the case's spheres): clear, with a bright
+   Glass disc: the 20px round chevron buttons — the header's and the case
+   page's back button — in the site's glass (glassMaterial.ts, the case's spheres): clear, with a bright
    rim line, the light gathered along its upper left, and a faintly darker
    band of thickness inside. Chromium bends what is behind it through
    #lg-disc (PillGlassFilter, in the layout); other engines frost it. The
    background colour is a real colour, not only a gradient: the menu's morph
    starts from it, and its shape takes this exact edge on the 20px drop
-   (useLiquidMorph).
+   (useLiquidMorph). The chip over a case card borrows this frost and edge
+   as a 106×30 pill, with its own radius and filter (#lg-chip, showcase.css):
+   a change here changes it too.
 --------------------------------------------------------------------------- */
 .glass-disc {
   border-radius: 50%;
@@ -180,7 +181,10 @@ html.lenis body {
     0 1px 3px rgba(0, 0, 0, 0.08),
     0 4px 10px rgba(0, 0, 0, 0.05);
 }
-@supports (backdrop-filter: url('#lg')) and (not (background: -webkit-named-image(apple-pay-logo-black))) {
+/* Firefox parses the url() but draws no SVG filter as a backdrop: it keeps
+   the frost above, as the pill and the menu do (-moz-appearance names it). */
+@supports (backdrop-filter: url('#lg')) and (not (background: -webkit-named-image(apple-pay-logo-black))) and
+  (not (-moz-appearance: none)) {
   .glass-disc {
     background-color: rgba(255, 255, 255, 0.3);
     backdrop-filter: url(#lg-disc);

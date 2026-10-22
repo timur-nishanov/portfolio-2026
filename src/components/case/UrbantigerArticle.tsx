@@ -53,15 +53,15 @@ export function UrbantigerArticle({ onBack, backHref }: ArticleProps) {
             ['Role', 'Senior designer'],
             [
               'Team',
-              'Client’s product strategist and head of the online store · Studio’s design lead, two junior designers and an illustrator',
+              'Client’s product strategist and head of the online store · studio’s design lead, two junior designers and an illustrator',
             ],
             ['Timeline', 'Three months of design, handed over in July 2025'],
-            ['Outcome', 'MVP live. The client reported conversion at about twice the old site’s rate'],
+            ['Outcome', 'MVP live · conversion at about twice the old site’s rate, as the client reported'],
           ]}
         />
         <p className="cp-reveal">
-          Urbantiger was a client of the studio I worked at. We won the tender for the design, and another team built
-          it.
+          Urbantiger was a client of Cedro Agency, the studio I worked at. We won the tender for the design, and another
+          team built it.
         </p>
       </div>
 
@@ -70,8 +70,8 @@ export function UrbantigerArticle({ onBack, backHref }: ArticleProps) {
         <Heading id="cp-01">Turn the brief into a plan</Heading>
         <p className="cp-reveal">
           The client’s product strategist wrote the brief himself: every page, every block, with references. He used to
-          work at Only&nbsp;Me, a store I’d designed before, and almost half of his references were my old screens. It
-          also said we could change anything, as long as we could argue for it.
+          work at Only&nbsp;Me, a store I’d designed before, and almost half of his references were my old screens. The
+          brief also said we could change anything, as long as we could argue for it.
         </p>
         <p className="cp-reveal">
           Before any visuals we went through stores like Urbantiger, from 12&nbsp;Storeez and Monochrome to Moncler and

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import * as THREE from 'three';
+import * as THREE from '@/lib/three';
 import { assets } from '@/data/assets';
 import { clamp, lerp } from '@/lib/lerp';
 import { zoomOf } from '@/lib/zoom';
@@ -78,8 +78,11 @@ const MARK_FADE = 7; // seconds a bruise takes to disappear
 // Only a real knock marks — drifting into a wall must not bruise.
 const MARK_MIN_IMPACT = 0.5;
 
-export function Head3D() {
+export function Head3D({ onFail }: { onFail?: () => void }) {
   const wrapRef = useRef<HTMLDivElement>(null);
+  // Read when it is needed, so a new callback never restarts the head.
+  const failRef = useRef(onFail);
+  failRef.current = onFail;
 
   useEffect(() => {
     const wrap = wrapRef.current;
@@ -103,7 +106,20 @@ export function Head3D() {
     canvas.style.pointerEvents = 'none'; // clicks always fall through to the page
     wrap.appendChild(canvas);
 
-    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+    let renderer: THREE.WebGLRenderer;
+    try {
+      // No multisampling: the head's edge is its texture's alpha and the
+      // blood's its shaders', so there is no geometry edge for it to smooth,
+      // and it cost a resolve of the whole hero every frame.
+      renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: false });
+    } catch {
+      // No context after all (FloatingHead checked, but the page may hold
+      // too many, or the GPU may have gone): the still head in its place.
+      canvas.remove();
+      probe.remove();
+      failRef.current?.();
+      return;
+    }
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     // The shader logs are read back synchronously on a program's first use;
@@ -358,7 +374,17 @@ export function Head3D() {
       document.documentElement.classList.toggle('head-grab', on);
     };
 
+    // Nothing to point at or grab while the hero is off the screen, or a
+    // case is open over it (CaseLayer marks the page): the listeners are
+    // the window's, and the head is still under there, so a hand showed
+    // over a case's text and a press on it took hold of the hidden head.
+    const stageLive = () => onScreen && !document.documentElement.hasAttribute('data-case-open');
+
     const onPointerMove = (e: PointerEvent) => {
+      if (!stageLive()) {
+        setHover(false);
+        return;
+      }
       if (!dragging && e.pointerType === 'mouse') {
         const { u, v } = headUV(e.clientX, e.clientY);
         setHover(isOnHead(u, v));
@@ -384,6 +410,7 @@ export function Head3D() {
     };
 
     const onPointerDown = (e: PointerEvent) => {
+      if (!stageLive()) return;
       const { u, v } = headUV(e.clientX, e.clientY);
       // Miss → the event is left alone, so links and text under the transparent
       // part of the plane keep working (TZ §7.1).
@@ -467,8 +494,13 @@ export function Head3D() {
     window.addEventListener('pointerup', onPointerUp);
     window.addEventListener('pointercancel', onPointerCancel);
     window.addEventListener('blur', onPointerCancel);
-    window.addEventListener('touchstart', onTouch, { passive: false });
-    window.addEventListener('touchmove', onTouch, { passive: false });
+    // On the hero, not the window: a touch listener that may cancel makes
+    // every flick wait for the script to say so, and on the window that was
+    // every scroll on the page. A touch's events go to the element it began
+    // on, and a grab begins on the head, in the hero.
+    const stage = wrap.parentElement ?? wrap;
+    stage.addEventListener('touchstart', onTouch, { passive: false });
+    stage.addEventListener('touchmove', onTouch, { passive: false });
 
     // Bruise slots, reused round-robin once all six are taken.
     const marks = uniforms.uMarks.value;
@@ -742,12 +774,17 @@ export function Head3D() {
 
     // The hero scrolls away and stays away, but this loop used to keep
     // rendering the head at full rate underneath the rest of the page — a
-    // permanent GPU tax on every scroll. Pause while the stage is off screen;
-    // dt is already clamped, so picking back up is seamless.
+    // permanent GPU tax on every scroll. Pause while the stage is off screen,
+    // and while a case is open over it (CaseLayer marks the page; the
+    // observer only knows the screen's geometry, not what covers it); dt is
+    // already clamped, so picking back up is seamless.
     let onScreen = true;
-    const io = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting === onScreen) return;
-      onScreen = entry.isIntersecting;
+    let inView = true;
+    let covered = document.documentElement.hasAttribute('data-case-open');
+    const sync = () => {
+      const on = inView && !covered;
+      if (on === onScreen) return;
+      onScreen = on;
       if (onScreen && !raf) {
         last = performance.now();
         raf = requestAnimationFrame(loop);
@@ -755,8 +792,17 @@ export function Head3D() {
         cancelAnimationFrame(raf);
         raf = 0;
       }
+    };
+    const io = new IntersectionObserver(([entry]) => {
+      inView = entry.isIntersecting;
+      sync();
     });
     io.observe(wrap);
+    const caseWatch = new MutationObserver(() => {
+      covered = document.documentElement.hasAttribute('data-case-open');
+      sync();
+    });
+    caseWatch.observe(document.documentElement, { attributes: true, attributeFilter: ['data-case-open'] });
     raf = requestAnimationFrame(loop);
     // Compile the blood's programs while nothing is happening yet.
     const warm = window.setTimeout(() => blood.warmup(), 1200);
@@ -766,6 +812,7 @@ export function Head3D() {
       window.clearTimeout(warm);
       cancelAnimationFrame(raf);
       io.disconnect();
+      caseWatch.disconnect();
       ro.disconnect();
       document.body.style.userSelect = '';
       document.documentElement.classList.remove('head-grab', 'head-grabbing');
@@ -774,8 +821,8 @@ export function Head3D() {
       window.removeEventListener('pointerup', onPointerUp);
       window.removeEventListener('pointercancel', onPointerCancel);
       window.removeEventListener('blur', onPointerCancel);
-      window.removeEventListener('touchstart', onTouch);
-      window.removeEventListener('touchmove', onTouch);
+      stage.removeEventListener('touchstart', onTouch);
+      stage.removeEventListener('touchmove', onTouch);
       blood.dispose();
       mesh.geometry.dispose();
       material.dispose();

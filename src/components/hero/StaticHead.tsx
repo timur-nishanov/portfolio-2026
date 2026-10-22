@@ -17,7 +17,7 @@ const LIGHT = 'brightness(0.8) contrast(0.9) saturate(1.35)';
  * Drawn on a canvas once the page is up, like the live head, rather than an
  * img in the markup: the first screen then paints its text at once, and the
  * picture — the largest thing on it — doesn't hold back the page's first
- * paint on a slow phone. Half-size file on a 1x screen, the full one beyond.
+ * paint on a slow phone.
  */
 export function StaticHead() {
   const ref = useRef<HTMLCanvasElement>(null);
@@ -29,16 +29,19 @@ export function StaticHead() {
     const baked = 'filter' in ctx;
     if (baked) canvas.style.filter = 'none';
     const img = new Image();
+    // As the live head asks for the same file, so the preload (Hero) serves both.
+    img.crossOrigin = 'anonymous';
     let src = '';
     const draw = () => {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       const w = Math.round(canvas.clientWidth * dpr);
       const h = Math.round(canvas.clientHeight * dpr);
       if (!w || !h) return;
-      const want = w > 700 ? assets.headColor : assets.headStill;
-      if (want !== src) {
-        src = want;
-        img.src = want;
+      // The live head's own texture: the page preloads it for either head
+      // (Hero), so a smaller file would only be a second download.
+      if (!src) {
+        src = assets.headColor;
+        img.src = src;
         return; // drawn on load
       }
       if (!img.complete || !img.naturalWidth) return;

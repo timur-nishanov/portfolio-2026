@@ -29,10 +29,15 @@ export function PhoneMockup({ phone, watch }: { phone: PhoneScreen; watch?: Vide
   // Source and poster are attached on approach, not in the markup — see useLazyVideo.
   const videoRef = useLazyVideo(phone.src, phone.poster, watch);
 
+  // What the recording shows, as text: a video with no controls has no role,
+  // and a label on it is not read by every screen reader.
+  const words = phone.type === 'video' ? <span className="sr-only">{phone.alt}</span> : null;
+
   // Already-a-mockup render: draw as-is, no iPhone frame layered on top.
   if (!phone.framed) {
     return (
       <div className="relative h-full overflow-hidden" style={{ aspectRatio: PHONE_AR }}>
+        {words}
         {phone.type === 'video' ? (
           <video
             ref={videoRef}
@@ -43,7 +48,7 @@ export function PhoneMockup({ phone, watch }: { phone: PhoneScreen; watch?: Vide
             loop
             playsInline
             preload="none"
-            aria-label={phone.alt}
+            aria-hidden="true"
           />
         ) : (
           <Image
@@ -68,6 +73,7 @@ export function PhoneMockup({ phone, watch }: { phone: PhoneScreen; watch?: Vide
 
   return (
     <div className="relative h-full" style={{ aspectRatio: PHONE_AR }}>
+      {words}
       {/* Content sits UNDER the frame, clipped to the screen rect with a
           matching corner radius so nothing bleeds past the bezel edge. With
           no file yet, the screen stands blank, in the cases' stand-in grey. */}
@@ -83,7 +89,7 @@ export function PhoneMockup({ phone, watch }: { phone: PhoneScreen; watch?: Vide
           loop
           playsInline
           preload="none"
-          aria-label={phone.alt}
+          aria-hidden="true"
         />
       ) : (
         <div className="absolute overflow-hidden" style={screenStyle}>

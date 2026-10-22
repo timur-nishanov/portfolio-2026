@@ -2,8 +2,11 @@
 
 import { useEffect, useRef } from 'react';
 import { showcase } from '@/data/showcase';
+import { loadAllCases } from '@/components/case/registry';
 import { cancelFrame, scheduleFrame, type FrameJob } from '@/lib/frame';
+import { PillGlassFilter } from '@/components/header/menu/PillGlassFilter';
 import { CaseCard } from './CaseCard';
+import { CHIP } from './CursorChip';
 import './showcase.css';
 
 // How the card beneath goes as the next one slides over it: it shrinks a
@@ -56,7 +59,11 @@ export function CaseShowcase() {
     let gaps: number[] = [];
     let heights: number[] = [];
     let park: number[] = [];
+    // Whether the cards stack at all: on a screen too short for it they
+    // follow one another (showcase.css), and there is nothing to drive.
+    let stacking = true;
     const measure = () => {
+      stacking = getComputedStyle(cards[0]).position === 'sticky';
       const cs = getComputedStyle(root);
       let y = parseFloat(cs.paddingTop);
       gaps = cards.map((c, i) => (i > 0 ? parseFloat(getComputedStyle(c).marginTop) : 0));
@@ -95,6 +102,16 @@ export function CaseShowcase() {
         });
       },
       write: () => {
+        if (!stacking) {
+          cards.forEach((_, i) => {
+            for (const prop of ['transform', '--dim', 'opacity', 'will-change', 'pointer-events', '--lift']) put(i, prop, '');
+            if (covered[i]) {
+              covered[i] = false;
+              cards[i].toggleAttribute('data-covered', false);
+            }
+          });
+          return;
+        }
         // The glide: where each card would be in flow, and its eased place.
         const settle = cards.map((_, i) => {
           if (!glides) return 0;
@@ -124,7 +141,7 @@ export function CaseShowcase() {
           if (p === 0) {
             rise[i] = 0;
             put(i, 'transform', settle[i] > 0.05 ? `translateY(${settle[i].toFixed(2)}px)` : '');
-            put(i, 'filter', '');
+            put(i, '--dim', '');
             put(i, 'opacity', '');
             put(i, 'will-change', '');
           } else {
@@ -136,30 +153,52 @@ export function CaseShowcase() {
               // full size and only scaled: a touch soft by the end, as a card
               // going back into the stack may well be.
               put(i, 'will-change', 'transform');
-              put(i, 'filter', p < 1 ? `brightness(${(1 - COVERED_DIM * p).toFixed(3)})` : '');
+              // The dimming is a black veil over the card (showcase.css),
+              // not a filter: a filter had the whole card, clip and all,
+              // drawn through it again on every frame of the slide.
+              put(i, '--dim', p < 1 ? (COVERED_DIM * p).toFixed(3) : '');
             }
             put(i, 'opacity', String(1 - p * p));
           }
           const gone = p === 1;
+          // Faded out it still stood in the pointer's way: its top 56px rise
+          // above the parked card, where a click on what looks like the page
+          // opened a case nobody could see. From nineteen twentieths on
+          // (under a tenth of its opacity), not from the snap: the parked
+          // card's glide keeps the recede short of 1 for a hundred pixels
+          // more. It keeps its place in the tab order and for screen
+          // readers, as before.
+          put(i, 'pointer-events', p >= 0.95 ? 'none' : '');
           const video = videos[i];
           if (!video) continue;
           if (gone) {
             covered[i] = true;
+            // The notes read it too, and stop taking turns under the stack.
+            cards[i].toggleAttribute('data-covered', true);
             if (!video.paused) video.pause();
           } else if (covered[i] && p < UNCOVERED) {
             covered[i] = false;
+            cards[i].toggleAttribute('data-covered', false);
             video.currentTime = 0;
-            video.play().catch(() => {});
+            // With motion reduced the clip waits for the pointer, as
+            // everywhere (useLazyVideo).
+            if (!reduced) video.play().catch(() => {});
           }
         }
       },
     };
     // Only while the section is anywhere near the screen.
     let near = false;
+    let asked = false;
     const io = new IntersectionObserver(
       ([e]) => {
         near = e.isIntersecting;
         if (near) scheduleFrame(job);
+        // The cases' articles, for the first card that is clicked (registry).
+        if (near && !asked) {
+          asked = true;
+          loadAllCases();
+        }
       },
       { rootMargin: '50% 0px' },
     );
@@ -186,6 +225,12 @@ export function CaseShowcase() {
 
   return (
     <section ref={ref} id="works" aria-label="Work" className="cs">
+      {/* The cursor chip's glass (Chromium; showcase.css): one filter for
+          the six cards' chips, drawn for the chip's fixed shape, its rim
+          and bend scaled near the header pill's 40px to the chip's 30. 0.8,
+          not 0.75: that put the map's step on a half device pixel at 2x,
+          where the precomputed map is refused (glassMap). */}
+      <PillGlassFilter id="lg-chip" width={CHIP.width} height={CHIP.height} scale={0.8} />
       {showcase.map((item) => (
         <CaseCard key={item.id} item={item} />
       ))}

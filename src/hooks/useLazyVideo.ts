@@ -20,6 +20,68 @@ export type VideoWatch = { share: number; hold: number; restart: boolean; line?:
 const STEPS = Array.from({ length: 21 }, (_, i) => i / 20);
 
 /**
+ * When a clip near the screen, but not yet on it, may go on the wire. On a
+ * wide screen at once. On a phone the first cards are 'near' the moment the
+ * page opens (the hero is one screen tall), and their clips, a megabyte or
+ * two each, went on the wire beside the head's own picture: on 4G the first
+ * screen waited seconds for them. There they wait for the first scroll, or
+ * for the page to have loaded and sat a moment idle, whichever comes first;
+ * the poster covers the rest, and a card's clip waits to be well in view
+ * before it plays anyway.
+ */
+let settled: Promise<void> | null = null;
+
+/**
+ * A play the browser refused (an iPhone in Low Power Mode, Safari set never
+ * to autoplay: a muted clip is refused there until the visitor has touched
+ * the page) is tried again on the first gesture, for every clip still on
+ * screen that was refused. One try and the clips stayed stills all visit.
+ * A pointerdown is not a gesture to a browser (lib/audio); these are.
+ */
+const refused = new Set<HTMLVideoElement>();
+let armed = false;
+const GESTURES = ['pointerup', 'touchend', 'click', 'keydown'] as const;
+function retry() {
+  for (const v of Array.from(refused)) {
+    refused.delete(v);
+    v.play().catch(() => refused.add(v));
+  }
+  if (!refused.size) {
+    armed = false;
+    for (const t of GESTURES) window.removeEventListener(t, retry, true);
+  }
+}
+function tryPlay(v: HTMLVideoElement) {
+  v.play().catch(() => {
+    refused.add(v);
+    if (armed) return;
+    armed = true;
+    for (const t of GESTURES) window.addEventListener(t, retry, true);
+  });
+}
+function heroSettled(): Promise<void> {
+  if (settled) return settled;
+  settled = new Promise((resolve) => {
+    if (!window.matchMedia('(max-width: 899px)').matches || window.scrollY > 0) return resolve();
+    let done = false;
+    const go = () => {
+      if (done) return;
+      done = true;
+      window.removeEventListener('scroll', go);
+      resolve();
+    };
+    window.addEventListener('scroll', go, { passive: true });
+    const idle = () => {
+      if ('requestIdleCallback' in window) window.requestIdleCallback(go, { timeout: 2500 });
+      else setTimeout(go, 1500);
+    };
+    if (document.readyState === 'complete') idle();
+    else window.addEventListener('load', idle, { once: true });
+  });
+  return settled;
+}
+
+/**
  * Attaches a video's source (and its poster) only once it is near the
  * viewport, then plays it while it is on screen.
  *
@@ -45,6 +107,11 @@ export function useLazyVideo(src: string, poster?: string, watch?: VideoWatch) {
     if (!v) return;
     // What is watched for being on screen: the clip, or the box round it.
     const target = (within && v.closest<HTMLElement>(within)) || v;
+    // The case layer scrolls its own box (.cp__scroll, CaseLayer): with the
+    // screen as the root, a margin past the screen is clipped off by that
+    // box first, and nothing below its fold was ever 'near'. The box is the
+    // root there, the screen elsewhere.
+    const root = v.closest<HTMLElement>('.cp__scroll');
 
     let attached = false;
     // Whether it is on screen enough to play, as the play observer last saw it.
@@ -77,14 +144,21 @@ export function useLazyVideo(src: string, poster?: string, watch?: VideoWatch) {
           near.disconnect();
         }
       },
-      { rootMargin: '150% 0px 150% 0px' },
+      { root, rootMargin: '150% 0px 150% 0px' },
     );
-    near.observe(v);
+    let live = true;
+    heroSettled().then(() => live && near.observe(v));
 
     // Play only while actually visible — seven clips running off-screen is
     // both wasted decode work and wasted battery.
     let enough = false;
     let risen = line === undefined;
+    // Motion to be reduced: a clip on screen shows its first frame and runs
+    // only while the pointer is on it (its card, its figure) or the keyboard
+    // is in it, and stops when they leave. Nothing else on the page moves
+    // on its own there either.
+    const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let wanted = false;
     const decide = () => {
       const seen = enough && risen;
       if (seen === visible) return;
@@ -94,12 +168,31 @@ export function useLazyVideo(src: string, poster?: string, watch?: VideoWatch) {
         attach();
         if (restart && gone) v.currentTime = 0;
         gone = false;
-        if (hold) held = window.setTimeout(() => v.play().catch(() => {}), hold);
-        else v.play().catch(() => {});
+        if (still && !wanted) return;
+        if (hold) held = window.setTimeout(() => tryPlay(v), hold);
+        else tryPlay(v);
       } else {
+        refused.delete(v);
         v.pause();
       }
     };
+    const want = (on: boolean) => {
+      wanted = on;
+      if (!visible) return;
+      if (on) tryPlay(v);
+      else {
+        refused.delete(v);
+        v.pause();
+      }
+    };
+    const onWant = () => want(true);
+    const onLeave = () => want(false);
+    if (still) {
+      target.addEventListener('pointerenter', onWant);
+      target.addEventListener('pointerleave', onLeave);
+      target.addEventListener('focusin', onWant);
+      target.addEventListener('focusout', onLeave);
+    }
     const play = new IntersectionObserver(
       ([e]) => {
         if (!e.isIntersecting) gone = true;
@@ -107,7 +200,7 @@ export function useLazyVideo(src: string, poster?: string, watch?: VideoWatch) {
         enough = e.isIntersecting && e.intersectionRect.height >= room * share - 1;
         decide();
       },
-      { threshold: watched ? STEPS : 0.1 },
+      { root, threshold: watched ? STEPS : 0.1 },
     );
     play.observe(target);
     // Whether its top has come up past the line: it meets the screen's part
@@ -120,15 +213,23 @@ export function useLazyVideo(src: string, poster?: string, watch?: VideoWatch) {
               risen = e.isIntersecting;
               decide();
             },
-            { rootMargin: `0px 0px ${-(1 - line) * 100}% 0px` },
+            { root, rootMargin: `0px 0px ${-(1 - line) * 100}% 0px` },
           );
     rise?.observe(target);
 
     return () => {
+      live = false;
+      refused.delete(v);
       window.clearTimeout(held);
       near.disconnect();
       play.disconnect();
       rise?.disconnect();
+      if (still) {
+        target.removeEventListener('pointerenter', onWant);
+        target.removeEventListener('pointerleave', onLeave);
+        target.removeEventListener('focusin', onWant);
+        target.removeEventListener('focusout', onLeave);
+      }
     };
   }, [src, poster, watched, share, hold, restart, line, within]);
 

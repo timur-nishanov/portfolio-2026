@@ -3,6 +3,7 @@
 import { createContext, useLayoutEffect } from 'react';
 import type { CasePair, CaseSlot } from '@/data/caseSlot';
 import { useLazyVideo, type VideoWatch } from '@/hooks/useLazyVideo';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { MonitorMockup } from '@/components/showcase/MonitorMockup';
 
 /** A phone's screen, a desktop window, a wide picture of several things at
@@ -41,20 +42,31 @@ function Clip({
   watch: VideoWatch;
 }) {
   const ref = useLazyVideo(slot.src ?? '', slot.poster, watch);
+  // With motion reduced the clip waits (useLazyVideo); it is the case's
+  // content, so the browser's own controls are there to run it.
+  const reduced = useReducedMotion();
   return (
-    <video
-      ref={ref}
-      className={className}
-      style={style}
-      width={slot.w}
-      height={slot.h}
-      autoPlay
-      muted
-      loop
-      playsInline
-      preload="none"
-      aria-label={slot.alt}
-    />
+    <>
+      <video
+        ref={ref}
+        className={className}
+        style={style}
+        width={slot.w}
+        height={slot.h}
+        autoPlay
+        muted
+        loop
+        playsInline
+        preload="none"
+        controls={reduced}
+        aria-hidden={reduced ? undefined : true}
+        aria-label={reduced ? slot.alt : undefined}
+      />
+      {/* What the clip shows, as text: a video with no controls has no role,
+          and a label on it is not read by every screen reader. With
+          controls it is a real control, so it is in the tree with its name. */}
+      {!reduced && <span className="sr-only">{slot.alt}</span>}
+    </>
   );
 }
 
@@ -138,7 +150,9 @@ export function BeforeAfter({ before, after, frame, labels = ['Before', 'After']
     running out to the column's edge (as benji.org heads a section). */
 export function Heading({ id, children }: { id: string; children: React.ReactNode }) {
   return (
-    <h2 id={id} className="cp-h cp-reveal">
+    // Focusable from script only: a chapter chosen in the index puts the
+    // keyboard here, so the next Tab goes on into the chapter.
+    <h2 id={id} className="cp-h cp-reveal" tabIndex={-1}>
       <span className="cp-h__name">{children}</span>
     </h2>
   );

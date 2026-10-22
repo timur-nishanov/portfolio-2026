@@ -44,6 +44,8 @@ export function RotatingNotes({ notes, className = '' }: Props) {
   const [phase, setPhase] = useState<'in' | 'out'>('in');
   const [active, setActive] = useState(false);
   const [held, setHeld] = useState(false);
+  // The keyboard in the card (its link) holds the note as a mouse on it does.
+  const [focused, setFocused] = useState(false);
   // What was left of a note's time when it was held or scrolled away.
   const left = useRef<number | null>(null);
   // The first note is simply there on load; every note after it animates in.
@@ -59,7 +61,17 @@ export function RotatingNotes({ notes, className = '' }: Props) {
     // the card has landed and filled, so none changes as it comes back.
     let covered = html.hasAttribute('data-case-open');
     let uncover = 0;
-    const update = () => setActive(inView && !covered && document.visibilityState === 'visible');
+    // A card wholly under the next one in the stack (CaseShowcase marks it)
+    // is in view too, and its notes took their turns unseen.
+    const card = el.closest<HTMLElement>('.cs-card');
+    let stacked = !!card?.hasAttribute('data-covered');
+    const onFocusIn = () => setFocused(true);
+    const onFocusOut = (e: FocusEvent) => {
+      if (!card?.contains(e.relatedTarget as Node | null)) setFocused(false);
+    };
+    card?.addEventListener('focusin', onFocusIn);
+    card?.addEventListener('focusout', onFocusOut);
+    const update = () => setActive(inView && !covered && !stacked && document.visibilityState === 'visible');
     const io = new IntersectionObserver(
       ([e]) => {
         inView = e.isIntersecting;
@@ -81,10 +93,18 @@ export function RotatingNotes({ notes, className = '' }: Props) {
       }
     });
     caseWatch.observe(html, { attributes: true, attributeFilter: ['data-case-open'] });
+    const stackWatch = new MutationObserver(() => {
+      stacked = !!card?.hasAttribute('data-covered');
+      update();
+    });
+    if (card) stackWatch.observe(card, { attributes: true, attributeFilter: ['data-covered'] });
     document.addEventListener('visibilitychange', update);
     return () => {
       io.disconnect();
       caseWatch.disconnect();
+      stackWatch.disconnect();
+      card?.removeEventListener('focusin', onFocusIn);
+      card?.removeEventListener('focusout', onFocusOut);
       window.clearTimeout(uncover);
       document.removeEventListener('visibilitychange', update);
     };
@@ -93,7 +113,9 @@ export function RotatingNotes({ notes, className = '' }: Props) {
   // A note on its way out always finishes leaving, and the next one comes
   // in, even under a case or off screen: the card never comes back with an
   // empty column. Only a shown note is held.
-  const running = phase === 'out' || (active && !held);
+  // With motion reduced the notes take no turns on their own: the first,
+  // the strongest, stays, and a click still brings the next.
+  const running = phase === 'out' || (active && !held && !focused && !reduced);
 
   useEffect(() => {
     if (!running || notes.length < 2) return;

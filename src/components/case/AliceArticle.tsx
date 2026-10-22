@@ -40,7 +40,7 @@ export function AliceArticle({ onBack, backHref }: ArticleProps) {
           <a className="cp-a" href="https://alice.yandex.ru" target="_blank" rel="noopener noreferrer">
             Yandex Alice
           </a>{' '}
-          team ran it as a design battle at the{' '}
+          team ran it as a design battle, a concept contest between studios and in-house teams, at the{' '}
           <a className="cp-a" href="https://www.kaifconf.ru/kaiferenciya-2025" target="_blank" rel="noopener noreferrer">
             Kaiference
           </a>{' '}
@@ -54,7 +54,7 @@ export function AliceArticle({ onBack, backHref }: ArticleProps) {
             ['Role', 'Senior designer'],
             ['Team', 'Studio team of five, with an art director'],
             ['Timeline', 'July 2025'],
-            ['Outcome', '2nd place, ahead of the other in-house teams'],
+            ['Outcome', '2nd place, one point behind the winner'],
           ]}
         />
         <p className="cp-reveal">
