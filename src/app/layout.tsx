@@ -31,8 +31,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${inter.variable} ${interItalic.variable}`}>
       <body>
-        {/* The 20px round chevron buttons' glass (.glass-disc): the header's,
-            the chip over a case card, the case page's back button. */}
+        {/* The 20px round chevron buttons' glass (.glass-disc): the header's
+            and the case page's back button. */}
         <PillGlassFilter id="lg-disc" width={20} height={20} scale={0.42} />
         {children}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(person) }} />

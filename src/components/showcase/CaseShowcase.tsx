@@ -4,7 +4,9 @@ import { useEffect, useRef } from 'react';
 import { showcase } from '@/data/showcase';
 import { loadAllCases } from '@/components/case/registry';
 import { cancelFrame, scheduleFrame, type FrameJob } from '@/lib/frame';
+import { PillGlassFilter } from '@/components/header/menu/PillGlassFilter';
 import { CaseCard } from './CaseCard';
+import { CHIP } from './CursorChip';
 import './showcase.css';
 
 // How the card beneath goes as the next one slides over it: it shrinks a
@@ -223,6 +225,10 @@ export function CaseShowcase() {
 
   return (
     <section ref={ref} id="works" aria-label="Work" className="cs">
+      {/* The cursor chip's glass (Chromium; showcase.css): one filter for
+          the six cards' chips, drawn for the chip's fixed shape, its rim
+          and bend scaled from the header pill's 40px to the chip's 30. */}
+      <PillGlassFilter id="lg-chip" width={CHIP.width} height={CHIP.height} scale={0.75} />
       {showcase.map((item) => (
         <CaseCard key={item.id} item={item} />
       ))}

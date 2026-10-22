@@ -1,20 +1,28 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { ButtonChevron } from '@/components/header/menu/icons';
 import { zoomOf } from '@/lib/zoom';
+
+/** The chip's box, CSS px: "Case study" in the notes' 15px with room either
+    side, half as tall again as the words, as the header pill is to its
+    title. Fixed, so its liquid glass (#lg-chip, CaseShowcase) is drawn for
+    exactly this shape. */
+export const CHIP = { width: 106, height: 30 };
 
 // Where the chip sits relative to the pointer's tip, so it never hides what
 // the cursor points at.
 const OFFSET_X = 16;
 const OFFSET_Y = 16;
+// How near the card's edge it may come: past it, the label would hang off
+// the card (on the right) or under the next one (below).
+const EDGE = 8;
 // How tightly it follows (per second): quick, but with a little give.
 const FOLLOW = 22;
 
 /**
- * The round chevron chip that rides next to the cursor over a case card —
- * the same element as the menu button beside the title, pointing right.
- * Mouse only; touch and pens never see it.
+ * The glass pill that rides next to the cursor over a case card and says
+ * what a click does: "Case study". The header pill's glass, at the size of
+ * the card's notes. Mouse only; touch and pens never see it.
  */
 export function CursorChip({ zoneRef }: { zoneRef: React.RefObject<HTMLElement | null> }) {
   const chipRef = useRef<HTMLDivElement>(null);
@@ -41,8 +49,10 @@ export function CursorChip({ zoneRef }: { zoneRef: React.RefObject<HTMLElement |
       if (!client) return;
       const r = zone.getBoundingClientRect();
       const z = zoomOf(zone);
-      tx = (client.x - r.left) / z + OFFSET_X;
-      ty = (client.y - r.top) / z + OFFSET_Y;
+      // Kept on the card: near its right or bottom edge the label stops
+      // there and the pointer runs on over it (it takes no pointer).
+      tx = Math.min((client.x - r.left) / z + OFFSET_X, r.width / z - CHIP.width - EDGE);
+      ty = Math.min((client.y - r.top) / z + OFFSET_Y, r.height / z - CHIP.height - EDGE);
     };
     const loop = (t: number) => {
       const dt = Math.min((t - last) / 1000, 1 / 30);
@@ -117,9 +127,11 @@ export function CursorChip({ zoneRef }: { zoneRef: React.RefObject<HTMLElement |
   }, [zoneRef]);
 
   return (
+    // aria-hidden: the card's link already says "case study" to a screen
+    // reader (CaseCard).
     <div ref={chipRef} className="cs-chip" aria-hidden="true">
-      <span className="cs-chip__dot glass-disc">
-        <ButtonChevron className="cs-chip__chevron" />
+      <span className="cs-chip__pill glass-disc" style={{ width: CHIP.width, height: CHIP.height }}>
+        Case study
       </span>
     </div>
   );
