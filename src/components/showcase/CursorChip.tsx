@@ -32,6 +32,7 @@ export function CursorChip({ zoneRef }: { zoneRef: React.RefObject<HTMLElement |
     const chip = chipRef.current;
     if (!zone || !chip) return;
     if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+    const notes = zone.querySelector<HTMLElement>('.cs-card__notes');
 
     let x = 0;
     let y = 0;
@@ -53,6 +54,16 @@ export function CursorChip({ zoneRef }: { zoneRef: React.RefObject<HTMLElement |
       // there and the pointer runs on over it (it takes no pointer).
       tx = Math.min((client.x - r.left) / z + OFFSET_X, r.width / z - CHIP.width - EDGE);
       ty = Math.min((client.y - r.top) / z + OFFSET_Y, r.height / z - CHIP.height - EDGE);
+      // Steps aside where it would cover the notes, as it does with the
+      // pointer on them (showcase.css). Their box in the card's own px, as
+      // tx and ty are (the card is their offset parent).
+      const aside =
+        !!notes &&
+        tx < notes.offsetLeft + notes.offsetWidth &&
+        tx + CHIP.width > notes.offsetLeft &&
+        ty < notes.offsetTop + notes.offsetHeight &&
+        ty + CHIP.height > notes.offsetTop;
+      chip.toggleAttribute('data-aside', aside);
     };
     const loop = (t: number) => {
       const dt = Math.min((t - last) / 1000, 1 / 30);
@@ -90,6 +101,7 @@ export function CursorChip({ zoneRef }: { zoneRef: React.RefObject<HTMLElement |
     const onLeave = () => {
       delete chip.dataset.on;
       delete chip.dataset.down;
+      delete chip.dataset.aside;
       shown = false;
       client = null;
     };

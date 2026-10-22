@@ -75,7 +75,8 @@ export function glassMapScale(step: number): number | null {
   const d = Math.max(1, Math.round(dev));
   if (d > 3) return null;
   // A step on a half pixel rounds either way in Skia (none of today's do:
-  // 3, 6, 9 for the pill; 1.26, 2.52, 3.78 for the buttons).
+  // 3, 6, 9 for the pill; 1.26, 2.52, 3.78 for the buttons; 2.4, 4.8, 7.2
+  // for the case cards' chip).
   const s = step * d;
   if (Math.abs(s - Math.floor(s) - 0.5) < 0.01) return null;
   return d;

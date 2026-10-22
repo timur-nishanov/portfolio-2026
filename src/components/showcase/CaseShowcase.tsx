@@ -227,8 +227,10 @@ export function CaseShowcase() {
     <section ref={ref} id="works" aria-label="Work" className="cs">
       {/* The cursor chip's glass (Chromium; showcase.css): one filter for
           the six cards' chips, drawn for the chip's fixed shape, its rim
-          and bend scaled from the header pill's 40px to the chip's 30. */}
-      <PillGlassFilter id="lg-chip" width={CHIP.width} height={CHIP.height} scale={0.75} />
+          and bend scaled near the header pill's 40px to the chip's 30. 0.8,
+          not 0.75: that put the map's step on a half device pixel at 2x,
+          where the precomputed map is refused (glassMap). */}
+      <PillGlassFilter id="lg-chip" width={CHIP.width} height={CHIP.height} scale={0.8} />
       {showcase.map((item) => (
         <CaseCard key={item.id} item={item} />
       ))}

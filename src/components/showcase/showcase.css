@@ -131,7 +131,12 @@
     pointer-events: none;
   }
 }
-.cs-card:has(.cs-card__notes:hover) .cs-chip__pill {
+/* And wherever the pill itself would land on the notes (data-aside,
+   CursorChip): beside the column, or pushed back over it by the card's
+   edge, it covered the very note being read. [data-on] for weight: the
+   rule that shows the pill has it too. */
+.cs-card:has(.cs-card__notes:hover) .cs-chip__pill,
+.cs-chip[data-on][data-aside] .cs-chip__pill {
   opacity: 0;
   transform: scale(0.4);
   visibility: hidden;
