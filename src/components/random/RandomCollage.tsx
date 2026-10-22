@@ -64,6 +64,8 @@ export function RandomCollage() {
     const cards = items.map((item) => item.firstElementChild as HTMLElement);
     const rects = items.map(() => ({ top: 0, height: 0 }));
     const drawn = items.map(() => '');
+    // On a phone the clips are a plain list, and none drifts (random-collage.css).
+    const list = window.matchMedia('(max-width: 899px)');
     let vh = 0;
     const job: FrameJob = {
       read: () => {
@@ -77,6 +79,13 @@ export function RandomCollage() {
       },
       write: () => {
         items.forEach((item, i) => {
+          if (list.matches) {
+            if (drawn[i]) {
+              drawn[i] = '';
+              cards[i].style.transform = '';
+            }
+            return;
+          }
           const r = rects[i];
           if (r.top + r.height < -vh * 0.2 || r.top > vh * 1.2) return;
           // -1 as the item comes in at the bottom, 1 as it leaves at the top.

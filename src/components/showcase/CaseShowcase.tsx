@@ -59,8 +59,8 @@ export function CaseShowcase() {
     let gaps: number[] = [];
     let heights: number[] = [];
     let park: number[] = [];
-    // Whether the cards stack at all: on a screen too short for it they
-    // follow one another (showcase.css), and there is nothing to drive.
+    // Whether the cards stack at all: on a phone or a tablet held upright
+    // they follow one another (showcase.css), and there is nothing to drive.
     let stacking = true;
     const measure = () => {
       stacking = getComputedStyle(cards[0]).position === 'sticky';
