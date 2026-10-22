@@ -222,6 +222,14 @@ export function useReveal(ref: React.RefObject<HTMLElement | null>) {
     const height = () => (scroller ? scroller.clientHeight : window.innerHeight);
     let pending = Array.from(root.querySelectorAll<HTMLElement>('.cp-reveal'));
     let raf = 0;
+    // A case growing out of its card (caseMorph) keeps its first screen back
+    // too, until the page has most of the screen: then it comes in as the
+    // blocks further down do, one after another.
+    const layer = root.closest<HTMLElement>('.cp');
+    const growing = !!layer?.hasAttribute('data-morph');
+    // Nothing comes in before then: not on the first look the observers
+    // take (below), nor on a wheel turned while the page is still growing.
+    let held = growing;
     // The blocks above the line come out of pending, those below stay. Every
     // block's place is read before any is shown: a class set between two
     // reads had the browser work the page out again for the next read, once
@@ -235,6 +243,7 @@ export function useReveal(ref: React.RefObject<HTMLElement | null>) {
     };
     const sweep = () => {
       raf = 0;
+      if (held) return;
       above(height() * 0.92).forEach((el, n) => {
         el.style.setProperty('--stagger', String(Math.min(n, 2)));
         el.classList.add('is-in');
@@ -243,12 +252,20 @@ export function useReveal(ref: React.RefObject<HTMLElement | null>) {
     const schedule = () => {
       if (!raf && pending.length) raf = requestAnimationFrame(sweep);
     };
-    above(height()).forEach((el) => el.classList.add('is-in'));
+    if (!growing) above(height()).forEach((el) => el.classList.add('is-in'));
     // The ones further down go into hiding at once, not through their fade:
     // the style is taken with transitions off, then they are put back.
     root.classList.add('cp-arming', 'cp-armed');
     void root.offsetHeight;
     root.classList.remove('cp-arming');
+    const arrive = () => {
+      held = false;
+      above(height()).forEach((el, n) => {
+        el.style.setProperty('--stagger', String(Math.min(n, 5)));
+        el.classList.add('is-in');
+      });
+    };
+    if (growing) layer?.addEventListener('cp:reveal', arrive, { once: true });
     target.addEventListener('scroll', schedule, { passive: true });
     window.addEventListener('resize', schedule);
     // The page changing height under the screen (the window narrowing)
@@ -256,6 +273,7 @@ export function useReveal(ref: React.RefObject<HTMLElement | null>) {
     const grow = new ResizeObserver(schedule);
     grow.observe(root);
     return () => {
+      layer?.removeEventListener('cp:reveal', arrive);
       grow.disconnect();
       cancelAnimationFrame(raf);
       target.removeEventListener('scroll', schedule);

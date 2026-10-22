@@ -77,6 +77,55 @@
   overflow-anchor: none;
 }
 
+/* --- the way in and out (caseMorph) ----------------------------------------
+   The case grows out of the "Case study" chip, as the menu grows out of its
+   button. The chip's double, the drop, carries the glass while the shape is
+   small: the chip's own tint (set from script), sheen, frost and edge (the
+   edge and its drop written per frame for the radius it has), and its words,
+   which go at the first step. */
+.cp-morph {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 71;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  pointer-events: none;
+  background-color: rgba(255, 255, 255, 0.42);
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0) 70%);
+  -webkit-backdrop-filter: blur(6px) saturate(170%);
+  backdrop-filter: blur(6px) saturate(170%);
+  color: #1c1c1e;
+  font-family: var(--font-sf);
+  font-size: 15px;
+  line-height: 1;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+  will-change: transform;
+}
+@media (prefers-reduced-transparency: reduce) {
+  .cp-morph {
+    background-image: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+/* The bar's row comes in with the first screen (useReveal brings the
+   blocks), once the page has most of the screen. */
+.cp[data-morph]:not([data-reveal]) .cp-bar__row {
+  opacity: 0;
+}
+.cp[data-morph] .cp-bar__row {
+  transition: opacity 420ms var(--cp-ease);
+}
+/* The way out: the words go first (caseMorph fades them frame by frame,
+   ahead of the paper), and the page folds back into the card it came from
+   with nothing on it. Its bar does not slide meanwhile. */
+.cp[data-leaving] .cp-bar {
+  transition: none;
+}
+
 /* --- the bar -------------------------------------------------------------- */
 /* Where the site's header row is: same line (centre at 31px), same type,
    the same 20px glass disc. */

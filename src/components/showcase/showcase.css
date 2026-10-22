@@ -390,6 +390,11 @@
   transform: scale(1);
   visibility: visible;
 }
+/* Its case opening (CursorChip): the drop that grows into the case has taken
+   its place this very frame, so it goes without its fade. */
+.cs-chip[data-gone] .cs-chip__pill {
+  transition: none;
+}
 .cs-chip[data-on][data-down] .cs-chip__pill {
   transform: scale(0.94);
   transition-duration: 120ms;

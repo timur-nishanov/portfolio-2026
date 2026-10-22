@@ -82,6 +82,7 @@ export function CursorChip({ zoneRef }: { zoneRef: React.RefObject<HTMLElement |
 
     const onEnter = (e: PointerEvent) => {
       if (e.pointerType !== 'mouse') return;
+      delete chip.dataset.gone;
       client = { x: e.clientX, y: e.clientY };
       target();
       // Appear right at the pointer, then follow.
@@ -121,6 +122,18 @@ export function CursorChip({ zoneRef }: { zoneRef: React.RefObject<HTMLElement |
       kick();
     };
 
+    // A case opening: the chip goes at once (data-gone: no fade), the drop
+    // the case grows out of having taken its place in the same frame
+    // (caseMorph). It is back once the pointer is over a card again (the
+    // browser says so as soon as the case has gone from under it).
+    const html = document.documentElement;
+    const caseWatch = new MutationObserver(() => {
+      if (!html.hasAttribute('data-case-open')) return;
+      chip.dataset.gone = '';
+      onLeave();
+    });
+    caseWatch.observe(html, { attributes: true, attributeFilter: ['data-case-open'] });
+
     zone.addEventListener('pointerenter', onEnter);
     zone.addEventListener('pointermove', onMove);
     zone.addEventListener('pointerleave', onLeave);
@@ -129,6 +142,7 @@ export function CursorChip({ zoneRef }: { zoneRef: React.RefObject<HTMLElement |
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => {
       cancelAnimationFrame(raf);
+      caseWatch.disconnect();
       zone.removeEventListener('pointerenter', onEnter);
       zone.removeEventListener('pointermove', onMove);
       zone.removeEventListener('pointerleave', onLeave);
