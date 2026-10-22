@@ -1,21 +1,8 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { zoomOf } from '@/lib/zoom';
+import { CHIP, CHIP_DOCK, chipPlace } from './chipPlace';
 
-/** The chip's box, CSS px: "Case study" in the notes' 15px with room either
-    side, half as tall again as the words, as the header pill is to its
-    title. Fixed, so its liquid glass (#lg-chip, CaseShowcase) is drawn for
-    exactly this shape. */
-export const CHIP = { width: 106, height: 30 };
-
-// Where the chip sits relative to the pointer's tip, so it never hides what
-// the cursor points at.
-const OFFSET_X = 16;
-const OFFSET_Y = 16;
-// How near the card's edge it may come: past it, the label would hang off
-// the card (on the right) or under the next one (below).
-const EDGE = 8;
 // How tightly it follows (per second): quick, but with a little give.
 const FOLLOW = 22;
 
@@ -48,22 +35,12 @@ export function CursorChip({ zoneRef }: { zoneRef: React.RefObject<HTMLElement |
     };
     const target = () => {
       if (!client) return;
-      const r = zone.getBoundingClientRect();
-      const z = zoomOf(zone);
-      // Kept on the card: near its right or bottom edge the label stops
-      // there and the pointer runs on over it (it takes no pointer).
-      tx = Math.min((client.x - r.left) / z + OFFSET_X, r.width / z - CHIP.width - EDGE);
-      ty = Math.min((client.y - r.top) / z + OFFSET_Y, r.height / z - CHIP.height - EDGE);
-      // Steps aside where it would cover the notes, as it does with the
-      // pointer on them (showcase.css). Their box in the card's own px, as
-      // tx and ty are (the card is their offset parent).
-      const aside =
-        !!notes &&
-        tx < notes.offsetLeft + notes.offsetWidth &&
-        tx + CHIP.width > notes.offsetLeft &&
-        ty < notes.offsetTop + notes.offsetHeight &&
-        ty + CHIP.height > notes.offsetTop;
-      chip.toggleAttribute('data-aside', aside);
+      // Kept on the card, and stepping aside where it would cover the notes,
+      // as it does with the pointer on them (chipPlace, showcase.css).
+      const at = chipPlace(zone, client.x, client.y, notes);
+      tx = at.tx;
+      ty = at.ty;
+      chip.toggleAttribute('data-aside', at.aside);
     };
     const loop = (t: number) => {
       const dt = Math.min((t - last) / 1000, 1 / 30);
@@ -82,6 +59,7 @@ export function CursorChip({ zoneRef }: { zoneRef: React.RefObject<HTMLElement |
 
     const onEnter = (e: PointerEvent) => {
       if (e.pointerType !== 'mouse') return;
+      delete chip.dataset.gone;
       client = { x: e.clientX, y: e.clientY };
       target();
       // Appear right at the pointer, then follow.
@@ -121,6 +99,46 @@ export function CursorChip({ zoneRef }: { zoneRef: React.RefObject<HTMLElement |
       kick();
     };
 
+    // A case opening: the chip goes at once (data-gone: no fade), the drop
+    // the case grows out of having taken its place in the same frame
+    // (caseMorph). It is back once the pointer is over a card again (the
+    // browser says so as soon as the case has gone from under it).
+    const html = document.documentElement;
+    const caseWatch = new MutationObserver(() => {
+      if (!html.hasAttribute('data-case-open')) return;
+      chip.dataset.gone = '';
+      onLeave();
+    });
+    caseWatch.observe(html, { attributes: true, attributeFilter: ['data-case-open'] });
+
+    // The case closing back into the chip (caseMorph): the drop has landed
+    // where the chip goes for this pointer, as the chip, and the chip takes
+    // its place in the same frame, with no grow-in; its own transitions are
+    // back once it is on screen.
+    let docked = 0;
+    const onDock = (e: Event) => {
+      const at = (e as CustomEvent<{ x: number; y: number }>).detail;
+      e.preventDefault();
+      chip.dataset.gone = '';
+      cancelAnimationFrame(raf);
+      raf = 0;
+      client = { x: at.x, y: at.y };
+      target();
+      x = tx;
+      y = ty;
+      place();
+      chip.dataset.on = '';
+      shown = true;
+      cancelAnimationFrame(docked);
+      docked = requestAnimationFrame(() => {
+        docked = requestAnimationFrame(() => {
+          docked = 0;
+          delete chip.dataset.gone;
+        });
+      });
+    };
+    zone.addEventListener(CHIP_DOCK, onDock);
+
     zone.addEventListener('pointerenter', onEnter);
     zone.addEventListener('pointermove', onMove);
     zone.addEventListener('pointerleave', onLeave);
@@ -129,6 +147,9 @@ export function CursorChip({ zoneRef }: { zoneRef: React.RefObject<HTMLElement |
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => {
       cancelAnimationFrame(raf);
+      cancelAnimationFrame(docked);
+      caseWatch.disconnect();
+      zone.removeEventListener(CHIP_DOCK, onDock);
       zone.removeEventListener('pointerenter', onEnter);
       zone.removeEventListener('pointermove', onMove);
       zone.removeEventListener('pointerleave', onLeave);

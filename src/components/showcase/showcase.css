@@ -32,9 +32,6 @@
   transform-origin: 50% 0;
   border-radius: 24px;
   background: #e6e6e7;
-  /* The card will open its case study, and the chip by the arrow says so; a
-     hand on top of it would only crowd the chip. */
-  cursor: default;
 }
 /* --lift (0..1, CaseShowcase): while this card slides over another, a crisp
    light edge along its top parts the two — no cast shadow, which read as a
@@ -100,14 +97,14 @@
 .cs-card + .cs-card {
   margin-top: 56px;
 }
-/* The case link covers the whole card (CaseCard). No hand on it either: the
-   chip is the cue. */
+/* The case link covers the whole card (CaseCard): a hand over all of it, as
+   over any link, with the chip beside it saying where it leads. */
 .cs-card__link {
   position: absolute;
   inset: 0;
   z-index: 1;
   border-radius: inherit;
-  cursor: default;
+  cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
 .cs-card__link:focus-visible {
@@ -392,6 +389,11 @@
   opacity: 1;
   transform: scale(1);
   visibility: visible;
+}
+/* Its case opening (CursorChip): the drop that grows into the case has taken
+   its place this very frame, so it goes without its fade. */
+.cs-chip[data-gone] .cs-chip__pill {
+  transition: none;
 }
 .cs-chip[data-on][data-down] .cs-chip__pill {
   transform: scale(0.94);

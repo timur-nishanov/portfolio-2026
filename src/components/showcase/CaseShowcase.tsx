@@ -6,7 +6,7 @@ import { loadAllCases } from '@/components/case/registry';
 import { cancelFrame, scheduleFrame, type FrameJob } from '@/lib/frame';
 import { PillGlassFilter } from '@/components/header/menu/PillGlassFilter';
 import { CaseCard } from './CaseCard';
-import { CHIP } from './CursorChip';
+import { CHIP } from './chipPlace';
 import './showcase.css';
 
 // How the card beneath goes as the next one slides over it: it shrinks a

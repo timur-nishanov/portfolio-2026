@@ -9,9 +9,12 @@ import { CaseBar } from './CaseBar';
 import { CaseScroll } from './blocks';
 import { CASES, loadCase, type Article } from './registry';
 import { onOpenCase } from './caseStore';
+import { closeTo, createCaseMorph, seedFrom, type CaseMorph, type MorphSeed, type Pointer } from './caseMorph';
 import './case.css';
 
-type Opened = { id: string; card: HTMLElement | null; seq: number; Article: Article };
+/** morph: the case grows out of the card's chip or the card (caseMorph);
+    off where motion is to be reduced, and the case is simply there. */
+type Opened = { id: string; card: HTMLElement | null; seq: number; Article: Article; morph: boolean };
 type CaseState = { case?: string; layer?: string } | null;
 
 // Marks the history entries this page load put there itself. A case's
@@ -37,9 +40,12 @@ const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)'
  * its standalone page (app/cases). Nothing under it moves or reloads, so
  * going back finds the page exactly as it was left.
  *
- * It comes and goes at once: no card growing into the page, no fade. The
- * case is simply there, its first screen whole, and the way back is the page
- * as it was, with focus on the card it was opened from.
+ * It grows out of where it was asked for, as the menu grows out of its
+ * button: the "Case study" chip under the pointer swells into the page, or
+ * the card does (a tap, the keyboard), and the case's first screen comes in
+ * as the page fills the screen; closing runs it back into the card
+ * (caseMorph). With motion reduced it comes and goes at once. The way back
+ * is the page as it was, with focus on the card it was opened from.
  */
 export function CaseLayer() {
   const { setPaused } = useSmoothScroll();
@@ -52,6 +58,11 @@ export function CaseLayer() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const barRef = useRef<HTMLElement>(null);
+  const morphRef = useRef<CaseMorph | null>(null);
+  // What the case grew out of, and where the pointer is: the way back goes
+  // into the chip where it is about to show, or where it came out of.
+  const seedRef = useRef<MorphSeed | null>(null);
+  const pointerRef = useRef<Pointer | null>(null);
 
   // The article is fetched first where it is not in yet (registry): a card
   // under the pointer, or any card once the cards are near, has asked for
@@ -68,7 +79,7 @@ export function CaseLayer() {
         // Another case asked for since, or this one closed before it came.
         if (openedRef.current || ask !== seq.current) return;
         if (href) window.history.pushState({ case: id, layer: LAYER }, '', href);
-        const o = { id, card, seq: ask, Article };
+        const o = { id, card, seq: ask, Article, morph: !reducedMotion() };
         openedRef.current = o;
         setOpened(o);
       })
@@ -79,11 +90,39 @@ export function CaseLayer() {
       });
   }, []);
 
-  // The way out, once the address has gone back (or straight away).
+  // The way out, once the address has gone back (or straight away): back
+  // into the card it came from, then gone. Closed already as far as anything
+  // else can tell (openedRef), so a back, an Escape or another case asked
+  // for meanwhile is handled as if it were.
   const close = useCallback(() => {
-    if (!openedRef.current) return;
+    const o = openedRef.current;
+    if (!o) return;
     openedRef.current = null;
+    const leave = () => setOpened((cur) => (cur === o ? null : cur));
+    if (morphRef.current?.close(closeTo(o.card, seedRef.current, pointerRef.current), leave)) return;
     setOpened(null);
+  }, []);
+
+  // Where the pointer is, over the case or not (a mouse that has left the
+  // window for the browser's own back button is not over the card).
+  useEffect(() => {
+    const onPointer = (e: PointerEvent) => {
+      pointerRef.current = { x: e.clientX, y: e.clientY, mouse: e.pointerType === 'mouse', inside: true };
+    };
+    const onOut = () => {
+      if (pointerRef.current) pointerRef.current.inside = false;
+    };
+    const root = document.documentElement;
+    window.addEventListener('pointermove', onPointer, { capture: true, passive: true });
+    window.addEventListener('pointerdown', onPointer, { capture: true, passive: true });
+    root.addEventListener('mouseleave', onOut);
+    window.addEventListener('blur', onOut);
+    return () => {
+      window.removeEventListener('pointermove', onPointer, { capture: true });
+      window.removeEventListener('pointerdown', onPointer, { capture: true });
+      root.removeEventListener('mouseleave', onOut);
+      window.removeEventListener('blur', onOut);
+    };
   }, []);
 
   // The case's own scroll, read and set at once, for a Read more keeping its
@@ -173,6 +212,9 @@ export function CaseLayer() {
     const html = document.documentElement;
     const reduced = reducedMotion();
     const card = opened.card?.isConnected ? opened.card : null;
+    // Where it grows from: read before anything below hides the chip.
+    const seed = opened.morph ? seedFrom(card) : null;
+    seedRef.current = seed;
     // The card's video has nothing to show while the case is over it.
     const pageVideo = card?.querySelector('video') ?? null;
     pageVideo?.pause();
@@ -219,7 +261,18 @@ export function CaseLayer() {
     };
     scroller.addEventListener('keydown', onTab);
 
+    // The way in, drawn before this first paint: the seed, then the growth.
+    // A second click while it grows can land past the shape, on the page
+    // under it (inert), and take the focus off the case: it is given back.
+    const morph = opened.morph ? createCaseMorph(root) : null;
+    morph?.open(seed, () => {
+      if (!root.contains(document.activeElement)) scroller.focus({ preventScroll: true });
+    });
+    morphRef.current = morph;
+
     return () => {
+      morph?.destroy();
+      if (morphRef.current === morph) morphRef.current = null;
       scroller.removeEventListener('keydown', onTab);
       cancelAnimationFrame(raf);
       lenis?.destroy();
@@ -246,6 +299,9 @@ export function CaseLayer() {
       key={opened.seq}
       ref={rootRef}
       className="cp"
+      // The way in is running (caseMorph): the first screen waits for it
+      // (useReveal), as does the bar's row (case.css).
+      data-morph={opened.morph ? '' : undefined}
       role="dialog"
       aria-modal="true"
       aria-label={`${entry.title} case study`}
