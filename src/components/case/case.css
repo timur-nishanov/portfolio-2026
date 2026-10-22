@@ -79,10 +79,11 @@
 
 /* --- the way in and out (caseMorph) ----------------------------------------
    The case grows out of the "Case study" chip, as the menu grows out of its
-   button. The chip's double, the drop, carries the glass while the shape is
-   small: the chip's own tint (set from script), sheen, frost and edge (the
-   edge and its drop written per frame for the radius it has), and its words,
-   which go at the first step. */
+   button, and goes back into it. The chip's double, the drop, carries the
+   glass while the shape is small: the chip's own tint (set from script),
+   sheen, frost and edge (the edge and its drop written per frame for the
+   radius it has), and its words, which go at the first step out and come
+   back at the last step in. */
 .cp-morph {
   position: fixed;
   top: 0;
@@ -102,7 +103,15 @@
   line-height: 1;
   letter-spacing: 0.2px;
   white-space: nowrap;
+  transform-origin: 0 0;
   will-change: transform;
+}
+/* Landed as the chip on the way back with no chip to take its place (the
+   pointer elsewhere): it goes as the chip goes (showcase.css). */
+.cp-morph--leaving {
+  transition:
+    opacity 160ms ease,
+    transform 260ms cubic-bezier(0.3, 1.4, 0.5, 1);
 }
 @media (prefers-reduced-transparency: reduce) {
   .cp-morph {

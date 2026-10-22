@@ -9,7 +9,7 @@ import { CaseBar } from './CaseBar';
 import { CaseScroll } from './blocks';
 import { CASES, loadCase, type Article } from './registry';
 import { onOpenCase } from './caseStore';
-import { createCaseMorph, seedFrom, type CaseMorph } from './caseMorph';
+import { closeTo, createCaseMorph, seedFrom, type CaseMorph, type MorphSeed, type Pointer } from './caseMorph';
 import './case.css';
 
 /** morph: the case grows out of the card's chip or the card (caseMorph);
@@ -59,6 +59,10 @@ export function CaseLayer() {
   const contentRef = useRef<HTMLDivElement>(null);
   const barRef = useRef<HTMLElement>(null);
   const morphRef = useRef<CaseMorph | null>(null);
+  // What the case grew out of, and where the pointer is: the way back goes
+  // into the chip where it is about to show, or where it came out of.
+  const seedRef = useRef<MorphSeed | null>(null);
+  const pointerRef = useRef<Pointer | null>(null);
 
   // The article is fetched first where it is not in yet (registry): a card
   // under the pointer, or any card once the cards are near, has asked for
@@ -95,8 +99,30 @@ export function CaseLayer() {
     if (!o) return;
     openedRef.current = null;
     const leave = () => setOpened((cur) => (cur === o ? null : cur));
-    if (morphRef.current?.close(seedFrom(o.card), leave)) return;
+    if (morphRef.current?.close(closeTo(o.card, seedRef.current, pointerRef.current), leave)) return;
     setOpened(null);
+  }, []);
+
+  // Where the pointer is, over the case or not (a mouse that has left the
+  // window for the browser's own back button is not over the card).
+  useEffect(() => {
+    const onPointer = (e: PointerEvent) => {
+      pointerRef.current = { x: e.clientX, y: e.clientY, mouse: e.pointerType === 'mouse', inside: true };
+    };
+    const onOut = () => {
+      if (pointerRef.current) pointerRef.current.inside = false;
+    };
+    const root = document.documentElement;
+    window.addEventListener('pointermove', onPointer, { capture: true, passive: true });
+    window.addEventListener('pointerdown', onPointer, { capture: true, passive: true });
+    root.addEventListener('mouseleave', onOut);
+    window.addEventListener('blur', onOut);
+    return () => {
+      window.removeEventListener('pointermove', onPointer, { capture: true });
+      window.removeEventListener('pointerdown', onPointer, { capture: true });
+      root.removeEventListener('mouseleave', onOut);
+      window.removeEventListener('blur', onOut);
+    };
   }, []);
 
   // The case's own scroll, read and set at once, for a Read more keeping its
@@ -188,6 +214,7 @@ export function CaseLayer() {
     const card = opened.card?.isConnected ? opened.card : null;
     // Where it grows from: read before anything below hides the chip.
     const seed = opened.morph ? seedFrom(card) : null;
+    seedRef.current = seed;
     // The card's video has nothing to show while the case is over it.
     const pageVideo = card?.querySelector('video') ?? null;
     pageVideo?.pause();
