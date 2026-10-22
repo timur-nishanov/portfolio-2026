@@ -6,15 +6,16 @@
 export type AboutLine = string | { text: string; href: string };
 
 // Each paragraph set line by line, broken where the sense breaks, the lines
-// of a like length; a line too long for a phone wraps within itself, evenly.
+// of a like length. On a phone a line breaks again at its '\n' (a space
+// elsewhere), into lines about half as long, set by hand as well.
 export const aboutText: AboutLine[][] = [
   [
     // A word joiner after the hyphen keeps "e-commerce" whole where the
-    // line wraps (a phone), as the outro keeps "part-time" (outro.ts).
-    'Mostly B2C: fintech, Web3 and e-\u2060commerce.',
-    'I like messy flows and making them look good.',
-    'I research, prototype and build front ends,',
-    'and make 3D, icons, motion and video with AI.',
+    // line wraps, as the outro keeps "part-time" (outro.ts).
+    'Mostly B2C: fintech,\nWeb3 and e-\u2060commerce.',
+    'I like messy flows\nand making them look good.',
+    'I research, prototype\nand build front ends,',
+    'and make 3D, icons,\nmotion and video with AI.',
   ],
   [
     // A pause between the two longer ones, the turn on its second line.
@@ -23,8 +24,8 @@ export const aboutText: AboutLine[][] = [
   ],
   [
     // The two lines the old block had: the site, the awards.
-    'I designed a site for film director Artem\u00a0Shcherbakov.',
-    'It got Site\u00a0of\u00a0the\u00a0Day on Awwwards, FWA and CSSDA.',
+    'I designed a site for film director\nArtem\u00a0Shcherbakov.',
+    'It got Site\u00a0of\u00a0the\u00a0Day\non Awwwards, FWA and CSSDA.',
     { text: 'artemartemartem.com', href: 'https://artemartemartem.com' },
   ],
 ];

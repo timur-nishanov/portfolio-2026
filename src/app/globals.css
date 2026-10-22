@@ -63,13 +63,14 @@ body {
 
 /* The site's one large size (SF Pro 20 / 132%): the tagline, the cards'
    titles, the about block, Random's titles, the outro. A phone's screen is
-   a third of a laptop's width, and there 20 read a size too big. */
+   a third of a laptop's width, and there even 17 read too big and left the
+   page no air. */
 :root {
   --t-display: 20px;
 }
 @media (max-width: 599px) {
   :root {
-    --t-display: 17px;
+    --t-display: 15px;
   }
 }
 

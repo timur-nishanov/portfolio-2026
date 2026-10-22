@@ -121,11 +121,18 @@
     animation: none;
     will-change: auto;
   }
-  .rc__video {
-    border-radius: 20px;
-  }
   .rc__title {
     margin-top: 12px;
+  }
+}
+/* A phone: more air between the clips, and a corner that comes down with the
+   clip's size, as the cards' does (showcase.css). */
+@media (max-width: 599px) {
+  .rc__item + .rc__item {
+    margin-top: 56px;
+  }
+  .rc__video {
+    border-radius: 10px;
   }
 }
 

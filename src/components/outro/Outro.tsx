@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 import { outroLinks, outroPostscript, outroText } from '@/data/outro';
 import { copyText } from '@/lib/clipboard';
 import { createGlass, type GlassView } from '@/lib/glassSpheres';
@@ -96,12 +96,20 @@ type Body = {
   entered: boolean;
 };
 
-/** Lines set one under another, each wrapping within itself. */
+/** Lines set one under another, each wrapping within itself; a line's parts
+    (outro.ts) run on in it, but on a phone (outro.css). */
 function Lines({ lines, className }: { lines: string[]; className: string }) {
   return (
     <p className={className}>
       {lines.map((line) => (
-        <span key={line}>{line}</span>
+        <span key={line}>
+          {line.split('\n').map((part, j) => (
+            <Fragment key={part}>
+              {j > 0 && ' '}
+              <span className="outro__part">{part}</span>
+            </Fragment>
+          ))}
+        </span>
       ))}
     </p>
   );
@@ -116,23 +124,27 @@ function paintWords(ctx: CanvasRenderingContext2D, stage: HTMLElement) {
   const z = zoomOf(stage);
   const range = document.createRange();
   for (const span of section.querySelectorAll<HTMLElement>('.outro__text > span')) {
-    const node = span.firstChild;
-    if (!node || node.nodeType !== Node.TEXT_NODE) continue;
     const cs = getComputedStyle(span);
     ctx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
     ctx.fillStyle = cs.color;
     ctx.textBaseline = 'alphabetic';
-    // Its words, gathered into the lines they were set on.
+    // Its words, from each of its parts, gathered into the lines they were
+    // set on.
     const lines: { text: string; left: number; top: number }[] = [];
-    let at = 0;
-    for (const word of (node.textContent ?? '').split(' ')) {
-      range.setStart(node, at);
-      range.setEnd(node, at + word.length);
-      const r = range.getBoundingClientRect();
-      const last = lines[lines.length - 1];
-      if (last && Math.abs(r.top - last.top) < 4) last.text += ` ${word}`;
-      else lines.push({ text: word, left: r.left, top: r.top });
-      at += word.length + 1;
+    const walk = document.createTreeWalker(span, NodeFilter.SHOW_TEXT);
+    for (let node = walk.nextNode(); node; node = walk.nextNode()) {
+      let at = 0;
+      for (const word of (node.textContent ?? '').split(' ')) {
+        if (word) {
+          range.setStart(node, at);
+          range.setEnd(node, at + word.length);
+          const r = range.getBoundingClientRect();
+          const last = lines[lines.length - 1];
+          if (last && Math.abs(r.top - last.top) < 4) last.text += ` ${word}`;
+          else lines.push({ text: word, left: r.left, top: r.top });
+        }
+        at += word.length + 1;
+      }
     }
     for (const l of lines) {
       const ascent = ctx.measureText(l.text).fontBoundingBoxAscent;
