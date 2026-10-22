@@ -88,7 +88,7 @@
 .rc__title {
   margin: 16px 0 0;
   font-family: var(--font-sf);
-  font-size: 20px;
+  font-size: var(--t-display);
   font-weight: 400;
   line-height: 1.32;
   letter-spacing: 0;
@@ -97,31 +97,32 @@
 }
 
 /* --- phones ---------------------------------------------------------------- */
+/* No zigzag here: the clips follow one another, each the full width between
+   the case cards' margins, with their corners, and none drifts (here or in
+   RandomCollage's fallback), so they read as a list of cards. */
 @media (max-width: 899px) {
   .rc {
     --gutter: 12px;
-    /* And never taller than the screen: a phone held sideways. */
-    --clip-w: min(calc(100vw - 2 * var(--gutter) - 10vw), 150svh);
     padding: 96px 0 120px;
   }
-  .rc__item[data-side='right'] {
+  .rc__item,
+  .rc__item[data-side='right'],
+  .rc__item[data-shape='upright'],
+  .rc__item[data-shape='upright'][data-side='left'],
+  .rc__item[data-shape='upright'][data-side='right'] {
+    width: auto;
     margin-right: var(--gutter);
-    margin-left: auto;
-  }
-  .rc__item[data-shape='upright'] {
-    width: min(var(--clip-w), 56svh);
-  }
-  .rc__item[data-shape='upright'][data-side='left'] {
     margin-left: var(--gutter);
   }
-  .rc__item[data-shape='upright'][data-side='right'] {
-    margin-right: var(--gutter);
-  }
   .rc__item + .rc__item {
-    margin-top: 120px;
+    margin-top: 40px;
+  }
+  .rc__card {
+    animation: none;
+    will-change: auto;
   }
   .rc__video {
-    border-radius: 12px;
+    border-radius: 20px;
   }
   .rc__title {
     margin-top: 12px;

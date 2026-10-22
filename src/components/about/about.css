@@ -60,7 +60,7 @@
   padding: 0 20px;
   /* The case cards' title style: SF Pro 20 / 132%. */
   font-family: var(--font-sf);
-  font-size: 20px;
+  font-size: var(--t-display);
   font-weight: 400;
   line-height: 1.32;
   letter-spacing: 0;

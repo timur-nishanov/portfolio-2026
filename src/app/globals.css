@@ -61,6 +61,18 @@ body {
   zoom: var(--site-zoom);
 }
 
+/* The site's one large size (SF Pro 20 / 132%): the tagline, the cards'
+   titles, the about block, Random's titles, the outro. A phone's screen is
+   a third of a laptop's width, and there 20 read a size too big. */
+:root {
+  --t-display: 20px;
+}
+@media (max-width: 599px) {
+  :root {
+    --t-display: 17px;
+  }
+}
+
 /* The floating head's grab affordance (set from Head3D): an open hand, and
    a closed one while held. The head floats over text and links whose own
    cursors beat anything set on an ancestor, so while the pointer is on the
@@ -145,7 +157,7 @@ html.lenis body {
   /* Title and tagline: SF Pro Regular 20 / 132% / 0. */
   .t-title {
     font-family: var(--font-sf);
-    font-size: 20px;
+    font-size: var(--t-display);
     font-weight: 400;
     line-height: 1.32;
     letter-spacing: 0;

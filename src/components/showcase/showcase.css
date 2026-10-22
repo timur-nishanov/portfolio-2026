@@ -154,7 +154,7 @@
 .cs-card__sub {
   margin: 0;
   font-family: var(--font-sf);
-  font-size: 20px;
+  font-size: var(--t-display);
   font-weight: 400;
   line-height: 1.32;
   letter-spacing: 0;
@@ -415,25 +415,26 @@
   }
 }
 
-/* --- stacked (tablet portrait and phones) ---------------------------------- */
+/* --- one under another (tablet portrait and phones) ------------------------ */
+/* No stack here: the cards follow one another down the page with a gap
+   between them, as the page scrolls (not sticky, so CaseShowcase leaves them
+   alone). */
 @media (max-width: 899px) {
   .cs {
     padding: 72px 12px 12px;
   }
   .cs-card {
+    position: relative;
+    top: auto;
     display: flex;
     flex-direction: column;
     gap: 24px;
-    top: 12px;
     height: auto;
     padding: 28px 20px 32px;
     border-radius: 20px;
   }
-  /* A phone card fills most of the screen, so with a narrow gap the next one
-     would slide over its notes almost at once. A wider gap here keeps the
-     whole card, notes included, in view for a stretch of scroll. */
   .cs-card + .cs-card {
-    margin-top: 30svh;
+    margin-top: 12px;
   }
   .cs-card__head,
   .cs-card__phone,
@@ -453,9 +454,9 @@
     height: auto;
   }
   /* No taller than leaves room for the rest of the card on the screen
-     (the head, the gaps, a four-line note): on a small phone (an SE, a 13
-     with its toolbars) the parked card ran past the bottom and its notes
-     were out of sight. */
+     (the head, the gaps, a four-line note), so a whole card can be seen at
+     once, and its clip, which waits for most of the card to be in view,
+     plays even on a small phone (an SE, a 13 with its toolbars). */
   .cs-card__phone {
     align-self: center;
     height: clamp(220px, min(560px, 118vw), calc(100svh - 300px));
@@ -464,7 +465,7 @@
      the card's link. */
   .cs-card__notes {
     position: relative;
-    inset: auto; /* the desktop column's offsets don't apply in the stack */
+    inset: auto; /* the desktop column's offsets don't apply here */
     /* A reading measure on a tablet, where the card is wide: at the full
        width a note ran to a hundred characters a line. */
     max-width: 36em;
@@ -472,19 +473,5 @@
   }
   .rn__track {
     left: -16px;
-  }
-}
-
-/* Too short a screen for a card to park and the next to slide over it (a
-   phone held sideways, a laptop at twice its size): the cards simply follow
-   one another, and CaseShowcase leaves them alone. After the stacked rules,
-   whose sticky top it undoes. */
-@media (max-width: 899px) and (max-height: 520px) {
-  .cs-card {
-    position: relative;
-    top: auto;
-  }
-  .cs-card + .cs-card {
-    margin-top: 24px;
   }
 }

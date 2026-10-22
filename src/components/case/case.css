@@ -904,8 +904,10 @@
   .cp-figure--monitor .cp-figure__box {
     padding: 32px 16px;
   }
+  /* A phone screen as wide as the box lets it, out to the box's own
+     padding: at 200px in the middle it looked lost. */
   .cp-shot--phone {
-    width: 200px;
+    width: 100%;
   }
   /* The board one column. */
   .cp-board {
