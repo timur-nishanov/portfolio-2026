@@ -475,3 +475,30 @@
     left: -16px;
   }
 }
+
+/* --- phones ------------------------------------------------------------------
+   More air inside the card, about as much all round as between its parts.
+   The phone runs the full width inside that padding, edge to edge with the
+   title and the note, as the monitor does; the card may then be taller than
+   the screen (its clip still starts, with the card over most of it). The
+   corner is smaller in step with the narrower card (the desktop one's is
+   24), and the notes take a size under the titles' 15. */
+@media (max-width: 599px) {
+  .cs-card {
+    gap: 32px;
+    padding: 28px 28px 32px;
+    border-radius: 12px;
+  }
+  .cs-card__phone {
+    align-self: stretch;
+    height: auto;
+  }
+  .cs-card__phone > div {
+    width: 100%;
+    height: auto;
+  }
+  .rn {
+    font-size: 13px;
+    line-height: 17px;
+  }
+}

@@ -72,8 +72,9 @@
   margin: 0;
 }
 /* One line of the paragraph (about.ts); when it has to wrap, the two halves
-   come out even rather than a full line and a stray word. */
-.aw__text span {
+   come out even rather than a full line and a stray word. Its parts run on
+   in it, but on a phone (below). */
+.aw__text p > span {
   display: block;
   text-wrap: balance;
 }
@@ -128,6 +129,14 @@
   .aw__text {
     inset: 22svh 0 auto;
     padding: 0 16px;
+  }
+}
+/* A phone held upright: each line in the shorter lines set for it
+   (about.ts), so the block keeps a shape of its own instead of the long
+   lines' wrapping. */
+@media (max-width: 599px) {
+  .aw__part {
+    display: block;
   }
 }
 /* A phone held sideways: the text starts higher and runs wider, so the

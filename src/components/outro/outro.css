@@ -30,7 +30,7 @@
   color: var(--ink-strong, #08080a);
   text-align: center;
 }
-.outro__text span {
+.outro__text > span {
   display: block;
   text-wrap: balance;
 }
@@ -178,5 +178,20 @@
   }
   .outro__stage {
     --ball: calc(33vw / var(--site-zoom, 1));
+  }
+}
+/* A phone held upright: the words go up into the screen's upper part and
+   break in two (outro.ts), and the balls under them grow to nearly half the
+   width, two abreast, in the room that leaves (Outro's sim fits them to it). */
+@media (max-width: 599px) {
+  .outro {
+    justify-content: flex-start;
+    padding-top: 15svh;
+  }
+  .outro__part {
+    display: block;
+  }
+  .outro__stage {
+    --ball: calc(46vw / var(--site-zoom, 1));
   }
 }

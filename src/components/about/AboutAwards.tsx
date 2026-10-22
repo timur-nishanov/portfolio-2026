@@ -214,7 +214,13 @@ export function AboutAwards() {
                     {i > 0 && ' '}
                     <span>
                       {typeof line === 'string' ? (
-                        line
+                        // A phone's shorter lines (about.css), one run elsewhere.
+                        line.split('\n').map((part, j) => (
+                          <Fragment key={part}>
+                            {j > 0 && ' '}
+                            <span className="aw__part">{part}</span>
+                          </Fragment>
+                        ))
                       ) : (
                         <a className="aw__link" href={line.href} target="_blank" rel="noopener noreferrer">
                           {line.text}
