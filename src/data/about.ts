@@ -5,29 +5,46 @@
 // subtitles).
 export type AboutLine = string | { text: string; href: string };
 
+// A paragraph, line by line; `phone`, the same words set again for a phone,
+// where its own lines don't fit (AboutAwards shows one or the other).
+export type AboutParagraph = { lines: AboutLine[]; phone?: AboutLine[] };
+
+const artemSite: AboutLine = { text: 'artemartemartem.com', href: 'https://artemartemartem.com' };
+
 // Each paragraph set line by line, broken where the sense breaks, the lines
-// of a like length. On a phone a line breaks again at its '\n' (a space
-// elsewhere), into lines about half as long, set by hand as well.
-export const aboutText: AboutLine[][] = [
-  [
-    // A word joiner after the hyphen keeps "e-commerce" whole where the
-    // line wraps, as the outro keeps "part-time" (outro.ts).
-    'Mostly B2C: fintech,\nWeb3 and e-\u2060commerce.',
-    'I like messy flows\nand making them look good.',
-    'I research, prototype\nand build front ends,',
-    'and make 3D, icons,\nmotion and video with AI.',
-  ],
-  [
+// of a like length. At a phone's 15px the first two keep their lines (the
+// longest just fits); the last is set again there.
+export const aboutText: AboutParagraph[] = [
+  {
+    lines: [
+      // A word joiner after the hyphen keeps "e-commerce" whole where the
+      // line wraps (a narrow phone), as the outro keeps "part-time" (outro.ts).
+      'Mostly B2C: fintech, Web3 and e-\u2060commerce.',
+      'I like messy flows and making them look good.',
+      'I research, prototype and build front ends,',
+      'and make 3D, icons, motion and video with AI.',
+    ],
+  },
+  {
     // A pause between the two longer ones, the turn on its second line.
-    'I care about systems,',
-    'but I still prefer a bit more craft.',
-  ],
-  [
-    // The two lines the old block had: the site, the awards.
-    'I designed a site for film director\nArtem\u00a0Shcherbakov.',
-    'It got Site\u00a0of\u00a0the\u00a0Day\non Awwwards, FWA and CSSDA.',
-    { text: 'artemartemartem.com', href: 'https://artemartemartem.com' },
-  ],
+    lines: ['I care about systems,', 'but I still prefer a bit more craft.'],
+  },
+  {
+    // The two lines the old block had: the site, the awards. On a phone,
+    // three round the longest in the middle, near the first paragraph's
+    // width.
+    lines: [
+      'I designed a site for film director Artem\u00a0Shcherbakov.',
+      'It got Site\u00a0of\u00a0the\u00a0Day on Awwwards, FWA and CSSDA.',
+      artemSite,
+    ],
+    phone: [
+      'I designed a site for film director',
+      'Artem\u00a0Shcherbakov. It got Site\u00a0of\u00a0the\u00a0Day',
+      'on Awwwards, FWA and CSSDA.',
+      artemSite,
+    ],
+  },
 ];
 
 export type AwardPoster = {

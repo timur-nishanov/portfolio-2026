@@ -135,7 +135,15 @@ export function RandomCollage() {
             data-shape={item.video.height > item.video.width ? 'upright' : 'wide'}
           >
             <div className="rc__card">
-              <div className="rc__media" style={{ aspectRatio: `${item.video.width} / ${item.video.height}` }}>
+              <div
+                className="rc__media"
+                style={
+                  {
+                    '--ar': `${item.video.width} / ${item.video.height}`,
+                    '--ar-phone': item.video.phoneAspect,
+                  } as React.CSSProperties
+                }
+              >
                 <Clip video={item.video} />
               </div>
               <h3 className="rc__title">{item.title}</h3>
