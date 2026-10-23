@@ -29,6 +29,30 @@ const SAMPLES = 96;
 // typings yet.
 type ViewTimelineCtor = new (options: { subject: Element; axis?: 'block' | 'inline' }) => AnimationTimeline;
 
+const lineText = (line: AboutLine) => (typeof line === 'string' ? line : line.text);
+
+/** A paragraph's lines, one under another (about.css). */
+function Lines({ lines, className }: { lines: AboutLine[]; className?: string }) {
+  return (
+    <p className={className}>
+      {lines.map((line, i) => (
+        <Fragment key={lineText(line)}>
+          {i > 0 && ' '}
+          <span>
+            {typeof line === 'string' ? (
+              line
+            ) : (
+              <a className="aw__link" href={line.href} target="_blank" rel="noopener noreferrer">
+                {line.text}
+              </a>
+            )}
+          </span>
+        </Fragment>
+      ))}
+    </p>
+  );
+}
+
 /**
  * About me, with the award diplomas coming up over it (#awards, the menu's
  * "Awards"), after the "Hi! I am Per!" block on perappelgren.de. A sticky
@@ -38,8 +62,6 @@ type ViewTimelineCtor = new (options: { subject: Element; axis?: 'block' | 'inli
  * the top and covering the earlier ones but their top slivers. After the
  * last, the stage lets go and the stack scrolls away with the page.
  */
-const lineText = (line: AboutLine) => (typeof line === 'string' ? line : line.text);
-
 export function AboutAwards() {
   const ref = useRef<HTMLElement>(null);
 
@@ -207,29 +229,13 @@ export function AboutAwards() {
             <h2 id="about-heading" className="sr-only">
               About me and awards
             </h2>
-            {aboutText.map((lines) => (
-              <p key={lineText(lines[0])}>
-                {lines.map((line, i) => (
-                  <Fragment key={lineText(line)}>
-                    {i > 0 && ' '}
-                    <span>
-                      {typeof line === 'string' ? (
-                        // A phone's shorter lines (about.css), one run elsewhere.
-                        line.split('\n').map((part, j) => (
-                          <Fragment key={part}>
-                            {j > 0 && ' '}
-                            <span className="aw__part">{part}</span>
-                          </Fragment>
-                        ))
-                      ) : (
-                        <a className="aw__link" href={line.href} target="_blank" rel="noopener noreferrer">
-                          {line.text}
-                        </a>
-                      )}
-                    </span>
-                  </Fragment>
-                ))}
-              </p>
+            {aboutText.map((para) => (
+              // A paragraph set again for a phone comes in both settings, and
+              // only one of them shows (about.css).
+              <Fragment key={lineText(para.lines[0])}>
+                <Lines lines={para.lines} className={para.phone ? 'aw__wide' : undefined} />
+                {para.phone && <Lines lines={para.phone} className="aw__phone" />}
+              </Fragment>
             ))}
           </div>
         </div>

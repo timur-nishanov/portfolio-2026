@@ -70,8 +70,11 @@
     }
   }
 }
+/* The clip's own shape (--ar, RandomCollage); on a phone, a shape set for
+   it there (--ar-phone, below). */
 .rc__media {
   position: relative;
+  aspect-ratio: var(--ar);
 }
 .rc__video {
   display: block;
@@ -126,10 +129,15 @@
   }
 }
 /* A phone: more air between the clips, and a corner that comes down with the
-   clip's size, as the cards' does (showcase.css). */
+   clip's size, as the cards' does (showcase.css). A clip with a shape of its
+   own for a phone (randomCollage.ts) takes it, cropped at its sides: the
+   video covers the box (object-fit, above). */
 @media (max-width: 599px) {
   .rc__item + .rc__item {
     margin-top: 56px;
+  }
+  .rc__media {
+    aspect-ratio: var(--ar-phone, var(--ar));
   }
   .rc__video {
     border-radius: 10px;

@@ -8,7 +8,17 @@ export type CollageItem = {
   /** Which side of the page the clip leans to. An upright clip is set
    *  narrower, so it fits the screen's height, and further in. */
   side: 'left' | 'right';
-  video: { src: string; poster: string; width: number; height: number; alt: string };
+  video: {
+    src: string;
+    poster: string;
+    width: number;
+    height: number;
+    alt: string;
+    /** On a phone, a shape of its own (CSS aspect ratio), the clip cropped at
+     *  its sides to fill it: an iMac render has grey to spare either side of
+     *  the device, and at a phone's width the iMac came out small. */
+    phoneAspect?: string;
+  };
 };
 
 // Sides alternate down the page, and the upright clips sit between wide ones.
@@ -64,6 +74,9 @@ export const collage: CollageItem[] = [
       width: 1600,
       height: 900,
       alt: 'The Stepicon 2026 site on an iMac: the conference for people who build learning products',
+      // The iMac spans x 247–1355 of 1600 from 52px down: at 4:3 the crop
+      // keeps 200–1400, as much grey either side of it as above.
+      phoneAspect: '4 / 3',
     },
   },
   {
@@ -88,6 +101,7 @@ export const collage: CollageItem[] = [
       width: 1600,
       height: 900,
       alt: 'The Moneta site on an iMac: online payments and settlements, and its journal',
+      phoneAspect: '4 / 3', // the same iMac, placed as Stepicon's
     },
   },
 ];
