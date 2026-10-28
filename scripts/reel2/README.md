@@ -62,12 +62,15 @@ sound.
 ## The sound
 
 An original track, 88.9 bpm, so that a bar (2.7 s) is a station and the
-camera sets off on each downbeat; move one and move the other. It is soft
-under the words and holds back while the head is thrown, builds as the page
-pulls back, comes in as the camera sets off, drops out for the last screen
-and comes home with the address. Over it, the site's own sounds where the
-picture makes them: the head's knocks (its CC0 takes, `public/sounds`,
+camera sets off on each downbeat; move one and move the other. Light and
+dry, with air between the notes: a soft short kick, finger snaps, a shaker,
+ticks, a round bass pluck, a few electric-piano stabs, and the line on notes
+of glass, as the site's balls are. Under the words only a breath of the
+chord; it waits while the head is thrown, comes in as the page pulls back,
+plays the line while the camera travels, drops out for the last screen and
+ends on the chord with the address. Over it, the site's own sounds where
+the picture makes them: the head's knocks (its CC0 takes, `public/sounds`,
 planned as `impactSound.ts` plans them, without the crunch, which goes with
 blood) and the outro's glass (`chime.ts`'s synthesis, on the notes of the
-chord). Air for each move of the camera, a riser and a drop, the diplomas
-landing. Mastered to −14 LUFS, peaks under −1 dBTP.
+chord). Air for each move of the camera, the diplomas landing. Mastered to
+−16 LUFS, under the picture rather than over it, peaks under −1 dBTP.
