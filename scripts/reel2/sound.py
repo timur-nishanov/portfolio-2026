@@ -1,18 +1,17 @@
 #!/usr/bin/env python3
 """
-The reel's sound, no music: air where the picture moves, and the site's own
-sounds where it makes them, the head's knocks (its samples) and the outro's
-glass (its synthesis), struck by the impacts the plates log
-(scripts/reel/rec.mjs <shot> <out.json>). At the end, as the address rises,
-a breath of air and one ring of the glass.
+The reel's sound: the beat (beat.py), and over it air where the picture
+moves and the site's own sounds where it makes them, the head's knocks (its
+samples) and the outro's glass (its synthesis), struck by the impacts the
+plates log (scripts/reel/rec.mjs <shot> <out.json>). At the end, as the
+address rises, a breath of air and one ring of the glass.
 
   python scripts/reel2/sound.py <hero.json> <outro.json> <out.wav>
 
 Needs numpy, scipy, pedalboard, pyloudnorm and soundfile (pip), and ffmpeg.
 
 Each kind of sound is set to its own loudness where it plays (LEVELS), not
-the whole to a target: a reel this quiet, normalised, would have its air
-pushed up as loud as music.
+the whole to a target, so the beat can't push the rest about.
 """
 import json
 import subprocess
@@ -20,6 +19,8 @@ import sys
 
 import numpy as np
 import pedalboard as pb
+
+import beat
 import pyloudnorm as pyln
 import soundfile as sf
 from scipy import signal
@@ -34,22 +35,23 @@ HERO_LAG = 1.6  # reel time of the hero plate's frame 0
 OUTRO_AT = 23.3 - 0.8  # reel time of the outro plate's frame 0
 # The gallery's changes (comp.html's CHANGES), one case going as the next
 # comes, and the way each goes: the band of its air from → to (Hz, rising
-# as a thing flies up close, falling as it drops or goes off into the
-# distance), and its pan from → to (only the carousel goes sideways).
+# as things go up, falling as they go down or off into the distance), and
+# its pan from → to (only the push to the left goes sideways).
 CHANGES = [
-    (9.8, (500, 2400), (0.0, 0.0)),  # the page goes, Kritika rises
-    (12.5, (400, 2600), (0.0, 0.0)),  # the phones fly up, Urbantiger flies in
-    (15.2, (900, 1800), (0.6, -0.5)),  # the monitor sweeps off, the phones swing in
-    (17.9, (2400, 600), (0.0, 0.0)),  # the phones drop, the monitors come down
+    (9.8, (500, 2400), (0.0, 0.0)),  # pushed up: the page out, Kritika in from below
+    (12.5, (900, 1800), (0.6, -0.6)),  # pushed left: Kritika out, Urbantiger in from the right
+    (15.2, (500, 2400), (0.0, 0.0)),  # pushed up: Urbantiger out, Chums and Alice in from below
+    (17.9, (2400, 600), (0.0, 0.0)),  # pushed down: the phones out, the monitors in from above
     (20.6, (2000, 500), (0.0, 0.0)),  # the monitors fall back into the distance
     (23.3, (500, 2600), (0.0, 0.0)),  # the diplomas fly up, the last page rises
 ]
 DIPLOMAS = [(-0.3, 21.1), (0.0, 21.55), (0.3, 22.0)]  # (pan, when each starts to fall)
 URL_IN = 27.35  # the address rises out of a blur over 0.7 s
 
-# Loudness (LUFS) of each kind where it plays: the knocks clear, the glass
-# under them, the air soft.
-LEVELS = {'head': -21, 'glass': -25, 'air': -28, 'end': -25}
+# Loudness (LUFS) of each kind where it plays: the beat in the gallery, the
+# knocks clear (the beat waits for them), the glass over the breakdown, the
+# air under the beat.
+LEVELS = {'music': -18, 'head': -21, 'glass': -24, 'air': -30, 'end': -26}
 
 
 def idx(t):
@@ -161,9 +163,9 @@ def build(hero, outro):
     wind.add(air(0.32, lambda u: 700 + 2600 * u, lambda u: np.sin(np.pi * u) ** 1.5, q=1.5), 3.3, pan=0.15, gain=0.9)
     # The page pulls back into the room.
     wind.add(air(1.9, lambda u: 380 + 500 * np.sin(np.pi * u), lambda u: np.sin(np.pi * u) ** 2, kind='low'), 5.2, gain=0.6)
-    # Each change: a gust as things come and go, all at once and then dying
-    # away slowly, as they move (off the mark, then a long landing).
-    gust = lambda u: (u ** 1.2 * (1 - u) ** 3.5) / (0.2553 ** 1.2 * 0.7447 ** 3.5)
+    # Each change: a gust as things come and go, gathering and then dying
+    # away, as a push moves (off gently, fast, then a long landing).
+    gust = lambda u: (u ** 1.6 * (1 - u) ** 2.0) / (0.4444 ** 1.6 * 0.5556 ** 2.0)
     for t0, (f0, f1), (p0, p1) in CHANGES:
         w = air(1.3, lambda u, f0=f0, f1=f1: f0 + (f1 - f0) * u ** 0.7, gust, q=0.8)
         wind.add(across(w, p0, p1), t0 - 0.05, gain=0.4)
@@ -189,9 +191,9 @@ def build(hero, outro):
 
     # --- the glass: the site's synthesis (chime.ts) -----------------------------
     # One ring per 110 ms, as the site rings them, each on the nearest note
-    # of G major (with nothing else playing, a heap of glass rings sweetly
-    # rather than clanks).
-    notes = np.array([mtof(m) for m in (86, 90, 91, 93, 95)])  # D6 F#6 G6 A6 B6
+    # of the beat's key, F minor's pentatonic (a heap of glass rings sweetly
+    # with it rather than clanks).
+    notes = np.array([mtof(m) for m in (84, 87, 89, 92, 94)])  # C6 Eb6 F6 Ab6 Bb6
     last = -1.0
     for e in outro:
         t0 = (e['f'] + round(OUTRO_AT * 60)) / 60
@@ -205,10 +207,10 @@ def build(hero, outro):
 
     # --- the end: the address rises ---------------------------------------------
     # A breath of air coming up with it, and one ring of the glass as it
-    # settles, on D, home.
+    # settles, on A-flat, where the beat ends.
     end.add(air(1.2, lambda u: 500 + 2200 * u ** 1.5, lambda u: np.sin(np.pi * np.minimum(u * 1.15, 1)) ** 2, q=1.0), URL_IN - 0.25, gain=0.8)
-    end.add(chime(mtof(86), 0.05, n_s=2.5, longer=3.2), URL_IN + 0.3, pan=0.0)
-    end.add(chime(mtof(93), 0.025, n_s=2.0, longer=2.6), URL_IN + 0.36, pan=0.15)
+    end.add(chime(mtof(92), 0.05, n_s=2.5, longer=3.2), URL_IN + 0.3, pan=0.0)  # A-flat
+    end.add(chime(mtof(99), 0.025, n_s=2.0, longer=2.6), URL_IN + 0.36, pan=0.15)  # E-flat
 
     return {'air': wind, 'head': head, 'glass': glass, 'end': end}
 
@@ -220,6 +222,9 @@ def loudness(meter, x, a, b):
 def mix(buses):
     meter = pyln.Meter(SR)
     stems = {
+        # The beat, held together a little (a gentle bus compressor).
+        'music': pb.Pedalboard([pb.Compressor(threshold_db=-16, ratio=2.0, attack_ms=12, release_ms=120)])(
+            sum(beat.build(DUR).values()).astype(np.float32), SR).astype(np.float64),
         'air': buses['air'].x,
         'head': buses['head'].x,
         # A little room for the glass, as the balls ring in a space.
@@ -227,7 +232,7 @@ def mix(buses):
         'end': buses['end'].x + reverb(buses['end'].x, room=0.7) * 0.4,
     }
     # Where each is measured: the knocks, a move of the camera, the balls, the end.
-    where = {'head': (3.8, 5.2), 'air': (12.45, 13.75), 'glass': (24.8, 26.9), 'end': (URL_IN - 0.3, URL_IN + 1.5)}
+    where = {'music': (9.8, 23.3), 'head': (3.8, 5.2), 'air': (12.45, 13.75), 'glass': (24.8, 26.9), 'end': (URL_IN - 0.3, URL_IN + 1.5)}
     for name, (a, b) in where.items():
         stems[name] *= db(LEVELS[name] - loudness(meter, stems[name], a, b))
     out = sum(stems.values())

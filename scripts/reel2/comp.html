@@ -372,6 +372,12 @@ function bezier(x1, y1, x2, y2) {
 // long, soft landing; going, gathering itself and then gone.
 const land = bezier(0.16, 1, 0.3, 1);
 const go = bezier(0.5, 0, 0.75, 0);
+// A push: one case going and the next coming on the same curve, a set way
+// apart, so they never cross. Off gently, fast, and a long landing.
+const glide = bezier(0.65, 0, 0.25, 1);
+const push = (t, t0, lag = 0) => glide(span(t, t0 - 0.05 + lag, t0 + 1.15 + lag));
+// Leaning into a push: nothing at either end, most in the middle.
+const lean = (p) => Math.sin(Math.PI * p);
 
 // Where a thing is at t: at rest, but for its way in (from where, starting
 // when, for how long) and its way out (to where). from and to are absolute;
@@ -415,7 +421,7 @@ function jolt(t) {
   return y;
 }
 // When each case is on the stage at all (its way in to its way out).
-const ON_STAGE = [[0, 10.75], [9.8, 13.45], [12.45, 16.15], [15.2, 18.8], [17.9, 21.7], [20.9, 24.3], [23.3, 27.0]];
+const ON_STAGE = [[0, 11.0], [9.75, 13.7], [12.45, 16.4], [15.15, 19.1], [17.85, 21.7], [20.9, 24.3], [23.3, 27.0]];
 // A station's clips start a little before the camera gets there.
 const clipT = (i, inPt, ft) => inPt + (ft - (ARRIVE[i] - 0.8));
 // The address comes in once the page has gone, and stays a while.
@@ -470,64 +476,75 @@ function pose(t) {
   // Pull back from full frame into 3D, then drift.
   const pb = E.inOutCubic(span(t, 5.3, 7.0));
   const dr = E.inOutSine(span(t, 7.0, 10.9));
-  // And as the first case comes, it goes: back into the distance, lying back.
-  const away = go(span(t, 9.7, 10.75));
+  // And as the first case comes up from below, it's pushed up and out.
+  const away = push(t, CHANGES[0]);
   site.style.transform = tf({
     x: lerp(0, 40, pb) - dr * 80,
-    y: lerp(0, 30, pb) + away * 380,
-    z: -away * 2600,
-    rx: lerp(0, 12, pb) - dr * 2 + away * 38,
+    y: lerp(0, 30, pb) - away * 1500,
+    rx: lerp(0, 12, pb) - dr * 2 + lean(away) * 10,
     ry: lerp(0, -18, pb) + dr * 22,
     rz: lerp(0, 1.5, pb) - dr * 1.5,
     s: lerp(1, 0.8, pb) + dr * 0.03,
   });
-  site.style.opacity = String(E.outCubic(span(t, 1.85, 2.45)) * (1 - span(t, 10.35, 10.75)));
+  site.style.opacity = String(E.outCubic(span(t, 1.85, 2.45)));
   site.style.borderRadius = `${(pb * 30).toFixed(2)}px`;
   site.style.boxShadow = `0 0 0 1px rgba(8,8,10,${(0.06 * pb).toFixed(3)}), 0 ${(50 * pb).toFixed(1)}px ${(90 * pb).toFixed(1)}px -24px rgba(8,8,10,${(0.24 * pb).toFixed(3)})`;
 
   // The stations, each turning a little as the camera goes by (d: -1
   // arriving, 0 there, 1 gone), all its devices together.
-  // 1: Kritika: the phones rise from below, standing up as they come, the
-  // middle one first; they go up and away --------------------------------------------
+  // The pushes, each a case going and the next coming the same way:
+  // up (the page, Kritika), left (Kritika, Urbantiger), up (Urbantiger, Chums
+  // and Alice), down (Chums and Alice, Lendly and Yandex Cloud).
+  // 1: Kritika: up from below, standing up as they come, the middle phone
+  // first; pushed out to the left by Urbantiger ------------------------------------
   const tt1 = turntable(t, 1, 4);
   g1.style.transform = tf({ y: 10 + tt1.y, ry: tt1.ry });
+  const p2 = push(t, CHANGES[1]);
   k.forEach((p, i) => {
     const rest = { x: p.x, y: i === 1 ? -10 : 12, z: i === 1 ? 60 : -40, ry: (1 - i) * 9 };
-    const lag = [0.08, 0, 0.16][i];
-    p.d.style.transform = tf(move(t, rest,
-      { t: CHANGES[0] + lag, d: 1.25, from: { y: 1150, z: -300, rx: 40, ry: rest.ry + (1 - i) * 20 } },
-      { t: CHANGES[1] - 0.1 + lag * 0.6, d: 0.85, to: { y: -1250, z: -400, rx: -30, ry: rest.ry - (1 - i) * 16 } }));
+    const p1 = push(t, CHANGES[0], [0.04, 0, 0.08][i]);
+    p.d.style.transform = tf({
+      x: rest.x - p2 * 2300,
+      y: rest.y + (1 - p1) * 1250,
+      z: rest.z,
+      rx: (1 - p1) * 22,
+      ry: rest.ry + (1 - p1) * (1 - i) * 12 - lean(p2) * 16,
+    });
   });
-  // 2: Urbantiger: the monitor flies in out of the distance, turning to face
-  // us, through the gap the phones leave; it swings away to the left ---------------
+  // 2: Urbantiger: in from the right; pushed up and out by Chums and Alice -----
   const tt2 = turntable(t, 2, -5);
   g2.style.transform = tf({ y: 26 + tt2.y, ry: tt2.ry });
-  urb.d.style.transform = tf(move(t, {},
-    { t: CHANGES[1] - 0.05, d: 1.35, from: { z: -3200, ry: 28, rx: -8, y: -60 } },
-    { t: CHANGES[2] - 0.2, d: 0.8, to: { x: -2500, z: -700, ry: -50 } }));
-  urb.d.style.opacity = String(E.outCubic(span(t, CHANGES[1] - 0.05, CHANGES[1] + 0.25)));
-  // 3: Chums and Alice swing in from the right; as Alice opens, it comes
-  // forward and Chums steps back; they drop away -------------------------------------
+  const p3 = push(t, CHANGES[2]);
+  urb.d.style.transform = tf({ x: (1 - p2) * 2300, y: -p3 * 1550, ry: -lean(p2) * 16, rx: lean(p3) * 10 });
+  // 3: Chums and Alice: up from below, Alice first; as Alice opens, it comes
+  // forward and Chums steps back; pushed down and out by the monitors ---------------
   const tt3 = turntable(t, 3, 4);
   g3.style.transform = tf({ y: tt3.y, ry: tt3.ry });
   const swap = E.inOutCubic(span(t, ARRIVE[3] - 0.1, ARRIVE[3] + 0.7));
+  const p4 = push(t, CHANGES[3]);
   pair.forEach((p, i) => {
     const front = i === 1 ? swap : 1 - swap;
-    const rest = { x: p.x * lerp(1, i === 1 ? 0.88 : 1.1, swap), z: lerp(-60, 50, front), ry: i === 0 ? 7 : -7 };
-    p.d.style.transform = tf(move(t, rest,
-      { t: CHANGES[2] + (i === 0 ? 0.1 : 0), d: 1.25, from: { x: rest.x + 2300, ry: 55, z: -400 } },
-      { t: CHANGES[3] - 0.25 + i * 0.05, d: 0.7, to: { y: 1250, rx: -35, z: -200 } }));
+    const pin = push(t, CHANGES[2], i === 0 ? 0.06 : 0);
+    p.d.style.transform = tf({
+      x: p.x * lerp(1, i === 1 ? 0.88 : 1.1, swap),
+      y: (1 - pin) * 1350 + p4 * 1400,
+      z: lerp(-60, 50, front),
+      rx: (1 - pin) * 22 - lean(p4) * 10,
+      ry: i === 0 ? 7 : -7,
+    });
   });
-  // 4: Lendly and Yandex Cloud come down from above, and the second slides
-  // out from behind the first; they fall back into the distance ----------------------
+  // 4: Lendly and Yandex Cloud: down from above, then the second slides out
+  // from behind the first; they fall back into the distance ----------------------
   const tt4 = turntable(t, 4, -5);
   g4.style.transform = tf({ y: 20 + tt4.y, ry: tt4.ry });
   const out_ = E.inOutCubic(span(t, ARRIVE[4] - 0.4, ARRIVE[4] + 0.5));
   mons.forEach((p, i) => {
     const rest = { x: i === 0 ? p.x : lerp(-170, p.x, out_), z: i === 0 ? 20 : lerp(-150, -30, out_), ry: i === 0 ? 9 : -9 };
-    p.d.style.transform = tf(move(t, rest,
-      { t: CHANGES[3] + 0.1 + i * 0.1, d: 1.3, from: { y: -1250, rx: -30, z: -500 } },
-      { t: CHANGES[4] - 0.1 + i * 0.06, d: 1.0, to: { z: -2600, rx: 45, y: 250 } }));
+    const pin = push(t, CHANGES[3], i * 0.06);
+    const m = move(t, rest, null, { t: CHANGES[4] - 0.1 + i * 0.06, d: 1.0, to: { z: -2600, rx: 45, y: 250 } });
+    m.y += -(1 - pin) * 1300;
+    m.rx += -(1 - pin) * 20;
+    p.d.style.transform = tf(m);
     p.d.style.opacity = String(1 - span(t, CHANGES[4] + 0.45, CHANGES[4] + 0.95));
   });
   // 5: the diplomas, dropping onto the stack one after another ------------------------
@@ -546,13 +563,13 @@ function pose(t) {
     p.p.style.opacity = String(a > 0 ? 1 : 0);
   });
   // 6: the end of the page, the camera coming up to it -----------------------------
-  const push = E.inOutCubic(span(t, 24.2, 25.4));
+  const closeIn = E.inOutCubic(span(t, 24.2, 25.4));
   g6.style.transform = tf({});
   // It rises from below, standing up as it comes, then flat and full frame.
   const rise = 1 - land(span(t, CHANGES[5], CHANGES[5] + 1.2));
-  outro.style.transform = tf({ y: rise * 1100, z: -rise * 600, ry: lerp(-16, 0, push), rx: lerp(8, 0, push) + rise * 35, s: lerp(0.8, 1, push) });
-  outro.style.borderRadius = `${((1 - push) * 30).toFixed(2)}px`;
-  outro.style.boxShadow = `0 0 0 1px rgba(8,8,10,${(0.06 * (1 - push)).toFixed(3)}), 0 ${(50 * (1 - push)).toFixed(1)}px ${(90 * (1 - push)).toFixed(1)}px -24px rgba(8,8,10,${(0.24 * (1 - push)).toFixed(3)})`;
+  outro.style.transform = tf({ y: rise * 1100, z: -rise * 600, ry: lerp(-16, 0, closeIn), rx: lerp(8, 0, closeIn) + rise * 35, s: lerp(0.8, 1, closeIn) });
+  outro.style.borderRadius = `${((1 - closeIn) * 30).toFixed(2)}px`;
+  outro.style.boxShadow = `0 0 0 1px rgba(8,8,10,${(0.06 * (1 - closeIn)).toFixed(3)}), 0 ${(50 * (1 - closeIn)).toFixed(1)}px ${(90 * (1 - closeIn)).toFixed(1)}px -24px rgba(8,8,10,${(0.24 * (1 - closeIn)).toFixed(3)})`;
   outro.style.opacity = String(1 - span(t, 26.5, 27.0));
 
   // On screen or not, from where everything now is.

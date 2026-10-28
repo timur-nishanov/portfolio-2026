@@ -60,13 +60,22 @@ sound.
 
 ## The sound
 
-No music: air wherever the picture moves (the title flying up, the throw,
-the page pulling back, each move of the camera, the diplomas falling), and
-the site's own sounds where it makes them: the head's knocks (its CC0
-takes, `public/sounds`, planned as `impactSound.ts` plans them, without the
-crunch, which goes with blood) and the outro's glass (`chime.ts`'s
-synthesis, each ring on the nearest note of G major). At the end, as the
-address rises, a breath of air and one ring of the glass. Each kind is set
-to its own loudness where it plays (`LEVELS` in `sound.py`), the knocks
-clearest, the air soft; the whole isn't normalised, which would push the air
-up as loud as music.
+A beat (`beat.py`, synthesised, no samples): half time at 88.9 bpm in F
+minor, a bar to each case, so every change lands on a downbeat. A kick, an
+808 that slides, a snare with a clap in it, hats as an 808 makes them, a
+rim, a soft pad; and mixed in, the site's own glass (`chime.ts`'s
+synthesis) chopped on the chord's notes, with an echo. It follows the
+picture: a pad under the title, silence for the head's knocks, the beat
+behind an opening filter as the page pulls back, a cymbal backwards and a
+breath of silence before the drop, a breakdown under the outro's glass, and
+one last hit on A-flat with the address.
+
+Over it, the site's own sounds where it makes them: the head's knocks (its
+CC0 takes, `public/sounds`, planned as `impactSound.ts` plans them, without
+the crunch, which goes with blood) and the outro's glass (`chime.ts`, each
+ring on the nearest note of F minor's pentatonic, so it rings with the
+beat); and air wherever the picture moves (the title flying up, the throw,
+the page pulling back, each push, the diplomas falling). Each kind is set
+to its own loudness where it plays (`LEVELS` in `sound.py`): the beat in
+the gallery, the knocks clear (the beat waits for them), the air under it
+all.
