@@ -3,11 +3,18 @@
 // (shots.mjs), and pipes each frame into ffmpeg. See README.md.
 //
 //   node scripts/reel/rec.mjs <shot> <out.mp4> [frames]
+//   node scripts/reel/rec.mjs <shot> <out.json>
+//
+// The second runs the shot just the same without recording it, and writes
+// the sounds it would make: the head's knocks and the outro's glass, each
+// with the frame it lands on (the copy of the site has to log them: see
+// scripts/reel2/README.md).
 //
 // The site is served at localhost:4400 (serve.mjs). 1440×810 at a 4/3 pixel
 // ratio: 1920×1080, 60fps; an x264 CRF 8 intermediate, for the assembly.
 import { chromium } from '/opt/node22/lib/node_modules/playwright/index.mjs';
 import { spawn } from 'node:child_process';
+import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -24,6 +31,8 @@ const W = 1440, H = 810, SCALE = shot.scale ?? 4 / 3;
 const browser = await chromium.launch({ args: ['--enable-unsafe-swiftshader', '--autoplay-policy=no-user-gesture-required', '--hide-scrollbars'] });
 const ctx = await browser.newContext({ viewport: { width: W, height: H }, deviceScaleFactor: SCALE, reducedMotion: 'no-preference' });
 await ctx.addInitScript({ path: path.join(here, 'clock.js') });
+const events = out.endsWith('.json');
+if (events) await ctx.addInitScript(() => { window.__sfx = []; });
 const page = await ctx.newPage();
 page.on('console', (m) => { if (m.type() === 'error') console.log('[page]', m.text().slice(0, 200)); });
 page.on('pageerror', (e) => console.log('[pageerror]', String(e).slice(0, 300)));
@@ -56,11 +65,16 @@ if (shot.setup) await shot.setup(api);
 for (let i = 0; i < (shot.warm ?? 90); i++) await step();
 
 const frames = Math.min(Math.round(shot.duration * FPS), limit ? +limit : Infinity);
-const ff = spawn('ffmpeg', ['-v', 'error', '-y', '-f', 'image2pipe', '-framerate', String(FPS), '-c:v', 'png', '-i', '-',
+const ff = events ? null : spawn('ffmpeg', ['-v', 'error', '-y', '-f', 'image2pipe', '-framerate', String(FPS), '-c:v', 'png', '-i', '-',
   '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '8', '-pix_fmt', 'yuv420p', out], { stdio: ['pipe', 'inherit', 'inherit'] });
 const t0 = Date.now();
 for (let f = 0; f < frames; f++) {
   await shot.frame(f / FPS, api);
+  if (events) {
+    await page.evaluate((f) => { window.__frame = f; }, f);
+    await step();
+    continue;
+  }
   await step();
   // The clip is in the document's coordinates: the screen is where the page
   // is scrolled to (at 0, 0 a scrolled page came out blank).
@@ -69,7 +83,14 @@ for (let f = 0; f < frames; f++) {
   if (!ff.stdin.write(Buffer.from(data, 'base64'))) await new Promise((r) => ff.stdin.once('drain', r));
   if (f % 60 === 0) console.log(name, 'frame', f, '/', frames, ((Date.now() - t0) / (f + 1)).toFixed(0), 'ms/frame');
 }
-ff.stdin.end();
-await new Promise((r) => ff.on('close', r));
-console.log(name, 'done', frames, 'frames in', ((Date.now() - t0) / 1000).toFixed(0), 's');
+if (events) {
+  // Only what happens on the frames themselves, not while the page settled.
+  const list = await page.evaluate(() => window.__sfx.filter((e) => e.f !== undefined));
+  fs.writeFileSync(out, JSON.stringify(list, null, 1));
+  console.log(name, list.length, 'sounds in', frames, 'frames');
+} else {
+  ff.stdin.end();
+  await new Promise((r) => ff.on('close', r));
+  console.log(name, 'done', frames, 'frames in', ((Date.now() - t0) / 1000).toFixed(0), 's');
+}
 await browser.close();
