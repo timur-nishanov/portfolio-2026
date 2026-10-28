@@ -24,30 +24,27 @@ them if the layout changes.
 
 ## The plan
 
-Shots joined with 0.7 s dissolves:
+Shots joined with 0.7 s dissolves into 29.5 s (`assemble.sh`):
 
-1. **main**, 16.5 s. The hero, where the cursor grabs the head: a squeeze, then
+1. **main**, 13 s. The hero, where the cursor grabs the head: a squeeze, then
    release. Scroll down: Kritika parks with the chip on hover, then Urbantiger,
-   then Chums. A click opens Chums out of the chip, and its page scrolls a little.
-2. **awards**, about 3.6 s. Scroll 5653 → 6950; the diplomas come up.
-3. **random**, about 3.4 s. Scroll 8100 → 9700.
-4. **outro**, about 3.8 s. Scroll 12918 → 13418; the balls drop in.
-5. **end card**, about 2.8 s. The page's off-white, with “timur.design” fading in.
+   then Chums.
+2. **case**, 5 s. Kritika parked. A click opens its case out of the chip, and
+   the page scrolls down to the app in hand.
+3. **awards**, 3.8 s. Scroll 5653 → 6953; the diplomas come up.
+4. **random**, 3.6 s. Scroll 8150 → 9600.
+5. **outro**, 4.6 s. Scroll 12498 → 13418; the balls drop in.
+6. **end**, 3 s. The page's off-white, with “timur.design” fading in at 56px,
+   large enough to read in a phone's feed.
 
-Assembly: ffmpeg `xfade` (fade, 0.7 s), then H.264 at 1920×1080, 60fps,
-`+faststart`.
+The first shot fades in from the off-white. The output is H.264 at
+1920×1080, 60fps, CRF 14, with `+faststart` and no sound.
 
 ## Where it stands
 
-- **Done:** the clock, the recorder, the range server and the VP9 re-encode.
-  The hero and the head grab record as planned.
-- **Fixed:** frames came out blank after a scroll. The capture clip has to sit
-  at the scroll offset.
-- **Next:**
-  - Check `main` through the cards and the case opening.
-  - Write the other shots and the end card.
-  - Assemble the reel.
-- **First:** the new Kritika recordings go on the site, then the reel is
-  recorded with them.
-- **Note:** `GRAB` in `shots.mjs` is the head's position at 1.7 s, read off a
-  test frame. Read it again if the hero changes.
+Done: the reel is recorded and assembled, including the new Kritika
+recordings. To make it again, run the steps above for each shot, then
+`scripts/reel/assemble.sh <work> <out.mp4>`.
+
+`GRAB` in `shots.mjs` is the head's position at 1.7 s, read off a test frame.
+Read it again if the hero changes.

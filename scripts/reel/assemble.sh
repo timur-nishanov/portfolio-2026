@@ -29,5 +29,5 @@ for i in "${!shots[@]}"; do
 done
 
 ffmpeg -v error -y "${inputs[@]}" -filter_complex "$filter" -map "[$last]" \
-  -c:v libx264 -preset slow -crf 17 -profile:v high -pix_fmt yuv420p -r 60 -movflags +faststart -an "$out"
+  -c:v libx264 -preset slow -crf 14 -profile:v high -pix_fmt yuv420p -r 60 -movflags +faststart -an "$out"
 ffprobe -v error -show_entries format=duration,size -of csv=p=0 "$out"
