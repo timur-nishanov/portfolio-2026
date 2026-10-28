@@ -166,7 +166,7 @@ function monitor(parent, src, w) {
 // --- the world --------------------------------------------------------------------------
 const world = el('div', 'world');
 const rig = el('div', 'rig', world);
-const STEP = 2700; // between the stations along the camera's track
+const STEP = 2050; // between the stations: the next comes in as the last goes
 
 // Station 0: the site itself, on one plane: full frame at first.
 const g0 = el('div', 'group', rig);
@@ -174,6 +174,11 @@ const site = el('div', 'plane', g0, 'width:1920px;height:1080px;left:-960px;top:
 const siteVid = video('/reel2/p-hero.webm', site);
 // Over the hero's own title until the big one lands on it.
 const patch = el('div', '', site, 'position:absolute;left:836px;top:22px;width:196px;height:42px;background:#f7f7f5');
+// And over its button, so the button comes in after the title has landed.
+const patch2 = el('div', '', site, 'position:absolute;left:1032px;top:14px;width:40px;height:54px;background:#f7f7f5');
+// The hand-over: one frame, between two frames' shutters, so no frame's
+// motion blur mixes the two titles (theirs and ours differ by a hair).
+const SWAP = 2.5 + 0.5 / 60;
 
 // Station 1: Kritika, three phones.
 const g1 = el('div', 'group', rig);
@@ -181,7 +186,7 @@ const k = [
   ['/reel2/k-05-onboarding.webm', 0.4, -480, 0],
   ['/reel2/k-01-ratings-2.webm', 2.6, 0, 0],
   ['/reel2/k-03-peel-2.webm', 0.6, 480, 0],
-].map(([src, inPt, x]) => ({ ...phone(g1, src, 372), inPt, x }));
+].map(([src, inPt, x]) => ({ ...phone(g1, src, 404), inPt, x: x * 1.06 }));
 
 // Station 2: Urbantiger on the monitor.
 const g2 = el('div', 'group', rig);
@@ -190,8 +195,8 @@ const urb = { ...monitor(g2, '/mockups/urbantiger-case-2.mp4', 1180), inPt: 0.5 
 // Station 3: Chums and Alice, two phones.
 const g3 = el('div', 'group', rig);
 const pair = [
-  { ...phone(g3, '/mockups/chums-case-3.mp4', 392), inPt: 0.2, x: -270 },
-  { ...phone(g3, '/mockups/alice-case.mp4', 392), inPt: 1.0, x: 270 },
+  { ...phone(g3, '/mockups/chums-case-3.mp4', 412), inPt: 0.2, x: -290 },
+  { ...phone(g3, '/mockups/alice-case.mp4', 412), inPt: 1.0, x: 290 },
 ];
 
 // Station 4: Lendly and Yandex Cloud, two monitors.
@@ -300,6 +305,9 @@ function camX(t) {
   }
   return TRACK[TRACK.length - 1][1] * STEP;
 }
+// When the camera reaches each station.
+const ARRIVE = [];
+for (const [tt, st] of TRACK) if (ARRIVE[st] === undefined) ARRIVE[st] = tt;
 window.DURATION = 29.0;
 
 window.renderAt = (t) => {
@@ -314,7 +322,7 @@ window.renderAt = (t) => {
   rig.style.transform = tf({ x: -x - drift, z: -travel * 260, ry: clamp(-vel / 600, -7, 7) });
 
   // 0: the title, the hero, the fling, the pull back, the scroll -------------------
-  const on0 = t < 11.2;
+  const on0 = Math.abs(x) < 2300;
   show(g0, on0);
   show(titleLayer, t < 2.7);
   if (t < 2.7) {
@@ -327,12 +335,13 @@ window.renderAt = (t) => {
     });
     const m = E.inOutCubic(span(t, 1.5, 2.5));
     g.setAttribute('transform', `translate(${lerp(big.x, small.x, m).toFixed(2)} ${lerp(big.y, small.y, m).toFixed(2)}) scale(${lerp(big.s, small.s, m).toFixed(5)})`);
-    // The title hands over to the page's own, a few frames.
-    titleLayer.style.opacity = String(1 - span(t, 2.5, 2.58));
+    // The title hands over to the page's own.
+    titleLayer.style.opacity = t < SWAP ? '1' : '0';
   }
   if (on0) {
     site.style.opacity = String(E.outCubic(span(t, 1.85, 2.45)));
-    patch.style.opacity = String(1 - span(t, 2.5, 2.58));
+    patch.style.opacity = t < SWAP ? '1' : '0';
+    patch2.style.opacity = String(1 - E.outCubic(span(t, SWAP, SWAP + 0.3)));
     // Pull back from full frame into 3D, then drift.
     const pb = E.inOutCubic(span(t, 5.3, 7.0));
     const dr = E.inOutSine(span(t, 7.0, 10.9));
@@ -349,50 +358,54 @@ window.renderAt = (t) => {
     waits.push(seek(siteVid, t - HERO_LAG, false));
   }
 
+  // The stations: each on screen while the camera is near it, and each
+  // turning a little as the camera goes by (d: -1 arriving, 0 there, 1 gone),
+  // all its devices together. A clip runs from a little before the camera
+  // arrives.
+  const near = (i) => Math.abs(x - i * STEP) < 2300;
+  const d = (i) => clamp((x - i * STEP) / STEP, -1, 1);
+  const clipT = (i, inPt) => inPt + (t - (ARRIVE[i] - 0.8));
+
   // 1: Kritika ----------------------------------------------------------------------
-  const on1 = t > 9.6 && t < 14.0;
-  show(g1, on1);
-  if (on1) {
+  show(g1, near(1));
+  if (near(1)) {
     g1.style.transform = tf({ x: STEP, y: 10 });
     k.forEach((p, i) => {
-      p.d.style.transform = tf({ x: p.x, z: i === 1 ? 60 : -40, ry: (1 - i) * 9, y: i === 1 ? -10 : 12 });
-      waits.push(seek(p.v, p.inPt + (t - 10.2)));
+      p.d.style.transform = tf({ x: p.x, z: i === 1 ? 60 : -40, ry: (1 - i) * 9 - d(1) * 16, y: i === 1 ? -10 : 12 });
+      waits.push(seek(p.v, clipT(1, p.inPt)));
     });
   }
   // 2: Urbantiger -------------------------------------------------------------------
-  const on2 = t > 12.3 && t < 16.7;
-  show(g2, on2);
-  if (on2) {
+  show(g2, near(2));
+  if (near(2)) {
     g2.style.transform = tf({ x: 2 * STEP, y: 26 });
-    waits.push(seek(urb.v, urb.inPt + (t - 13.0)));
+    urb.d.style.transform = tf({ ry: -d(2) * 14 });
+    waits.push(seek(urb.v, clipT(2, urb.inPt)));
   }
   // 3: Chums and Alice -------------------------------------------------------------
-  const on3 = t > 15.0 && t < 19.4;
-  show(g3, on3);
-  if (on3) {
+  show(g3, near(3));
+  if (near(3)) {
     g3.style.transform = tf({ x: 3 * STEP });
     pair.forEach((p, i) => {
-      p.d.style.transform = tf({ x: p.x, ry: i === 0 ? 7 : -7, z: 0 });
-      waits.push(seek(p.v, p.inPt + (t - 15.7)));
+      p.d.style.transform = tf({ x: p.x, ry: (i === 0 ? 7 : -7) - d(3) * 16 });
+      waits.push(seek(p.v, clipT(3, p.inPt)));
     });
   }
   // 4: Lendly and Yandex Cloud ------------------------------------------------------
-  const on4 = t > 17.7 && t < 22.1;
-  show(g4, on4);
-  if (on4) {
+  show(g4, near(4));
+  if (near(4)) {
     g4.style.transform = tf({ x: 4 * STEP, y: 20 });
     mons.forEach((p, i) => {
-      p.d.style.transform = tf({ x: p.x, ry: i === 0 ? 9 : -9, z: -30 });
-      waits.push(seek(p.v, p.inPt + (t - 18.4)));
+      p.d.style.transform = tf({ x: p.x, ry: (i === 0 ? 9 : -9) - d(4) * 14, z: -30 });
+      waits.push(seek(p.v, clipT(4, p.inPt)));
     });
   }
   // 5: the diplomas, dropping onto the stack one after another ------------------------
-  const on5 = t > 20.4 && t < 25.1;
-  show(g5, on5);
-  if (on5) {
-    g5.style.transform = tf({ x: 5 * STEP, y: 0 });
+  show(g5, near(5));
+  if (near(5)) {
+    g5.style.transform = tf({ x: 5 * STEP, y: 0, ry: -d(5) * 12 });
     posters.forEach((p) => {
-      const t0 = 21.2 + p.i * 0.45;
+      const t0 = ARRIVE[5] - 0.35 + p.i * 0.45;
       const a = clamp((t - t0) / 0.9);
       const land = outBack(a, 0.9);
       const y = lerp(-1250, p.i * 6 - 6, land);
@@ -402,7 +415,7 @@ window.renderAt = (t) => {
     });
   }
   // 6: the end of the page, the camera coming up to it -----------------------------
-  const on6 = t > 23.2 && t < 27.6;
+  const on6 = near(6) && t < 27.6;
   show(g6, on6);
   if (on6) {
     const push = E.inOutCubic(span(t, 24.5, 25.7));
