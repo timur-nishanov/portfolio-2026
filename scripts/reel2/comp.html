@@ -329,7 +329,7 @@ function setupWords() {
 // Opening, one take: the plate's time is the reel's, less this.
 const HERO_LAG = 1.6;
 // The camera's track: [t, station] holds and moves, each move eased in and
-// out; between moves it drifts on a little, so nothing is ever quite still.
+// out; on a hold it keeps moving (HOLD), so nothing is ever quite still.
 // A move sets off every 2.7 s, on the downbeat of a bar of the music
 // (88.9 bpm, sound.py): change one and change the other.
 const TRACK = [
@@ -341,23 +341,69 @@ const TRACK = [
   [21.7, 5], [23.3, 5],
   [24.4, 6],
 ];
+// The stations sit a little higher or lower than one another, so the camera
+// rises and dips from one to the next and no move is quite the last again.
+const LIFT = [0, 0, -50, 40, -40, 0, 0];
 // Where the camera is, and how far into a move (0 → 1 → 0, flat at both
-// ends; 0 on a hold).
+// ends; 0 on a hold); rise: which way it goes up or down (-1..1).
 function cam(t) {
-  if (t <= TRACK[0][0]) return { x: 0, b: 0, dir: 0 };
+  if (t <= TRACK[0][0]) return { x: 0, y: 0, b: 0, dir: 0, rise: 0 };
   for (let i = 1; i < TRACK.length; i++) {
     const [t1, s1] = TRACK[i];
     const [t0, s0] = TRACK[i - 1];
     if (t <= t1) {
       const u = span(t, t0, t1);
-      return { x: lerp(s0, s1, E.smooth(u)) * STEP, b: s1 === s0 ? 0 : bump(u), dir: Math.sign(s1 - s0) };
+      const e = E.smooth(u);
+      return {
+        x: lerp(s0, s1, e) * STEP,
+        y: lerp(LIFT[s0], LIFT[s1], e),
+        b: s1 === s0 ? 0 : bump(u),
+        dir: Math.sign(s1 - s0),
+        rise: clamp((LIFT[s1] - LIFT[s0]) / 60, -1, 1),
+      };
     }
   }
-  return { x: TRACK[TRACK.length - 1][1] * STEP, b: 0, dir: 0 };
+  const last = TRACK[TRACK.length - 1][1];
+  return { x: last * STEP, y: LIFT[last], b: 0, dir: 0, rise: 0 };
 }
-// When the camera reaches each station.
+// When the camera reaches each station, and when it leaves.
 const ARRIVE = [];
-for (const [tt, st] of TRACK) if (ARRIVE[st] === undefined) ARRIVE[st] = tt;
+const LEAVE = [];
+for (const [tt, st] of TRACK) {
+  if (ARRIVE[st] === undefined) ARRIVE[st] = tt;
+  else LEAVE[st] = tt;
+}
+// On a station the camera doesn't stop: it goes in a little and round a
+// little, each station its own way, and back out as it leaves, so it
+// breathes, in on a station, out between them.
+const HOLD = [
+  null,
+  { z: 80, yaw: -3, pitch: 0 }, // Kritika: in, and round to the left
+  { z: 100, yaw: 0, pitch: 2.5 }, // Urbantiger: in, tipping down to the screen
+  { z: 50, yaw: 2.5, pitch: 0 }, // Chums and Alice
+  { z: 60, yaw: -5, pitch: 0 }, // Lendly and Yandex Cloud: round them, to show their depth
+  { z: 50, yaw: 0, pitch: -1.5 }, // the diplomas
+];
+function hold(t) {
+  const h = { z: 0, yaw: 0, pitch: 0 };
+  for (let i = 1; i < HOLD.length; i++) {
+    const v = E.smooth(span(t, ARRIVE[i] - 0.4, LEAVE[i] + 0.2)) * (1 - E.smooth(span(t, LEAVE[i] + 0.2, LEAVE[i] + 1.1)));
+    h.z += HOLD[i].z * v;
+    h.yaw += HOLD[i].yaw * v;
+    h.pitch += HOLD[i].pitch * v;
+  }
+  return h;
+}
+// Each diploma landing jolts the camera, a few pixels, dying at once.
+const LANDINGS = [0, 1, 2].map((i) => ARRIVE[5] - 0.6 + i * 0.45 + 0.474);
+function jolt(t) {
+  let y = 0;
+  for (const l of LANDINGS) {
+    const s = t - l;
+    if (s > 0 && s < 0.5) y += 4 * Math.exp(-s / 0.08) * Math.sin((2 * Math.PI * s) / 0.16);
+  }
+  return y;
+}
 // A station's clips start a little before the camera gets there.
 const clipT = (i, inPt, ft) => inPt + (ft - (ARRIVE[i] - 0.8));
 // The address comes in once the page has gone, and stays a while.
@@ -393,15 +439,18 @@ const clips = [
 
 // Everything where it is at t (the clips aside).
 function pose(t) {
-  // The camera: along the track, banking into each move and drawing back a
-  // little while it travels; the drift comes in after the opening and goes
-  // before the end, from nothing.
+  // The camera: along the track, up or down to each station, drawing back
+  // while it travels, turning and leaning into each move as a drone does,
+  // and on each station going in and round (hold). It turns the world about
+  // itself, not about the first station (where the far stations swung in
+  // half again as big).
   const c = cam(t);
-  const drift = 26 * Math.sin(0.9 * (t - TRACK[0][0])) *
-    E.inOutSine(span(t, 9.8, 10.9)) * (1 - E.inOutSine(span(t, 23.3, 24.4)));
-  // The bank turns the world about the camera, not about the first station
-  // (where the far stations swung in half again as big).
-  rig.style.transform = `translate3d(0, 0, ${(-c.b * 240).toFixed(2)}px) rotateY(${(-c.b * c.dir * 6).toFixed(3)}deg) translate3d(${(-c.x - drift).toFixed(2)}px, 0, 0)`;
+  const h = hold(t);
+  const z = -c.b * 240 + h.z;
+  const yaw = -c.b * c.dir * 6 + h.yaw;
+  const pitch = -c.b * c.rise * 3 + h.pitch;
+  const roll = c.b * c.dir * 1.2;
+  rig.style.transform = `translate3d(0, ${jolt(t).toFixed(2)}px, ${z.toFixed(2)}px) rotateX(${pitch.toFixed(3)}deg) rotateY(${yaw.toFixed(3)}deg) rotateZ(${roll.toFixed(3)}deg) translate3d(${(-c.x).toFixed(2)}px, ${(-c.y).toFixed(2)}px, 0)`;
   const d = (i) => clamp((c.x - i * STEP) / STEP, -1, 1);
 
   // 0: the title, the hero, the fling, the pull back, the scroll -------------------
@@ -433,26 +482,34 @@ function pose(t) {
 
   // The stations, each turning a little as the camera goes by (d: -1
   // arriving, 0 there, 1 gone), all its devices together.
-  // 1: Kritika ----------------------------------------------------------------------
-  g1.style.transform = tf({ x: STEP, y: 10 });
+  // 1: Kritika: the phones stand up into place one after another as the
+  // camera comes, from lying back a little, lower down ------------------------------
+  g1.style.transform = tf({ x: STEP, y: 10 + LIFT[1] });
   k.forEach((p, i) => {
-    p.d.style.transform = tf({ x: p.x, z: i === 1 ? 60 : -40, ry: (1 - i) * 9 - d(1) * 16, y: i === 1 ? -10 : 12 });
+    const up = E.outCubic(span(t, ARRIVE[1] - 0.9 + i * 0.1, ARRIVE[1] + 0.1 + i * 0.1));
+    p.d.style.transform = tf({ x: p.x, z: i === 1 ? 60 : -40, ry: (1 - i) * 9 - d(1) * 16, y: (i === 1 ? -10 : 12) + (1 - up) * 120, rx: (1 - up) * 18 });
   });
-  // 2: Urbantiger -------------------------------------------------------------------
-  g2.style.transform = tf({ x: 2 * STEP, y: 26 });
-  urb.d.style.transform = tf({ ry: -d(2) * 14 });
-  // 3: Chums and Alice -------------------------------------------------------------
-  g3.style.transform = tf({ x: 3 * STEP });
+  // 2: Urbantiger: the monitor rises and straightens up ------------------------------
+  g2.style.transform = tf({ x: 2 * STEP, y: 26 + LIFT[2] });
+  const set = E.outCubic(span(t, ARRIVE[2] - 0.8, ARRIVE[2] + 0.2));
+  urb.d.style.transform = tf({ ry: -d(2) * 14, rx: (1 - set) * 12, y: (1 - set) * 70, s: lerp(0.95, 1, set) });
+  // 3: Chums and Alice: as Alice opens, it comes forward and Chums steps back -------
+  g3.style.transform = tf({ x: 3 * STEP, y: LIFT[3] });
+  const swap = E.inOutCubic(span(t, ARRIVE[3] - 0.1, ARRIVE[3] + 0.7));
   pair.forEach((p, i) => {
-    p.d.style.transform = tf({ x: p.x, ry: (i === 0 ? 7 : -7) - d(3) * 16 });
+    const front = i === 1 ? swap : 1 - swap;
+    p.d.style.transform = tf({ x: p.x * lerp(1, i === 1 ? 0.88 : 1.1, swap), z: lerp(-60, 50, front), ry: (i === 0 ? 7 : -7) - d(3) * 16 });
   });
-  // 4: Lendly and Yandex Cloud ------------------------------------------------------
-  g4.style.transform = tf({ x: 4 * STEP, y: 20 });
+  // 4: Lendly and Yandex Cloud: the second slides out from behind the first --------
+  g4.style.transform = tf({ x: 4 * STEP, y: 20 + LIFT[4] });
+  const out_ = E.inOutCubic(span(t, ARRIVE[4] - 0.55, ARRIVE[4] + 0.45));
   mons.forEach((p, i) => {
-    p.d.style.transform = tf({ x: p.x, ry: (i === 0 ? 9 : -9) - d(4) * 14, z: -30 });
+    const x = i === 0 ? p.x : lerp(-170, p.x, out_);
+    const zz = i === 0 ? 20 : lerp(-150, -30, out_);
+    p.d.style.transform = tf({ x, ry: (i === 0 ? 9 : -9) - d(4) * 14, z: zz });
   });
   // 5: the diplomas, dropping onto the stack one after another ------------------------
-  g5.style.transform = tf({ x: 5 * STEP, y: 0, ry: -d(5) * 12 });
+  g5.style.transform = tf({ x: 5 * STEP, y: LIFT[5], ry: -d(5) * 12 });
   posters.forEach((p) => {
     // The first falls in as the camera arrives, so the frame is never empty.
     const t0 = ARRIVE[5] - 0.6 + p.i * 0.45;
