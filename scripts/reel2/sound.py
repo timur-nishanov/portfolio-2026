@@ -32,7 +32,18 @@ rng = np.random.default_rng(11)
 # --- the picture's timeline (comp.html) -----------------------------------------
 HERO_LAG = 1.6  # reel time of the hero plate's frame 0
 OUTRO_AT = 23.3 - 0.8  # reel time of the outro plate's frame 0
-MOVES = [9.8, 12.5, 15.2, 17.9, 20.6, 23.3]  # the camera's moves, 1.1 s each
+# The gallery's changes (comp.html's CHANGES), one case going as the next
+# comes, and the way each goes: the band of its air from → to (Hz, rising
+# as a thing flies up close, falling as it drops or goes off into the
+# distance), and its pan from → to (only the carousel goes sideways).
+CHANGES = [
+    (9.8, (500, 2400), (0.0, 0.0)),  # the page goes, Kritika rises
+    (12.5, (400, 2600), (0.0, 0.0)),  # the phones fly up, Urbantiger flies in
+    (15.2, (900, 1800), (0.6, -0.5)),  # the monitor sweeps off, the phones swing in
+    (17.9, (2400, 600), (0.0, 0.0)),  # the phones drop, the monitors come down
+    (20.6, (2000, 500), (0.0, 0.0)),  # the monitors fall back into the distance
+    (23.3, (500, 2600), (0.0, 0.0)),  # the diplomas fly up, the last page rises
+]
 DIPLOMAS = [(-0.3, 21.1), (0.0, 21.55), (0.3, 22.0)]  # (pan, when each starts to fall)
 URL_IN = 27.35  # the address rises out of a blur over 0.7 s
 
@@ -150,10 +161,12 @@ def build(hero, outro):
     wind.add(air(0.32, lambda u: 700 + 2600 * u, lambda u: np.sin(np.pi * u) ** 1.5, q=1.5), 3.3, pan=0.15, gain=0.9)
     # The page pulls back into the room.
     wind.add(air(1.9, lambda u: 380 + 500 * np.sin(np.pi * u), lambda u: np.sin(np.pi * u) ** 2, kind='low'), 5.2, gain=0.6)
-    # Each move of the camera: air going by, right to left.
-    for m0 in MOVES:
-        w = air(1.1, lambda u: 600 + 2200 * np.sin(np.pi * u) ** 2, lambda u: (16 * u * u * (1 - u) * (1 - u)) ** 1.4, q=0.8)
-        wind.add(across(w, 0.55, -0.55), m0, gain=0.4)
+    # Each change: a gust as things come and go, all at once and then dying
+    # away slowly, as they move (off the mark, then a long landing).
+    gust = lambda u: (u ** 1.2 * (1 - u) ** 3.5) / (0.2553 ** 1.2 * 0.7447 ** 3.5)
+    for t0, (f0, f1), (p0, p1) in CHANGES:
+        w = air(1.3, lambda u, f0=f0, f1=f1: f0 + (f1 - f0) * u ** 0.7, gust, q=0.8)
+        wind.add(across(w, p0, p1), t0 - 0.05, gain=0.4)
     # The diplomas falling onto the stack.
     for pan, t0 in DIPLOMAS:
         w = air(0.5, lambda u: 3000 - 2000 * u, lambda u: np.sin(np.pi * u ** 0.8) ** 2, q=1.4)
@@ -214,7 +227,7 @@ def mix(buses):
         'end': buses['end'].x + reverb(buses['end'].x, room=0.7) * 0.4,
     }
     # Where each is measured: the knocks, a move of the camera, the balls, the end.
-    where = {'head': (3.8, 5.2), 'air': (12.5, 13.6), 'glass': (24.8, 26.9), 'end': (URL_IN - 0.3, URL_IN + 1.5)}
+    where = {'head': (3.8, 5.2), 'air': (12.45, 13.75), 'glass': (24.8, 26.9), 'end': (URL_IN - 0.3, URL_IN + 1.5)}
     for name, (a, b) in where.items():
         stems[name] *= db(LEVELS[name] - loudness(meter, stems[name], a, b))
     out = sum(stems.values())

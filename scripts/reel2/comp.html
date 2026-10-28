@@ -97,8 +97,6 @@ const E = {
   // bank and the pull back follow.
   smooth: (x) => x * x * x * (x * (x * 6 - 15) + 10),
 };
-// 0 → 1 → 0 across a move, flat at both ends.
-const bump = (x) => 16 * x * x * (1 - x) * (1 - x);
 // A settle with a little give, for things that land.
 const outBack = (x, s = 1.2) => 1 + (s + 1) * Math.pow(x - 1, 3) + s * Math.pow(x - 1, 2);
 
@@ -181,7 +179,6 @@ function monitor(parent, src, w) {
 // --- the world --------------------------------------------------------------------------
 const world = el('div', 'world');
 const rig = el('div', 'rig', world);
-const STEP = 2050; // between the stations: the next comes in as the last goes
 
 // Station 0: the site itself, on one plane: full frame at first.
 const g0 = el('div', 'group', rig);
@@ -328,10 +325,11 @@ function setupWords() {
 // --- the timeline ---------------------------------------------------------------------
 // Opening, one take: the plate's time is the reel's, less this.
 const HERO_LAG = 1.6;
-// The camera's track: [t, station] holds and moves, each move eased in and
-// out; on a hold it keeps moving (HOLD), so nothing is ever quite still.
-// A move sets off every 2.7 s, on the downbeat of a bar of the music
-// (88.9 bpm, sound.py): change one and change the other.
+// The gallery's beats: [t, case], each case's arrival and its going. A
+// change every 2.7 s, on the downbeat of a bar (88.9 bpm, as sound.py's
+// MOVES): change one and change the other. The cases don't stand in a row
+// for a camera to travel along: each comes to the stage its own way, as
+// Apple's products come to their camera, and goes another.
 const TRACK = [
   [9.8, 0],
   [10.9, 1], [12.5, 1],
@@ -341,58 +339,70 @@ const TRACK = [
   [21.7, 5], [23.3, 5],
   [24.4, 6],
 ];
-// The stations sit a little higher or lower than one another, so the camera
-// rises and dips from one to the next and no move is quite the last again.
-const LIFT = [0, 0, -50, 40, -40, 0, 0];
-// Where the camera is, and how far into a move (0 → 1 → 0, flat at both
-// ends; 0 on a hold); rise: which way it goes up or down (-1..1).
-function cam(t) {
-  if (t <= TRACK[0][0]) return { x: 0, y: 0, b: 0, dir: 0, rise: 0 };
-  for (let i = 1; i < TRACK.length; i++) {
-    const [t1, s1] = TRACK[i];
-    const [t0, s0] = TRACK[i - 1];
-    if (t <= t1) {
-      const u = span(t, t0, t1);
-      const e = E.smooth(u);
-      return {
-        x: lerp(s0, s1, e) * STEP,
-        y: lerp(LIFT[s0], LIFT[s1], e),
-        b: s1 === s0 ? 0 : bump(u),
-        dir: Math.sign(s1 - s0),
-        rise: clamp((LIFT[s1] - LIFT[s0]) / 60, -1, 1),
-      };
-    }
-  }
-  const last = TRACK[TRACK.length - 1][1];
-  return { x: last * STEP, y: LIFT[last], b: 0, dir: 0, rise: 0 };
-}
-// When the camera reaches each station, and when it leaves.
+// When each case has arrived and when it goes.
 const ARRIVE = [];
 const LEAVE = [];
 for (const [tt, st] of TRACK) {
   if (ARRIVE[st] === undefined) ARRIVE[st] = tt;
   else LEAVE[st] = tt;
 }
-// On a station the camera doesn't stop: it goes in a little and round a
-// little, each station its own way, and back out as it leaves, so it
-// breathes, in on a station, out between them.
-const HOLD = [
-  null,
-  { z: 80, yaw: -3, pitch: 0 }, // Kritika: in, and round to the left
-  { z: 100, yaw: 0, pitch: 2.5 }, // Urbantiger: in, tipping down to the screen
-  { z: 50, yaw: 2.5, pitch: 0 }, // Chums and Alice
-  { z: 60, yaw: -5, pitch: 0 }, // Lendly and Yandex Cloud: round them, to show their depth
-  { z: 50, yaw: 0, pitch: -1.5 }, // the diplomas
-];
-function hold(t) {
-  const h = { z: 0, yaw: 0, pitch: 0 };
-  for (let i = 1; i < HOLD.length; i++) {
-    const v = E.smooth(span(t, ARRIVE[i] - 0.4, LEAVE[i] + 0.2)) * (1 - E.smooth(span(t, LEAVE[i] + 0.2, LEAVE[i] + 1.1)));
-    h.z += HOLD[i].z * v;
-    h.yaw += HOLD[i].yaw * v;
-    h.pitch += HOLD[i].pitch * v;
+// The changes, on the music's downbeats: one case goes as the next comes.
+const CHANGES = [9.8, 12.5, 15.2, 17.9, 20.6, 23.3];
+
+// CSS's cubic-bezier, solved for x by halving.
+function bezier(x1, y1, x2, y2) {
+  const cx = 3 * x1, bx = 3 * (x2 - x1) - cx, ax = 1 - cx - bx;
+  const cy = 3 * y1, by = 3 * (y2 - y1) - cy, ay = 1 - cy - by;
+  const X = (u) => ((ax * u + bx) * u + cx) * u;
+  const Y = (u) => ((ay * u + by) * u + cy) * u;
+  return (x) => {
+    if (x <= 0) return 0;
+    if (x >= 1) return 1;
+    let lo = 0;
+    let hi = 1;
+    for (let i = 0; i < 24; i++) {
+      const m = (lo + hi) / 2;
+      if (X(m) < x) lo = m;
+      else hi = m;
+    }
+    return Y((lo + hi) / 2);
+  };
+}
+// The way Apple's products move: coming in, off the mark at once and then a
+// long, soft landing; going, gathering itself and then gone.
+const land = bezier(0.16, 1, 0.3, 1);
+const go = bezier(0.5, 0, 0.75, 0);
+
+// Where a thing is at t: at rest, but for its way in (from where, starting
+// when, for how long) and its way out (to where). from and to are absolute;
+// what they leave out stays as at rest.
+const KEYS = ['x', 'y', 'z', 'rx', 'ry', 'rz', 's'];
+function move(t, rest, inn, out) {
+  const a = inn ? 1 - land(span(t, inn.t, inn.t + inn.d)) : 0;
+  const b = out ? go(span(t, out.t, out.t + out.d)) : 0;
+  const o = {};
+  for (const k of KEYS) {
+    const r = rest[k] ?? (k === 's' ? 1 : 0);
+    const f = inn && k in inn.from ? inn.from[k] : r;
+    const e = out && k in out.to ? out.to[k] : r;
+    o[k] = r + a * (f - r) + b * (e - r);
   }
-  return h;
+  return o;
+}
+// While a case is on stage it turns slowly, as on a turntable, and floats.
+function turntable(t, i, deg) {
+  const u = span(t, ARRIVE[i] - 0.8, LEAVE[i] + 0.8);
+  return { ry: deg * (u * 2 - 1), y: 6 * Math.sin(t * 1.9 + i * 1.3) };
+}
+// The camera hardly moves: a slow sway, a little way in on each case, and
+// back as the next comes.
+function camera(t) {
+  const on = E.smooth(span(t, 9.8, 10.8)) * (1 - E.smooth(span(t, 23.3, 24.4)));
+  let z = 0;
+  for (let i = 1; i <= 5; i++) {
+    z += 70 * E.smooth(span(t, ARRIVE[i] - 0.5, LEAVE[i])) * (1 - E.smooth(span(t, LEAVE[i], LEAVE[i] + 0.8)));
+  }
+  return { z, yaw: 2 * Math.sin(((t - 9.8) / 9) * 2 * Math.PI) * on };
 }
 // Each diploma landing jolts the camera, a few pixels, dying at once.
 const LANDINGS = [0, 1, 2].map((i) => ARRIVE[5] - 0.6 + i * 0.45 + 0.474);
@@ -404,6 +414,8 @@ function jolt(t) {
   }
   return y;
 }
+// When each case is on the stage at all (its way in to its way out).
+const ON_STAGE = [[0, 10.75], [9.8, 13.45], [12.45, 16.15], [15.2, 18.8], [17.9, 21.7], [20.9, 24.3], [23.3, 27.0]];
 // A station's clips start a little before the camera gets there.
 const clipT = (i, inPt, ft) => inPt + (ft - (ARRIVE[i] - 0.8));
 // The address comes in once the page has gone, and stays a while.
@@ -439,19 +451,9 @@ const clips = [
 
 // Everything where it is at t (the clips aside).
 function pose(t) {
-  // The camera: along the track, up or down to each station, drawing back
-  // while it travels, turning and leaning into each move as a drone does,
-  // and on each station going in and round (hold). It turns the world about
-  // itself, not about the first station (where the far stations swung in
-  // half again as big).
-  const c = cam(t);
-  const h = hold(t);
-  const z = -c.b * 240 + h.z;
-  const yaw = -c.b * c.dir * 6 + h.yaw;
-  const pitch = -c.b * c.rise * 3 + h.pitch;
-  const roll = c.b * c.dir * 1.2;
-  rig.style.transform = `translate3d(0, ${jolt(t).toFixed(2)}px, ${z.toFixed(2)}px) rotateX(${pitch.toFixed(3)}deg) rotateY(${yaw.toFixed(3)}deg) rotateZ(${roll.toFixed(3)}deg) translate3d(${(-c.x).toFixed(2)}px, ${(-c.y).toFixed(2)}px, 0)`;
-  const d = (i) => clamp((c.x - i * STEP) / STEP, -1, 1);
+  // The camera, nearly still.
+  const cam_ = camera(t);
+  rig.style.transform = `translate3d(0, ${jolt(t).toFixed(2)}px, ${cam_.z.toFixed(2)}px) rotateY(${cam_.yaw.toFixed(3)}deg)`;
 
   // 0: the title, the hero, the fling, the pull back, the scroll -------------------
   show(titleLayer, t < 2.7);
@@ -463,53 +465,74 @@ function pose(t) {
     // The title hands over to the page's own.
     titleLayer.style.opacity = t < SWAP ? '1' : '0';
   }
-  site.style.opacity = String(E.outCubic(span(t, 1.85, 2.45)));
   patch.style.opacity = t < SWAP ? '1' : '0';
   patch2.style.opacity = String(1 - E.outCubic(span(t, SWAP, SWAP + 0.3)));
   // Pull back from full frame into 3D, then drift.
   const pb = E.inOutCubic(span(t, 5.3, 7.0));
   const dr = E.inOutSine(span(t, 7.0, 10.9));
+  // And as the first case comes, it goes: back into the distance, lying back.
+  const away = go(span(t, 9.7, 10.75));
   site.style.transform = tf({
     x: lerp(0, 40, pb) - dr * 80,
-    y: lerp(0, 30, pb),
-    rx: lerp(0, 12, pb) - dr * 2,
+    y: lerp(0, 30, pb) + away * 380,
+    z: -away * 2600,
+    rx: lerp(0, 12, pb) - dr * 2 + away * 38,
     ry: lerp(0, -18, pb) + dr * 22,
     rz: lerp(0, 1.5, pb) - dr * 1.5,
     s: lerp(1, 0.8, pb) + dr * 0.03,
   });
+  site.style.opacity = String(E.outCubic(span(t, 1.85, 2.45)) * (1 - span(t, 10.35, 10.75)));
   site.style.borderRadius = `${(pb * 30).toFixed(2)}px`;
   site.style.boxShadow = `0 0 0 1px rgba(8,8,10,${(0.06 * pb).toFixed(3)}), 0 ${(50 * pb).toFixed(1)}px ${(90 * pb).toFixed(1)}px -24px rgba(8,8,10,${(0.24 * pb).toFixed(3)})`;
 
   // The stations, each turning a little as the camera goes by (d: -1
   // arriving, 0 there, 1 gone), all its devices together.
-  // 1: Kritika: the phones stand up into place one after another as the
-  // camera comes, from lying back a little, lower down ------------------------------
-  g1.style.transform = tf({ x: STEP, y: 10 + LIFT[1] });
+  // 1: Kritika: the phones rise from below, standing up as they come, the
+  // middle one first; they go up and away --------------------------------------------
+  const tt1 = turntable(t, 1, 4);
+  g1.style.transform = tf({ y: 10 + tt1.y, ry: tt1.ry });
   k.forEach((p, i) => {
-    const up = E.outCubic(span(t, ARRIVE[1] - 0.9 + i * 0.1, ARRIVE[1] + 0.1 + i * 0.1));
-    p.d.style.transform = tf({ x: p.x, z: i === 1 ? 60 : -40, ry: (1 - i) * 9 - d(1) * 16, y: (i === 1 ? -10 : 12) + (1 - up) * 120, rx: (1 - up) * 18 });
+    const rest = { x: p.x, y: i === 1 ? -10 : 12, z: i === 1 ? 60 : -40, ry: (1 - i) * 9 };
+    const lag = [0.08, 0, 0.16][i];
+    p.d.style.transform = tf(move(t, rest,
+      { t: CHANGES[0] + lag, d: 1.25, from: { y: 1150, z: -300, rx: 40, ry: rest.ry + (1 - i) * 20 } },
+      { t: CHANGES[1] - 0.1 + lag * 0.6, d: 0.85, to: { y: -1250, z: -400, rx: -30, ry: rest.ry - (1 - i) * 16 } }));
   });
-  // 2: Urbantiger: the monitor rises and straightens up ------------------------------
-  g2.style.transform = tf({ x: 2 * STEP, y: 26 + LIFT[2] });
-  const set = E.outCubic(span(t, ARRIVE[2] - 0.8, ARRIVE[2] + 0.2));
-  urb.d.style.transform = tf({ ry: -d(2) * 14, rx: (1 - set) * 12, y: (1 - set) * 70, s: lerp(0.95, 1, set) });
-  // 3: Chums and Alice: as Alice opens, it comes forward and Chums steps back -------
-  g3.style.transform = tf({ x: 3 * STEP, y: LIFT[3] });
+  // 2: Urbantiger: the monitor flies in out of the distance, turning to face
+  // us, through the gap the phones leave; it swings away to the left ---------------
+  const tt2 = turntable(t, 2, -5);
+  g2.style.transform = tf({ y: 26 + tt2.y, ry: tt2.ry });
+  urb.d.style.transform = tf(move(t, {},
+    { t: CHANGES[1] - 0.05, d: 1.35, from: { z: -3200, ry: 28, rx: -8, y: -60 } },
+    { t: CHANGES[2] - 0.2, d: 0.8, to: { x: -2500, z: -700, ry: -50 } }));
+  urb.d.style.opacity = String(E.outCubic(span(t, CHANGES[1] - 0.05, CHANGES[1] + 0.25)));
+  // 3: Chums and Alice swing in from the right; as Alice opens, it comes
+  // forward and Chums steps back; they drop away -------------------------------------
+  const tt3 = turntable(t, 3, 4);
+  g3.style.transform = tf({ y: tt3.y, ry: tt3.ry });
   const swap = E.inOutCubic(span(t, ARRIVE[3] - 0.1, ARRIVE[3] + 0.7));
   pair.forEach((p, i) => {
     const front = i === 1 ? swap : 1 - swap;
-    p.d.style.transform = tf({ x: p.x * lerp(1, i === 1 ? 0.88 : 1.1, swap), z: lerp(-60, 50, front), ry: (i === 0 ? 7 : -7) - d(3) * 16 });
+    const rest = { x: p.x * lerp(1, i === 1 ? 0.88 : 1.1, swap), z: lerp(-60, 50, front), ry: i === 0 ? 7 : -7 };
+    p.d.style.transform = tf(move(t, rest,
+      { t: CHANGES[2] + (i === 0 ? 0.1 : 0), d: 1.25, from: { x: rest.x + 2300, ry: 55, z: -400 } },
+      { t: CHANGES[3] - 0.25 + i * 0.05, d: 0.7, to: { y: 1250, rx: -35, z: -200 } }));
   });
-  // 4: Lendly and Yandex Cloud: the second slides out from behind the first --------
-  g4.style.transform = tf({ x: 4 * STEP, y: 20 + LIFT[4] });
-  const out_ = E.inOutCubic(span(t, ARRIVE[4] - 0.55, ARRIVE[4] + 0.45));
+  // 4: Lendly and Yandex Cloud come down from above, and the second slides
+  // out from behind the first; they fall back into the distance ----------------------
+  const tt4 = turntable(t, 4, -5);
+  g4.style.transform = tf({ y: 20 + tt4.y, ry: tt4.ry });
+  const out_ = E.inOutCubic(span(t, ARRIVE[4] - 0.4, ARRIVE[4] + 0.5));
   mons.forEach((p, i) => {
-    const x = i === 0 ? p.x : lerp(-170, p.x, out_);
-    const zz = i === 0 ? 20 : lerp(-150, -30, out_);
-    p.d.style.transform = tf({ x, ry: (i === 0 ? 9 : -9) - d(4) * 14, z: zz });
+    const rest = { x: i === 0 ? p.x : lerp(-170, p.x, out_), z: i === 0 ? 20 : lerp(-150, -30, out_), ry: i === 0 ? 9 : -9 };
+    p.d.style.transform = tf(move(t, rest,
+      { t: CHANGES[3] + 0.1 + i * 0.1, d: 1.3, from: { y: -1250, rx: -30, z: -500 } },
+      { t: CHANGES[4] - 0.1 + i * 0.06, d: 1.0, to: { z: -2600, rx: 45, y: 250 } }));
+    p.d.style.opacity = String(1 - span(t, CHANGES[4] + 0.45, CHANGES[4] + 0.95));
   });
   // 5: the diplomas, dropping onto the stack one after another ------------------------
-  g5.style.transform = tf({ x: 5 * STEP, y: LIFT[5], ry: -d(5) * 12 });
+  const tt5 = turntable(t, 5, 3);
+  g5.style.transform = tf({ y: tt5.y, ry: tt5.ry });
   posters.forEach((p) => {
     // The first falls in as the camera arrives, so the frame is never empty.
     const t0 = ARRIVE[5] - 0.6 + p.i * 0.45;
@@ -517,20 +540,23 @@ function pose(t) {
     const land = outBack(a, 0.9);
     const y = lerp(-1250, p.i * 6 - 6, land);
     const rz = lerp(p.rz * 3, p.rz, E.outCubic(a));
-    p.p.style.transform = tf({ x: p.x * lerp(0.6, 1, E.outCubic(a)), y, z: p.i * 30, rz });
+    // And up and away, one after another, as the last page comes.
+    const b = go(span(t, CHANGES[5] - 0.05 + p.i * 0.06, CHANGES[5] + 0.8 + p.i * 0.06));
+    p.p.style.transform = tf({ x: p.x * lerp(0.6, 1, E.outCubic(a)), y: y - b * 1300, z: p.i * 30 - b * 300, rz: rz - b * 25 });
     p.p.style.opacity = String(a > 0 ? 1 : 0);
   });
   // 6: the end of the page, the camera coming up to it -----------------------------
   const push = E.inOutCubic(span(t, 24.2, 25.4));
-  g6.style.transform = tf({ x: 6 * STEP });
-  // In 3D as the camera arrives, then flat and full frame.
-  outro.style.transform = tf({ ry: lerp(-16, 0, push), rx: lerp(8, 0, push), s: lerp(0.8, 1, push) });
+  g6.style.transform = tf({});
+  // It rises from below, standing up as it comes, then flat and full frame.
+  const rise = 1 - land(span(t, CHANGES[5], CHANGES[5] + 1.2));
+  outro.style.transform = tf({ y: rise * 1100, z: -rise * 600, ry: lerp(-16, 0, push), rx: lerp(8, 0, push) + rise * 35, s: lerp(0.8, 1, push) });
   outro.style.borderRadius = `${((1 - push) * 30).toFixed(2)}px`;
   outro.style.boxShadow = `0 0 0 1px rgba(8,8,10,${(0.06 * (1 - push)).toFixed(3)}), 0 ${(50 * (1 - push)).toFixed(1)}px ${(90 * (1 - push)).toFixed(1)}px -24px rgba(8,8,10,${(0.24 * (1 - push)).toFixed(3)})`;
   outro.style.opacity = String(1 - span(t, 26.5, 27.0));
 
   // On screen or not, from where everything now is.
-  for (const { g: gr, parts } of groups) show(gr, parts.some(inFrame));
+  groups.forEach(({ g: gr, parts }, i) => show(gr, t >= ON_STAGE[i][0] && t <= ON_STAGE[i][1] && parts.some(inFrame)));
   if (t >= 27.0) show(g6, false);
 
   // The address, on the page's off-white.
