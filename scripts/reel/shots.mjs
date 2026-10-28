@@ -169,3 +169,41 @@ export const shots = {
     },
   },
 };
+
+// --- plates for the composition (reel2) ------------------------------------
+// Recorded on their own, no cursor unless the gesture needs one, and handed
+// to the composition as footage.
+export const plates = {
+  // The head flung across the hero and off its walls: a straight, quick
+  // flick up and to the right, let go at full speed (an eased drag stopped
+  // the hand, and the head barely moved). On the diagonal, each wall takes
+  // only part of the speed: it knocks, under the blood's threshold.
+  // The page scrolling from the hero into the cases: Kritika parks, then
+  // Urbantiger slides over it. At 2, for a camera that comes in close.
+  scroll: {
+    duration: 5,
+    scale: 2,
+    async frame(t, api) {
+      await api.pointer(-50, -50, false);
+      await api.scroll(scrollAt(t, [[0.1, 0], [2.3, PARK[0]], [2.9, PARK[0]], [4.5, PARK[1]]]));
+    },
+  },
+  head: {
+    duration: 4.5,
+    scale: 4 / 3,
+    async frame(t, api) {
+      const g = { x: GRAB.x, y: GRAB.y - 20 };
+      let x;
+      let y;
+      if (t < 1.05) [x, y] = path(t, [[0.0, 1250, 760], [0.9, g.x, g.y]]);
+      else if (t < 1.25) {
+        const k = (t - 1.05) / 0.2; // linear: the hand at speed when it lets go
+        x = g.x + 110 * k;
+        y = g.y - 110 * k;
+      } else [x, y] = path(t, [[1.25, g.x + 110, g.y - 110], [2.4, 1300, 720]]);
+      await api.pointer(x, y, t < 2.4);
+      if (t >= 0.95 && t < 1.24) await api.down();
+      else await api.up();
+    },
+  },
+};

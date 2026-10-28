@@ -12,12 +12,14 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 const here = path.dirname(fileURLToPath(import.meta.url));
 const [name, out, limit] = process.argv.slice(2);
-const { shots } = await import(path.join(here, 'shots.mjs'));
-const shot = shots[name];
+const { shots, plates } = await import(path.join(here, 'shots.mjs'));
+const shot = shots[name] ?? plates?.[name];
 if (!shot) throw new Error('no shot ' + name);
 const FPS = 60;
 const DT = 1000 / FPS;
-const W = 1440, H = 810, SCALE = 4 / 3;
+// 1440×810 at a 4/3 pixel ratio (1920×1080), or a shot's own ratio (a plate
+// for the composition at 2: 2880×1620, room to zoom in).
+const W = 1440, H = 810, SCALE = shot.scale ?? 4 / 3;
 
 const browser = await chromium.launch({ args: ['--enable-unsafe-swiftshader', '--autoplay-policy=no-user-gesture-required', '--hide-scrollbars'] });
 const ctx = await browser.newContext({ viewport: { width: W, height: H }, deviceScaleFactor: SCALE, reducedMotion: 'no-preference' });
