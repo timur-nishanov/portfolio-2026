@@ -169,3 +169,71 @@ export const shots = {
     },
   },
 };
+
+// --- plates for the composition (reel2) ------------------------------------
+// Recorded on their own, no cursor unless the gesture needs one, and handed
+// to the composition as footage.
+export const plates = {
+  // The head flung across the hero and off its walls: a straight, quick
+  // flick up and to the right, let go at full speed (an eased drag stopped
+  // the hand, and the head barely moved). On the diagonal, each wall takes
+  // only part of the speed: it knocks, under the blood's threshold.
+  // One take for the reel's opening: the hero, the hand coming in and
+  // flinging the head (a straight flick, let go at full speed, on the
+  // diagonal so no wall takes enough of it to bleed), the flight and its
+  // knocks, then the page scrolling into the cases: Kritika parks, then
+  // Urbantiger slides over it, then Chums. At 2, for the camera to pull
+  // back from full frame and move round it.
+  hero: {
+    duration: 9.6,
+    scale: 2,
+    async frame(t, api) {
+      const g = { x: GRAB.x, y: GRAB.y - 20 };
+      let x;
+      let y;
+      if (t < 1.75) [x, y] = path(t, [[1.0, 1250, 760], [1.7, g.x, g.y]]);
+      else if (t < 1.95) {
+        const k = (t - 1.75) / 0.2;
+        x = g.x + 110 * k;
+        y = g.y - 110 * k;
+      } else [x, y] = path(t, [[1.95, g.x + 110, g.y - 110], [2.7, 1300, 720]]);
+      // Gone with the cursor, the pointer leaves the page too: left over a
+      // card, it kept the card's chip up.
+      if (t >= 2.7) await api.pointer(-50, -50, false);
+      else await api.pointer(x, y, t >= 1.0);
+      if (t >= 1.72 && t < 1.94) await api.down();
+      else await api.up();
+      await api.scroll(
+        scrollAt(t, [[4.0, 0], [6.0, PARK[0]], [6.4, PARK[0]], [7.9, PARK[1]], [8.2, PARK[1]], [9.6, PARK[2]]]),
+      );
+    },
+  },
+  // The page scrolling from the hero into the cases: Kritika parks, then
+  // Urbantiger slides over it. At 2, for a camera that comes in close.
+  scroll: {
+    duration: 5,
+    scale: 2,
+    async frame(t, api) {
+      await api.pointer(-50, -50, false);
+      await api.scroll(scrollAt(t, [[0.1, 0], [2.3, PARK[0]], [2.9, PARK[0]], [4.5, PARK[1]]]));
+    },
+  },
+  head: {
+    duration: 4.5,
+    scale: 4 / 3,
+    async frame(t, api) {
+      const g = { x: GRAB.x, y: GRAB.y - 20 };
+      let x;
+      let y;
+      if (t < 1.05) [x, y] = path(t, [[0.0, 1250, 760], [0.9, g.x, g.y]]);
+      else if (t < 1.25) {
+        const k = (t - 1.05) / 0.2; // linear: the hand at speed when it lets go
+        x = g.x + 110 * k;
+        y = g.y - 110 * k;
+      } else [x, y] = path(t, [[1.25, g.x + 110, g.y - 110], [2.4, 1300, 720]]);
+      await api.pointer(x, y, t < 2.4);
+      if (t >= 0.95 && t < 1.24) await api.down();
+      else await api.up();
+    },
+  },
+};
