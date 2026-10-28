@@ -102,8 +102,8 @@ export function KritikaArticle({ onBack, backHref }: ArticleProps) {
         </p>
         <Figure slot={media.feed} frame="phone" />
         <p className="cp-reveal">
-          The profile sums you up as a critic: a badge for how you rate, from Softie to Tomato thrower, and laurels for
-          the reviews that made the top three.
+          The profile sums you up as a critic: a badge for how you rate, from Softie to Tomato thrower, and laurels that
+          count how often your reviews took first, second and third place.
         </p>
         <Figure slot={media.profile} frame="phone" />
         <p className="cp-reveal">
