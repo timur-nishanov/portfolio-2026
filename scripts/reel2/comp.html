@@ -126,10 +126,14 @@ function video(src, parent) {
 // stamped to the millisecond (0.017, 0.033, ...), so a seek to exactly n/60
 // lands on the frame before every third time and the clip stutters. The
 // middle of the frame is safe. Before its start a clip holds its first frame,
-// after its end its last.
-function seekFrame(v, time) {
+// after its end its last. `skip`: the 1/60 s slots (sorted) in which the
+// phone's recording holds the frame before in the middle of a motion, left
+// out so the motion runs evenly.
+function seekFrame(v, time, skip = []) {
   if (!Number.isFinite(v.duration)) return Promise.resolve();
-  const n = clamp(Math.floor(time * FPS + 1e-6), 0, Math.floor(v.duration * FPS) - 1);
+  let n = Math.floor(time * FPS + 1e-6);
+  for (const s of skip) if (s <= n) n++;
+  n = clamp(n, 0, Math.floor(v.duration * FPS) - 1);
   if (v.frameNo === n && v.readyState >= 2) return Promise.resolve();
   v.frameNo = n;
   return new Promise((res) => {
@@ -194,12 +198,15 @@ const SWAP = 2.5 + 0.5 / 60;
 // Station 1: Kritika, three phones, three different screens, each with its
 // moment in turn, left to right: the scale's poo bursting on the first
 // screen, a review's ratings (hearts for Love it), the profile's badges.
+// These recordings run at 57 fps, a 1/60 s slot empty every so often (and the
+// profile's held most frames of the badges sheet coming up): the slots that
+// would hold the frame before in the middle of a motion are left out.
 const g1 = el('div', 'group', rig);
 const k = [
-  ['/reel2/k-05-onboarding.webm', 2.0, -480],
-  ['/reel2/k-02-add-review-2.webm', 10.1, 0],
-  ['/reel2/k-06-profile.webm', 2.4, 480],
-].map(([src, inPt, x]) => ({ ...phone(g1, src, 404), inPt, x: x * 1.06 }));
+  ['/reel2/k-05-onboarding.webm', 2.0, -480, [190, 210, 230, 250, 270]],
+  ['/reel2/k-02-add-review-2.webm', 10.1, 0, [694, 719, 725, 726, 731, 744, 756, 769, 781, 794, 806]],
+  ['/reel2/k-06-profile.webm', 2.4, 480, [270, 271, 272, 275, 276, 277, 279, 281, 283, 285, 286, 289, 290, 291, 293, 295]],
+].map(([src, inPt, x, skip]) => ({ ...phone(g1, src, 404), inPt, x: x * 1.06, skip }));
 
 // Station 2: Urbantiger on the monitor.
 const g2 = el('div', 'group', rig);
@@ -210,13 +217,13 @@ const urb = { ...monitor(g2, '/mockups/urbantiger-case-2.mp4', 1180), inPt: 0.5 
 const g3 = el('div', 'group', rig);
 const pair = [
   { ...phone(g3, '/mockups/chums-case-3.mp4', 412), inPt: 0.2, x: -290 },
-  { ...phone(g3, '/cases/alice/08-onboarding.mp4', 412), inPt: 0.2, x: 290 },
+  { ...phone(g3, '/cases/alice/08-onboarding.mp4', 412), inPt: 0.2, x: 290, skip: [81, 117, 225] },
 ];
 
 // Station 4: Lendly and Yandex Cloud, two monitors.
 const g4 = el('div', 'group', rig);
 const mons = [
-  { ...monitor(g4, '/mockups/lendly-case.mp4', 840), inPt: 0.3, x: -450 },
+  { ...monitor(g4, '/mockups/lendly-case.mp4', 840), inPt: 0.3, x: -450, skip: [175, 183] },
   { ...monitor(g4, '/mockups/yc-case-2.mp4', 840), inPt: 0.5, x: 450 },
 ];
 
@@ -374,10 +381,10 @@ const groups = [
 // Each clip, its group, and its moment for the reel's frame.
 const clips = [
   { v: siteVid, g: g0, at: (ft) => ft - HERO_LAG },
-  ...k.map((p) => ({ v: p.v, g: g1, at: (ft) => clipT(1, p.inPt, ft) })),
+  ...k.map((p) => ({ v: p.v, g: g1, at: (ft) => clipT(1, p.inPt, ft), skip: p.skip })),
   { v: urb.v, g: g2, at: (ft) => clipT(2, urb.inPt, ft) },
-  ...pair.map((p) => ({ v: p.v, g: g3, at: (ft) => clipT(3, p.inPt, ft) })),
-  ...mons.map((p) => ({ v: p.v, g: g4, at: (ft) => clipT(4, p.inPt, ft) })),
+  ...pair.map((p) => ({ v: p.v, g: g3, at: (ft) => clipT(3, p.inPt, ft), skip: p.skip })),
+  ...mons.map((p) => ({ v: p.v, g: g4, at: (ft) => clipT(4, p.inPt, ft), skip: p.skip })),
   // The plate: the page comes up (0.1–2.0s), the balls drop (2.0s on).
   { v: outroVid, g: g6, at: (ft) => 0.8 + (ft - 23.6) },
 ];
@@ -478,7 +485,7 @@ function pose(t) {
 // footage stays sharp (the plates' frames blended into ghosts).
 window.renderAt = (t, ft = t) => {
   pose(t);
-  return Promise.all(clips.filter((c) => c.g.style.visibility !== 'hidden').map((c) => seekFrame(c.v, c.at(ft))));
+  return Promise.all(clips.filter((c) => c.g.style.visibility !== 'hidden').map((c) => seekFrame(c.v, c.at(ft), c.skip)));
 };
 
 // How far anything on screen moves between a and b, in pixels: what the

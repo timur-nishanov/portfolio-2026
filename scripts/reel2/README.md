@@ -37,5 +37,12 @@ picture, and `render.mjs` steps it a frame at a time.
   picture, and only the camera and what it moves blur. Clips seek to the
   middle of a frame: their frames are stamped to the millisecond, and a seek
   to exactly n/60 lands on the frame before every third time.
+- **Held frames.** The phone recordings run at 55–57 fps with an empty
+  1/60 s slot every so often, and some hold a frame or a few in the middle
+  of a motion: there, the motion jerks. Each clip lists those slots (`skip`)
+  and they are left out, so the motion runs evenly (across them the
+  recordings move on by one ordinary step: the animation waited). List them
+  with `node scripts/reel2/held.mjs <clip> <from> <to>` for the part of a
+  clip the reel uses, again whenever an in-point changes.
 - **Grain.** The renderer multiplies it into each finished frame (`GRAIN` in
   the page). In the page it doubled the time of every screenshot.
