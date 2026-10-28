@@ -224,8 +224,12 @@ const mons = [
   { ...monitor(g4, '/mockups/yc-case-2.mp4', 840), inPt: 0.5, x: 450 },
 ];
 
-// Station 5: the diplomas.
-const g5 = el('div', 'group', rig);
+// Station 5: the diplomas, in a world of their own over the first, with the
+// same camera: going up and away as the last page rises, they'd cut through
+// it in a world they shared (the browser splits planes where they cross).
+const world5 = el('div', 'world');
+const rig5 = el('div', 'rig', world5);
+const g5 = el('div', 'group', rig5);
 const posters = [
   ['/awards/posters/awwwards-sotd.webp', 728, 966, -330, -5.5],
   ['/awards/posters/fwa-otd.webp', 728, 1030, 0, 2.0],
@@ -459,7 +463,7 @@ const clips = [
 function pose(t) {
   // The camera, nearly still.
   const cam_ = camera(t);
-  rig.style.transform = `translate3d(0, ${jolt(t).toFixed(2)}px, ${cam_.z.toFixed(2)}px) rotateY(${cam_.yaw.toFixed(3)}deg)`;
+  rig.style.transform = rig5.style.transform = `translate3d(0, ${jolt(t).toFixed(2)}px, ${cam_.z.toFixed(2)}px) rotateY(${cam_.yaw.toFixed(3)}deg)`;
 
   // 0: the title, the hero, the fling, the pull back, the scroll -------------------
   show(titleLayer, t < 2.7);
