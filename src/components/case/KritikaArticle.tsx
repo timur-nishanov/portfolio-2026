@@ -56,6 +56,7 @@ export function KritikaArticle({ onBack, backHref }: ArticleProps) {
           Shit to Oscar, with a tomato for Flop and popcorn for OK. You rate plot, action and acting separately, because
           a film can have a great story and terrible acting, and now your review can say so.
         </p>
+        <Figure slot={media.onboarding} frame="phone" />
         <Figure slot={media.ratings} frame="phone" />
       </section>
 
@@ -93,6 +94,7 @@ export function KritikaArticle({ onBack, backHref }: ArticleProps) {
           phone. Accounts and search are next.
         </p>
         <Figure slot={media.feed} frame="phone" />
+        <Figure slot={media.profile} frame="phone" />
         <p className="cp-reveal">
           What I don’t know yet is whether people want to rate films this way, or just like peeling the stamps.
         </p>
