@@ -98,7 +98,7 @@ export function KritikaArticle({ onBack, backHref }: ArticleProps) {
         <Heading id="cp-04">Work in progress</Heading>
         <p className="cp-reveal">
           Kritika isn’t in the App Store yet. The feed, the reviews, the ratings, the collection and the profile already
-          work on my phone. Search is next.
+          work on my phone.
         </p>
         <Figure slot={media.feed} frame="phone" />
         <p className="cp-reveal">
