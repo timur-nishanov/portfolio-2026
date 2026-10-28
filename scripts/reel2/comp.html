@@ -6,9 +6,9 @@
 <!--
   The reel as a composition: the site's own footage (plates recorded with
   scripts/reel) and the cases' recordings in the site's own device frames,
-  set in 3D. Nothing here moves on its own: render.mjs calls renderAt(t) for
-  every frame (and the subframes blended into its motion blur), and the page
-  draws exactly that moment. Served from the recording copy of the site
+  set in 3D. Nothing here moves on its own: render.mjs calls renderAt(t, ft)
+  for every frame (and the moments blended into its motion blur), and the
+  page draws exactly that moment. Served from the recording copy of the site
   (serve.mjs), so the font, the frames and the clips are its own.
 
   The story, with no words but the first and the last:
@@ -18,7 +18,7 @@
   - the camera travels along the cases, each in its device, a moment at each;
   - the three diplomas drop onto a stack;
   - the camera comes up to the last screen, the balls drop in;
-  - the address.
+  - the address, set as the first words were.
 -->
 <style>
   @font-face {
@@ -72,17 +72,11 @@
     object-fit: cover;
   }
   .dev { position: absolute; transform-style: flat; }
+  .dev .shade { position: absolute; }
   .dev .screen { position: absolute; overflow: hidden; background: #fff; }
   .dev .frame { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
   .poster { position: absolute; border-radius: 3px; overflow: hidden; }
   .poster img { display: block; width: 100%; height: 100%; }
-  #grain {
-    position: absolute;
-    inset: -50%;
-    pointer-events: none;
-    opacity: 0.045;
-    mix-blend-mode: multiply;
-  }
 </style>
 </head>
 <body>
@@ -99,7 +93,12 @@ const E = {
   inOutSine: (x) => -(Math.cos(Math.PI * x) - 1) / 2,
   outExpo: (x) => (x >= 1 ? 1 : 1 - Math.pow(2, -10 * x)),
   inOutQuart: (x) => (x < 0.5 ? 8 * x ** 4 : 1 - Math.pow(-2 * x + 2, 4) / 2),
+  // No jolt anywhere, ends or middle: the camera's moves, whose speed the
+  // bank and the pull back follow.
+  smooth: (x) => x * x * x * (x * (x * 6 - 15) + 10),
 };
+// 0 → 1 → 0 across a move, flat at both ends.
+const bump = (x) => 16 * x * x * (1 - x) * (1 - x);
 // A settle with a little give, for things that land.
 const outBack = (x, s = 1.2) => 1 + (s + 1) * Math.pow(x - 1, 3) + s * Math.pow(x - 1, 2);
 
@@ -112,6 +111,7 @@ const el = (tag, cls, parent = stage, css = '') => {
   parent.appendChild(n);
   return n;
 };
+const FPS = 60;
 const videos = [];
 function video(src, parent) {
   const v = el('video', '', parent);
@@ -122,17 +122,22 @@ function video(src, parent) {
   videos.push(v);
   return v;
 }
-function seek(v, time, loop = true) {
+// A clip shows one whole frame, the one for the reel's frame: its frames are
+// stamped to the millisecond (0.017, 0.033, ...), so a seek to exactly n/60
+// lands on the frame before every third time and the clip stutters. The
+// middle of the frame is safe. Before its start a clip holds its first frame,
+// after its end its last.
+function seekFrame(v, time) {
   if (!Number.isFinite(v.duration)) return Promise.resolve();
-  let t = time;
-  if (loop) t = ((t % v.duration) + v.duration) % v.duration;
-  t = clamp(t, 0, v.duration - 0.02);
-  if (Math.abs(v.currentTime - t) < 0.001 && v.readyState >= 2) return Promise.resolve();
+  const n = clamp(Math.floor(time * FPS + 1e-6), 0, Math.floor(v.duration * FPS) - 1);
+  if (v.frameNo === n && v.readyState >= 2) return Promise.resolve();
+  v.frameNo = n;
   return new Promise((res) => {
-    const done = () => { v.removeEventListener('seeked', done); res(); };
+    let timer;
+    const done = () => { v.removeEventListener('seeked', done); clearTimeout(timer); res(); };
     v.addEventListener('seeked', done);
-    v.currentTime = t;
-    setTimeout(done, 5000);
+    timer = setTimeout(done, 5000);
+    v.currentTime = (n + 0.5) / FPS;
   });
 }
 const show = (n, on) => { n.style.visibility = on ? 'visible' : 'hidden'; };
@@ -142,11 +147,15 @@ const tf = (o) =>
   ` scale(${(o.s ?? 1).toFixed(5)})`;
 
 // The site's device frames (PhoneMockup, MonitorMockup): the clip under the
-// frame's transparent screen, at the frame's own insets.
+// frame's transparent screen, at the frame's own insets. A phone's shadow is
+// a box of its own under the frame, with the body's corners (a drop-shadow
+// filter on a turned device came out cut off square at its layer's edge); a
+// monitor's is a soft patch under its stand.
 function phone(parent, src, w) {
   const h = Math.round((w * 1489) / 720);
-  const d = el('div', 'dev', parent, `width:${w}px;height:${h}px;left:${-w / 2}px;top:${-h / 2}px;` +
-    'filter:drop-shadow(0 34px 36px rgba(8,8,10,.16)) drop-shadow(0 8px 10px rgba(8,8,10,.08))');
+  const d = el('div', 'dev', parent, `width:${w}px;height:${h}px;left:${-w / 2}px;top:${-h / 2}px`);
+  el('div', 'shade', d, 'left:0.6%;right:0.6%;top:0;bottom:0;border-radius:21% / 10.2%;' +
+    'box-shadow:0 2px 6px rgba(8,8,10,.05),0 24px 48px -16px rgba(8,8,10,.15),0 60px 100px -40px rgba(8,8,10,.14)');
   const sc = el('div', 'screen', d, 'left:3.97%;top:1.62%;width:91.98%;height:96.72%;border-radius:9.9% / 4.55%');
   const v = video(src, sc);
   const f = el('img', 'frame', d);
@@ -156,6 +165,8 @@ function phone(parent, src, w) {
 function monitor(parent, src, w) {
   const h = Math.round((w * 1256) / 1600);
   const d = el('div', 'dev', parent, `width:${w}px;height:${h}px;left:${-w / 2}px;top:${-h / 2}px`);
+  el('div', 'shade', d, 'left:33%;width:34%;top:96.2%;height:4.6%;border-radius:50%;' +
+    'background:radial-gradient(closest-side,rgba(8,8,10,.2),rgba(8,8,10,.07) 55%,rgba(8,8,10,0))');
   const sc = el('div', 'screen', d, `left:${(33 / 1600) * 100}%;top:${(33 / 1256) * 100}%;width:${(1534 / 1600) * 100}%;height:${(863 / 1256) * 100}%`);
   const v = video(src, sc);
   const f = el('img', 'frame', d);
@@ -180,23 +191,26 @@ const patch2 = el('div', '', site, 'position:absolute;left:1032px;top:14px;width
 // motion blur mixes the two titles (theirs and ours differ by a hair).
 const SWAP = 2.5 + 0.5 / 60;
 
-// Station 1: Kritika, three phones.
+// Station 1: Kritika, three phones, three different screens, each with its
+// moment in turn, left to right: the scale's poo bursting on the first
+// screen, a review's ratings (hearts for Love it), the profile's badges.
 const g1 = el('div', 'group', rig);
 const k = [
-  ['/reel2/k-05-onboarding.webm', 0.4, -480, 0],
-  ['/reel2/k-01-ratings-2.webm', 2.6, 0, 0],
-  ['/reel2/k-03-peel-2.webm', 0.6, 480, 0],
+  ['/reel2/k-05-onboarding.webm', 2.0, -480],
+  ['/reel2/k-02-add-review-2.webm', 10.1, 0],
+  ['/reel2/k-06-profile.webm', 2.4, 480],
 ].map(([src, inPt, x]) => ({ ...phone(g1, src, 404), inPt, x: x * 1.06 }));
 
 // Station 2: Urbantiger on the monitor.
 const g2 = el('div', 'group', rig);
 const urb = { ...monitor(g2, '/mockups/urbantiger-case-2.mp4', 1180), inPt: 0.5 };
 
-// Station 3: Chums and Alice, two phones.
+// Station 3: Chums, and Alice opening for the first time: the tap on its
+// icon, the glow, the greeting.
 const g3 = el('div', 'group', rig);
 const pair = [
   { ...phone(g3, '/mockups/chums-case-3.mp4', 412), inPt: 0.2, x: -290 },
-  { ...phone(g3, '/mockups/alice-case.mp4', 412), inPt: 1.0, x: 290 },
+  { ...phone(g3, '/cases/alice/08-onboarding.mp4', 412), inPt: 0.2, x: 290 },
 ];
 
 // Station 4: Lendly and Yandex Cloud, two monitors.
@@ -227,59 +241,81 @@ const g6 = el('div', 'group', rig);
 const outro = el('div', 'plane', g6, 'width:1920px;height:1080px;left:-960px;top:-540px');
 const outroVid = video('/reel2/p-outro.webm', outro);
 
-// The words.
+// The words: the first, then the address, set alike.
 const svgNS = 'http://www.w3.org/2000/svg';
-const titleLayer = el('div', 'layer');
-const svg = document.createElementNS(svgNS, 'svg');
-svg.setAttribute('width', '1920');
-svg.setAttribute('height', '1080');
-svg.style.cssText = 'position:absolute;left:0;top:0;overflow:visible';
-titleLayer.appendChild(svg);
-const g = document.createElementNS(svgNS, 'g');
-svg.appendChild(g);
 const BIG = 168;
+function words(layer) {
+  const s = document.createElementNS(svgNS, 'svg');
+  s.setAttribute('width', '1920');
+  s.setAttribute('height', '1080');
+  s.style.cssText = 'position:absolute;left:0;top:0;overflow:visible';
+  layer.appendChild(s);
+  const g = document.createElementNS(svgNS, 'g');
+  s.appendChild(g);
+  return g;
+}
+function text(g, str, x) {
+  const t = document.createElementNS(svgNS, 'text');
+  t.setAttribute('font-family', 'inter');
+  t.setAttribute('font-size', String(BIG));
+  t.setAttribute('font-weight', '400');
+  t.setAttribute('x', String(x));
+  t.setAttribute('y', '0');
+  t.setAttribute('fill', '#08080a');
+  t.textContent = str;
+  g.appendChild(t);
+  return t;
+}
+// Where a line sits centred on the frame by its ink.
+function centred(c, str) {
+  const m = c.measureText(str);
+  const l = -m.actualBoundingBoxLeft;
+  const w = m.actualBoundingBoxRight - l;
+  const h = m.actualBoundingBoxAscent + m.actualBoundingBoxDescent;
+  return { l, w, a: m.actualBoundingBoxAscent, x: 960 - (l + w / 2), y: 540 + m.actualBoundingBoxAscent - h / 2 };
+}
+// Coming in: up a little out of a blur.
+function enter(n, k) {
+  n.style.opacity = String(k);
+  n.style.filter = `blur(${((1 - k) * 16).toFixed(2)}px)`;
+  n.setAttribute('transform', `translate(0 ${((1 - k) * 30).toFixed(2)})`);
+}
+const titleLayer = el('div', 'layer');
+const g = words(titleLayer);
 // Ink box of the hero's title in the plate, at 1920×1080.
 const PLATE_TITLE = { x0: 848, x1: 1022, y0: 31, y1: 56 };
 let title = null;
 
 const endLayer = el('div', 'layer');
-const url = el('div', '', endLayer, 'position:absolute;left:0;right:0;top:0;bottom:0;display:grid;place-items:center;font-size:150px;font-weight:400;letter-spacing:-0.04em;line-height:1');
-const urlText = el('span', '', url);
-urlText.textContent = 'timur.design';
+const ug = words(endLayer);
+let urlText = null;
 
-// Grain on top of everything.
-const grain = document.createElementNS(svgNS, 'svg');
-grain.id = 'grain';
-grain.setAttribute('width', '3840');
-grain.setAttribute('height', '2160');
-grain.innerHTML = '<filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter><rect width="100%" height="100%" filter="url(#n)"/>';
-stage.appendChild(grain);
+// Grain over everything, moving as film does: a 3840×2160 field of noise,
+// shifted every 1/24 s, multiplied in at a touch. The renderer lays it on
+// each finished frame (render.mjs): over the page it doubled the time of
+// every screenshot, and within a frame's blur it could mix two fields.
+window.GRAIN = {
+  svg: '<svg xmlns="http://www.w3.org/2000/svg" width="3840" height="2160"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter><rect width="100%" height="100%" filter="url(#n)"/></svg>',
+  opacity: 0.045,
+  // Where the frame's top left falls in the field at t.
+  at: (t) => {
+    const gi = Math.floor(t * 24);
+    return [960 - (((gi * 37) % 200) - 100), 540 - (((gi * 53) % 200) - 100)];
+  },
+};
 
-function setupTitle() {
+function setupWords() {
   const c = document.createElement('canvas').getContext('2d');
   c.font = `400 ${BIG}px inter`;
-  const parts = ['Hey!', 'I’m Timur'];
-  const at = [0, c.measureText('Hey! ').width];
-  const spans = parts.map((p, i) => {
-    const t = document.createElementNS(svgNS, 'text');
-    t.setAttribute('font-family', 'inter');
-    t.setAttribute('font-size', String(BIG));
-    t.setAttribute('font-weight', '400');
-    t.setAttribute('x', String(at[i]));
-    t.setAttribute('y', '0');
-    t.setAttribute('fill', '#08080a');
-    t.textContent = p;
-    g.appendChild(t);
-    return t;
-  });
-  const m = c.measureText('Hey! I’m Timur');
-  const ink = { l: -m.actualBoundingBoxLeft, r: m.actualBoundingBoxRight, a: m.actualBoundingBoxAscent, d: m.actualBoundingBoxDescent };
-  const bw = ink.r - ink.l;
-  const bh = ink.a + ink.d;
-  const big = { s: 1, x: 960 - (ink.l + bw / 2), y: 540 + ink.a - bh / 2 };
-  const s = (PLATE_TITLE.x1 - PLATE_TITLE.x0) / bw;
-  const small = { s, x: PLATE_TITLE.x0 - ink.l * s, y: PLATE_TITLE.y0 + ink.a * s };
+  const spans = [text(g, 'Hey!', 0), text(g, 'I’m Timur', c.measureText('Hey! ').width)];
+  const m = centred(c, 'Hey! I’m Timur');
+  const big = { s: 1, x: m.x, y: m.y };
+  const s = (PLATE_TITLE.x1 - PLATE_TITLE.x0) / m.w;
+  const small = { s, x: PLATE_TITLE.x0 - m.l * s, y: PLATE_TITLE.y0 + m.a * s };
   title = { big, small, spans };
+  const u = centred(c, 'timur.design');
+  urlText = text(ug, 'timur.design', 0);
+  ug.setAttribute('transform', `translate(${u.x.toFixed(2)} ${u.y.toFixed(2)})`);
 }
 
 // --- the timeline ---------------------------------------------------------------------
@@ -296,158 +332,181 @@ const TRACK = [
   [21.7, 5], [23.6, 5],
   [24.7, 6],
 ];
-function camX(t) {
-  if (t <= TRACK[0][0]) return 0;
+// Where the camera is, and how far into a move (0 → 1 → 0, flat at both
+// ends; 0 on a hold).
+function cam(t) {
+  if (t <= TRACK[0][0]) return { x: 0, b: 0, dir: 0 };
   for (let i = 1; i < TRACK.length; i++) {
     const [t1, s1] = TRACK[i];
     const [t0, s0] = TRACK[i - 1];
-    if (t <= t1) return lerp(s0, s1, E.inOutCubic(span(t, t0, t1))) * STEP;
+    if (t <= t1) {
+      const u = span(t, t0, t1);
+      return { x: lerp(s0, s1, E.smooth(u)) * STEP, b: s1 === s0 ? 0 : bump(u), dir: Math.sign(s1 - s0) };
+    }
   }
-  return TRACK[TRACK.length - 1][1] * STEP;
+  return { x: TRACK[TRACK.length - 1][1] * STEP, b: 0, dir: 0 };
 }
 // When the camera reaches each station.
 const ARRIVE = [];
 for (const [tt, st] of TRACK) if (ARRIVE[st] === undefined) ARRIVE[st] = tt;
-window.DURATION = 29.0;
+// A station's clips start a little before the camera gets there.
+const clipT = (i, inPt, ft) => inPt + (ft - (ARRIVE[i] - 0.8));
+// The address comes in once the page has gone, and stays a while.
+const URL_IN = 27.4;
+window.DURATION = 29.8;
 
-window.renderAt = (t) => {
-  const waits = [];
-  const dt = 1 / 120;
+// What is on screen: a group shows while any of its pieces is in the frame
+// (with room for their shadows), so nothing pops in or out in view.
+const ROOM = 200;
+const inFrame = (n) => {
+  const r = n.getBoundingClientRect();
+  return r.right > -ROOM && r.left < 1920 + ROOM && r.bottom > -ROOM && r.top < 1080 + ROOM;
+};
+const groups = [
+  { g: g0, parts: [site] },
+  { g: g1, parts: k.map((p) => p.d) },
+  { g: g2, parts: [urb.d] },
+  { g: g3, parts: pair.map((p) => p.d) },
+  { g: g4, parts: mons.map((p) => p.d) },
+  { g: g5, parts: posters.map((p) => p.p) },
+  { g: g6, parts: [outro] },
+];
+// Each clip, its group, and its moment for the reel's frame.
+const clips = [
+  { v: siteVid, g: g0, at: (ft) => ft - HERO_LAG },
+  ...k.map((p) => ({ v: p.v, g: g1, at: (ft) => clipT(1, p.inPt, ft) })),
+  { v: urb.v, g: g2, at: (ft) => clipT(2, urb.inPt, ft) },
+  ...pair.map((p) => ({ v: p.v, g: g3, at: (ft) => clipT(3, p.inPt, ft) })),
+  ...mons.map((p) => ({ v: p.v, g: g4, at: (ft) => clipT(4, p.inPt, ft) })),
+  // The plate: the page comes up (0.1–2.0s), the balls drop (2.0s on).
+  { v: outroVid, g: g6, at: (ft) => 0.8 + (ft - 23.6) },
+];
+
+// Everything where it is at t (the clips aside).
+function pose(t) {
   // The camera: along the track, banking into each move and drawing back a
-  // little while it travels.
-  const x = camX(t);
-  const vel = (camX(t + dt) - camX(t - dt)) / (2 * dt);
-  const travel = clamp(Math.abs(vel) / 4200);
-  const drift = t > 9.8 && t < 24.7 ? Math.sin(t * 0.9) * 26 : 0;
-  rig.style.transform = tf({ x: -x - drift, z: -travel * 260, ry: clamp(-vel / 600, -7, 7) });
+  // little while it travels; the drift comes in after the opening and goes
+  // before the end, from nothing.
+  const c = cam(t);
+  const drift = 26 * Math.sin(0.9 * (t - TRACK[0][0])) *
+    E.inOutSine(span(t, 9.8, 10.9)) * (1 - E.inOutSine(span(t, 23.6, 24.7)));
+  // The bank turns the world about the camera, not about the first station
+  // (where the far stations swung in half again as big).
+  rig.style.transform = `translate3d(0, 0, ${(-c.b * 240).toFixed(2)}px) rotateY(${(-c.b * c.dir * 6).toFixed(3)}deg) translate3d(${(-c.x - drift).toFixed(2)}px, 0, 0)`;
+  const d = (i) => clamp((c.x - i * STEP) / STEP, -1, 1);
 
   // 0: the title, the hero, the fling, the pull back, the scroll -------------------
-  const on0 = Math.abs(x) < 2300;
-  show(g0, on0);
   show(titleLayer, t < 2.7);
   if (t < 2.7) {
     const { big, small, spans } = title;
-    spans.forEach((sp, i) => {
-      const kk = E.outCubic(span(t, 0.15 + i * 0.22, 0.15 + i * 0.22 + 0.7));
-      sp.style.opacity = String(kk);
-      sp.style.filter = `blur(${((1 - kk) * 16).toFixed(2)}px)`;
-      sp.setAttribute('transform', `translate(0 ${((1 - kk) * 30).toFixed(2)})`);
-    });
+    spans.forEach((sp, i) => enter(sp, E.outCubic(span(t, 0.15 + i * 0.22, 0.15 + i * 0.22 + 0.7))));
     const m = E.inOutCubic(span(t, 1.5, 2.5));
     g.setAttribute('transform', `translate(${lerp(big.x, small.x, m).toFixed(2)} ${lerp(big.y, small.y, m).toFixed(2)}) scale(${lerp(big.s, small.s, m).toFixed(5)})`);
     // The title hands over to the page's own.
     titleLayer.style.opacity = t < SWAP ? '1' : '0';
   }
-  if (on0) {
-    site.style.opacity = String(E.outCubic(span(t, 1.85, 2.45)));
-    patch.style.opacity = t < SWAP ? '1' : '0';
-    patch2.style.opacity = String(1 - E.outCubic(span(t, SWAP, SWAP + 0.3)));
-    // Pull back from full frame into 3D, then drift.
-    const pb = E.inOutCubic(span(t, 5.3, 7.0));
-    const dr = E.inOutSine(span(t, 7.0, 10.9));
-    site.style.transform = tf({
-      x: lerp(0, 40, pb) - dr * 80,
-      y: lerp(0, 30, pb),
-      rx: lerp(0, 12, pb) - dr * 2,
-      ry: lerp(0, -18, pb) + dr * 22,
-      rz: lerp(0, 1.5, pb) - dr * 1.5,
-      s: lerp(1, 0.8, pb) + dr * 0.03,
-    });
-    site.style.borderRadius = `${(pb * 30).toFixed(2)}px`;
-    site.style.boxShadow = `0 0 0 1px rgba(8,8,10,${(0.06 * pb).toFixed(3)}), 0 ${(50 * pb).toFixed(1)}px ${(90 * pb).toFixed(1)}px -24px rgba(8,8,10,${(0.24 * pb).toFixed(3)})`;
-    waits.push(seek(siteVid, t - HERO_LAG, false));
-  }
+  site.style.opacity = String(E.outCubic(span(t, 1.85, 2.45)));
+  patch.style.opacity = t < SWAP ? '1' : '0';
+  patch2.style.opacity = String(1 - E.outCubic(span(t, SWAP, SWAP + 0.3)));
+  // Pull back from full frame into 3D, then drift.
+  const pb = E.inOutCubic(span(t, 5.3, 7.0));
+  const dr = E.inOutSine(span(t, 7.0, 10.9));
+  site.style.transform = tf({
+    x: lerp(0, 40, pb) - dr * 80,
+    y: lerp(0, 30, pb),
+    rx: lerp(0, 12, pb) - dr * 2,
+    ry: lerp(0, -18, pb) + dr * 22,
+    rz: lerp(0, 1.5, pb) - dr * 1.5,
+    s: lerp(1, 0.8, pb) + dr * 0.03,
+  });
+  site.style.borderRadius = `${(pb * 30).toFixed(2)}px`;
+  site.style.boxShadow = `0 0 0 1px rgba(8,8,10,${(0.06 * pb).toFixed(3)}), 0 ${(50 * pb).toFixed(1)}px ${(90 * pb).toFixed(1)}px -24px rgba(8,8,10,${(0.24 * pb).toFixed(3)})`;
 
-  // The stations: each on screen while the camera is near it, and each
-  // turning a little as the camera goes by (d: -1 arriving, 0 there, 1 gone),
-  // all its devices together. A clip runs from a little before the camera
-  // arrives.
-  const near = (i) => Math.abs(x - i * STEP) < 2300;
-  const d = (i) => clamp((x - i * STEP) / STEP, -1, 1);
-  const clipT = (i, inPt) => inPt + (t - (ARRIVE[i] - 0.8));
-
+  // The stations, each turning a little as the camera goes by (d: -1
+  // arriving, 0 there, 1 gone), all its devices together.
   // 1: Kritika ----------------------------------------------------------------------
-  show(g1, near(1));
-  if (near(1)) {
-    g1.style.transform = tf({ x: STEP, y: 10 });
-    k.forEach((p, i) => {
-      p.d.style.transform = tf({ x: p.x, z: i === 1 ? 60 : -40, ry: (1 - i) * 9 - d(1) * 16, y: i === 1 ? -10 : 12 });
-      waits.push(seek(p.v, clipT(1, p.inPt)));
-    });
-  }
+  g1.style.transform = tf({ x: STEP, y: 10 });
+  k.forEach((p, i) => {
+    p.d.style.transform = tf({ x: p.x, z: i === 1 ? 60 : -40, ry: (1 - i) * 9 - d(1) * 16, y: i === 1 ? -10 : 12 });
+  });
   // 2: Urbantiger -------------------------------------------------------------------
-  show(g2, near(2));
-  if (near(2)) {
-    g2.style.transform = tf({ x: 2 * STEP, y: 26 });
-    urb.d.style.transform = tf({ ry: -d(2) * 14 });
-    waits.push(seek(urb.v, clipT(2, urb.inPt)));
-  }
+  g2.style.transform = tf({ x: 2 * STEP, y: 26 });
+  urb.d.style.transform = tf({ ry: -d(2) * 14 });
   // 3: Chums and Alice -------------------------------------------------------------
-  show(g3, near(3));
-  if (near(3)) {
-    g3.style.transform = tf({ x: 3 * STEP });
-    pair.forEach((p, i) => {
-      p.d.style.transform = tf({ x: p.x, ry: (i === 0 ? 7 : -7) - d(3) * 16 });
-      waits.push(seek(p.v, clipT(3, p.inPt)));
-    });
-  }
+  g3.style.transform = tf({ x: 3 * STEP });
+  pair.forEach((p, i) => {
+    p.d.style.transform = tf({ x: p.x, ry: (i === 0 ? 7 : -7) - d(3) * 16 });
+  });
   // 4: Lendly and Yandex Cloud ------------------------------------------------------
-  show(g4, near(4));
-  if (near(4)) {
-    g4.style.transform = tf({ x: 4 * STEP, y: 20 });
-    mons.forEach((p, i) => {
-      p.d.style.transform = tf({ x: p.x, ry: (i === 0 ? 9 : -9) - d(4) * 14, z: -30 });
-      waits.push(seek(p.v, clipT(4, p.inPt)));
-    });
-  }
+  g4.style.transform = tf({ x: 4 * STEP, y: 20 });
+  mons.forEach((p, i) => {
+    p.d.style.transform = tf({ x: p.x, ry: (i === 0 ? 9 : -9) - d(4) * 14, z: -30 });
+  });
   // 5: the diplomas, dropping onto the stack one after another ------------------------
-  show(g5, near(5));
-  if (near(5)) {
-    g5.style.transform = tf({ x: 5 * STEP, y: 0, ry: -d(5) * 12 });
-    posters.forEach((p) => {
-      const t0 = ARRIVE[5] - 0.35 + p.i * 0.45;
-      const a = clamp((t - t0) / 0.9);
-      const land = outBack(a, 0.9);
-      const y = lerp(-1250, p.i * 6 - 6, land);
-      const rz = lerp(p.rz * 3, p.rz, E.outCubic(a));
-      p.p.style.transform = tf({ x: p.x * lerp(0.6, 1, E.outCubic(a)), y, z: p.i * 30, rz });
-      p.p.style.opacity = String(a > 0 ? 1 : 0);
-    });
-  }
+  g5.style.transform = tf({ x: 5 * STEP, y: 0, ry: -d(5) * 12 });
+  posters.forEach((p) => {
+    // The first falls in as the camera arrives, so the frame is never empty.
+    const t0 = ARRIVE[5] - 0.6 + p.i * 0.45;
+    const a = clamp((t - t0) / 0.9);
+    const land = outBack(a, 0.9);
+    const y = lerp(-1250, p.i * 6 - 6, land);
+    const rz = lerp(p.rz * 3, p.rz, E.outCubic(a));
+    p.p.style.transform = tf({ x: p.x * lerp(0.6, 1, E.outCubic(a)), y, z: p.i * 30, rz });
+    p.p.style.opacity = String(a > 0 ? 1 : 0);
+  });
   // 6: the end of the page, the camera coming up to it -----------------------------
-  const on6 = near(6) && t < 27.6;
-  show(g6, on6);
-  if (on6) {
-    const push = E.inOutCubic(span(t, 24.5, 25.7));
-    g6.style.transform = tf({ x: 6 * STEP });
-    // In 3D as the camera arrives, then flat and full frame.
-    outro.style.transform = tf({ ry: lerp(-16, 0, push), rx: lerp(8, 0, push), s: lerp(0.8, 1, push), z: lerp(0, 0, push) });
-    outro.style.borderRadius = `${((1 - push) * 30).toFixed(2)}px`;
-    outro.style.boxShadow = `0 0 0 1px rgba(8,8,10,${(0.06 * (1 - push)).toFixed(3)}), 0 ${(50 * (1 - push)).toFixed(1)}px ${(90 * (1 - push)).toFixed(1)}px -24px rgba(8,8,10,${(0.24 * (1 - push)).toFixed(3)})`;
-    // The plate: the page comes up (0.1–2.0s), the balls drop (2.0s on).
-    waits.push(seek(outroVid, 0.8 + (t - 23.6), false));
-    outro.style.opacity = String(1 - span(t, 26.9, 27.5));
-  }
-  // The address, on the page's off-white.
-  const onEnd = t > 27.0;
-  show(endLayer, onEnd);
-  if (onEnd) {
-    const a = E.outCubic(span(t, 27.3, 28.2));
-    urlText.style.opacity = String(a);
-    urlText.style.filter = `blur(${((1 - a) * 16).toFixed(2)}px)`;
-    urlText.style.display = 'inline-block';
-    urlText.style.transform = `translateY(${((1 - a) * 26).toFixed(2)}px)`;
-  }
+  const push = E.inOutCubic(span(t, 24.5, 25.7));
+  g6.style.transform = tf({ x: 6 * STEP });
+  // In 3D as the camera arrives, then flat and full frame.
+  outro.style.transform = tf({ ry: lerp(-16, 0, push), rx: lerp(8, 0, push), s: lerp(0.8, 1, push) });
+  outro.style.borderRadius = `${((1 - push) * 30).toFixed(2)}px`;
+  outro.style.boxShadow = `0 0 0 1px rgba(8,8,10,${(0.06 * (1 - push)).toFixed(3)}), 0 ${(50 * (1 - push)).toFixed(1)}px ${(90 * (1 - push)).toFixed(1)}px -24px rgba(8,8,10,${(0.24 * (1 - push)).toFixed(3)})`;
+  outro.style.opacity = String(1 - span(t, 26.8, 27.3));
 
-  // Grain, moving as film does.
-  const gi = Math.floor(t * 24);
-  grain.style.transform = `translate(${((gi * 37) % 200) - 100}px, ${((gi * 53) % 200) - 100}px)`;
-  return Promise.all(waits);
+  // On screen or not, from where everything now is.
+  for (const { g: gr, parts } of groups) show(gr, parts.some(inFrame));
+  if (t >= 27.3) show(g6, false);
+
+  // The address, on the page's off-white.
+  const onEnd = t > URL_IN;
+  show(endLayer, onEnd);
+  if (onEnd) enter(urlText, E.outCubic(span(t, URL_IN, URL_IN + 0.7)));
+}
+
+// The moment t, with the clips at the frame ft's own picture: within a
+// frame's motion blur only the camera and what it moves blur, and the
+// footage stays sharp (the plates' frames blended into ghosts).
+window.renderAt = (t, ft = t) => {
+  pose(t);
+  return Promise.all(clips.filter((c) => c.g.style.visibility !== 'hidden').map((c) => seekFrame(c.v, c.at(ft))));
+};
+
+// How far anything on screen moves between a and b, in pixels: what the
+// renderer needs to know to blur a frame smoothly.
+const movers = [site, ...k.map((p) => p.d), urb.d, ...pair.map((p) => p.d), ...mons.map((p) => p.d), ...posters.map((p) => p.p), outro];
+window.motion = (a, b) => {
+  const look = () => {
+    const out = movers.map((n) => (n.closest('.group').style.visibility !== 'hidden' && inFrame(n) ? n.getBoundingClientRect() : null));
+    if (titleLayer.style.visibility !== 'hidden') out.push(g.getBoundingClientRect());
+    else out.push(null);
+    return out;
+  };
+  pose(a);
+  const A = look();
+  pose(b);
+  const B = look();
+  let m = 0;
+  A.forEach((ra, i) => {
+    const rb = B[i];
+    if (!ra || !rb) return;
+    m = Math.max(m, Math.abs(ra.left - rb.left), Math.abs(ra.right - rb.right), Math.abs(ra.top - rb.top), Math.abs(ra.bottom - rb.bottom));
+  });
+  return m;
 };
 
 window.ready = (async () => {
   await document.fonts.load(`400 ${BIG}px inter`);
-  setupTitle();
+  setupWords();
   await Promise.all([...document.images].map((im) => (im.complete ? 0 : new Promise((r) => { im.onload = im.onerror = r; }))));
   await Promise.all(videos.map((v) => new Promise((res) => {
     if (v.readyState >= 2) return res();
