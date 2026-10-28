@@ -35,7 +35,6 @@ sound.
    10–14 s at every third frame without blur, for a quick look.
 6. The sound, with numpy, scipy, pedalboard, pyloudnorm and soundfile:
    `python scripts/reel2/sound.py <work>/hero.json <work>/outro.json <work>/sound.wav`
-   (it prints each part's loudness where it plays).
 7. Encode for X:
    `ffmpeg -i <work>/reel.mp4 -i <work>/sound.wav -c:v libx264 -preset slow -crf 14 -profile:v high -pix_fmt yuv420p -colorspace bt709 -color_primaries bt709 -color_trc bt709 -c:a aac -b:a 256k -movflags +faststart <out.mp4>`
 
@@ -61,16 +60,13 @@ sound.
 
 ## The sound
 
-An original track, 88.9 bpm, so that a bar (2.7 s) is a station and the
-camera sets off on each downbeat; move one and move the other. Light and
-dry, with air between the notes: a soft short kick, finger snaps, a shaker,
-ticks, a round bass pluck, a few electric-piano stabs, and the line on notes
-of glass, as the site's balls are. Under the words only a breath of the
-chord; it waits while the head is thrown, comes in as the page pulls back,
-plays the line while the camera travels, drops out for the last screen and
-ends on the chord with the address. Over it, the site's own sounds where
-the picture makes them: the head's knocks (its CC0 takes, `public/sounds`,
-planned as `impactSound.ts` plans them, without the crunch, which goes with
-blood) and the outro's glass (`chime.ts`'s synthesis, on the notes of the
-chord). Air for each move of the camera, the diplomas landing. Mastered to
-−16 LUFS, under the picture rather than over it, peaks under −1 dBTP.
+No music: air wherever the picture moves (the title flying up, the throw,
+the page pulling back, each move of the camera, the diplomas falling), and
+the site's own sounds where it makes them: the head's knocks (its CC0
+takes, `public/sounds`, planned as `impactSound.ts` plans them, without the
+crunch, which goes with blood) and the outro's glass (`chime.ts`'s
+synthesis, each ring on the nearest note of G major). At the end, as the
+address rises, a breath of air and one ring of the glass. Each kind is set
+to its own loudness where it plays (`LEVELS` in `sound.py`), the knocks
+clearest, the air soft; the whole isn't normalised, which would push the air
+up as loud as music.
