@@ -689,17 +689,20 @@
 .cp-shot--stage {
   width: 100%;
 }
-/* A screen's file lifts off the box a little, on a soft shadow in layers: a
-   hairline edge, a close one, and two wider ones that fade out within the
-   box's room under it (32px on a phone) and beside it (16px). A wide picture
-   (a diagram, several screens laid out) is drawn on it, flat and square. */
+/* A screen's file lifts off the box a little, on a very soft shadow in
+   layers: a faint hairline for its outline, a faint close one, a halo that
+   goes evenly round the corners, and a wide one a little under it. None of
+   them draws a line of its own along the edge (the old close shadow did, a
+   dark rim under the screen), and all fade out within the box's room under
+   it (32px on a phone) and beside it (16px). A wide picture (a diagram,
+   several screens laid out) is drawn on it, flat and square. */
 .cp-figure img.cp-shot,
 .cp-figure video.cp-shot {
   box-shadow:
-    0 0 0 0.5px rgba(8, 8, 10, 0.06),
-    0 1px 3px rgba(8, 8, 10, 0.05),
-    0 6px 12px -4px rgba(8, 8, 10, 0.06),
-    0 14px 24px -10px rgba(8, 8, 10, 0.08);
+    0 0 0 0.5px rgba(8, 8, 10, 0.045),
+    0 1px 3px rgba(8, 8, 10, 0.025),
+    0 4px 14px rgba(8, 8, 10, 0.04),
+    0 12px 28px -8px rgba(8, 8, 10, 0.06);
 }
 .cp-figure img.cp-shot--wide,
 .cp-figure video.cp-shot--wide,

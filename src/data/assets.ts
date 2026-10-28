@@ -23,8 +23,8 @@ export const assets = {
   aliceCasePoster: '/mockups/alice-case.webp', // its first frame
   ycCaseVideo: '/mockups/yc-case-2.mp4', // yc-bundle-spring-2560x1440-60fps.mp4, 16:9 like the monitor's screen (1600x900)
   ycCasePoster: '/mockups/yc-case-2.webp', // its first frame
-  kritikaCaseVideo: '/mockups/kritika-case-3.mp4', // 03-peel_2.mp4 (1178x2556), as in the case at 0.95 of its pace, scaled to 780x1692 (CRF 23) — inside the iPhone frame, its own dynamic island painted out (delogo) so only the frame's shows
-  kritikaCasePoster: '/mockups/kritika-case-3.webp', // its first frame
+  kritikaCaseVideo: '/mockups/kritika-case-4.mp4', // kritika-case-3_2.mp4 (780x1692, the new peel), as in the case at 0.95 of its pace (CRF 23) — inside the iPhone frame, its own dynamic island painted out (delogo) so only the frame's shows
+  kritikaCasePoster: '/mockups/kritika-case-4.webp', // its first frame
   lendlyCaseVideo: '/mockups/lendly-case.mp4', // 09-homepage-card.mp4 (1600x900, 60fps, CRF 23) — the monitor's 16:9 as it is
   lendlyCasePoster: '/mockups/lendly-case.webp', // its first frame
   monitorFrame: '/mockups/monitor-frame.webp', // a 27" display on its stand, the screen transparent (for recordings); drawn by scripts/render-monitor.py
