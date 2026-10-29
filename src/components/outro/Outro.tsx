@@ -96,20 +96,16 @@ type Body = {
   entered: boolean;
 };
 
-/** Lines set one under another, each wrapping within itself; a line's parts
-    (outro.ts) run on in it, but on a phone (outro.css). */
+/** Lines set one under another (outro.ts), a space between them for
+    whatever reads them as text. */
 function Lines({ lines, className }: { lines: string[]; className: string }) {
   return (
     <p className={className}>
-      {lines.map((line) => (
-        <span key={line}>
-          {line.split('\n').map((part, j) => (
-            <Fragment key={part}>
-              {j > 0 && ' '}
-              <span className="outro__part">{part}</span>
-            </Fragment>
-          ))}
-        </span>
+      {lines.map((line, i) => (
+        <Fragment key={line}>
+          {i > 0 && ' '}
+          <span>{line}</span>
+        </Fragment>
       ))}
     </p>
   );
