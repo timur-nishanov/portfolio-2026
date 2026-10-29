@@ -5,42 +5,38 @@
 // subtitles).
 export type AboutLine = string | { text: string; href: string };
 
-// A paragraph, line by line; `phone`, the same words set again for a phone,
-// where its own lines don't fit (AboutAwards shows one or the other).
-export type AboutParagraph = { lines: AboutLine[]; phone?: AboutLine[] };
+// A paragraph, line by line.
+export type AboutParagraph = { lines: AboutLine[] };
 
 const artemSite: AboutLine = { text: 'artemartemartem.com', href: 'https://artemartemartem.com' };
 
-// Each paragraph set line by line, broken where the sense breaks, the lines
-// of a like length. At a phone's 15px the first two keep their lines (the
-// longest just fits); the last is set again there.
+// Each paragraph set line by line, in short lines broken where the sense
+// breaks, a short one and a longer one by turns: centred on a laptop, flush
+// left on a phone (about.css), where none of them is long enough to wrap.
 export const aboutText: AboutParagraph[] = [
   {
     lines: [
-      // A word joiner after the hyphen keeps "e-commerce" whole where the
-      // line wraps (a narrow phone), as the outro keeps "part-time" (outro.ts).
-      'Mostly B2C: fintech, Web3 and e-\u2060commerce.',
-      'I like messy flows and making them look good.',
-      'I research, prototype and build front ends,',
-      'and make 3D, icons, motion and video with AI.',
+      'Mostly B2C: fintech,',
+      'Web3 and e-commerce.',
+      'I like messy flows',
+      'and making them look good.',
+      'I research, prototype',
+      'and build front ends,',
+      'and make 3D, icons,',
+      'motion and video with AI.',
     ],
   },
   {
-    // A pause between the two longer ones, the turn on its second line.
-    lines: ['I care about systems,', 'but I still prefer a bit more craft.'],
+    // The turn on its second line.
+    lines: ['I care about systems,', 'but I still prefer', 'a bit more craft.'],
   },
   {
-    // The two lines the old block had: the site, the awards. On a phone,
-    // three round the longest in the middle, near the first paragraph's
-    // width.
+    // The site, the awards, the address.
     lines: [
-      'I designed a site for film director Artem\u00a0Shcherbakov.',
-      'It got Site\u00a0of\u00a0the\u00a0Day on Awwwards, FWA and CSSDA.',
-      artemSite,
-    ],
-    phone: [
-      'I designed a site for film director',
-      'Artem\u00a0Shcherbakov. It got Site\u00a0of\u00a0the\u00a0Day',
+      'I designed a site',
+      'for film director',
+      'Artem\u00a0Shcherbakov.',
+      'It got Site\u00a0of\u00a0the\u00a0Day',
       'on Awwwards, FWA and CSSDA.',
       artemSite,
     ],

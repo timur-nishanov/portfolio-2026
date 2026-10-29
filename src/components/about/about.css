@@ -77,11 +77,6 @@
   display: block;
   text-wrap: balance;
 }
-/* A paragraph set again for a phone (about.ts): its phone setting stays
-   out of the way until there (below). */
-.aw__phone {
-  display: none;
-}
 /* The site's secondary grey (the case subtitles, the case pages' quieter
    line): 4.9:1 on the page, where #ababab read at 2.2:1. */
 .aw__link {
@@ -135,18 +130,12 @@
     padding: 0 16px;
   }
 }
-/* A phone held upright: a paragraph set again for it shows that setting.
-   The sides come in a little, so the longest line (at 15px, 328px) still
-   fits whole on a 360px phone. */
+/* A phone held upright: the short lines flush left, at the page's own
+   margin, a ragged column down the screen's left side. */
 @media (max-width: 599px) {
   .aw__text {
-    padding: 0 12px;
-  }
-  .aw__wide {
-    display: none;
-  }
-  .aw__phone {
-    display: block;
+    padding: 0 16px;
+    text-align: left;
   }
 }
 /* A phone held sideways: the text starts higher and runs wider, so the
