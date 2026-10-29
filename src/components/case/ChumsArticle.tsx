@@ -51,7 +51,7 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
         <Facts
           items={[
             ['Role', 'Product design lead'],
-            ['Team', 'Founders, PM, art director, one developer, junior designer'],
+            ['Team', 'Founders, PM, art director, one developer, designer'],
             ['Timeline', 'Concept in 2024 · Design lead in 2025'],
             ['Outcome', 'Desktop beta in three months · attaching a file went from six steps to one'],
           ]}
@@ -75,7 +75,7 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
         </ul>
         <BeforeAfter {...media.concept} frame="stage" />
         <p className="cp-reveal">
-          The founders approved it. Then the product’s designer left, and I took over design, with a junior designer to
+          The founders approved it. Then the product’s designer left, and I took over design, with a designer to
           mentor.
         </p>
         <p className="cp-reveal">
@@ -178,7 +178,7 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
           ]}
         />
         <p className="cp-reveal">
-          The junior designer drew the screens, and I directed the work. The system was{' '}
+          The designer I mentored drew the screens, and I directed the work. The system was{' '}
           <Mark>approved and handed to development</Mark> before I left the studio in January&nbsp;2026.
         </p>
         <Figure slot={media.rewards} frame="stage" />

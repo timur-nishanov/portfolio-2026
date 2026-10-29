@@ -93,7 +93,7 @@ export const showcase: ShowcaseCase[] = [
     notes: [
       'I led design at Chums for a year. On desktop, attaching a file took six steps. Now you drag it into the\u00a0chat.',
       'The desktop app was the phone app stretched across a big window. The redesign reached beta three months after the plan was\u00a0approved.',
-      'The phone on this card is my 2024 concept. Later came AI threads and a rewards system, designed with a junior designer I\u00a0mentored.',
+      'The phone on this card is my 2024 concept. Later came AI threads and a rewards system, made with a designer I\u00a0mentored.',
     ],
   },
   {
