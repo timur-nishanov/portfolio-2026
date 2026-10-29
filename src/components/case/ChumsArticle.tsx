@@ -42,7 +42,11 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
           and dApps built into the chat. <Mark>32k+ wallets, $200k+ in user balances.</Mark>
         </p>
         <p className="cp-reveal">
-          Chums already had plenty of features. Most of my job was making them easy to find and easy to use.
+          Most messengers are centralized: one company holds your account and your data. Decentralized ones leave them
+          with you, but they’re hard to use. Chums wants to be both: yours, and as easy as the apps people already know.
+        </p>
+        <p className="cp-reveal">
+          It already had plenty of features. Most of my job was making them easy to find and easy to use.
         </p>
         <Facts
           items={[
@@ -116,9 +120,9 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
         </p>
         <Figure slot={media.wallet} frame="stage" />
         <p className="cp-reveal">
-          The founders and the PM approved the plan within a week. With one developer on the whole app, some details
-          had to wait. <Mark>The first beta shipped three months later</Mark>, and the new patterns went into the design
-          system.
+          The founders and the PM approved the plan within a week, and we turned it into a backlog, ordered by what had
+          to make the first release. With one developer on the whole app, some details had to wait. <Mark>The first
+          beta shipped three months later</Mark>, and the new patterns went into the design system.
         </p>
       </section>
 
@@ -151,6 +155,11 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
           at all?”
         </p>
         <QuestBoard />
+        <p className="cp-reveal">
+          “Why do quests at all?” had a plain answer: Chums had no way to bring in new users but word of mouth. Partner
+          quests were meant to fix that. A Web3 project’s community earns its tokens in Chums, and Chums gets active
+          users.
+        </p>
         <p className="cp-reveal">
           Then we looked at how Matrix clients, Telegram, Discord and the Family wallet handle this, and built the
           screens around three questions.
@@ -191,9 +200,10 @@ export function ChumsArticle({ onBack, backHref }: ArticleProps) {
       <section className="cp-chapter cp-col" aria-labelledby="cp-differently">
         <Heading id="cp-differently">What I’d do differently</Heading>
         <p className="cp-reveal">
-          Agree on metrics with the PM before the first mockup. I can tell you attaching a file went from six steps to
-          one, but not how many people noticed. For desktop I’d track steps and time for common actions. For rewards,
-          how many people start a quest and how many finish.
+          Agree on metrics with the PM before the first mockup. There was no budget for research, so ideas went
+          straight into the product. I can tell you attaching a file went from six steps to one, but not how many people
+          noticed. For desktop I’d track steps and time for common actions. For rewards, how many people start a quest
+          and how many finish.
         </p>
       </section>
 
