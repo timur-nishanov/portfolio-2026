@@ -1,17 +1,26 @@
-"""Recolour a mockup render's warm background (a radial vignette, the devices'
-soft shadows on it) to a flat target colour, leaving the devices and their
-screens as they are.
+"""Flatten a mockup render's background (a radial vignette, the devices' soft
+shadows on it) to one flat colour, the case cards' grey, leaving the devices
+and their screens as they are.
 
 Per pixel: r = frame / background. The background and the shadows on it are
-the background darkened evenly (r the same in every channel, never above 1);
-a device or a screen is not (another hue, or brighter). Where a pixel reads as
-background it is moved by target / background, so a shadow stays a shadow of
-the same depth, on the target colour; elsewhere nothing changes. The weight
-is worked out on 4x4 blocks (noise averages out), grown a block into the
-devices' edges (no warm fringe left round them) and eased in between.
+the background darkened evenly (r the same in every channel, never above 1)
+and change slowly from pixel to pixel; a device or a screen is another hue,
+brighter, or ends at a sharp edge. The flat colour floods in from the frame's
+edges, from where it is plain background, over everything that reads as
+background or shadow, and stops at the devices' edges: a grey part of a
+device (an iMac's stand) is walled off by its own outline, even where it
+runs off the frame. Flooded pixels take the flat colour, eased in over a
+pixel at the edge of the flood; elsewhere nothing changes. Works as well on a
+clip already recoloured, with its shadows kept (the vignette's banding and
+the shadows go).
 
-usage: python3 scripts/recolor-random.py SRC DST CRF [--frames N] [--debug DIR]
-  e.g. python3 scripts/recolor-random.py render.mp4 public/random/name.mp4 23
+Where a grey part of a device fades into the background with no edge at all
+(an iMac's chin at its right end), --keep fences it in by hand: a box
+x0:y0:x1:y1 in the frame's pixels the flood never enters (as many as needed).
+
+usage: python3 scripts/recolor-random.py SRC DST CRF [--keep X0:Y0:X1:Y1 ...] [--frames N] [--debug DIR]
+  e.g. python3 scripts/recolor-random.py render.mp4 public/random/name.mp4 20
+  the iMac in public/random/moneta-site.mp4 and stepicon-site.mp4: --keep 248:700:1353:819
 needs ffmpeg, and numpy and scipy for Python. The poster is the new first
 frame, as the others are (public/random/*.webp).
 """
@@ -57,22 +66,6 @@ def pool(a, k):
     return a[: h - h % k, : w - w % k].reshape(h // k, k, w // k, k, *a.shape[2:]).mean(axis=(1, 3))
 
 
-def upsample(a, h, w):
-    """Bilinear, from block centres, to the full frame."""
-    ph, pw = a.shape[:2]
-    ys = (np.arange(h) + 0.5) * ph / h - 0.5
-    xs = (np.arange(w) + 0.5) * pw / w - 0.5
-    y0 = np.clip(np.floor(ys).astype(int), 0, ph - 1)
-    x0 = np.clip(np.floor(xs).astype(int), 0, pw - 1)
-    y1 = np.clip(y0 + 1, 0, ph - 1)
-    x1 = np.clip(x0 + 1, 0, pw - 1)
-    fy = np.clip(ys - y0, 0, 1)[:, None]
-    fx = np.clip(xs - x0, 0, 1)[None, :]
-    top = a[y0][:, x0] * (1 - fx) + a[y0][:, x1] * fx
-    bot = a[y1][:, x0] * (1 - fx) + a[y1][:, x1] * fx
-    return top * (1 - fy) + bot * fy
-
-
 def design(h, w):
     v, u = np.mgrid[0:h, 0:w].astype(np.float64)
     u = u / (w - 1) - 0.5
@@ -105,30 +98,37 @@ def fit_background(path, w, h, samples=40):
     return (Xf @ coef).reshape(h, w, 3).astype(np.float32), rms, keep.mean()
 
 
-def weights(frame, bg4):
-    f4 = pool(frame, 4)
-    r = f4 / bg4
-    mean = np.maximum(r.mean(axis=2), 1e-3)
-    c1 = (r[..., 0] - r[..., 2]) / mean
-    c2 = (r[..., 1] - (r[..., 0] + r[..., 2]) / 2) / mean
-    # Near black the hue is noise; the move there is a level at most anyway.
-    chroma = np.where(mean < 0.06, 0.0, np.sqrt(c1 * c1 + c2 * c2))
-    bright = r.max(axis=2)
-    w = (np.clip((0.03 - chroma) / 0.015, 0, 1) * np.clip((1.035 - bright) / 0.02, 0, 1)
-         # A shadow on the background is never this dark; a device's black is.
-         * np.clip((mean - 0.3) / 0.2, 0, 1))
-    # Only what reaches the frame's edge is background: the background and the
-    # shadows on it always do, a grey inside a window or a screen never does.
-    lab, _ = ndimage.label(w > 0.3)
-    edge = np.unique(np.concatenate([lab[0], lab[-1], lab[:, 0], lab[:, -1]]))
-    w = w * np.isin(lab, edge[edge > 0])
-    # Grow the background a block into the devices' edges: an edge pixel of a
-    # device moved a little is invisible; a background pixel left warm is a fringe.
-    g = w.copy()
-    for dy in (-1, 0, 1):
-        for dx in (-1, 0, 1):
-            g = np.maximum(g, np.roll(np.roll(w, dy, 0), dx, 1))
-    return g
+def flood(frame, bg, keep):
+    """How much of each pixel is background (1) or device (0); never in keep."""
+    r = frame / bg
+    mean = r.mean(axis=2)
+    chroma = np.abs(r - mean[..., None]).max(axis=2)
+    # An edge is a step: steeper close up than from further off, where a
+    # shadow's ramp is as steep either way. A device's grey part (an iMac's
+    # chin) is fenced in by its outline even where the step is a few levels.
+    g = frame.mean(axis=2)
+    g1 = ndimage.gaussian_filter(g, 1.0)
+    g3 = ndimage.gaussian_filter(g, 3.0)
+    grad1 = np.hypot(ndimage.sobel(g1, 0), ndimage.sobel(g1, 1)) / 8
+    grad3 = np.hypot(ndimage.sobel(g3, 0), ndimage.sobel(g3, 1)) / 8
+    edge = ndimage.binary_dilation((grad1 - grad3 > 0.8) | (grad1 > 6))
+    grey = (chroma < 0.02) & (mean > 0.6) & (mean < 1.02) & ~keep
+    lab, _ = ndimage.label(grey & ~edge, structure=np.ones((3, 3)))
+    # It comes in where the frame's edge is plain background.
+    border = np.zeros_like(edge)
+    border[0] = border[-1] = True
+    border[:, 0] = border[:, -1] = True
+    seeds = np.unique(lab[border & ~edge & grey & (np.abs(mean - 1) < 0.015)])
+    w = np.isin(lab, seeds[seeds > 0])
+    # And on up to the devices' edges, over the shadow left in the fence: no
+    # dark line round a device where its shadow was.
+    w |= ndimage.binary_dilation(w, iterations=2) & grey & (mean < 1)
+    # Specks of background the tests missed, here and there in the flood.
+    lab, n = ndimage.label(~w)
+    size = ndimage.sum(np.ones_like(mean), lab, np.arange(1, n + 1))
+    speck = np.isin(lab, np.arange(1, n + 1)[size < 64]) & (np.abs(mean - 1) < 0.04) & (chroma < 0.03) & ~keep
+    w = (w | speck).astype(np.float32)
+    return np.maximum(w, ndimage.gaussian_filter(w, 0.6))
 
 
 def main():
@@ -136,15 +136,18 @@ def main():
     ap.add_argument('src')
     ap.add_argument('dst')
     ap.add_argument('crf')
+    ap.add_argument('--keep', action='append', default=[])
     ap.add_argument('--frames', type=int, default=0)
     ap.add_argument('--debug')
     a = ap.parse_args()
     w, h, n, fps, dur = probe(a.src)
     bg, rms, share = fit_background(a.src, w, h)
+    keep = np.zeros((h, w), bool)
+    for box in a.keep:
+        x0, y0, x1, y1 = (int(v) for v in box.split(':'))
+        keep[y0:y1, x0:x1] = True
     print(f'{a.src}: {w}x{h} {fps:g}fps {n} frames; background fit rms {rms:.2f} levels over {share:.0%} of the frame', file=sys.stderr)
     print(f'  background corners {bg[0, 0].round()} {bg[-1, -1].round()} centre {bg[h // 2, w // 2].round()}', file=sys.stderr)
-    m = TARGET / bg
-    bg4 = pool(bg, 4)
     enc = subprocess.Popen(
         ['ffmpeg', '-v', 'error', '-y', '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-s', f'{w}x{h}', '-r', f'{fps:g}', '-i', '-',
          '-vf', 'scale=out_color_matrix=bt709:in_range=pc:out_range=tv,format=yuv420p',
@@ -156,14 +159,14 @@ def main():
         if a.frames and i >= a.frames:
             break
         f = f.astype(np.float32)
-        wt = upsample(weights(f, bg4), h, w)[..., None]
-        out = np.clip(f * (1 + wt * (m - 1)) + 0.5, 0, 255).astype(np.uint8)
+        wt = flood(f, bg, keep)[..., None]
+        out = np.clip(f + wt * (TARGET - f) + 0.5, 0, 255).astype(np.uint8)
         enc.stdin.write(out.tobytes())
         if a.debug and i in (0, n // 2 if n else 60):
             from PIL import Image
             Image.fromarray(out).save(f'{a.debug}/out-{i}.png')
             Image.fromarray(f.astype(np.uint8)).save(f'{a.debug}/in-{i}.png')
-            Image.fromarray((upsample(weights(f, bg4), h, w) * 255).astype(np.uint8)).save(f'{a.debug}/w-{i}.png')
+            Image.fromarray((wt[..., 0] * 255).astype(np.uint8)).save(f'{a.debug}/w-{i}.png')
         done += 1
     enc.stdin.close()
     enc.wait()
