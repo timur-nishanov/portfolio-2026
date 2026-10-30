@@ -67,6 +67,12 @@
   color: var(--ink-strong, #08080a);
   text-align: center;
   will-change: transform;
+  /* The paragraphs one under another, a space between each and the next
+     shown: of a paragraph set twice (about.ts), the setting not shown takes
+     no space, nor the room between, as a margin on p + p would. */
+  display: flex;
+  flex-direction: column;
+  gap: 1.5em;
 }
 .aw__text p {
   margin: 0;
@@ -76,6 +82,11 @@
 .aw__text span {
   display: block;
   text-wrap: balance;
+}
+/* A paragraph set again for a phone (about.ts): its phone setting stays
+   out of the way until there (below). */
+.aw__phone {
+  display: none;
 }
 /* The site's secondary grey (the case subtitles, the case pages' quieter
    line): 4.9:1 on the page, where #ababab read at 2.2:1. */
@@ -91,9 +102,6 @@
   outline: 2px solid currentColor;
   outline-offset: 3px;
   border-radius: 2px;
-}
-.aw__text p + p {
-  margin-top: 1.5em;
 }
 
 /* --- the diplomas --------------------------------------------------------- */
@@ -128,6 +136,15 @@
   .aw__text {
     inset: 22svh 0 auto;
     padding: 0 16px;
+  }
+}
+/* A phone held upright: a paragraph set again for it shows that setting. */
+@media (max-width: 599px) {
+  .aw__wide {
+    display: none;
+  }
+  .aw__phone {
+    display: block;
   }
 }
 /* A phone held sideways: the text starts higher and runs wider, so the
