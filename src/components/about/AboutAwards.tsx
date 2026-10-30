@@ -230,7 +230,12 @@ export function AboutAwards() {
               About me and awards
             </h2>
             {aboutText.map((para) => (
-              <Lines key={lineText(para.lines[0])} lines={para.lines} />
+              // A paragraph set again for a phone comes in both settings, and
+              // only one of them shows (about.css).
+              <Fragment key={lineText(para.lines[0])}>
+                <Lines lines={para.lines} className={para.phone ? 'aw__wide' : undefined} />
+                {para.phone && <Lines lines={para.phone} className="aw__phone" />}
+              </Fragment>
             ))}
           </div>
         </div>

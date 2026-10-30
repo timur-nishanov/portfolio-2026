@@ -5,17 +5,24 @@
 // subtitles).
 export type AboutLine = string | { text: string; href: string };
 
-// A paragraph, line by line.
-export type AboutParagraph = { lines: AboutLine[] };
+// A paragraph, line by line; `phone`, the same words set again for a phone,
+// in shorter lines (AboutAwards shows one or the other).
+export type AboutParagraph = { lines: AboutLine[]; phone?: AboutLine[] };
 
 const artemSite: AboutLine = { text: 'artemartemartem.com', href: 'https://artemartemartem.com' };
 
-// Each paragraph set line by line, in short lines broken where the sense
-// breaks, a short one and a longer one by turns, centred: none of them is
-// long enough to wrap on a phone.
+// Each paragraph set line by line, broken where the sense breaks: on a
+// laptop the lines of a like length; on a phone in short lines, a short one
+// and a longer one by turns, none of them long enough to wrap there.
 export const aboutText: AboutParagraph[] = [
   {
     lines: [
+      'Mostly B2C: fintech, Web3 and e-commerce.',
+      'I like messy flows and making them look good.',
+      'I research, prototype and build front ends,',
+      'and make 3D, icons, motion and video with AI.',
+    ],
+    phone: [
       'Mostly B2C: fintech,',
       'Web3 and e-commerce.',
       'I like messy flows',
@@ -27,12 +34,18 @@ export const aboutText: AboutParagraph[] = [
     ],
   },
   {
-    // The turn on its second line.
-    lines: ['I care about systems,', 'but I still prefer', 'a bit more craft.'],
+    // A pause between the two longer ones, the turn on its second line.
+    lines: ['I care about systems,', 'but I still prefer a bit more craft.'],
+    phone: ['I care about systems,', 'but I still prefer', 'a bit more craft.'],
   },
   {
     // The site, the awards, the address.
     lines: [
+      'I designed a site for film director Artem\u00a0Shcherbakov.',
+      'It got Site\u00a0of\u00a0the\u00a0Day on Awwwards, FWA and CSSDA.',
+      artemSite,
+    ],
+    phone: [
       'I designed a site',
       'for film director',
       'Artem\u00a0Shcherbakov.',
