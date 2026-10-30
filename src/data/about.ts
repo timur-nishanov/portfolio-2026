@@ -11,8 +11,8 @@ export type AboutParagraph = { lines: AboutLine[] };
 const artemSite: AboutLine = { text: 'artemartemartem.com', href: 'https://artemartemartem.com' };
 
 // Each paragraph set line by line, in short lines broken where the sense
-// breaks, a short one and a longer one by turns: centred on a laptop, flush
-// left on a phone (about.css), where none of them is long enough to wrap.
+// breaks, a short one and a longer one by turns, centred: none of them is
+// long enough to wrap on a phone.
 export const aboutText: AboutParagraph[] = [
   {
     lines: [
