@@ -9,11 +9,19 @@ brighter, or ends at a sharp edge. The flat colour floods in from the frame's
 edges, from where it is plain background, over everything that reads as
 background or shadow, and stops at the devices' edges: a grey part of a
 device (an iMac's stand) is walled off by its own outline, even where it
-runs off the frame. Whether a pixel is flooded is put to a vote of the frames either side of it
-(the two before and the two after), so the flood's edge holds still with a
-device rather than shimmer by a pixel as the noise comes and goes, and still
-moves with one that moves. Flooded pixels take the flat colour, eased in over
-a pixel at the edge of the flood; elsewhere nothing changes. Works as well on a
+runs off the frame. A pixel's weight is the mean of its weights in the frames round it, half a
+second either way (WINDOW), in which it looks as it does now (within STILL
+levels): whether the flood reaches a pixel by a device comes and goes with
+the noise and with what plays on the screen nearby, and would flicker;
+averaged, it holds still with the picture. Where the picture moves (these
+renders zoom in and out over a second or so), the frames that look alike are
+the few either side, and the weight moves with it. Right by a device (NEAR), where whether the flood
+reaches comes and goes with the noise and with what plays on the screen
+nearby, the flood's weight goes by the distance to the device alone: none
+for its first few pixels (a rim, a button), all of it a few pixels further
+out, so the edge there holds still (a shadow's last pixels stay, as the
+outline's own shading). Flooded pixels take the flat colour; elsewhere nothing
+changes. Works as well on a
 clip already recoloured, with its shadows kept (the vignette's banding and
 the shadows go).
 
@@ -32,6 +40,7 @@ frame, as the others are (public/random/*.webp).
 
 import argparse
 import json
+from collections import deque
 import subprocess
 import sys
 
@@ -39,6 +48,9 @@ import numpy as np
 from scipy import ndimage
 
 TARGET = np.array([0xE6, 0xE6, 0xE7], np.float32)  # the case cards (.cs-card)
+WINDOW = 30  # frames either side of each whose weights a pixel takes the mean of
+STILL = 6  # levels apart that a pixel still looks the same
+NEAR = 10  # px from a device within which the distance alone sets the weight
 
 
 def probe(path):
@@ -135,10 +147,22 @@ def flood(frame, bg, keep):
     return w | speck
 
 
-def ease(mask):
-    """The flood's weight, eased in over a pixel at its edge."""
+def weight(frame, bg, mask, keep):
+    """The flood's weight: eased in over a pixel at its edge, and within a few
+    pixels of a device by the distance to it alone."""
+    r = frame / bg
+    mean = r.mean(axis=2)
+    chroma = np.abs(r - mean[..., None]).max(axis=2)
+    grey = (chroma < 0.02) & (mean > 0.6) & (mean < 1.02) & ~keep
+    d = ndimage.distance_transform_edt(grey)  # to the nearest device pixel
+    mask = mask & grey
     w = mask.astype(np.float32)
-    return np.maximum(w, ndimage.gaussian_filter(w, 0.6))
+    w = np.maximum(w, ndimage.gaussian_filter(w, 0.6))
+    # Only outside a device: within reach of the flood, which a device's own
+    # bezel or frame keeps from its screen.
+    near = ndimage.binary_dilation(mask, iterations=12) & grey & (d < NEAR)
+    w[near] = np.clip((d[near] - 3) / 3, 0, 1)
+    return w
 
 
 def main():
@@ -164,16 +188,25 @@ def main():
          '-c:v', 'libx264', '-preset', 'slow', '-crf', a.crf, '-profile:v', 'high',
          '-colorspace', 'bt709', '-color_primaries', 'bt709', '-color_trc', 'bt709', '-color_range', 'tv',
          '-movflags', '+faststart', '-an', a.dst], stdin=subprocess.PIPE)
-    # Each frame waits for the two after it: its flood is the vote of the
-    # five round it (fewer at the clip's ends).
-    frames, masks = [], []
+    # Each frame waits for the WINDOW after it.
+    frames, grey, weights = deque(), deque(), deque()
     done = 0
 
-    def emit(k):
+    def emit():
         nonlocal done
-        votes = masks[max(0, k - 2):k + 3]
-        wt = ease(np.sum(votes, axis=0) * 2 > len(votes))[..., None]
-        f = frames[k]
+        k, f = frames.popleft()
+        while weights[0][0] < k - WINDOW:
+            weights.popleft()
+            grey.popleft()
+        gk = grey[k - grey[0][0]][1]
+        acc = np.zeros((h, w), np.float32)
+        cnt = np.zeros((h, w), np.float32)
+        for (_, gj), (_, wj) in zip(grey, weights):
+            alike = np.abs(gj - gk) <= STILL
+            acc += wj * alike
+            cnt += alike
+        wt = (acc / cnt)[..., None]  # the frame itself is always alike
+        f = f.astype(np.float32)
         out = np.clip(f + wt * (TARGET - f) + 0.5, 0, 255).astype(np.uint8)
         enc.stdin.write(out.tobytes())
         if a.debug and done in (0, n // 2 if n else 60):
@@ -186,17 +219,14 @@ def main():
     for i, f in enumerate(read_frames(a.src, w, h)):
         if a.frames and i >= a.frames:
             break
-        frames.append(f.astype(np.float32))
-        masks.append(flood(frames[-1], bg, keep))
-        # Out goes the frame two back, with the two after it in; a frame and
-        # mask go once no vote needs them.
-        if len(frames) >= 3:
-            emit(len(frames) - 3)
-        if len(frames) > 5:
-            frames.pop(0)
-            masks.pop(0)
-    for k in range(max(0, len(frames) - 2), len(frames)):
-        emit(k)
+        ff = f.astype(np.float32)
+        frames.append((i, f))
+        grey.append((i, ff.mean(axis=2).astype(np.int16)))
+        weights.append((i, weight(ff, bg, flood(ff, bg, keep), keep)))
+        if i >= WINDOW:
+            emit()
+    while frames:
+        emit()
     enc.stdin.close()
     enc.wait()
     print(f'  wrote {done} frames to {a.dst}', file=sys.stderr)
