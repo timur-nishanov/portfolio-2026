@@ -6,7 +6,7 @@ import { site } from './site';
 // P.S. in two under its mark, which has a line of its own. A line that has
 // to wrap (a narrow phone) wraps evenly, and a no-break space keeps "my head"
 // together. The balls with the links fall in round them.
-export const outroText: string[] = ['Open to remote work,', 'part-time or just a chat.', site.email];
+export const outroText: string[] = ['Open to remote', 'work, part-time or just a chat.', site.email];
 // The head on the first screen: thrown at the walls, it now and then says
 // "khm" (impactSound).
 export const outroPostscript: string[] = [
