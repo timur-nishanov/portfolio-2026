@@ -24,8 +24,9 @@ export type CollageItem = {
 // Sides alternate down the page, and the upright clips sit between wide ones.
 // Every clip but the first (the app in hand, filmed) is a render on a warm
 // grey with a vignette; those backgrounds are brought to the case cards'
-// #e6e6e7, flat, the devices' shadows kept and the devices left as they were.
-// A new render goes the same way (scripts/recolor-random.py), or its
+// #e6e6e7, flat, without the devices' shadows (kept, they and the vignette's
+// banding read as dirt round the devices), the devices left as they were. A
+// new render goes the same way (scripts/recolor-random.py), or its
 // background shows warmer.
 export const collage: CollageItem[] = [
   {
