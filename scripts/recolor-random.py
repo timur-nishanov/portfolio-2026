@@ -9,18 +9,23 @@ brighter, or ends at a sharp edge. The flat colour floods in from the frame's
 edges, from where it is plain background, over everything that reads as
 background or shadow, and stops at the devices' edges: a grey part of a
 device (an iMac's stand) is walled off by its own outline, even where it
-runs off the frame. Flooded pixels take the flat colour, eased in over a
-pixel at the edge of the flood; elsewhere nothing changes. Works as well on a
+runs off the frame. Whether a pixel is flooded is put to a vote of the frames either side of it
+(the two before and the two after), so the flood's edge holds still with a
+device rather than shimmer by a pixel as the noise comes and goes, and still
+moves with one that moves. Flooded pixels take the flat colour, eased in over
+a pixel at the edge of the flood; elsewhere nothing changes. Works as well on a
 clip already recoloured, with its shadows kept (the vignette's banding and
 the shadows go).
 
 Where a grey part of a device fades into the background with no edge at all
-(an iMac's chin at its right end), --keep fences it in by hand: a box
+(an iMac's chin at its right end, its stand where it runs off the frame and
+for a stretch is the background's grey), --keep fences it in by hand: a box
 x0:y0:x1:y1 in the frame's pixels the flood never enters (as many as needed).
 
 usage: python3 scripts/recolor-random.py SRC DST CRF [--keep X0:Y0:X1:Y1 ...] [--frames N] [--debug DIR]
   e.g. python3 scripts/recolor-random.py render.mp4 public/random/name.mp4 20
-  the iMac in public/random/moneta-site.mp4 and stepicon-site.mp4: --keep 248:700:1353:819
+  the iMac in public/random/moneta-site.mp4 and stepicon-site.mp4, its chin and its stand:
+    --keep 248:700:1353:819 --keep 680:815:921:900
 needs ffmpeg, and numpy and scipy for Python. The poster is the new first
 frame, as the others are (public/random/*.webp).
 """
@@ -99,7 +104,7 @@ def fit_background(path, w, h, samples=40):
 
 
 def flood(frame, bg, keep):
-    """How much of each pixel is background (1) or device (0); never in keep."""
+    """Which pixels are background, as against device; never in keep."""
     r = frame / bg
     mean = r.mean(axis=2)
     chroma = np.abs(r - mean[..., None]).max(axis=2)
@@ -127,7 +132,12 @@ def flood(frame, bg, keep):
     lab, n = ndimage.label(~w)
     size = ndimage.sum(np.ones_like(mean), lab, np.arange(1, n + 1))
     speck = np.isin(lab, np.arange(1, n + 1)[size < 64]) & (np.abs(mean - 1) < 0.04) & (chroma < 0.03) & ~keep
-    w = (w | speck).astype(np.float32)
+    return w | speck
+
+
+def ease(mask):
+    """The flood's weight, eased in over a pixel at its edge."""
+    w = mask.astype(np.float32)
     return np.maximum(w, ndimage.gaussian_filter(w, 0.6))
 
 
@@ -154,20 +164,39 @@ def main():
          '-c:v', 'libx264', '-preset', 'slow', '-crf', a.crf, '-profile:v', 'high',
          '-colorspace', 'bt709', '-color_primaries', 'bt709', '-color_trc', 'bt709', '-color_range', 'tv',
          '-movflags', '+faststart', '-an', a.dst], stdin=subprocess.PIPE)
+    # Each frame waits for the two after it: its flood is the vote of the
+    # five round it (fewer at the clip's ends).
+    frames, masks = [], []
     done = 0
+
+    def emit(k):
+        nonlocal done
+        votes = masks[max(0, k - 2):k + 3]
+        wt = ease(np.sum(votes, axis=0) * 2 > len(votes))[..., None]
+        f = frames[k]
+        out = np.clip(f + wt * (TARGET - f) + 0.5, 0, 255).astype(np.uint8)
+        enc.stdin.write(out.tobytes())
+        if a.debug and done in (0, n // 2 if n else 60):
+            from PIL import Image
+            Image.fromarray(out).save(f'{a.debug}/out-{done}.png')
+            Image.fromarray(f.astype(np.uint8)).save(f'{a.debug}/in-{done}.png')
+            Image.fromarray((wt[..., 0] * 255).astype(np.uint8)).save(f'{a.debug}/w-{done}.png')
+        done += 1
+
     for i, f in enumerate(read_frames(a.src, w, h)):
         if a.frames and i >= a.frames:
             break
-        f = f.astype(np.float32)
-        wt = flood(f, bg, keep)[..., None]
-        out = np.clip(f + wt * (TARGET - f) + 0.5, 0, 255).astype(np.uint8)
-        enc.stdin.write(out.tobytes())
-        if a.debug and i in (0, n // 2 if n else 60):
-            from PIL import Image
-            Image.fromarray(out).save(f'{a.debug}/out-{i}.png')
-            Image.fromarray(f.astype(np.uint8)).save(f'{a.debug}/in-{i}.png')
-            Image.fromarray((wt[..., 0] * 255).astype(np.uint8)).save(f'{a.debug}/w-{i}.png')
-        done += 1
+        frames.append(f.astype(np.float32))
+        masks.append(flood(frames[-1], bg, keep))
+        # Out goes the frame two back, with the two after it in; a frame and
+        # mask go once no vote needs them.
+        if len(frames) >= 3:
+            emit(len(frames) - 3)
+        if len(frames) > 5:
+            frames.pop(0)
+            masks.pop(0)
+    for k in range(max(0, len(frames) - 2), len(frames)):
+        emit(k)
     enc.stdin.close()
     enc.wait()
     print(f'  wrote {done} frames to {a.dst}', file=sys.stderr)
