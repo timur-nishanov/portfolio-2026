@@ -17,8 +17,8 @@
   padding: 96px 16px;
 }
 
-/* The about block's text (about.css): SF Pro 20 / 132%, a line to a line,
-   centred (on a phone flush left, below). */
+/* The about block's text (about.css): SF Pro 20 / 132%, centred, a line to
+   a line. */
 .outro__text {
   max-width: 560px;
   margin: 0;
@@ -180,18 +180,13 @@
     --ball: calc(33vw / var(--site-zoom, 1));
   }
 }
-/* A phone held upright: the words go up into the screen's upper part, flush
-   left at the page's margin as the about block's are, and the balls under
-   them grow to nearly half the width, two abreast, in the room that leaves
-   (Outro's sim fits them to it). */
+/* A phone held upright: the words go up into the screen's upper part, and
+   the balls under them grow to nearly half the width, two abreast, in the
+   room that leaves (Outro's sim fits them to it). */
 @media (max-width: 599px) {
   .outro {
-    align-items: stretch;
     justify-content: flex-start;
     padding-top: 15svh;
-  }
-  .outro__text {
-    text-align: left;
   }
   .outro__stage {
     --ball: calc(46vw / var(--site-zoom, 1));

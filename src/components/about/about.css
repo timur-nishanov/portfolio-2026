@@ -130,14 +130,6 @@
     padding: 0 16px;
   }
 }
-/* A phone held upright: the short lines flush left, at the page's own
-   margin, a ragged column down the screen's left side. */
-@media (max-width: 599px) {
-  .aw__text {
-    padding: 0 16px;
-    text-align: left;
-  }
-}
 /* A phone held sideways: the text starts higher and runs wider, so the
    three paragraphs fit the short stage, and the diplomas keep a card's size
    rather than a thumbnail's. */
