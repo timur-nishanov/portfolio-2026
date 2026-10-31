@@ -8,6 +8,9 @@ export type CollageItem = {
   /** Which side of the page the clip leans to. An upright clip is set
    *  narrower, so it fits the screen's height, and further in. */
   side: 'left' | 'right';
+  /** Set smaller than the others: its source is small (a 720p recording),
+   *  and at their size it comes out soft. */
+  small?: boolean;
   video: {
     src: string;
     poster: string;
@@ -109,6 +112,7 @@ export const collage: CollageItem[] = [
     id: 'chums-welcome',
     title: 'Chums: the welcome screen, its logo in glass',
     side: 'left',
+    small: true,
     video: {
       src: '/random/chums-welcome.mp4', // rYS2LywV7Ddm7PyH.mp4, 872×720 cut to 576×720 (4:5) round the phone, 30fps, no audio
       poster: '/random/chums-welcome.webp',
@@ -121,6 +125,7 @@ export const collage: CollageItem[] = [
     id: 'cedro-streak',
     title: 'A 50-day streak in Cedro’s school, confetti and all',
     side: 'right',
+    small: true,
     video: {
       src: '/random/cedro-streak.mp4', // OtnAIUz-faD4GdYt.mp4, 1280×720 (16:9), 30fps, no audio
       poster: '/random/cedro-streak.webp',

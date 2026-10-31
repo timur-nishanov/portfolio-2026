@@ -133,6 +133,7 @@ export function RandomCollage() {
             className="rc__item"
             data-side={item.side}
             data-shape={item.video.height > item.video.width ? 'upright' : 'wide'}
+            data-size={item.small ? 'small' : undefined}
           >
             <div className="rc__card">
               <div
