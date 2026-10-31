@@ -35,6 +35,21 @@
 .rc__item + .rc__item {
   margin-top: clamp(140px, 15vw, 260px);
 }
+/* A clip set smaller (randomCollage.ts), as its source is: at the others'
+   size it came out soft. About three quarters of theirs, a wide one's outer
+   edge where theirs is. A phone shows every clip the full width (below). */
+@media (min-width: 900px) {
+  .rc__item[data-size='small'] {
+    --small-w: min(46vw, 860px);
+    width: var(--small-w);
+  }
+  .rc__item[data-shape='wide'][data-size='small'][data-side='right'] {
+    margin-left: calc(26vw + var(--clip-w) - var(--small-w));
+  }
+  .rc__item[data-shape='upright'][data-size='small'] {
+    width: min(26vw, 50svh);
+  }
+}
 
 /* The clip and its title; drifts against the page on scroll: from
    --drift screens above its place as it comes in at the bottom to as far
