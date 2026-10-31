@@ -22,12 +22,12 @@ export type CollageItem = {
 };
 
 // Sides alternate down the page, and the upright clips sit between wide ones.
-// Every clip but the first (the app in hand, filmed) is a render on a warm
-// grey with a vignette; those backgrounds are brought to the case cards'
-// #e6e6e7, flat, without the devices' shadows (kept, they and the vignette's
-// banding read as dirt round the devices), the devices left as they were. A
-// new render goes the same way (scripts/recolor-random.py), or its
-// background shows warmer.
+// Every clip but the first (the app in hand, filmed) is a render on a plain
+// background, a warm grey with a vignette or white; those backgrounds are
+// brought to the case cards' #e6e6e7, flat, without the devices' shadows
+// (kept, they and the vignette's banding read as dirt round the devices), the
+// devices left as they were. A new render goes the same way
+// (scripts/recolor-random.py), or its background shows warmer.
 export const collage: CollageItem[] = [
   {
     id: 'kritika',
@@ -103,6 +103,32 @@ export const collage: CollageItem[] = [
       height: 900,
       alt: 'The Moneta site on an iMac: online payments and settlements, and its journal',
       phoneAspect: '4 / 3', // the same iMac, placed as Stepicon's
+    },
+  },
+  {
+    id: 'chums-welcome',
+    title: 'Chums: the welcome screen, its logo in glass',
+    side: 'left',
+    video: {
+      src: '/random/chums-welcome.mp4', // rYS2LywV7Ddm7PyH.mp4, 872×720 cut to 576×720 (4:5) round the phone, 30fps, no audio
+      poster: '/random/chums-welcome.webp',
+      width: 576,
+      height: 720,
+      alt: 'The Chums welcome screen on an iPhone: the logo turning in glass over “Welcome to the safety chatting and crypto”, powered by Matrix',
+    },
+  },
+  {
+    id: 'cedro-streak',
+    title: 'A 50-day streak in Cedro’s school, confetti and all',
+    side: 'right',
+    video: {
+      src: '/random/cedro-streak.mp4', // OtnAIUz-faD4GdYt.mp4, 1280×720 (16:9), 30fps, no audio
+      poster: '/random/cedro-streak.webp',
+      width: 1280,
+      height: 720,
+      alt: 'Cedro’s school in a browser: “50 days in a row! Invincible!”, a mascot raising a sword, the week’s streak in flames and 7,000 CEDRO, under falling confetti',
+      // The window spans x 207–1070 of 1280: at 4:3 the crop keeps 160–1120.
+      phoneAspect: '4 / 3',
     },
   },
 ];

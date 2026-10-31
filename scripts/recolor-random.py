@@ -94,7 +94,11 @@ def design(h, w):
 def fit_background(path, w, h, samples=40):
     """The background without the devices: a smooth field fitted to the
     per-pixel median of frames across the clip, shadows and devices left out
-    by refitting to what stays close to it."""
+    by refitting to what stays close to it. Only what has the corner's tint
+    counts (a vignette darkens a background without turning its hue), and
+    the field stays within what it was fitted to: where a device fills most
+    of the frame, a screen's smooth gradient would draw the fit off on to it,
+    and out of the background's colour under it."""
     _, _, _, fps, dur = probe(path)
     vf = f'fps={samples / dur},' + DECODE
     frames = [pool(f.astype(np.float32), 8) for f in read_frames(path, w, h, vf)]
@@ -102,17 +106,20 @@ def fit_background(path, w, h, samples=40):
     ph, pw = med.shape[:2]
     X = design(ph, pw)
     corner = med[:4, :4].reshape(-1, 3).mean(axis=0)
-    keep = (np.abs(med - corner) < 14).all(axis=2).ravel()
+    tint = (np.abs(med - med.mean(axis=2, keepdims=True) - (corner - corner.mean())) < 6).all(axis=2).ravel()
+    keep = (np.abs(med - corner) < 14).all(axis=2).ravel() & tint
     coef = None
     for _ in range(6):
         coef, *_ = np.linalg.lstsq(X[keep], med.reshape(-1, 3)[keep], rcond=None)
         fit = (X @ coef).reshape(ph, pw, 3)
         res = med - fit
-        keep = (np.abs(res) < 2.5).all(axis=2).ravel()
+        keep = (np.abs(res) < 2.5).all(axis=2).ravel() & tint
     fit = (X @ coef).reshape(ph, pw, 3)
     rms = np.sqrt(((med - fit) ** 2).reshape(-1, 3)[keep].mean())
+    kept = med.reshape(-1, 3)[keep]
     Xf = design(h, w)
-    return (Xf @ coef).reshape(h, w, 3).astype(np.float32), rms, keep.mean()
+    full = np.clip((Xf @ coef).reshape(h, w, 3), kept.min(axis=0), kept.max(axis=0))
+    return full.astype(np.float32), rms, keep.mean()
 
 
 def flood(frame, bg, keep):
