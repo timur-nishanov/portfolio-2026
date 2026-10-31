@@ -36,18 +36,19 @@
   margin-top: clamp(140px, 15vw, 260px);
 }
 /* A clip set smaller (randomCollage.ts), as its source is: at the others'
-   size it came out soft. About three quarters of theirs, a wide one's outer
-   edge where theirs is. A phone shows every clip the full width (below). */
+   size it came out soft, at three quarters of it lost. About six sevenths of
+   theirs, a wide one's outer edge where theirs is. A phone shows every clip
+   the full width (below). */
 @media (min-width: 900px) {
   .rc__item[data-size='small'] {
-    --small-w: min(46vw, 860px);
+    --small-w: min(54vw, 1010px);
     width: var(--small-w);
   }
   .rc__item[data-shape='wide'][data-size='small'][data-side='right'] {
     margin-left: calc(26vw + var(--clip-w) - var(--small-w));
   }
   .rc__item[data-shape='upright'][data-size='small'] {
-    width: min(26vw, 50svh);
+    width: min(31vw, 60svh);
   }
 }
 
