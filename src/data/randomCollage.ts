@@ -45,9 +45,22 @@ export const collage: CollageItem[] = [
     },
   },
   {
+    id: 'design-battle',
+    title: 'A design battle app: the semifinals, and a vote for who wins',
+    side: 'right',
+    small: true,
+    video: {
+      src: '/random/design-battle.mp4', // IMG_8333.MOV, 848×848 cut to 678×848 (4:5) round the phone, 25fps, no audio
+      poster: '/random/design-battle.webp',
+      width: 678,
+      height: 848,
+      alt: 'A phone on a wooden table: the semifinals of a design battle, a countdown to the final, a live duel at 128 votes and its brief; then “who wins?”, two onboarding screens swiped between, and a vote',
+    },
+  },
+  {
     id: 'artem',
     title: 'Artem Shcherbakov’s site',
-    side: 'right',
+    side: 'left',
     video: {
       src: '/random/artem-site.mp4', // artem_404_1600x1200_60.mp4, 1600×1200 (4:3), 60fps, no audio
       poster: '/random/artem-site.webp',
@@ -59,7 +72,7 @@ export const collage: CollageItem[] = [
   {
     id: 'opus-experiment',
     title: 'Quick experiment with Opus 5.5',
-    side: 'left',
+    side: 'right',
     video: {
       src: '/random/opus-experiment.mp4', // D4OzCiDYGSrnN6HD.mp4, 960×1200 (4:5), 60fps, no audio
       poster: '/random/opus-experiment.webp',
@@ -71,7 +84,7 @@ export const collage: CollageItem[] = [
   {
     id: 'stepicon',
     title: 'Stepicon 2026: the conference landing page, from concept to code',
-    side: 'right',
+    side: 'left',
     video: {
       src: '/random/stepicon-site.mp4', // stepicon_mockup_1080p60.mp4, 1600×900, 60fps, no audio
       poster: '/random/stepicon-site.webp',
@@ -86,7 +99,7 @@ export const collage: CollageItem[] = [
   {
     id: 'kritika-review',
     title: 'Adding a review in Kritika: poster in, stamp out',
-    side: 'left',
+    side: 'right',
     video: {
       src: '/random/kritika-review.mp4', // BtJr5050gdQcQBWs.mp4, 960×1200 (4:5), 60fps, no audio
       poster: '/random/kritika-review.webp',
@@ -98,7 +111,7 @@ export const collage: CollageItem[] = [
   {
     id: 'moneta',
     title: 'Moneta, a payment platform: home page and journal concepts',
-    side: 'right',
+    side: 'left',
     video: {
       src: '/random/moneta-site.mp4', // moneta_mockup_1080p60_1.mp4, 1600×900, 60fps, no audio
       poster: '/random/moneta-site.webp',
@@ -111,7 +124,7 @@ export const collage: CollageItem[] = [
   {
     id: 'chums-welcome',
     title: 'Chums: the welcome screen, its logo in glass',
-    side: 'left',
+    side: 'right',
     small: true,
     video: {
       src: '/random/chums-welcome.mp4', // rYS2LywV7Ddm7PyH.mp4, 872×720 cut to 576×720 (4:5) round the phone, 30fps, no audio
@@ -124,7 +137,7 @@ export const collage: CollageItem[] = [
   {
     id: 'cedro-streak',
     title: 'A 50-day streak in Cedro’s school, confetti and all',
-    side: 'right',
+    side: 'left',
     small: true,
     video: {
       src: '/random/cedro-streak.mp4', // OtnAIUz-faD4GdYt.mp4, 1280×720 (16:9), 30fps, no audio
@@ -134,6 +147,18 @@ export const collage: CollageItem[] = [
       alt: 'Cedro’s school in a browser: “50 days in a row! Invincible!”, a mascot raising a sword, the week’s streak in flames and 7,000 CEDRO, under falling confetti',
       // The window spans x 207–1070 of 1280: at 4:3 the crop keeps 160–1120.
       phoneAspect: '4 / 3',
+    },
+  },
+  {
+    id: 'kritika-hands',
+    title: 'Kritika on my phone: a review of Eraserhead, hearts and all',
+    side: 'right',
+    video: {
+      src: '/random/kritika-hands.mp4', // IMG_8331.MP4, 1280×1280 cut to 1024×1280 (4:5) round the phone, 25fps, no audio
+      poster: '/random/kritika-hands.webp',
+      width: 1024,
+      height: 1280,
+      alt: 'Kritika on an iPhone in hand: typing in Eraserhead, picking its poster and rating the plot, the acting and the action, hearts bursting with each rating',
     },
   },
 ];
