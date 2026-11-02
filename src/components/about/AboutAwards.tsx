@@ -250,7 +250,7 @@ export function AboutAwards() {
                 src={poster.src}
                 width={poster.width}
                 height={poster.height}
-                sizes="(max-width: 899px) 72vw, 440px"
+                sizes="(max-width: 599px) 58vw, (max-width: 899px) 72vw, 440px"
                 alt={poster.alt}
               />
             </li>
