@@ -138,8 +138,17 @@
     padding: 0 16px;
   }
 }
-/* A phone held upright: a paragraph set again for it shows that setting. */
+/* A phone held upright: a paragraph set again for it shows that setting.
+   The sides come in a little, so the longest line (at 15px, 328px) still
+   fits whole on a 360px phone; the diplomas come down to leave the words
+   the screen. */
 @media (max-width: 599px) {
+  .aw {
+    --W: min(58vw, 36svh);
+  }
+  .aw__text {
+    padding: 0 12px;
+  }
   .aw__wide {
     display: none;
   }
