@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { ButtonChevron } from '@/components/header/menu/icons';
 import { BackLink } from './BackLink';
@@ -10,6 +11,10 @@ type Props = {
   backHref?: string;
   /** What scrolls under it: the layer's own scroller, or the window. */
   scrollerRef?: React.RefObject<HTMLElement | null>;
+  /** A case shared by link alone has no "back" for a visitor who came
+      straight to it: the bar's button is a way home, named, in place of the
+      case's title (UnlistedCasePage). */
+  home?: string;
 };
 
 /**
@@ -21,7 +26,7 @@ type Props = {
  * first scroll up. Only on screens too narrow for the index down the left
  * (CaseIndex), which carries the way back there.
  */
-export const CaseBar = forwardRef<HTMLElement, Props>(function CaseBar({ title, onBack, backHref, scrollerRef }, ref) {
+export const CaseBar = forwardRef<HTMLElement, Props>(function CaseBar({ title, onBack, backHref, scrollerRef, home }, ref) {
   const barRef = useRef<HTMLElement>(null);
   useImperativeHandle(ref, () => barRef.current as HTMLElement);
   const [hidden, setHidden] = useState(false);
@@ -64,13 +69,26 @@ export const CaseBar = forwardRef<HTMLElement, Props>(function CaseBar({ title, 
       onFocus={() => setHidden(false)}
     >
       <div className="cp-bar__row">
-        <BackLink onBack={onBack} backHref={backHref} className="cp-back" label="Back to all work">
-          <span className="cp-back__disc glass-disc" aria-hidden="true" />
-          <ButtonChevron className="cp-back__chevron cp-chevron-left" />
-        </BackLink>
-        {/* The case's name, as the site's own sits in its header; the page's
-            heading is the name at the top of the case itself. */}
-        <p className="cp-bar__title">{title}</p>
+        {home ? (
+          // The disc and the name one link, home.
+          <Link href={backHref ?? '/'} className="cp-bar__home">
+            <span className="cp-back" aria-hidden="true">
+              <span className="cp-back__disc glass-disc" />
+              <ButtonChevron className="cp-back__chevron cp-chevron-left" />
+            </span>
+            <span className="cp-bar__title">{home}</span>
+          </Link>
+        ) : (
+          <>
+            <BackLink onBack={onBack} backHref={backHref} className="cp-back" label="Back to all work">
+              <span className="cp-back__disc glass-disc" aria-hidden="true" />
+              <ButtonChevron className="cp-back__chevron cp-chevron-left" />
+            </BackLink>
+            {/* The case's name, as the site's own sits in its header; the page's
+                heading is the name at the top of the case itself. */}
+            <p className="cp-bar__title">{title}</p>
+          </>
+        )}
       </div>
     </header>
   );

@@ -89,7 +89,7 @@ const paintWords: GlassPaint = (ctx, spheres, s) => {
   }
 };
 
-export function GlassOrbs({ items }: { items: Item[] }) {
+export function GlassOrbs({ items, caption }: { items: Item[]; caption?: string }) {
   const rootRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -144,6 +144,7 @@ export function GlassOrbs({ items }: { items: Item[] }) {
           </li>
         ))}
       </ol>
+      {caption && <p className="cp-figure__cap go__cap">{caption}</p>}
       <canvas ref={canvasRef} className="go__canvas" aria-hidden="true" />
     </div>
   );

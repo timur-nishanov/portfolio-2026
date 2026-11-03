@@ -178,6 +178,55 @@ export function Facts({ items }: { items: [label: string, value: React.ReactNode
   );
 }
 
+/** A column's head: its name, and on a phone, where the full names don't fit,
+    a short one in its place (the full one still read out). */
+export type TableHead = { name: string; short?: string };
+
+/**
+ * A plain table of figures in a figure's box: the names down the first
+ * column, the figures right-aligned in tabular numbers, a hairline under the
+ * head and between the rows, the last column (the result) in semibold.
+ */
+export function Table({ head, rows, caption }: { head: TableHead[]; rows: (string | number)[][]; caption: string }) {
+  return (
+    <figure className="cp-figure cp-reveal">
+      <div className="cp-figure__box cp-table-box">
+        <table className="cp-table">
+          <thead>
+            <tr>
+              {head.map((h) => (
+                <th key={h.name} scope="col">
+                  {h.short ? (
+                    <>
+                      <span className="cp-table__full">{h.name}</span>
+                      <span className="cp-table__short" aria-hidden="true">
+                        {h.short}
+                      </span>
+                    </>
+                  ) : (
+                    h.name
+                  )}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map(([name, ...cells]) => (
+              <tr key={String(name)}>
+                <th scope="row">{name}</th>
+                {cells.map((cell, i) => (
+                  <td key={i}>{cell}</td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <figcaption className="cp-figure__cap">{caption}</figcaption>
+    </figure>
+  );
+}
+
 /** Where a case landed: each part's name over what became of it. */
 export function Results({ items }: { items: [title: string, text: React.ReactNode][] }) {
   return (
