@@ -12,7 +12,11 @@ export type AboutParagraph = { lines: AboutLine[]; phone?: AboutLine[] };
 const artemSite: AboutLine = { text: 'artemartemartem.com', href: 'https://artemartemartem.com' };
 
 // Each paragraph set line by line, broken where the sense breaks, the lines
-// of a like length. At a phone's 15px the first two keep their lines (the
+// of a like length: three short ones, of two lines each (the last with the
+// address under it), that read one at a time rather than as a block. The
+// list of what goes into the work (research, prototypes, front ends, 3D,
+// motion) is gone: the first screen says "who builds in code", and Random
+// shows the rest. At a phone's 15px the first two keep their lines (the
 // longest just fits); the last is set again there.
 export const aboutText: AboutParagraph[] = [
   {
@@ -22,8 +26,6 @@ export const aboutText: AboutParagraph[] = [
       // the face has no non-breaking hyphen.
       'Mostly B2C: fintech, Web3 and e-\u2060commerce.',
       'I like messy flows and making them look good.',
-      'I research, prototype and build front ends,',
-      'and make 3D, icons, motion and video with AI.',
     ],
   },
   {
