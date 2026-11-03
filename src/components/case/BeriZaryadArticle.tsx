@@ -8,22 +8,26 @@ import { GlassOrbs } from './GlassOrbs';
 import { NoteBoard, type NoteColumn } from './NoteBoard';
 import type { ArticleProps } from './registry';
 
-// What came up again and again: the outside view in blue, the field test in
-// the notes' own yellow.
+// What came up again and again in the competitors' apps and their reviews,
+// both on blue notes.
 const FOUND: NoteColumn[] = [
   {
     label: 'Competitors',
     blue: true,
-    notes: [{ text: 'Everyone sells taking, nobody sells returning' }, { text: 'No route to the station' }],
+    notes: [
+      { text: 'Everyone sells taking, nobody sells returning' },
+      { text: 'No marks for where it pays to return' },
+      { text: 'No route to the station' },
+    ],
   },
   {
     label: 'Reviews',
     blue: true,
-    notes: [{ text: 'The return often doesn’t count' }, { text: 'No confirmation that it worked' }],
-  },
-  {
-    label: 'Field test',
-    notes: [{ text: 'The “Finish” button felt scary' }, { text: 'No station photo, hard to find' }],
+    notes: [
+      { text: 'The return often doesn’t count' },
+      { text: '“No free slots”, you came for nothing' },
+      { text: 'No confirmation that it worked' },
+    ],
   },
 ];
 
@@ -106,10 +110,24 @@ export function BeriZaryadArticle({ onBack, backHref }: ArticleProps) {
 
       <section className="cp-chapter cp-col" aria-labelledby="bz-found">
         <Heading id="bz-found">What I found</Heading>
-        <p className="cp-reveal">
-          I looked at 13 rental apps, read the reviews and asked friends in two cities to rent and return a powerbank.
-        </p>
+        <p className="cp-reveal">I looked at 13 rental apps and read the reviews.</p>
         <NoteBoard columns={FOUND} caption="What came up again and again" />
+      </section>
+
+      <section className="cp-chapter cp-col" aria-labelledby="bz-field">
+        <Heading id="bz-field">Field test</Heading>
+        <p className="cp-reveal">
+          Then I asked friends in Kirov and Krasnoyarsk to rent and return a powerbank for real, in Beri Zaryad and in
+          its competitor EnerGO. They shared their screens on a call, and I watched where they got stuck.
+        </p>
+        <Figure slot={media.field} frame="phone" />
+        <Figure slot={media.energo} frame="phone" />
+        <ul className="cp-list cp-reveal">
+          <li>The “Finish” button felt scary: one wrong tap and the rent ends</li>
+          <li>There was a route to take a powerbank, but not to return it, so they opened Yandex Maps</li>
+          <li>EnerGO showed a photo of the station, Beri Zaryad didn’t</li>
+          <li>In Krasnoyarsk, Beri Zaryad wouldn’t rent at all and showed a generic error</li>
+        </ul>
         <blockquote className="cp-quote cp-reveal">
           <p>
             People don’t mind returning it elsewhere. They just aren’t sure where to go and whether the discount will
