@@ -754,6 +754,36 @@
   width: 100%;
   aspect-ratio: 1600 / 1256;
 }
+/* Two screens side by side in one box (FigurePair), one height, each as wide
+   as its shape makes it (--pair-cols): at most a phone screen's height at
+   its usual 240px, less where the box is narrower. Both keep that screen's
+   corners, the same round whatever their width. Under the box each line is
+   centred under its own screen. */
+.cp-pair {
+  --pair-gap: 24px;
+  --pair-pad: 24px; /* the box's own room either side */
+  display: grid;
+  grid-template-columns: var(--pair-cols);
+  column-gap: var(--pair-gap);
+  align-items: start;
+  width: 100%;
+  max-width: calc(520px * var(--sum) + var(--pair-gap));
+  margin-left: auto;
+  margin-right: auto;
+}
+.cp-pair > .cp-shot {
+  width: 100%;
+  border-radius: calc(8.3% / var(--ar)) / 8.3%;
+}
+.cp-pair > * {
+  min-width: 0;
+}
+/* The lines' row as wide as the screens' row in the box, so each line sits
+   under its own screen. */
+.cp-figure__cap.cp-pair {
+  width: calc(100% - 2 * var(--pair-pad));
+}
+
 /* The stand-in, until the file is in: a grey screen, blank. */
 .cp-ph {
   background: linear-gradient(180deg, #f1f1f1, #e9e9ea);
@@ -1004,6 +1034,11 @@
      padding: at 200px in the middle it looked lost. */
   .cp-shot--phone {
     width: 100%;
+  }
+  /* Two side by side keep as much of the box as they can. */
+  .cp-pair {
+    --pair-gap: 12px;
+    --pair-pad: 16px;
   }
   /* The board one column. */
   .cp-board {
