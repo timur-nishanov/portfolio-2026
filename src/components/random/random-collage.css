@@ -87,12 +87,13 @@
   }
 }
 /* The clip's own shape (--ar, RandomCollage); on a phone, a shape set for
-   it there (--ar-phone, below). */
+   it there (--ar-phone, below). A poster is set the same way, as an image. */
 .rc__media {
   position: relative;
   aspect-ratio: var(--ar);
 }
-.rc__video {
+.rc__video,
+.rc__image {
   display: block;
   width: 100%;
   height: 100%;
@@ -155,7 +156,8 @@
   .rc__media {
     aspect-ratio: var(--ar-phone, var(--ar));
   }
-  .rc__video {
+  .rc__video,
+  .rc__image {
     border-radius: 10px;
   }
 }

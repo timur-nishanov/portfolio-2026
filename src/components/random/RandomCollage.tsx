@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { collage, type CollageItem } from '@/data/randomCollage';
+import { collage, type CollageVideo } from '@/data/randomCollage';
 import { useLazyVideo, type VideoWatch } from '@/hooks/useLazyVideo';
 import { cancelFrame, scheduleFrame, type FrameJob } from '@/lib/frame';
 import './random-collage.css';
@@ -13,7 +13,7 @@ import './random-collage.css';
 const CLIP_WATCH: VideoWatch = { share: 0.5, hold: 0, restart: false };
 
 /** A project's clip; its source and poster are attached on approach (useLazyVideo). */
-function Clip({ video }: { video: CollageItem['video'] }) {
+function Clip({ video }: { video: CollageVideo }) {
   const ref = useLazyVideo(video.src, video.poster, CLIP_WATCH);
   return (
     <>
@@ -43,8 +43,8 @@ const DRIFT = { wide: 0.035, upright: 0.075 };
 
 /**
  * Random (#random, the menu's "Random"), after the work list on rsquare.work:
- * one big clip per project, leaning left or right of centre, with the title
- * under it in the case cards' style. As the side card in glossar.app's
+ * one big clip per project, or a poster as it is, leaning left or right of
+ * centre, with the title under it in the case cards' style. As the side card in glossar.app's
  * "Seamless fluency", each card moves a touch slower than the page while it
  * crosses the screen, by its own amount, so they read as layers; the clips
  * themselves stay whole. Nothing moves under reduced motion.
@@ -127,30 +127,46 @@ export function RandomCollage() {
         Random
       </h2>
       <ul className="rc__list">
-        {collage.map((item) => (
-          <li
-            key={item.id}
-            className="rc__item"
-            data-side={item.side}
-            data-shape={item.video.height > item.video.width ? 'upright' : 'wide'}
-            data-size={item.small ? 'small' : undefined}
-          >
-            <div className="rc__card">
-              <div
-                className="rc__media"
-                style={
-                  {
-                    '--ar': `${item.video.width} / ${item.video.height}`,
-                    '--ar-phone': item.video.phoneAspect,
-                  } as React.CSSProperties
-                }
-              >
-                <Clip video={item.video} />
+        {collage.map((item) => {
+          const media = 'video' in item ? item.video : item.image;
+          return (
+            <li
+              key={item.id}
+              className="rc__item"
+              data-side={item.side}
+              data-shape={media.height > media.width ? 'upright' : 'wide'}
+              data-size={item.small ? 'small' : undefined}
+            >
+              <div className="rc__card">
+                <div
+                  className="rc__media"
+                  style={
+                    {
+                      '--ar': `${media.width} / ${media.height}`,
+                      '--ar-phone': media.phoneAspect,
+                    } as React.CSSProperties
+                  }
+                >
+                  {'video' in item ? (
+                    <Clip video={item.video} />
+                  ) : (
+                    // eslint-disable-next-line @next/next/no-img-element -- a static export: next/image adds nothing here
+                    <img
+                      className="rc__image"
+                      src={media.src}
+                      alt={media.alt}
+                      width={media.width}
+                      height={media.height}
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  )}
+                </div>
+                <h3 className="rc__title">{item.title}</h3>
               </div>
-              <h3 className="rc__title">{item.title}</h3>
-            </div>
-          </li>
-        ))}
+            </li>
+          );
+        })}
       </ul>
     </section>
   );
