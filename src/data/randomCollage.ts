@@ -22,6 +22,8 @@ export type CollageStill = Omit<CollageMedia, 'phoneAspect'>;
 
 export type CollageItem = {
   id: string;
+  /** What it is, plainly: the project, and the part of it shown if there is
+   *  more than one. Not what the picture shows; the alt says that. */
   title: string;
   /** Which side of the page the clip leans to. An upright clip is set
    *  narrower, so it fits the screen's height, and further in. */
@@ -43,8 +45,8 @@ export type CollageItem = {
 // light, where the flood frayed: its stage went instead round one mask of
 // the phone for the whole clip. The two posters are stills, whole as they
 // were made, each laid on a stage of that grey as a device is, at the
-// upright clips' size: four fifths of the stage's height, which on a 1440px
-// retina screen is their 724px, one to one.
+// upright clips' size: three fifths of the stage's height, which keeps
+// their 724px sharp on a laptop's retina screen.
 export const collage: CollageItem[] = [
   {
     id: 'kritika',
@@ -60,7 +62,7 @@ export const collage: CollageItem[] = [
   },
   {
     id: 'design-battle',
-    title: 'A design battle app: the semifinals, and a vote for who wins',
+    title: 'Design battle app',
     side: 'right',
     small: true,
     video: {
@@ -73,7 +75,7 @@ export const collage: CollageItem[] = [
   },
   {
     id: 'bergman-poster',
-    title: 'Bergman, a poster: five of his films under the g',
+    title: 'Bergman poster',
     side: 'left',
     image: {
       src: '/random/bergman-poster.webp', // 724×1024, flat colour, kept lossless
@@ -108,7 +110,7 @@ export const collage: CollageItem[] = [
   },
   {
     id: 'beri-zaryad-take',
-    title: 'Beri Zaryad, a powerbank rental: taking one where the bonus is',
+    title: 'Beri Zaryad, renting a powerbank',
     side: 'right',
     video: {
       src: '/random/beri-zaryad-take.mp4', // the case's 01-take.mp4, its white stage the cards' grey, 1080×1350 (4:5), 60fps, no audio
@@ -120,7 +122,7 @@ export const collage: CollageItem[] = [
   },
   {
     id: 'stepicon',
-    title: 'Stepicon 2026: the conference landing page, from concept to code',
+    title: 'Stepicon 2026 landing page',
     side: 'left',
     video: {
       src: '/random/stepicon-site.mp4', // stepicon_mockup_1080p60.mp4, 1600×900, 60fps, no audio
@@ -135,7 +137,7 @@ export const collage: CollageItem[] = [
   },
   {
     id: 'kritika-review',
-    title: 'Adding a review in Kritika: poster in, stamp out',
+    title: 'Kritika, adding a review',
     side: 'right',
     video: {
       src: '/random/kritika-review.mp4', // BtJr5050gdQcQBWs.mp4, 960×1200 (4:5), 60fps, no audio
@@ -147,7 +149,7 @@ export const collage: CollageItem[] = [
   },
   {
     id: 'gig-poster',
-    title: 'A gig poster: Soyun Guyn, 11 August',
+    title: 'Gig poster',
     side: 'left',
     image: {
       src: '/random/gig-poster.webp', // 723×1024 less a light seam at its right and bottom edges
@@ -158,7 +160,7 @@ export const collage: CollageItem[] = [
   },
   {
     id: 'moneta',
-    title: 'Moneta, a payment platform: home page and journal concepts',
+    title: 'Moneta website concept',
     side: 'right',
     video: {
       src: '/random/moneta-site.mp4', // moneta_mockup_1080p60_1.mp4, 1600×900, 60fps, no audio
@@ -171,7 +173,7 @@ export const collage: CollageItem[] = [
   },
   {
     id: 'beri-zaryad-return',
-    title: 'Beri Zaryad: handing it back at a bonus station, 15% off the next rent',
+    title: 'Beri Zaryad, returning a powerbank',
     side: 'left',
     video: {
       src: '/random/beri-zaryad-return.mp4', // the case's 03-return.mp4, its white stage the cards' grey, 1080×1350 (4:5), 60fps, no audio
@@ -183,7 +185,7 @@ export const collage: CollageItem[] = [
   },
   {
     id: 'chums-welcome',
-    title: 'Chums: the welcome screen, its logo in glass',
+    title: 'Chums welcome screen',
     side: 'right',
     small: true,
     video: {
@@ -196,7 +198,7 @@ export const collage: CollageItem[] = [
   },
   {
     id: 'cedro-streak',
-    title: 'A 50-day streak in Cedro’s school, confetti and all',
+    title: 'Cedro streak screen',
     side: 'left',
     small: true,
     video: {
@@ -211,7 +213,7 @@ export const collage: CollageItem[] = [
   },
   {
     id: 'kritika-hands',
-    title: 'Kritika on my phone: a review of Eraserhead, hearts and all',
+    title: 'Kritika on my phone',
     side: 'right',
     video: {
       src: '/random/kritika-hands.mp4', // IMG_8331.MP4, 1280×1280 cut to 1024×1280 (4:5) round the phone, 25fps, no audio
