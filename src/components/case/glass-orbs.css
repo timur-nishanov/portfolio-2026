@@ -21,6 +21,10 @@
 }
 .go__orb {
   position: relative;
+  /* Its own layer, so the disc painted behind the words without WebGL stays
+     over the page: on a wide screen nothing else made one, and the disc went
+     under the page's background. */
+  isolation: isolate;
   flex: none;
   display: grid;
   place-items: center;

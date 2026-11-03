@@ -387,6 +387,11 @@
 .cp-col > * + * {
   margin-top: 16px;
 }
+/* A quote, what the text over it comes to, stands a figure's step clear of
+   it: at a paragraph's step it ran on from a list's last line. */
+.cp-col > * + .cp-quote {
+  margin-top: var(--cp-step);
+}
 .cp-col > .cp-h + * {
   margin-top: var(--cp-head);
 }
@@ -689,6 +694,9 @@
 .cp-figure__cap {
   margin-top: 10px;
   text-align: center;
+  /* One that runs onto a second line, on a phone, splits evenly rather than
+     leaving a word or two under a full line. */
+  text-wrap: balance;
   font-family: var(--font-inter-italic), var(--font-sf);
   font-style: italic;
   color: var(--cp-mute);
@@ -703,10 +711,12 @@
 /* The phone's corners as round as iOS draws a sheet's: concentric with the
    display, on a continuous curve that runs further along the edges than a
    circle does. A smaller circle left what lies behind the sheet showing in
-   each corner, a grey sliver round the curve. */
+   each corner, a grey sliver round the curve. The curve's height follows the
+   screen's shape, so a shorter one (a camera's 9:16) keeps the same round
+   corners: on a 9:19.5 screen that is the 8.3% it always was. */
 .cp-shot--phone {
   width: 240px;
-  border-radius: 18% / 8.3%;
+  border-radius: 18% / calc(18% * var(--ar));
 }
 .cp-shot--desktop,
 .cp-shot--wide {
