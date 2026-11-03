@@ -133,6 +133,35 @@ export function Figure({
   );
 }
 
+/** Two screens side by side in one box, at one height (each as wide as its
+    shape makes it), and under the box each one's line, centred under it. */
+export function FigurePair({ slots, frame }: { slots: [CaseSlot, CaseSlot]; frame: Frame }) {
+  const ars = slots.map((slot) => (slot.w && slot.h ? slot.w / slot.h : 9 / 19.5));
+  const sum = ars[0] + ars[1];
+  // The columns' shares of the row, so both screens come out one height.
+  const style = {
+    '--sum': sum,
+    '--pair-cols': ars.map((ar) => `${(ar / sum).toFixed(4)}fr`).join(' '),
+  } as React.CSSProperties;
+  return (
+    <figure className={`cp-figure cp-figure--${frame} cp-figure--pair cp-reveal`} style={style}>
+      <div className="cp-figure__box">
+        <div className="cp-pair">
+          {slots.map((slot) => (
+            <Shot key={slot.src ?? slot.alt} slot={slot} frame={frame} watch={CASE_WATCH} />
+          ))}
+        </div>
+      </div>
+      <figcaption className="cp-figure__cap cp-pair">
+        <span>{slots[0].caption}</span>
+        {/* Read out as two lines, not run together. */}
+        <span className="sr-only">. </span>
+        <span>{slots[1].caption}</span>
+      </figcaption>
+    </figure>
+  );
+}
+
 /** The same thing before and after, one figure over the other, each side
     named under it: Before and After, unless the pair names them itself. */
 export function BeforeAfter({ before, after, frame, labels = ['Before', 'After'] }: CasePair & { frame: Frame }) {

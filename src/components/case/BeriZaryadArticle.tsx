@@ -2,7 +2,7 @@
 
 import { useRef } from 'react';
 import { beriZaryadMedia as media } from '@/data/beriZaryadCase';
-import { Facts, Figure, Heading, Table, useReveal } from './blocks';
+import { Facts, Figure, FigurePair, Heading, Table, useReveal } from './blocks';
 import { CaseIndex } from './CaseIndex';
 import { GlassOrbs } from './GlassOrbs';
 import { NoteBoard, type NoteColumn } from './NoteBoard';
@@ -120,8 +120,7 @@ export function BeriZaryadArticle({ onBack, backHref }: ArticleProps) {
           Then I asked friends in Kirov and Krasnoyarsk to rent and return a powerbank for real, in Beri Zaryad and in
           its competitor EnerGO. They shared their screens on a call, and I watched where they got stuck.
         </p>
-        <Figure slot={media.field} frame="phone" />
-        <Figure slot={media.energo} frame="phone" />
+        <FigurePair slots={[media.field, media.energo]} frame="phone" />
         <ul className="cp-list cp-reveal">
           <li>The “Finish” button felt scary: one wrong tap and the rent ends</li>
           <li>There was a route to take a powerbank, but not to return it, so they opened Yandex Maps</li>

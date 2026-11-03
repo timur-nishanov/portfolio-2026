@@ -2,7 +2,7 @@ import type { CaseSlot } from './caseSlot';
 
 /** The media in the Beri Zaryad case (BeriZaryadArticle): from the field
     test, a friend's clip from a mall and the competitor's station card off
-    the call, both on a phone's screen; then three recordings, each a phone on
+    the call, side by side in one box; then three recordings, each a phone on
     the whole of its white stage, 1080×1350 at 60fps. A clip's poster is its
     first frame. */
 const clip = (name: string, alt: string, caption: string): CaseSlot => ({
