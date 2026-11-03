@@ -41,13 +41,18 @@ function Clip({ video }: { video: CollageVideo }) {
 // numbers are in random-collage.css (--drift).
 const DRIFT = { wide: 0.035, upright: 0.075 };
 
+/** The stage a poster lies on: the upright clips' shape, so it stands among
+    them as one of them (random-collage.css lays the poster in it). */
+const STILL_STAGE = '4 / 5';
+
 /**
  * Random (#random, the menu's "Random"), after the work list on rsquare.work:
- * one big clip per project, or a poster as it is, leaning left or right of
- * centre, with the title under it in the case cards' style. As the side card in glossar.app's
- * "Seamless fluency", each card moves a touch slower than the page while it
- * crosses the screen, by its own amount, so they read as layers; the clips
- * themselves stay whole. Nothing moves under reduced motion.
+ * one big clip per project, or a poster on a stage as theirs, leaning left
+ * or right of centre, with the title under it in the case cards' style. As
+ * the side card in glossar.app's "Seamless fluency", each card moves a touch
+ * slower than the page while it crosses the screen, by its own amount, so
+ * they read as layers; the clips themselves stay whole. Nothing moves under
+ * reduced motion.
  */
 export function RandomCollage() {
   const ref = useRef<HTMLElement>(null);
@@ -128,13 +133,22 @@ export function RandomCollage() {
       </h2>
       <ul className="rc__list">
         {collage.map((item) => {
-          const media = 'video' in item ? item.video : item.image;
+          // A clip's box is its own shape (on a phone perhaps one set for it
+          // there); a poster's, the stage it lies on.
+          const box =
+            'video' in item
+              ? {
+                  ar: `${item.video.width} / ${item.video.height}`,
+                  upright: item.video.height > item.video.width,
+                  phone: item.video.phoneAspect,
+                }
+              : { ar: STILL_STAGE, upright: true };
           return (
             <li
               key={item.id}
               className="rc__item"
               data-side={item.side}
-              data-shape={media.height > media.width ? 'upright' : 'wide'}
+              data-shape={box.upright ? 'upright' : 'wide'}
               data-size={item.small ? 'small' : undefined}
             >
               <div className="rc__card">
@@ -142,8 +156,8 @@ export function RandomCollage() {
                   className="rc__media"
                   style={
                     {
-                      '--ar': `${media.width} / ${media.height}`,
-                      '--ar-phone': media.phoneAspect,
+                      '--ar': box.ar,
+                      '--ar-phone': box.phone,
                     } as React.CSSProperties
                   }
                 >
@@ -153,10 +167,10 @@ export function RandomCollage() {
                     // eslint-disable-next-line @next/next/no-img-element -- a static export: next/image adds nothing here
                     <img
                       className="rc__image"
-                      src={media.src}
-                      alt={media.alt}
-                      width={media.width}
-                      height={media.height}
+                      src={item.image.src}
+                      alt={item.image.alt}
+                      width={item.image.width}
+                      height={item.image.height}
                       loading="lazy"
                       decoding="async"
                     />

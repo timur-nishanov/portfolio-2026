@@ -15,16 +15,21 @@ type CollageMedia = {
 
 export type CollageVideo = CollageMedia & { poster: string };
 
+/** A still (a poster), laid on a stage of the cards' grey as a device is: the
+ *  stage the upright clips' 4:5, the poster in it whole, its corners square
+ *  (RandomCollage, random-collage.css). Its size is the file's own. */
+export type CollageStill = Omit<CollageMedia, 'phoneAspect'>;
+
 export type CollageItem = {
   id: string;
   title: string;
   /** Which side of the page the clip leans to. An upright clip is set
    *  narrower, so it fits the screen's height, and further in. */
   side: 'left' | 'right';
-  /** Set smaller than the others: its source is small (a 720p recording, a
-   *  poster 724px wide), and at their size it comes out soft. */
+  /** Set smaller than the others: its source is small (a 720p recording),
+   *  and at their size it comes out soft. */
   small?: boolean;
-} & ({ video: CollageVideo } | { image: CollageMedia });
+} & ({ video: CollageVideo } | { image: CollageStill });
 
 // Sides alternate down the page, and each wide clip is followed by two
 // upright ones, zig-zagging (nine upright to five wide), so the wide ones
@@ -37,7 +42,9 @@ export type CollageItem = {
 // warmer. Beri Zaryad's phone stands still on white, its frame almost as
 // light, where the flood frayed: its stage went instead round one mask of
 // the phone for the whole clip. The two posters are stills, whole as they
-// were made, and set small: their files are 724px wide.
+// were made, each laid on a stage of that grey as a device is, at the
+// upright clips' size: four fifths of the stage's height, which on a 1440px
+// retina screen is their 724px, one to one.
 export const collage: CollageItem[] = [
   {
     id: 'kritika',
@@ -68,7 +75,6 @@ export const collage: CollageItem[] = [
     id: 'bergman-poster',
     title: 'Bergman, a poster: five of his films under the g',
     side: 'left',
-    small: true,
     image: {
       src: '/random/bergman-poster.webp', // 724×1024, flat colour, kept lossless
       width: 724,
@@ -143,7 +149,6 @@ export const collage: CollageItem[] = [
     id: 'gig-poster',
     title: 'A gig poster: Soyun Guyn, 11 August',
     side: 'left',
-    small: true,
     image: {
       src: '/random/gig-poster.webp', // 723×1024 less a light seam at its right and bottom edges
       width: 722,
