@@ -69,10 +69,11 @@
   will-change: transform;
   /* The paragraphs one under another, a space between each and the next
      shown: of a paragraph set twice (about.ts), the setting not shown takes
-     no space, nor the room between, as a margin on p + p would. */
+     no space, nor the room between, as a margin on p + p would. A line and
+     a half between, so each short paragraph stands on its own. */
   display: flex;
   flex-direction: column;
-  gap: 1.5em;
+  gap: 2em;
 }
 .aw__text p {
   margin: 0;
