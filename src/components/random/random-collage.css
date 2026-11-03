@@ -87,7 +87,7 @@
   }
 }
 /* The clip's own shape (--ar, RandomCollage); on a phone, a shape set for
-   it there (--ar-phone, below). A poster is set the same way, as an image. */
+   it there (--ar-phone, below). A poster's is the stage it lies on. */
 .rc__media {
   position: relative;
   aspect-ratio: var(--ar);
@@ -97,11 +97,24 @@
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: cover;
   border-radius: 16px;
   /* The case cards' grey (.cs-card), the colour the clips' own backgrounds
      are in, so a clip still loading is the same box. */
   background: #e6e6e7;
+}
+.rc__video {
+  object-fit: cover;
+}
+/* A poster lies on that grey as a device does, its own corners square: the
+   image's box is the stage (4:5, RandomCollage), its padding the grey round
+   the poster, and the poster is drawn whole in what is left. The padding
+   goes by the width: 12.5% of it top and bottom is a tenth of a 4:5 stage's
+   height, so the poster stands four fifths of it tall, centred, a little
+   more grey at its sides than above and below it. */
+.rc__image {
+  box-sizing: border-box;
+  padding: 12.5% 10%;
+  object-fit: contain;
 }
 
 /* The case cards' title style: SF Pro 20 / 132%. */

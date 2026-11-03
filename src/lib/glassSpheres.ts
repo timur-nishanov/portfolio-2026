@@ -14,7 +14,8 @@ type Three = typeof import('@/lib/three');
  * What lies under each sphere is the page's own (its words), and the canvas
  * draws the same into a texture (the caller's paint). A sphere can also carry
  * something inside it, a logo, from a texture of its own, which goes where it
- * goes. Nothing is drawn outside the spheres at all.
+ * goes, bent as the page is but not split into colours. Nothing is drawn
+ * outside the spheres at all.
  */
 
 // The glass: how much it bends (its index), how far the colours part across
@@ -60,22 +61,40 @@ const float IOR = ${IOR.toFixed(3)};
 const float DISP = ${DISPERSION.toFixed(4)};
 const float GAP = ${GAP.toFixed(3)};
 
-// The page at a point, in radii from the sphere's centre: its colour, and
-// what is drawn over it. Only from the middle: a neighbour's words, or its
-// own brought back round the rim, read as noise. What the sphere carries
-// lies over the page, read round its own place in its own texture.
+// Where the ray through the glass at a point (n, its normal there) lands on
+// the page, for glass of index ior: in at the front, across, out at the
+// back, down to the page; in radii from the sphere's centre.
+vec2 land(vec3 n, float ior) {
+  vec3 d1 = refract(vec3(0.0, 0.0, -1.0), n, 1.0 / ior);
+  vec3 P2 = n + d1 * (-2.0 * dot(n, d1));
+  vec3 d2 = refract(d1, -P2, ior);
+  if (dot(d2, d2) < 1e-6) d2 = d1;
+  float s = (-1.0 - GAP - P2.z) / min(d2.z, -1e-3);
+  return P2.xy + d2.xy * s;
+}
+
+// Only what lands in the middle is read: a neighbour's words, or its own
+// brought back round the rim, read as noise.
+float keep(vec2 p) {
+  return 1.0 - smoothstep(0.76, 0.92, length(p));
+}
+
+// The sheets hold their colours premultiplied (each already times its
+// cover; createGlass), so each lies over what is under it as
+// rgb + c * (1 - a).
+
+// The page at a point: its colour, and what is drawn over it.
 vec3 pageAt(vec2 p) {
-  vec2 o = vec2(p.x, -p.y) * uRadius;
-  vec2 q = uCenter + o;
-  vec4 t = texture2D(uTex, vec2(q.x / uSize.x, 1.0 - q.y / uSize.y));
-  t.a *= 1.0 - smoothstep(0.76, 0.92, length(p));
-  vec3 c = mix(uBg, t.rgb, t.a);
-  if (uCarries > 0.5) {
-    vec2 h = uHome + o;
-    vec4 k = texture2D(uCarry, vec2(h.x / uCarrySize.x, 1.0 - h.y / uCarrySize.y));
-    c = mix(c, k.rgb, k.a * (1.0 - smoothstep(0.76, 0.92, length(p))));
-  }
-  return c;
+  vec2 q = uCenter + vec2(p.x, -p.y) * uRadius;
+  vec4 t = texture2D(uTex, vec2(q.x / uSize.x, 1.0 - q.y / uSize.y)) * keep(p);
+  return t.rgb + uBg * (1.0 - t.a);
+}
+
+// What the sphere carries at a point, read round its own place in its own
+// texture.
+vec4 carriedAt(vec2 p) {
+  vec2 h = uHome + vec2(p.x, -p.y) * uRadius;
+  return texture2D(uCarry, vec2(h.x / uCarrySize.x, 1.0 - h.y / uCarrySize.y)) * keep(p);
 }
 
 void main() {
@@ -91,23 +110,24 @@ void main() {
   float z = sqrt(max(0.0, 1.0 - rr * rr));
   vec3 n = vec3(p / max(r, 1e-4) * rr, z);
   vec3 I = vec3(0.0, 0.0, -1.0);
-  // Through the glass: in at the front, across, out at the back, down to
-  // the page — once for each colour, red bent least.
+  // The page through the glass, once for each colour, red bent least.
   vec3 col = vec3(0.0);
   vec3 wsum = vec3(0.0);
   for (int i = 0; i < 12; i++) {
     float t = float(i) / 11.0;
-    float ior = IOR + (t - 0.5) * 2.0 * DISP;
     vec3 w = vec3(smoothstep(0.8, 0.2, t), 1.0 - min(1.0, abs(t - 0.5) * 2.2), smoothstep(0.2, 0.8, t));
-    vec3 d1 = refract(I, n, 1.0 / ior);
-    vec3 P2 = n + d1 * (-2.0 * dot(n, d1));
-    vec3 d2 = refract(d1, -P2, ior);
-    if (dot(d2, d2) < 1e-6) d2 = d1;
-    float s = (-1.0 - GAP - P2.z) / min(d2.z, -1e-3);
-    col += pageAt(P2.xy + d2.xy * s) * w;
+    col += pageAt(land(n, IOR + (t - 0.5) * 2.0 * DISP)) * w;
     wsum += w;
   }
   col /= wsum;
+  // What it carries lies over that, read along the middle colour's ray
+  // alone, about where the colours' rays land on average: split as the
+  // page is, a logo's crisp edges came out with a line of colour round
+  // them, orange on one side and blue on the other.
+  if (uCarries > 0.5) {
+    vec4 k = carriedAt(land(n, IOR));
+    col = k.rgb + col * (1.0 - k.a);
+  }
   // The edge of the glass: a thin dark band of its thickness just inside a
   // bright line.
   float band = smoothstep(0.945, 0.985, rr) - smoothstep(0.985, 1.0, rr);
@@ -231,6 +251,15 @@ export function createGlass(
     tex.minFilter = THREE.LinearFilter;
     tex.magFilter = THREE.LinearFilter;
     tex.generateMipmaps = false;
+    // Taken as the canvas holds it, each colour already times its cover
+    // (the shader lies it over the page so). Read between a pixel at a
+    // logo's edge and the clear one beside it, the glass then gets the
+    // logo's own colour, only fainter. Unmultiplied on the way in, as
+    // before, a clear pixel is black, and every edge took in a share of
+    // that black: a grey ring round the mail's white disc, darker rims on
+    // the others; the faint pixels of an edge, unmultiplied in eight bits,
+    // came out speckled besides.
+    tex.premultiplyAlpha = true;
     return { c, ctx, tex };
   };
   const pageSheet = sheet();
