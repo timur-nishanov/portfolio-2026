@@ -30,7 +30,12 @@ const rowOf = (t: EventTarget | null) =>
  * they leave. The way back's chevron shows only then, as the links' at the
  * end of a case do.
  */
-export function CaseIndex({ items, onBack, backHref }: { items: IndexItem[] } & ArticleProps) {
+export function CaseIndex({
+  items,
+  onBack,
+  backHref,
+  backLabel = 'Back to all work',
+}: { items: IndexItem[]; backLabel?: string } & ArticleProps) {
   const ref = useRef<HTMLElement>(null);
   const pillRef = useRef<HTMLSpanElement>(null);
   const hovered = useRef<HTMLElement | null>(null);
@@ -122,7 +127,7 @@ export function CaseIndex({ items, onBack, backHref }: { items: IndexItem[] } & 
       <nav
         ref={ref}
         className="cp-index cp-reveal"
-        aria-label="Chapters"
+        aria-label={items.length ? 'Chapters' : backLabel}
         onPointerOver={(e) => {
           const row = rowOf(e.target);
           if (!row || e.pointerType === 'touch' || row === hovered.current) return;
@@ -153,17 +158,19 @@ export function CaseIndex({ items, onBack, backHref }: { items: IndexItem[] } & 
           <span className="cp-index__chev" aria-hidden="true">
             <ButtonChevron className="cp-chevron-left" />
           </span>
-          <span>Back to all work</span>
+          <span>{backLabel}</span>
         </BackLink>
-        <ol>
-          {items.map((item) => (
-            <li key={item.id}>
-              <a href={`#${item.id}`} aria-current={current === item.id ? 'true' : undefined} onClick={(e) => go(e, item.id)}>
-                {item.label}
-              </a>
-            </li>
-          ))}
-        </ol>
+        {items.length > 0 && (
+          <ol>
+            {items.map((item) => (
+              <li key={item.id}>
+                <a href={`#${item.id}`} aria-current={current === item.id ? 'true' : undefined} onClick={(e) => go(e, item.id)}>
+                  {item.label}
+                </a>
+              </li>
+            ))}
+          </ol>
+        )}
       </nav>
     </div>
   );

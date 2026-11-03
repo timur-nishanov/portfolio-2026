@@ -90,6 +90,10 @@
     left: calc(50% - var(--go-d) / 2);
   }
 }
+/* A line under them, as under a figure (Beri Zaryad's three questions). */
+.go__cap {
+  margin-top: 16px;
+}
 /* The canvas, over the column and the lean's reach round it. */
 .go__canvas {
   position: absolute;
