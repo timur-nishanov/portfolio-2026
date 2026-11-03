@@ -24,13 +24,18 @@ export type CollageItem = {
   };
 };
 
-// Sides alternate down the page, and the upright clips sit between wide ones.
-// Every clip but the first (the app in hand, filmed) is a render on a plain
-// background, a warm grey with a vignette or white; those backgrounds are
-// brought to the case cards' #e6e6e7, flat, without the devices' shadows
-// (kept, they and the vignette's banding read as dirt round the devices), the
-// devices left as they were. A new render goes the same way
-// (scripts/recolor-random.py), or its background shows warmer.
+// Sides alternate down the page, and the upright clips sit between wide ones;
+// with more upright clips than wide, the two of Beri Zaryad each meet another
+// upright, zig-zagging, where the rhythm turns over: between them the wide
+// ones lean right and the upright left. The filmed ones aside (the app in
+// hand), every clip is a render on a plain background, a warm grey with a
+// vignette or white; those backgrounds are brought to the case cards'
+// #e6e6e7, flat, without the devices' shadows (kept, they and the vignette's
+// banding read as dirt round the devices), the devices left as they were. A
+// new render goes the same way (scripts/recolor-random.py), or its
+// background shows warmer. Beri Zaryad's phone stands still on white, its
+// frame almost as light, where the flood frayed: its stage went instead
+// round one mask of the phone for the whole clip.
 export const collage: CollageItem[] = [
   {
     id: 'kritika',
@@ -82,9 +87,21 @@ export const collage: CollageItem[] = [
     },
   },
   {
+    id: 'beri-zaryad-take',
+    title: 'Beri Zaryad, a powerbank rental: taking one where the bonus is',
+    side: 'left',
+    video: {
+      src: '/random/beri-zaryad-take.mp4', // the case's 01-take.mp4, its white stage the cards' grey, 1080×1350 (4:5), 60fps, no audio
+      poster: '/random/beri-zaryad-take.webp',
+      width: 1080,
+      height: 1350,
+      alt: 'Beri Zaryad on an iPhone: the map with the bonus stations picked out, a station’s card with its free slots, photos and the discount, the QR scanned and the powerbank taken',
+    },
+  },
+  {
     id: 'stepicon',
     title: 'Stepicon 2026: the conference landing page, from concept to code',
-    side: 'left',
+    side: 'right',
     video: {
       src: '/random/stepicon-site.mp4', // stepicon_mockup_1080p60.mp4, 1600×900, 60fps, no audio
       poster: '/random/stepicon-site.webp',
@@ -99,7 +116,7 @@ export const collage: CollageItem[] = [
   {
     id: 'kritika-review',
     title: 'Adding a review in Kritika: poster in, stamp out',
-    side: 'right',
+    side: 'left',
     video: {
       src: '/random/kritika-review.mp4', // BtJr5050gdQcQBWs.mp4, 960×1200 (4:5), 60fps, no audio
       poster: '/random/kritika-review.webp',
@@ -111,7 +128,7 @@ export const collage: CollageItem[] = [
   {
     id: 'moneta',
     title: 'Moneta, a payment platform: home page and journal concepts',
-    side: 'left',
+    side: 'right',
     video: {
       src: '/random/moneta-site.mp4', // moneta_mockup_1080p60_1.mp4, 1600×900, 60fps, no audio
       poster: '/random/moneta-site.webp',
@@ -119,6 +136,18 @@ export const collage: CollageItem[] = [
       height: 900,
       alt: 'The Moneta site on an iMac: online payments and settlements, and its journal',
       phoneAspect: '4 / 3', // the same iMac, placed as Stepicon's
+    },
+  },
+  {
+    id: 'beri-zaryad-return',
+    title: 'Beri Zaryad: handing it back at a bonus station, 15% off the next rent',
+    side: 'left',
+    video: {
+      src: '/random/beri-zaryad-return.mp4', // the case's 03-return.mp4, its white stage the cards' grey, 1080×1350 (4:5), 60fps, no audio
+      poster: '/random/beri-zaryad-return.webp',
+      width: 1080,
+      height: 1350,
+      alt: 'Beri Zaryad on an iPhone: finishing the rent at a bonus station, the code, the return, five stars for the rent and the 15% discount on the next one',
     },
   },
   {
