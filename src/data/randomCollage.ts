@@ -1,6 +1,19 @@
 // The Random block after the awards (RandomCollage), after the work list on
-// rsquare.work: a big clip per project, set left or right of centre, its
-// title underneath.
+// rsquare.work: a big clip per project, or a still (a poster), set left or
+// right of centre, its title underneath.
+
+type CollageMedia = {
+  src: string;
+  width: number;
+  height: number;
+  alt: string;
+  /** On a phone, a shape of its own (CSS aspect ratio), the clip cropped at
+   *  its sides to fill it: an iMac render has grey to spare either side of
+   *  the device, and at a phone's width the iMac came out small. */
+  phoneAspect?: string;
+};
+
+export type CollageVideo = CollageMedia & { poster: string };
 
 export type CollageItem = {
   id: string;
@@ -8,34 +21,23 @@ export type CollageItem = {
   /** Which side of the page the clip leans to. An upright clip is set
    *  narrower, so it fits the screen's height, and further in. */
   side: 'left' | 'right';
-  /** Set smaller than the others: its source is small (a 720p recording),
-   *  and at their size it comes out soft. */
+  /** Set smaller than the others: its source is small (a 720p recording, a
+   *  poster 724px wide), and at their size it comes out soft. */
   small?: boolean;
-  video: {
-    src: string;
-    poster: string;
-    width: number;
-    height: number;
-    alt: string;
-    /** On a phone, a shape of its own (CSS aspect ratio), the clip cropped at
-     *  its sides to fill it: an iMac render has grey to spare either side of
-     *  the device, and at a phone's width the iMac came out small. */
-    phoneAspect?: string;
-  };
-};
+} & ({ video: CollageVideo } | { image: CollageMedia });
 
-// Sides alternate down the page, and the upright clips sit between wide ones;
-// with more upright clips than wide, the two of Beri Zaryad each meet another
-// upright, zig-zagging, where the rhythm turns over: between them the wide
-// ones lean right and the upright left. The filmed ones aside (the app in
-// hand), every clip is a render on a plain background, a warm grey with a
-// vignette or white; those backgrounds are brought to the case cards'
-// #e6e6e7, flat, without the devices' shadows (kept, they and the vignette's
-// banding read as dirt round the devices), the devices left as they were. A
-// new render goes the same way (scripts/recolor-random.py), or its
-// background shows warmer. Beri Zaryad's phone stands still on white, its
-// frame almost as light, where the flood frayed: its stage went instead
-// round one mask of the phone for the whole clip.
+// Sides alternate down the page, and each wide clip is followed by two
+// upright ones, zig-zagging (nine upright to five wide), so the wide ones
+// lean left and right in turn. The filmed ones aside (the app in hand),
+// every clip is a render on a plain background, a warm grey with a vignette
+// or white; those backgrounds are brought to the case cards' #e6e6e7, flat,
+// without the devices' shadows (kept, they and the vignette's banding read
+// as dirt round the devices), the devices left as they were. A new render
+// goes the same way (scripts/recolor-random.py), or its background shows
+// warmer. Beri Zaryad's phone stands still on white, its frame almost as
+// light, where the flood frayed: its stage went instead round one mask of
+// the phone for the whole clip. The two posters are stills, whole as they
+// were made, and set small: their files are 724px wide.
 export const collage: CollageItem[] = [
   {
     id: 'kritika',
@@ -63,9 +65,21 @@ export const collage: CollageItem[] = [
     },
   },
   {
+    id: 'bergman-poster',
+    title: 'Bergman, a poster: five of his films under the g',
+    side: 'left',
+    small: true,
+    image: {
+      src: '/random/bergman-poster.webp', // 724×1024, flat colour, kept lossless
+      width: 724,
+      height: 1024,
+      alt: 'A red poster: a pale mask in profile with a red slit for an eye, “Bergman” set huge in a serif, and the tail of its g running into five of his films: Fanny & Alexander, Winter Light, Cries & Whispers, Höstsonaten, Skammen',
+    },
+  },
+  {
     id: 'artem',
     title: 'Artem Shcherbakov’s site',
-    side: 'left',
+    side: 'right',
     video: {
       src: '/random/artem-site.mp4', // artem_404_1600x1200_60.mp4, 1600×1200 (4:3), 60fps, no audio
       poster: '/random/artem-site.webp',
@@ -77,7 +91,7 @@ export const collage: CollageItem[] = [
   {
     id: 'opus-experiment',
     title: 'Quick experiment with Opus 5.5',
-    side: 'right',
+    side: 'left',
     video: {
       src: '/random/opus-experiment.mp4', // D4OzCiDYGSrnN6HD.mp4, 960×1200 (4:5), 60fps, no audio
       poster: '/random/opus-experiment.webp',
@@ -89,7 +103,7 @@ export const collage: CollageItem[] = [
   {
     id: 'beri-zaryad-take',
     title: 'Beri Zaryad, a powerbank rental: taking one where the bonus is',
-    side: 'left',
+    side: 'right',
     video: {
       src: '/random/beri-zaryad-take.mp4', // the case's 01-take.mp4, its white stage the cards' grey, 1080×1350 (4:5), 60fps, no audio
       poster: '/random/beri-zaryad-take.webp',
@@ -101,7 +115,7 @@ export const collage: CollageItem[] = [
   {
     id: 'stepicon',
     title: 'Stepicon 2026: the conference landing page, from concept to code',
-    side: 'right',
+    side: 'left',
     video: {
       src: '/random/stepicon-site.mp4', // stepicon_mockup_1080p60.mp4, 1600×900, 60fps, no audio
       poster: '/random/stepicon-site.webp',
@@ -116,13 +130,25 @@ export const collage: CollageItem[] = [
   {
     id: 'kritika-review',
     title: 'Adding a review in Kritika: poster in, stamp out',
-    side: 'left',
+    side: 'right',
     video: {
       src: '/random/kritika-review.mp4', // BtJr5050gdQcQBWs.mp4, 960×1200 (4:5), 60fps, no audio
       poster: '/random/kritika-review.webp',
       width: 960,
       height: 1200,
       alt: 'Kritika: picking a poster, typing the film title and rating the plot, acting and action',
+    },
+  },
+  {
+    id: 'gig-poster',
+    title: 'A gig poster: Soyun Guyn, 11 August',
+    side: 'left',
+    small: true,
+    image: {
+      src: '/random/gig-poster.webp', // 723×1024 less a light seam at its right and bottom edges
+      width: 722,
+      height: 1023,
+      alt: 'A gig poster: a musician with a bow in red and green grain on violet, the date and the place at the top, the name Soyun Guyn, and huge warped yellow letters across the bottom, running into pink and cyan',
     },
   },
   {
