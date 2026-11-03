@@ -108,12 +108,13 @@
 /* A poster lies on that grey as a device does, its own corners square: the
    image's box is the stage (4:5, RandomCollage), its padding the grey round
    the poster, and the poster is drawn whole in what is left. The padding
-   goes by the width: 12.5% of it top and bottom is a tenth of a 4:5 stage's
-   height, so the poster stands four fifths of it tall, centred, a little
-   more grey at its sides than above and below it. */
+   goes by the width: 25% of it top and bottom is a fifth of a 4:5 stage's
+   height, so the poster stands three fifths of it tall, centred, and about
+   as wide a share of it as a phone takes of its own (53%), with much the
+   same grey all round. At four fifths it filled the stage. */
 .rc__image {
   box-sizing: border-box;
-  padding: 12.5% 10%;
+  padding: 25% 10%;
   object-fit: contain;
 }
 
