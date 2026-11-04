@@ -34,7 +34,7 @@ export type CollageItem = {
 } & ({ video: CollageVideo } | { image: CollageStill });
 
 // Sides alternate down the page, and each wide clip is followed by two
-// upright ones, zig-zagging (nine upright to five wide), so the wide ones
+// upright ones, zig-zagging (ten upright to five wide), so the wide ones
 // lean left and right in turn. The filmed ones aside (the app in hand),
 // every clip is a render on a plain background, a warm grey with a vignette
 // or white; those backgrounds are brought to the case cards' #e6e6e7, flat,
@@ -43,10 +43,11 @@ export type CollageItem = {
 // goes the same way (scripts/recolor-random.py), or its background shows
 // warmer. Beri Zaryad's phone stands still on white, its frame almost as
 // light, where the flood frayed: its stage went instead round one mask of
-// the phone for the whole clip. The two posters are stills, whole as they
-// were made, each laid on a stage of that grey as a device is, at the
-// upright clips' size: three fifths of the stage's height, which keeps
-// their 724px sharp on a laptop's retina screen.
+// the phone for the whole clip. Snow.fi's came rendered on that grey, the
+// phone's soft shadow with it, and is as it came. The two posters are
+// stills, whole as they were made, each laid on a stage of that grey as a
+// device is, at the upright clips' size: three fifths of the stage's
+// height, which keeps their 724px sharp on a laptop's retina screen.
 export const collage: CollageItem[] = [
   {
     id: 'kritika',
@@ -221,6 +222,18 @@ export const collage: CollageItem[] = [
       width: 1024,
       height: 1280,
       alt: 'Kritika on an iPhone in hand: typing in Eraserhead, picking its poster and rating the plot, the acting and the action, hearts bursting with each rating',
+    },
+  },
+  {
+    id: 'snowfi',
+    title: 'Snow.fi, a liquid restaking app',
+    side: 'left',
+    video: {
+      src: '/random/snowfi.mp4', // snowfi_v4_1080.mp4 as it came, on the cards' grey, 1080×1350 (4:5), 60fps, no audio
+      poster: '/random/snowfi.webp',
+      width: 1080,
+      height: 1350,
+      alt: 'Snow.fi on an iPhone: an invite code typed in, a wallet connected and the points counting up, then 1.34 Gemstone deposited, confirmed in the wallet and earning',
     },
   },
 ];
