@@ -20,7 +20,8 @@ const COPIED_MS = 1400;
  * screen is first scrolled to, and must not arrive as one rehearsed row —
  * each gets its own delay, drop height, sideways drift and bounciness, so they
  * land out of step. `slot` is where it comes down across the width (0 = left
- * edge, 1 = right); `lift` is how far above the stage it waits, in radii.
+ * edge, 1 = right); `lift` is how far above the top of the screen it starts,
+ * in radii, from its lowest point.
  */
 const DROPS = [
   { delay: 0.0, slot: 0.0, lift: 0.4, drift: 55, bounce: 0.77 },
@@ -44,11 +45,19 @@ const REST_GAP = 12; // px
 // other. Holding one suspends it — it moves only while the button is down —
 // and letting go hands its momentum back to the sim.
 const GRAVITY = 2000; // px/s²
-// Gone wholly off the top, after a throw or a knock, a ball is pulled back
-// this many times harder: there is no ceiling, it still flies out of sight,
-// but it turns there in a moment and comes back as fast as it left, rather
-// than from somewhere high in the sky seconds later.
+// Gone wholly off the top of the screen, after a throw or a knock, a ball is
+// pulled back this many times harder: there is no ceiling, it still flies out
+// of sight, but it turns there in a moment and comes back as fast as it left,
+// rather than from somewhere high in the sky seconds later.
 const ABOVE_PULL = 5;
+// The glass has this much room above the stage, as a share of its height: a
+// ball thrown up flies on over the page above and out of the screen, rather
+// than being cut off at the stage's top edge, which is in sight wherever the
+// screen shows some of the page above it (a phone with its bars tucked away
+// is taller than the stage; a screen not scrolled to the end). Half the
+// stage takes in what shows above it while a ball can be reached on the
+// floor, or as the drop begins, three quarters of it on the screen.
+const ABOVE = 0.5;
 // How much of a knock comes back, off the sides and off another ball (off the
 // floor it is each ball's own, in DROPS).
 const WALL_BOUNCE = 0.8;
@@ -91,8 +100,9 @@ type Body = {
   quietT: number;
   px: number;
   py: number;
-  /** Wholly on the stage since it dropped in: off the top from then on, it
-   *  is pulled back harder (ABOVE_PULL). Its drop in is plain gravity. */
+  /** Wholly on the stage since it dropped in: off the top of the screen from
+   *  then on, it is pulled back harder (ABOVE_PULL). Its drop in is plain
+   *  gravity. */
   entered: boolean;
 };
 
@@ -182,6 +192,12 @@ function Balls() {
     // Local px per visual px: the sim's constants are tuned in visual px.
     let zi = 1;
     const bodies: Body[] = [];
+    // Whether the drop has begun (the screen in view; io, below).
+    let running = false;
+    // The glass's room above the stage (ABOVE), and where the top of the
+    // screen is on the stage, each frame the sim runs.
+    let above = 0;
+    let sky = 0;
 
     // How big the balls are. On a wide screen, as big as the stylesheet has
     // them: the words leave room beside them, and the balls that heap on top
@@ -283,7 +299,10 @@ function Balls() {
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     const sheets = () => {
       if (!view) return;
-      view.size(W, H);
+      // The canvas reaches up past the stage by this much (outro.css).
+      above = Math.round(H * ABOVE);
+      stage.style.setProperty('--above', `${above}px`);
+      view.size(W, H + above);
       // The words are only ever seen through a passing ball, bent and a
       // touch larger: a sheet the stage's size at 1.5x is plenty, and a
       // quarter of what the screen's density would cost.
@@ -305,7 +324,14 @@ function Balls() {
     };
     const glass = () => {
       if (!view) return;
-      bodies.forEach((b, i) => view!.set(i, b.x, b.y, b.r, b.x, b.y, [i * cell + cell / 2, cell / 2]));
+      bodies.forEach((b, i) => {
+        // On the canvas, which starts above the stage; the words' sheet is
+        // the stage's own. A ball still waiting for its drop is drawn off the
+        // canvas: in the room above the stage it would hang in the air, over
+        // the page above.
+        const out = !reduced && (!running || b.wait > 0);
+        view!.set(i, b.x, out ? -4 * b.r : b.y + above, b.r, b.x, b.y, [i * cell + cell / 2, cell / 2]);
+      });
       view.render();
     };
     const paint = () => {
@@ -468,7 +494,6 @@ function Balls() {
     // --- loop ---------------------------------------------------------------
     let raf = 0;
     let last = performance.now();
-    let running = false;
 
     // One step of the sim, dt seconds long.
     const tick = (dt: number) => {
@@ -477,7 +502,7 @@ function Balls() {
         const b = bodies[i];
         if (i === dragging || b.wait > 0) continue;
         if (!b.entered && b.y >= b.r) b.entered = true;
-        const pull = b.entered && b.y < -b.r ? ABOVE_PULL : 1;
+        const pull = b.entered && b.y < sky - b.r ? ABOVE_PULL : 1;
         b.vy += GRAVITY * pull * zi * dt;
         b.vx *= air;
         b.vy *= air;
@@ -567,6 +592,7 @@ function Balls() {
       // Held above the stage until the screen is in view and their own delays
       // have run out, so they arrive out of step.
       if (running) {
+        sky = -stage.getBoundingClientRect().top * zi;
         for (const b of bodies) if (b.wait > 0) b.wait -= frame;
         for (let s = 0; s < SUBSTEPS; s++) tick(frame / SUBSTEPS);
       }
@@ -602,6 +628,12 @@ function Balls() {
       ([entry]) => {
         if (reduced) return;
         if (entry.intersectionRatio >= 0.75 && !running) {
+          // They start above the top of the screen rather than the stage's,
+          // which is lower wherever the screen shows some of the page above
+          // it: the glass has room there, and a ball would come into sight
+          // already in the air.
+          const below = Math.max(0, entry.boundingClientRect.top * zi);
+          for (const b of bodies) if (!b.entered) b.y -= below;
           running = true;
           wake();
         } else if (!entry.isIntersecting && running && dragging < 0) {
