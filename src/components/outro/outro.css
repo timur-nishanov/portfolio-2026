@@ -40,8 +40,8 @@
 }
 
 /* --- the balls -------------------------------------------------------------- */
-/* The stage is the whole screen; the balls fall in through its top and rest
-   on its bottom, three on the floor and two on top of them: on a wide
+/* The stage is the whole screen; the balls fall in from above and rest on
+   its bottom, three on the floor and two on top of them: on a wide
    screen a little more than a quarter of it each, too big for four abreast,
    the two on top round the words and partly over them; on a phone a third
    of it each. --ball is the most a ball may be (on a wide screen up to half
@@ -54,11 +54,22 @@
   overflow: hidden;
   pointer-events: none;
 }
+/* With the glass drawn, nothing is cut off at the stage's top edge: the
+   canvas reaches up past it (--above, Outro), and a ball thrown up flies on
+   over the page above and out of the screen. Without it, the discs the
+   stylesheet paints are clipped there as before, the balls waiting above
+   the stage for their drop out of sight. */
+.outro__stage[data-gl] {
+  overflow: visible;
+}
+/* Sized outright: a canvas, placed by its edges alone, takes its drawing
+   buffer's size. */
 .outro__canvas {
   position: absolute;
-  inset: 0;
+  top: calc(var(--above, 0px) * -1);
+  left: 0;
   width: 100%;
-  height: 100%;
+  height: calc(100% + var(--above, 0px));
   pointer-events: none;
 }
 .outro__balls {
