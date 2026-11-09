@@ -13,24 +13,24 @@ const artemSite: AboutLine = { text: 'artemartemartem.com', href: 'https://artem
 
 // Each paragraph set line by line, broken where the sense breaks, never
 // inside a phrase, and no two lines one after the other of a like length:
-// two of them, as long as each other, read as a block. The first opens on a
-// long line and goes on in two shorter ones, short then longer; the short
-// one after it, short then long, turns from one to the other; the last
-// climbs, short, longer, longest, the address under them. Its awards are
-// one sentence on one line: broken after "Site of the Day", it read as two.
-// The list of what goes into the work (research, prototypes, front ends, 3D,
-// motion) is gone: the first screen says "who builds in code", and Random
-// shows the rest. At a phone's 15px the first two keep their lines; the
-// last's awards are too long for a phone, and it is set again there.
+// two of them, as long as each other, read as a block. Each climbs, short,
+// longer, longest, so no line's end hangs out past the one under it (the
+// first opened on its longest, "e-commerce" out on its own at the end); the
+// last has the address under them. Its awards are one sentence on one
+// line: broken after "Site of the Day", it read as two. The list of what
+// goes into the work (research, prototypes, front ends, 3D, motion) is
+// gone: the first screen says "who builds in code", and Random shows the
+// rest. At a phone's 15px the first two keep their lines; the last's
+// awards are too long for a phone, and it is set again there.
 export const aboutText: AboutParagraph[] = [
   {
     lines: [
       // A word joiner after the hyphen keeps "e-commerce" whole where the
       // line wraps (a narrow phone): the browser would break after it, and
       // the face has no non-breaking hyphen.
-      'Mostly B2C: fintech, Web3 and e-\u2060commerce.',
-      'I like messy flows',
-      'and making them look good.',
+      'Mostly B2C:',
+      'fintech, Web3 and e-\u2060commerce.',
+      'I like messy flows and making them look good.',
     ],
   },
   {
