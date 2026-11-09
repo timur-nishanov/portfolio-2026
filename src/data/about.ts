@@ -11,15 +11,17 @@ export type AboutParagraph = { lines: AboutLine[]; phone?: AboutLine[] };
 
 const artemSite: AboutLine = { text: 'artemartemartem.com', href: 'https://artemartemartem.com' };
 
-// Each paragraph set line by line, broken where the sense breaks, and no two
-// lines one after the other of a like length: two of them, as long as each
-// other, read as a block. The first and the last open on a long line and go
-// on in two shorter ones, short then longer (the last with the address under
-// them); the short one between, short then long, turns from one to the other.
+// Each paragraph set line by line, broken where the sense breaks, never
+// inside a phrase, and no two lines one after the other of a like length:
+// two of them, as long as each other, read as a block. The first opens on a
+// long line and goes on in two shorter ones, short then longer; the short
+// one after it, short then long, turns from one to the other; the last
+// climbs, short, longer, longest, the address under them. Its awards are
+// one sentence on one line: broken after "Site of the Day", it read as two.
 // The list of what goes into the work (research, prototypes, front ends, 3D,
 // motion) is gone: the first screen says "who builds in code", and Random
 // shows the rest. At a phone's 15px the first two keep their lines; the
-// last opens on a line too long for a phone, and is set again there.
+// last's awards are too long for a phone, and it is set again there.
 export const aboutText: AboutParagraph[] = [
   {
     lines: [
@@ -36,11 +38,12 @@ export const aboutText: AboutParagraph[] = [
     lines: ['I care about systems,', 'but I still prefer a bit more craft.'],
   },
   {
-    // The site, the awards, the address. On a phone, short and long in turn.
+    // The site, whom for, the awards, the address. On a phone, short and
+    // long in turn, the awards over two lines.
     lines: [
-      'I designed a site for film director Artem\u00a0Shcherbakov.',
-      'It got Site\u00a0of\u00a0the\u00a0Day',
-      'on Awwwards, FWA and CSSDA.',
+      'I designed a site',
+      'for film director Artem\u00a0Shcherbakov.',
+      'It got Site\u00a0of\u00a0the\u00a0Day on Awwwards, FWA and CSSDA.',
       artemSite,
     ],
     phone: [
