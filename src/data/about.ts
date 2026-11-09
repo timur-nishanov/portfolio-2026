@@ -13,15 +13,14 @@ const artemSite: AboutLine = { text: 'artemartemartem.com', href: 'https://artem
 
 // Each paragraph set line by line, broken where the sense breaks, never
 // inside a phrase, and no two lines one after the other of a like length:
-// two of them, as long as each other, read as a block. Each climbs, short,
-// longer, longest, so no line's end hangs out past the one under it (the
-// first opened on its longest, "e-commerce" out on its own at the end); the
-// last has the address under them. Its awards are one sentence on one
-// line: broken after "Site of the Day", it read as two. The list of what
-// goes into the work (research, prototypes, front ends, 3D, motion) is
-// gone: the first screen says "who builds in code", and Random shows the
-// rest. At a phone's 15px the first two keep their lines; the last's
-// awards are too long for a phone, and it is set again there.
+// two of them, as long as each other, read as a block. The lines are short,
+// none past 333px, so the words stand in a narrow column: the first and the
+// last paragraph go short and long in turn, and the short one between,
+// short then long, turns from one to the other; the last has the address
+// under them. The list of what goes into the work (research, prototypes,
+// front ends, 3D, motion) is gone: the first screen says "who builds in
+// code", and Random shows the rest. At a phone's 15px every line fits as it
+// is, the longest 256px.
 export const aboutText: AboutParagraph[] = [
   {
     lines: [
@@ -30,7 +29,8 @@ export const aboutText: AboutParagraph[] = [
       // the face has no non-breaking hyphen.
       'Mostly B2C:',
       'fintech, Web3 and e-\u2060commerce.',
-      'I like messy flows and making them look good.',
+      'I like messy flows',
+      'and making them look good.',
     ],
   },
   {
@@ -38,15 +38,8 @@ export const aboutText: AboutParagraph[] = [
     lines: ['I care about systems,', 'but I still prefer a bit more craft.'],
   },
   {
-    // The site, whom for, the awards, the address. On a phone, short and
-    // long in turn, the awards over two lines.
+    // The site, whom for, the awards, the address.
     lines: [
-      'I designed a site',
-      'for film director Artem\u00a0Shcherbakov.',
-      'It got Site\u00a0of\u00a0the\u00a0Day on Awwwards, FWA and CSSDA.',
-      artemSite,
-    ],
-    phone: [
       'I designed a site',
       'for film director Artem\u00a0Shcherbakov.',
       'It got Site\u00a0of\u00a0the\u00a0Day',
