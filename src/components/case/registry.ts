@@ -9,8 +9,8 @@ export type Article = ComponentType<ArticleProps>;
 type CaseEntry = {
   /** The bar's title and the tab's, spelled as on the case's card. */
   title: string;
-  /** The case's article, fetched when first wanted: the six of them were in
-      the home page's script, read by most visitors not at all. The layer
+  /** The case's article, fetched when first wanted: they were all in the
+      home page's script, read by most visitors not at all. The layer
       asks for them as the cards come near, and for a card's own under the
       pointer, so one opens at once all the same (CaseLayer, CaseCard). */
   load: () => Promise<Article>;
@@ -24,7 +24,6 @@ export const CASES: Record<string, CaseEntry> = {
   urbantiger: { title: 'Urbantiger', load: () => import('./UrbantigerArticle').then((m) => m.UrbantigerArticle) },
   lendly: { title: 'Lendly Invest', load: () => import('./LendlyArticle').then((m) => m.LendlyArticle) },
   alice: { title: 'Yandex Alice', load: () => import('./AliceArticle').then((m) => m.AliceArticle) },
-  'yandex-cloud': { title: 'Yandex Cloud', load: () => import('./YandexCloudArticle').then((m) => m.YandexCloudArticle) },
 };
 
 const loaded = new Map<string, Article>();

@@ -17,7 +17,8 @@ const INDEX = [
 /**
  * The Yandex Cloud case study, set as the Chums one is (ChumsArticle): one
  * narrow column, the pictures between the words in the same column, the way
- * back and the chapters down the left where there is room.
+ * back and the chapters down the left where there is room. Shared by link
+ * alone (app/cases/yandex-cloud), so its way back goes home and says so.
  */
 export function YandexCloudArticle({ onBack, backHref }: ArticleProps) {
   const ref = useRef<HTMLElement>(null);
@@ -25,7 +26,7 @@ export function YandexCloudArticle({ onBack, backHref }: ArticleProps) {
 
   return (
     <article ref={ref} className="cp-article">
-      <CaseIndex items={INDEX} onBack={onBack} backHref={backHref} />
+      <CaseIndex items={INDEX} onBack={onBack} backHref={backHref} backLabel="Home" />
 
       {/* --- overview ---------------------------------------------------- */}
       <div className="cp-col cp-intro">

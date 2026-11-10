@@ -37,7 +37,8 @@ export type ShowcaseCase = {
 // The cases after the hero, one card each (CaseShowcase). Three notes each,
 // the strongest first: it is the one up as the page loads. A no-break space
 // (\u00a0) keeps every note's last two words together, wherever the line
-// breaks fall.
+// breaks fall. Yandex Cloud's case has no card: it is shared by link alone,
+// as Beri Zaryad's is (app/cases/yandex-cloud).
 export const showcase: ShowcaseCase[] = [
   {
     id: 'kritika',
@@ -115,25 +116,6 @@ export const showcase: ShowcaseCase[] = [
       'Buying into a new loan takes a signature for every document. We split it into numbered steps, with a stepper that shows how many signatures are\u00a0left.',
       'Qualified investor status and a notarized power of attorney used to mean emails to support. Now both live in the investor’s\u00a0account.',
       'I designed the marketplace, analytics and the flows where money and documents change hands, with our lead designer, analyst and two\u00a0PMs.',
-    ],
-  },
-  {
-    id: 'yandex-cloud',
-    href: '/cases/yandex-cloud',
-    device: 'monitor',
-    title: 'Yandex Cloud',
-    subtitle: 'Touchscreen game at Yandex Scale 2026',
-    phone: {
-      framed: true,
-      type: 'video',
-      src: assets.ycCaseVideo,
-      poster: assets.ycCasePoster,
-      alt: 'Yandex Cloud booth game: choosing a business task',
-    },
-    notes: [
-      'I designed the game and built its front end myself, with Claude Code, in a week and a half. The production version is built on my\u00a0code.',
-      'A visitor at a booth has a minute or two and zero patience. So the game explains itself, and even running out of time shows you the right\u00a0answer.',
-      'Every result leads somewhere: a QR code to request materials or a consultation, and in the short mode, points you trade for merch at the\u00a0booth.',
     ],
   },
   {
