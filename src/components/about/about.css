@@ -157,9 +157,10 @@
   }
 }
 /* A phone held sideways: the text starts higher, and its lines and
-   paragraphs sit a little closer, so all eleven lines fit the short stage
-   (they ran 40px past the bottom of an 844×390 screen); the diplomas keep
-   a card's size rather than a thumbnail's. */
+   paragraphs sit a little closer, so all nine lines fit the short stage
+   with room under them (at the page's own spacing they ran 15px past the
+   bottom of a 740×360 screen); the diplomas keep a card's size rather than
+   a thumbnail's. */
 @media (max-width: 899px) and (max-height: 500px) {
   .aw {
     --W: min(72vw, 60svh);

@@ -11,25 +11,28 @@ export type AboutParagraph = { lines: AboutLine[]; phone?: AboutLine[] };
 
 const artemSite: AboutLine = { text: 'artemartemartem.com', href: 'https://artemartemartem.com' };
 
-// Each paragraph set line by line, broken where the sense breaks, never
-// inside a phrase, and no two lines one after the other of a like length:
-// two of them, as long as each other, read as a block. The lines are short,
-// none past 333px, so the words stand in a narrow column: the first and the
-// last paragraph go short and long in turn, and the short one between,
-// short then long, turns from one to the other; the last has the address
-// under them. The list of what goes into the work (research, prototypes,
-// front ends, 3D, motion) is gone: the first screen says "who builds in
-// code", and Random shows the rest. At a phone's 15px every line fits as it
-// is, the longest 256px.
+// Three paragraphs of running text in a narrow centred column, their lines
+// set by hand so the widths stay close: at 20px every line is between 196
+// and 379px, and in the two longer paragraphs the middle line is the
+// longest, the ones over and under it about three quarters of it. A line
+// may end inside a sentence, as in any paragraph, but never inside a name
+// or a term: "e-commerce", "Artem Shcherbakov" and "Site of the Day" stay
+// whole. A line to a phrase was tried in every arrangement. The phrases
+// here are too unlike in length for it: it gave either two lines as long as
+// each other, which read as a block, or a long line next to one half its
+// length, which read as verse and left words hanging. The list of what goes
+// into the work (research, prototypes, front ends, 3D, motion) is gone: the
+// first screen says "who builds in code", and Random shows the rest. At a
+// phone's 15px every line fits as it is, the longest 292px (a 320px phone's
+// column is 296).
 export const aboutText: AboutParagraph[] = [
   {
     lines: [
+      'Mostly B2C: fintech, Web3',
       // A word joiner after the hyphen keeps "e-commerce" whole where the
       // line wraps (a narrow phone): the browser would break after it, and
       // the face has no non-breaking hyphen.
-      'Mostly B2C:',
-      'fintech, Web3 and e-\u2060commerce.',
-      'I like messy flows',
+      'and e-\u2060commerce. I like messy flows',
       'and making them look good.',
     ],
   },
@@ -38,11 +41,10 @@ export const aboutText: AboutParagraph[] = [
     lines: ['I care about systems,', 'but I still prefer a bit more craft.'],
   },
   {
-    // The site, whom for, the awards, the address.
+    // The site and whom for, the awards, the address under them.
     lines: [
-      'I designed a site',
-      'for film director Artem\u00a0Shcherbakov.',
-      'It got Site\u00a0of\u00a0the\u00a0Day',
+      'I designed a site for film director',
+      'Artem\u00a0Shcherbakov. It got Site\u00a0of\u00a0the\u00a0Day',
       'on Awwwards, FWA and CSSDA.',
       artemSite,
     ],
