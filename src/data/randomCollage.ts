@@ -36,12 +36,13 @@ export type CollageItem = {
 // Sides alternate down the page, and each wide clip is followed by two
 // upright ones, zig-zagging (ten upright to five wide), so the wide ones
 // lean left and right in turn. The Dynamic Island concept is second, as
-// high as an upright clip can stand. The design battle, which stood there,
-// is fifth, so the two clips filmed in the dark (Kritika, then it) no
-// longer open the block one after the other, and the three filmed ones
-// stand apart: first, fifth, last. Dark screens and light ones take turns
-// where they can: the Opus experiment, a dark one, follows Beri Zaryad's
-// light return, and Chums' light welcome goes after Cedro's dark window.
+// high as an upright clip can stand, and the design battle third: the
+// concept's render stands between the two clips filmed in the dark
+// (Kritika, the design battle), which opened the block one after the
+// other. The Bergman poster, which stood third, is fifth, four places
+// before the other poster. Dark screens and light ones take turns where
+// they can: the Opus experiment, a dark one, follows Beri Zaryad's light
+// return, and Chums' light welcome goes after Cedro's dark window.
 //
 // The filmed ones aside (the app in hand), every clip is a render on a
 // plain background, a warm grey with a vignette or white; those backgrounds
@@ -82,14 +83,16 @@ export const collage: CollageItem[] = [
     },
   },
   {
-    id: 'bergman-poster',
-    title: 'Bergman poster',
+    id: 'design-battle',
+    title: 'Design battle app',
     side: 'left',
-    image: {
-      src: '/random/bergman-poster.webp', // 724×1024, flat colour, kept lossless
-      width: 724,
-      height: 1024,
-      alt: 'A red poster: a pale mask in profile with a red slit for an eye, “Bergman” set huge in a serif, and the tail of its g running into five of his films: Fanny & Alexander, Winter Light, Cries & Whispers, Höstsonaten, Skammen',
+    small: true,
+    video: {
+      src: '/random/design-battle.mp4', // IMG_8333.MOV, 848×848 cut to 678×848 (4:5) round the phone, 25fps, no audio
+      poster: '/random/design-battle.webp',
+      width: 678,
+      height: 848,
+      alt: 'A phone on a wooden table: the semifinals of a design battle, a countdown to the final, a live duel at 128 votes and its brief; then “who wins?”, two onboarding screens swiped between, and a vote',
     },
   },
   {
@@ -105,16 +108,14 @@ export const collage: CollageItem[] = [
     },
   },
   {
-    id: 'design-battle',
-    title: 'Design battle app',
+    id: 'bergman-poster',
+    title: 'Bergman poster',
     side: 'left',
-    small: true,
-    video: {
-      src: '/random/design-battle.mp4', // IMG_8333.MOV, 848×848 cut to 678×848 (4:5) round the phone, 25fps, no audio
-      poster: '/random/design-battle.webp',
-      width: 678,
-      height: 848,
-      alt: 'A phone on a wooden table: the semifinals of a design battle, a countdown to the final, a live duel at 128 votes and its brief; then “who wins?”, two onboarding screens swiped between, and a vote',
+    image: {
+      src: '/random/bergman-poster.webp', // 724×1024, flat colour, kept lossless
+      width: 724,
+      height: 1024,
+      alt: 'A red poster: a pale mask in profile with a red slit for an eye, “Bergman” set huge in a serif, and the tail of its g running into five of his films: Fanny & Alexander, Winter Light, Cries & Whispers, Höstsonaten, Skammen',
     },
   },
   {
