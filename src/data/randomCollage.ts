@@ -34,19 +34,23 @@ export type CollageItem = {
 } & ({ video: CollageVideo } | { image: CollageStill });
 
 // Sides alternate down the page, and each wide clip is followed by two
-// upright ones, zig-zagging (nine upright to five wide), so the wide ones
-// lean left and right in turn. The filmed ones aside (the app in hand),
-// every clip is a render on a plain background, a warm grey with a vignette
-// or white; those backgrounds are brought to the case cards' #e6e6e7, flat,
-// without the devices' shadows (kept, they and the vignette's banding read
-// as dirt round the devices), the devices left as they were. A new render
-// goes the same way (scripts/recolor-random.py), or its background shows
-// warmer. Beri Zaryad's phone stands still on white, its frame almost as
-// light, where the flood frayed: its stage went instead round one mask of
-// the phone for the whole clip. The two posters are stills, whole as they
-// were made, each laid on a stage of that grey as a device is, at the
-// upright clips' size: three fifths of the stage's height, which keeps
-// their 724px sharp on a laptop's retina screen.
+// upright ones, zig-zagging (ten upright to five wide), so the wide ones
+// lean left and right in turn. Dark screens and light ones take turns where
+// they can: the Dynamic Island concept, a dark one, follows Beri Zaryad's
+// light return, and Chums' light welcome, which stood there, goes on after
+// Cedro's dark window. The filmed ones aside (the app in hand), every clip
+// is a render on a plain background, a warm grey with a vignette or white;
+// those backgrounds are brought to the case cards' #e6e6e7, flat, without
+// the devices' shadows (kept, they and the vignette's banding read as dirt
+// round the devices), the devices left as they were. A new render goes the
+// same way (scripts/recolor-random.py), or its background shows warmer.
+// Beri Zaryad's phone stands still on white, its frame almost as light,
+// where the flood frayed: its stage went instead round one mask of the
+// phone for the whole clip. The Dynamic Island concept came rendered on
+// that grey, flat and with no shadow, and is as it came. The two posters
+// are stills, whole as they were made, each laid on a stage of that grey as
+// a device is, at the upright clips' size: three fifths of the stage's
+// height, which keeps their 724px sharp on a laptop's retina screen.
 export const collage: CollageItem[] = [
   {
     id: 'kritika',
@@ -184,16 +188,15 @@ export const collage: CollageItem[] = [
     },
   },
   {
-    id: 'chums-welcome',
-    title: 'Chums welcome screen',
+    id: 'island-drop',
+    title: 'Dynamic Island concept',
     side: 'right',
-    small: true,
     video: {
-      src: '/random/chums-welcome.mp4', // rYS2LywV7Ddm7PyH.mp4, 872×720 cut to 576×720 (4:5) round the phone, 30fps, no audio
-      poster: '/random/chums-welcome.webp',
-      width: 576,
-      height: 720,
-      alt: 'The Chums welcome screen on an iPhone: the logo turning in glass over “Welcome to the safety chatting and crypto”, powered by Matrix',
+      src: '/random/island-drop.mp4', // islanddrop_v20_static_grey_x.mp4 as it came, on the cards' grey, 1080×1350 (4:5), 60fps, no audio
+      poster: '/random/island-drop.webp',
+      width: 1080,
+      height: 1350,
+      alt: 'An iPhone home screen: a screenshot of the Wabi app is flung up into the Dynamic Island, which opens into a glowing card with the app’s name and a Get button; the app downloads in the island and its icon lands on the home screen',
     },
   },
   {
@@ -212,9 +215,22 @@ export const collage: CollageItem[] = [
     },
   },
   {
+    id: 'chums-welcome',
+    title: 'Chums welcome screen',
+    side: 'right',
+    small: true,
+    video: {
+      src: '/random/chums-welcome.mp4', // rYS2LywV7Ddm7PyH.mp4, 872×720 cut to 576×720 (4:5) round the phone, 30fps, no audio
+      poster: '/random/chums-welcome.webp',
+      width: 576,
+      height: 720,
+      alt: 'The Chums welcome screen on an iPhone: the logo turning in glass over “Welcome to the safety chatting and crypto”, powered by Matrix',
+    },
+  },
+  {
     id: 'kritika-hands',
     title: 'Kritika on my phone',
-    side: 'right',
+    side: 'left',
     video: {
       src: '/random/kritika-hands.mp4', // IMG_8331.MP4, 1280×1280 cut to 1024×1280 (4:5) round the phone, 25fps, no audio
       poster: '/random/kritika-hands.webp',
