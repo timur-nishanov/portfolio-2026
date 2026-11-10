@@ -236,7 +236,9 @@ export function createGlass(
   // into linear light, and the glass would come out darker than the page).
   const bg = new THREE.Vector3(0.97, 0.97, 0.96);
   {
-    const probe = document.createElement('canvas').getContext('2d');
+    // A software canvas (willReadFrequently): one pixel, read straight back,
+    // with no round trip to the GPU.
+    const probe = document.createElement('canvas').getContext('2d', { willReadFrequently: true });
     if (probe) {
       probe.fillStyle = getComputedStyle(from).getPropertyValue('--bg').trim() || '#f7f7f5';
       probe.fillRect(0, 0, 1, 1);

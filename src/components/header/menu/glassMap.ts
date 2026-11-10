@@ -224,7 +224,12 @@ export function greyImage(values: Uint8ClampedArray, w: number, h: number) {
   const c = document.createElement('canvas');
   c.width = w;
   c.height = h;
-  const g = c.getContext('2d');
+  // willReadFrequently: a software canvas. Its pixels are only put in and
+  // read straight back out as a PNG; on a GPU canvas that read waited for
+  // the GPU, busy with the page's first frames, and held the main thread
+  // (some 450ms for the page's three filters, profiled on a software GPU;
+  // 3ms this way). The PNG is the same either way, byte for byte.
+  const g = c.getContext('2d', { willReadFrequently: true });
   if (!g) return null;
   const img = g.createImageData(w, h);
   for (let i = 0; i < values.length; i++) {
