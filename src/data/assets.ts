@@ -21,8 +21,6 @@ export const assets = {
   urbantigerCasePoster: '/mockups/urbantiger-case-2.webp', // its first frame
   aliceCaseVideo: '/mockups/alice-case.mp4', // alice-lockscreen.mp4 (the iOS 26 lock screen through a day) scaled to 780x1688 (60fps, CRF 23) — inside the iPhone frame
   aliceCasePoster: '/mockups/alice-case.webp', // its first frame
-  ycCaseVideo: '/mockups/yc-case-2.mp4', // yc-bundle-spring-2560x1440-60fps.mp4, 16:9 like the monitor's screen (1600x900)
-  ycCasePoster: '/mockups/yc-case-2.webp', // its first frame
   kritikaCaseVideo: '/mockups/kritika-case-4.mp4', // kritika-case-3_2.mp4 (780x1692, the new peel), as in the case at 0.95 of its pace (CRF 23) — inside the iPhone frame, its own dynamic island painted out (delogo) so only the frame's shows
   kritikaCasePoster: '/mockups/kritika-case-4.webp', // its first frame
   lendlyCaseVideo: '/mockups/lendly-case.mp4', // 09-homepage-card.mp4 (1600x900, 60fps, CRF 23) — the monitor's 16:9 as it is
