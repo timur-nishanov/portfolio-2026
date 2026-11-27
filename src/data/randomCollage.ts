@@ -34,8 +34,10 @@ export type CollageItem = {
 } & ({ video: CollageVideo } | { image: CollageStill });
 
 // Sides alternate down the page, and each wide clip is followed by two
-// upright ones, zig-zagging (ten upright to five wide), so the wide ones
-// lean left and right in turn. The Dynamic Island concept is second, as
+// upright ones, zig-zagging, so the wide ones lean left and right in turn;
+// a sixth wide one, the 3D loop, closes the block as a wide one opens it
+// (ten upright to six wide). It fills its frame, as the filmed ones do, and
+// is shown whole on a phone. The Dynamic Island concept is second, as
 // high as an upright clip can stand, and the design battle third: the
 // concept's render stands between the two clips filmed in the dark
 // (Kritika, the design battle), which opened the block one after the
@@ -44,19 +46,19 @@ export type CollageItem = {
 // they can: the Opus experiment, a dark one, follows Beri Zaryad's light
 // return, and Chums' light welcome goes after Cedro's dark window.
 //
-// The filmed ones aside (the app in hand), every clip is a render on a
-// plain background, a warm grey with a vignette or white; those backgrounds
-// are brought to the case cards' #e6e6e7, flat, without the devices'
-// shadows (kept, they and the vignette's banding read as dirt round the
-// devices), the devices left as they were. A new render goes the same way
-// (scripts/recolor-random.py), or its background shows warmer. Beri
-// Zaryad's phone stands still on white, its frame almost as light, where
-// the flood frayed: its stage went instead round one mask of the phone for
-// the whole clip. The Dynamic Island concept came rendered on that grey,
-// flat and with no shadow, and is as it came. The two posters are stills,
-// whole as they were made, each laid on a stage of that grey as a device
-// is, at the upright clips' size: three fifths of the stage's height, which
-// keeps their 724px sharp on a laptop's retina screen.
+// The filmed ones (the app in hand) and the 3D loop aside, every clip is a
+// render on a plain background, a warm grey with a vignette or white; those
+// backgrounds are brought to the case cards' #e6e6e7, flat, without the
+// devices' shadows (kept, they and the vignette's banding read as dirt round
+// the devices), the devices left as they were. A new render goes the same way
+// (scripts/recolor-random.py), or its background shows warmer. Beri Zaryad's
+// phone stands still on white, its frame almost as light, where the flood
+// frayed: its stage went instead round one mask of the phone for the whole
+// clip. The Dynamic Island concept came rendered on that grey, flat and with
+// no shadow, and is as it came. The two posters are stills, whole as they
+// were made, each laid on a stage of that grey as a device is, at the upright
+// clips' size: three fifths of the stage's height, which keeps their 724px
+// sharp on a laptop's retina screen.
 export const collage: CollageItem[] = [
   {
     id: 'kritika',
@@ -243,6 +245,18 @@ export const collage: CollageItem[] = [
       width: 1024,
       height: 1280,
       alt: 'Kritika on an iPhone in hand: typing in Eraserhead, picking its poster and rating the plot, the acting and the action, hearts bursting with each rating',
+    },
+  },
+  {
+    id: 'globe-walk',
+    title: 'Looping 3D animation',
+    side: 'right',
+    video: {
+      src: '/random/globe-walk.mp4', // ade05f30…61.mp4, 1920×1080 scaled to 1600×900, 24fps, CRF 26, its audio dropped
+      poster: '/random/globe-walk.webp',
+      width: 1600,
+      height: 900,
+      alt: 'A 3D animation in a loop: a man walks over a turning globe with his eyes on his phone, from a tropical beach with a palm, a hut and a longtail boat into a knitted winter land with a yurt, a horse sledge, an apple stall and a camel, his clothes changing on the way, and back to the beach',
     },
   },
 ];
